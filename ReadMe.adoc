@@ -1,0 +1,8 @@
+= Useful Commands
+
+[source,bash]
+----
+cargo fmt
+cargo clippy
+cargo run
+----
