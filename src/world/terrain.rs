@@ -1,10 +1,8 @@
 use bevy::app::App;
 use bevy::asset::Assets;
-use bevy::math::Quat;
-use bevy::pbr::{PbrBundle, StandardMaterial};
-use bevy::prelude::{
-    default, Circle, Color, Commands, Cuboid, Mesh, Plugin, ResMut, Startup, Transform,
-};
+use bevy::pbr::{AlphaMode, PbrBundle, StandardMaterial};
+use bevy::prelude::shape::Plane;
+use bevy::prelude::{default, Color, Commands, Cuboid, Mesh, Plugin, ResMut, Startup, Transform};
 
 pub(crate) struct TerrainPlugin;
 
@@ -19,18 +17,31 @@ fn create_terrain(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // circular base
+    // Water
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Circle::new(4.0)),
-        material: materials.add(Color::WHITE),
-        transform: Transform::from_rotation(Quat::from_rotation_x(-std::f32::consts::FRAC_PI_2)),
+        mesh: meshes.add(Plane::from_size(10.0)),
+        material: materials.add(StandardMaterial {
+            base_color: Color::rgba_u8(173, 216, 230, 32),
+            alpha_mode: AlphaMode::Blend,
+            ..default()
+        }),
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
         ..default()
     });
-    // cube
+
+    // Sea bottom
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Plane::from_size(10.0)),
+        material: materials.add(Color::WHITE),
+        transform: Transform::from_xyz(0.0, -0.5, 0.0),
+        ..default()
+    });
+
+    // Mountain
     commands.spawn(PbrBundle {
         mesh: meshes.add(Cuboid::new(1.0, 1.0, 1.0)),
-        material: materials.add(Color::rgb_u8(124, 144, 255)),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
+        material: materials.add(Color::WHITE),
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
         ..default()
     });
 }
