@@ -2,7 +2,7 @@ use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{Color, Gizmos, Plugin};
 
-pub struct DebugPlugin;
+pub(crate) struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
