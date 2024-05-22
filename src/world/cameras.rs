@@ -32,6 +32,7 @@ fn create_cameras(mut commands: Commands) {
     ));
 }
 
+const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
 fn move_cameras(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
@@ -40,22 +41,32 @@ fn move_cameras(
     for (_, mut transform) in query.iter_mut() {
         let mut direction = Vec3::ZERO;
 
-        if keyboard_input.pressed(KeyCode::KeyF) {
-            direction.z -= 1.0;
-        }
         if keyboard_input.pressed(KeyCode::KeyS) {
+            direction.x -= 1.0;
             direction.z += 1.0;
+        }
+        if keyboard_input.pressed(KeyCode::KeyF) {
+            direction.x += 1.0;
+            direction.z -= 1.0;
         }
         if keyboard_input.pressed(KeyCode::KeyE) {
             direction.x -= 1.0;
+            direction.z -= 1.0;
         }
         if keyboard_input.pressed(KeyCode::KeyD) {
             direction.x += 1.0;
+            direction.z += 1.0;
+        }
+        if keyboard_input.pressed(KeyCode::KeyA) {
+            direction.y += 1.0;
+        }
+        if keyboard_input.pressed(KeyCode::KeyZ) {
+            direction.y -= 1.0;
         }
 
         if direction != Vec3::ZERO {
             direction = direction.normalize();
-            transform.translation += direction * time.delta_seconds();
+            transform.translation += direction * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
         }
     }
 }
