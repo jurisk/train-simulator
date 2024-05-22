@@ -41,21 +41,21 @@ fn move_cameras(
     for (_, mut transform) in query.iter_mut() {
         let mut direction = Vec3::ZERO;
 
+        if keyboard_input.pressed(KeyCode::KeyE) {
+            direction.x -= 1.0;
+            direction.z -= 1.0;
+        }
         if keyboard_input.pressed(KeyCode::KeyS) {
             direction.x -= 1.0;
+            direction.z += 1.0;
+        }
+        if keyboard_input.pressed(KeyCode::KeyD) {
+            direction.x += 1.0;
             direction.z += 1.0;
         }
         if keyboard_input.pressed(KeyCode::KeyF) {
             direction.x += 1.0;
             direction.z -= 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyE) {
-            direction.x -= 1.0;
-            direction.z -= 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyD) {
-            direction.x += 1.0;
-            direction.z += 1.0;
         }
         if keyboard_input.pressed(KeyCode::KeyA) {
             direction.y += 1.0;
