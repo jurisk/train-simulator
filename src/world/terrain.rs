@@ -19,6 +19,7 @@ fn create_terrain(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let size = 10.0;
+    let sea_depth = 2.0;
 
     // Water
     commands.spawn(PbrBundle {
@@ -36,7 +37,7 @@ fn create_terrain(
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane::from_size(size)),
         material: materials.add(Color::WHITE),
-        transform: Transform::from_xyz(0.0, -1.0, 0.0),
+        transform: Transform::from_xyz(0.0, -sea_depth, 0.0),
         ..default()
     });
 
@@ -51,7 +52,7 @@ fn create_terrain(
                 material: materials.add(Color::rgb(rng.gen(), rng.gen(), rng.gen())),
                 transform: Transform::from_xyz(
                     size * (((x as f32 + 0.5) / n as f32) - 0.5),
-                    height / 2.0,
+                    height / 2.0 - sea_depth,
                     size * (((y as f32 + 0.5) / n as f32) - 0.5),
                 ),
                 ..default()
