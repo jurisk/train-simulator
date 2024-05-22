@@ -1,7 +1,10 @@
 use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::pbr::{AlphaMode, PbrBundle, StandardMaterial};
+
+#[allow(deprecated)]
 use bevy::prelude::shape::Plane;
+
 use bevy::prelude::{default, Color, Commands, Cuboid, Mesh, Plugin, ResMut, Startup, Transform};
 use rand::Rng;
 
@@ -19,25 +22,18 @@ fn create_terrain(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let size = 10.0;
-    let sea_depth = 2.0;
+    let sea_depth = 2.5;
 
     // Water
+    #[allow(deprecated)]
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane::from_size(size)),
         material: materials.add(StandardMaterial {
-            base_color: Color::rgba_u8(173, 216, 230, 32),
+            base_color: Color::rgba_u8(173, 216, 230, 64),
             alpha_mode: AlphaMode::Blend,
             ..default()
         }),
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        ..default()
-    });
-
-    // Sea bottom
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Plane::from_size(size)),
-        material: materials.add(Color::WHITE),
-        transform: Transform::from_xyz(0.0, -sea_depth, 0.0),
         ..default()
     });
 
@@ -46,7 +42,7 @@ fn create_terrain(
     let n = 6;
     for x in 0..n {
         for y in 0..n {
-            let height = rng.gen_range(0..4) as u8 as f32;
+            let height = rng.gen_range(1..=5) as u8 as f32;
             commands.spawn(PbrBundle {
                 mesh: meshes.add(Cuboid::new(size / n as f32, height, size / n as f32)),
                 material: materials.add(Color::rgb(rng.gen(), rng.gen(), rng.gen())),

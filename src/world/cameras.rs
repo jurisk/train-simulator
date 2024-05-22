@@ -11,8 +11,13 @@ impl Plugin for CameraPlugin {
 }
 
 fn create_cameras(mut commands: Commands) {
+    let n = 8.0;
+    let from = Transform::from_xyz(n, n, n);
+    let target = Vec3::ZERO;
+    let up = Vec3::Y;
+
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(2.5, 12.0, 2.5).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: from.looking_at(target, up),
         ..default()
     });
 }
