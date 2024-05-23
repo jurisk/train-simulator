@@ -1,8 +1,8 @@
 use bevy::app::App;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, ButtonInput, Camera3dBundle, Commands, KeyCode, OrthographicProjection, Plugin,
-    Projection, Query, Res, Startup, Time, Transform, Update,
+    default, ButtonInput, Camera, Camera3dBundle, Commands, KeyCode, OrthographicProjection,
+    Plugin, Projection, Query, Res, Startup, Time, Transform, Update,
 };
 use bevy::render::camera::ScalingMode;
 
@@ -30,6 +30,10 @@ fn create_camera(mut commands: Commands) {
 
     commands.spawn((
         Camera3dBundle {
+            camera: Camera {
+                is_active: CameraId::default() == CameraId::Orthographic,
+                ..default()
+            },
             transform: from.looking_at(target, up),
             projection: OrthographicProjection {
                 // 8 world units per window height.

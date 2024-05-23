@@ -1,8 +1,8 @@
 use bevy::app::App;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, ButtonInput, Camera3dBundle, Commands, KeyCode, Plugin, Query, Res, Startup, Time,
-    Transform, Update,
+    default, ButtonInput, Camera, Camera3dBundle, Commands, KeyCode, Plugin, Query, Res, Startup,
+    Time, Transform, Update,
 };
 
 use crate::cameras::{CameraId, ControllableCamera};
@@ -27,6 +27,10 @@ fn create_camera(mut commands: Commands) {
 
     commands.spawn((
         Camera3dBundle {
+            camera: Camera {
+                is_active: CameraId::default() == CameraId::Perspective,
+                ..default()
+            },
             transform: from.looking_at(target, up),
             ..default()
         },
