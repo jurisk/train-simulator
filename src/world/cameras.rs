@@ -6,10 +6,11 @@ use bevy::prelude::{
 };
 use bevy::render::camera::ScalingMode;
 
-const ORTHOGRAPHIC_PROJECTION: bool = true;
+const ORTHOGRAPHIC_PROJECTION: bool = false;
 
 const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
 const ZOOM_SPEED: f32 = 2.0;
+const ANGLE_COEF: f32 = 0.5;
 
 pub(crate) struct CameraPlugin;
 
@@ -27,7 +28,7 @@ struct ControllableCamera {}
 
 fn create_cameras(mut commands: Commands) {
     let n = 8.0;
-    let from = Transform::from_xyz(n, n, n);
+    let from = Transform::from_xyz(n * ANGLE_COEF, n, n * ANGLE_COEF);
     let target = Vec3::ZERO;
     let up = Vec3::Y;
 
