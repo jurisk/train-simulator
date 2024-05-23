@@ -7,9 +7,16 @@ use crate::cameras::perspective::PerspectiveCameraPlugin;
 mod orthographic;
 mod perspective;
 
-const ORTHOGRAPHIC_PROJECTION: bool = false;
+const ORTHOGRAPHIC_PROJECTION: bool = true;
 
 pub(crate) struct CameraPlugin;
+
+#[derive(Default, Eq, PartialEq)]
+enum CameraId {
+    #[default]
+    Orthographic,
+    Perspective,
+}
 
 // TODO: Camera switching
 impl Plugin for CameraPlugin {
@@ -23,4 +30,6 @@ impl Plugin for CameraPlugin {
 }
 
 #[derive(Component, Default)]
-struct ControllableCamera {}
+struct ControllableCamera {
+    id: CameraId,
+}

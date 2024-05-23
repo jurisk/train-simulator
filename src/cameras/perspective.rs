@@ -1,9 +1,11 @@
 use bevy::app::App;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, ButtonInput, Camera3dBundle, Commands, Component, KeyCode, Plugin, Query, Res,
-    Startup, Time, Transform, Update, With,
+    default, ButtonInput, Camera3dBundle, Commands, KeyCode, Plugin, Query, Res, Startup, Time,
+    Transform, Update,
 };
+
+use crate::cameras::{CameraId, ControllableCamera};
 
 const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
 const ANGLE_COEF: f32 = 0.5;
@@ -17,9 +19,6 @@ impl Plugin for PerspectiveCameraPlugin {
     }
 }
 
-#[derive(Component, Default)]
-struct PerspectiveControllableCamera {}
-
 fn create_camera(mut commands: Commands) {
     let n = 8.0;
     let from = Transform::from_xyz(n * ANGLE_COEF, n, n * ANGLE_COEF);
@@ -31,7 +30,9 @@ fn create_camera(mut commands: Commands) {
             transform: from.looking_at(target, up),
             ..default()
         },
-        PerspectiveControllableCamera::default(),
+        ControllableCamera {
+            id: CameraId::Perspective,
+        },
     ));
 }
 
@@ -39,37 +40,39 @@ fn create_camera(mut commands: Commands) {
 fn move_camera(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<&mut Transform, With<PerspectiveControllableCamera>>,
+    mut query: Query<(&mut Transform, &ControllableCamera)>,
 ) {
-    for mut transform in &mut query {
-        let mut direction = Vec3::ZERO;
+    for (mut transform, camera) in &mut query {
+        if camera.id == CameraId::Perspective {
+            let mut direction = Vec3::ZERO;
 
-        if keyboard_input.pressed(KeyCode::KeyE) {
-            direction.x -= 1.0;
-            direction.z -= 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyS) {
-            direction.x -= 1.0;
-            direction.z += 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyD) {
-            direction.x += 1.0;
-            direction.z += 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyF) {
-            direction.x += 1.0;
-            direction.z -= 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyA) {
-            direction.y += 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyZ) {
-            direction.y -= 1.0;
-        }
+            if keyboard_input.pressed(KeyCode::KeyE) {
+                direction.x -= 1.0;
+                direction.z -= 1.0;
+            }
+            if keyboard_input.pressed(KeyCode::KeyS) {
+                direction.x -= 1.0;
+                direction.z += 1.0;
+            }
+            if keyboard_input.pressed(KeyCode::KeyD) {
+                direction.x += 1.0;
+                direction.z += 1.0;
+            }
+            if keyboard_input.pressed(KeyCode::KeyF) {
+                direction.x += 1.0;
+                direction.z -= 1.0;
+            }
+            if keyboard_input.pressed(KeyCode::KeyA) {
+                direction.y += 1.0;
+            }
+            if keyboard_input.pressed(KeyCode::KeyZ) {
+                direction.y -= 1.0;
+            }
 
-        if direction != Vec3::ZERO {
-            direction = direction.normalize();
-            transform.translation += direction * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
+            if direction != Vec3::ZERO {
+                direction = direction.normalize();
+                transform.translation += direction * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
+            }
         }
     }
 }

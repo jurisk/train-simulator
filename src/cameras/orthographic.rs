@@ -1,10 +1,12 @@
 use bevy::app::App;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, ButtonInput, Camera3dBundle, Commands, Component, KeyCode, OrthographicProjection,
-    Plugin, Projection, Query, Res, Startup, Time, Transform, Update, With,
+    default, ButtonInput, Camera3dBundle, Commands, KeyCode, OrthographicProjection, Plugin,
+    Projection, Query, Res, Startup, Time, Transform, Update,
 };
 use bevy::render::camera::ScalingMode;
+
+use crate::cameras::{CameraId, ControllableCamera};
 
 const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
 const ZOOM_SPEED: f32 = 2.0;
@@ -19,9 +21,6 @@ impl Plugin for OrthographicCameraPlugin {
             .add_systems(Update, zoom_orthographic_camera);
     }
 }
-
-#[derive(Component, Default)]
-struct OrthographicControllableCamera {}
 
 fn create_camera(mut commands: Commands) {
     let n = 8.0;
@@ -40,7 +39,9 @@ fn create_camera(mut commands: Commands) {
             .into(),
             ..default()
         },
-        OrthographicControllableCamera::default(),
+        ControllableCamera {
+            id: CameraId::Orthographic,
+        },
     ));
 }
 
@@ -48,31 +49,33 @@ fn create_camera(mut commands: Commands) {
 fn move_camera(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<&mut Transform, With<OrthographicControllableCamera>>,
+    mut query: Query<(&mut Transform, &ControllableCamera)>,
 ) {
-    for mut transform in &mut query {
-        let mut direction = Vec3::ZERO;
+    for (mut transform, camera) in &mut query {
+        if camera.id == CameraId::Orthographic {
+            let mut direction = Vec3::ZERO;
 
-        if keyboard_input.pressed(KeyCode::KeyE) {
-            direction.x -= 1.0;
-            direction.z -= 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyS) {
-            direction.x -= 1.0;
-            direction.z += 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyD) {
-            direction.x += 1.0;
-            direction.z += 1.0;
-        }
-        if keyboard_input.pressed(KeyCode::KeyF) {
-            direction.x += 1.0;
-            direction.z -= 1.0;
-        }
+            if keyboard_input.pressed(KeyCode::KeyE) {
+                direction.x -= 1.0;
+                direction.z -= 1.0;
+            }
+            if keyboard_input.pressed(KeyCode::KeyS) {
+                direction.x -= 1.0;
+                direction.z += 1.0;
+            }
+            if keyboard_input.pressed(KeyCode::KeyD) {
+                direction.x += 1.0;
+                direction.z += 1.0;
+            }
+            if keyboard_input.pressed(KeyCode::KeyF) {
+                direction.x += 1.0;
+                direction.z -= 1.0;
+            }
 
-        if direction != Vec3::ZERO {
-            direction = direction.normalize();
-            transform.translation += direction * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
+            if direction != Vec3::ZERO {
+                direction = direction.normalize();
+                transform.translation += direction * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
+            }
         }
     }
 }
@@ -81,17 +84,20 @@ fn move_camera(
 fn zoom_orthographic_camera(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query_camera: Query<&mut Projection, With<OrthographicControllableCamera>>,
+    mut query: Query<(&mut Projection, &ControllableCamera)>,
 ) {
-    // assume orthographic. do nothing if perspective.
-    if let Projection::Orthographic(ortho) = query_camera.single_mut().into_inner() {
-        let mut zooming = 0.0;
-        if keyboard_input.pressed(KeyCode::NumpadSubtract) {
-            zooming += 1.0;
+    for (projection, camera) in &mut query {
+        if camera.id == CameraId::Orthographic {
+            if let Projection::Orthographic(ortho) = projection.into_inner() {
+                let mut zooming = 0.0;
+                if keyboard_input.pressed(KeyCode::NumpadSubtract) {
+                    zooming += 1.0;
+                }
+                if keyboard_input.pressed(KeyCode::NumpadAdd) {
+                    zooming -= 1.0;
+                }
+                ortho.scale *= 1.0 + time.delta_seconds() * zooming * ZOOM_SPEED;
+            }
         }
-        if keyboard_input.pressed(KeyCode::NumpadAdd) {
-            zooming -= 1.0;
-        }
-        ortho.scale *= 1.0 + time.delta_seconds() * zooming * ZOOM_SPEED;
     }
 }
