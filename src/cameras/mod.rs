@@ -6,7 +6,7 @@ use bevy::prelude::{
 };
 use bevy::render::camera::ScalingMode;
 
-const ORTHOGRAPHIC_PROJECTION: bool = false;
+const ORTHOGRAPHIC_PROJECTION: bool = true;
 
 const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
 const ZOOM_SPEED: f32 = 2.0;
