@@ -27,7 +27,7 @@ fn create_terrain(
     commands.spawn(PbrBundle {
         mesh: meshes.add(Plane::from_size(size)),
         material: materials.add(StandardMaterial {
-            base_color: Color::rgba_u8(173, 216, 230, 64),
+            base_color: Color::rgba_u8(173, 216, 230, 96),
             alpha_mode: AlphaMode::Blend,
             ..default()
         }),
