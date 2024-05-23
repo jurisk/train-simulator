@@ -69,7 +69,7 @@ fn create_blocks(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let sea_depth = -2.0;
+    let sea_depth = -2.5;
     let mut rng = rand::thread_rng();
     let n = 6u8;
     for x in 0 .. n {
@@ -83,7 +83,7 @@ fn create_blocks(
                 material: materials.add(Color::rgb(rng.gen(), rng.gen(), rng.gen())),
                 transform: Transform::from_xyz(
                     SIZE * (((x + 0.5) / n) - 0.5),
-                    height / 2.0 - sea_depth,
+                    height / 2.0 + sea_depth,
                     SIZE * (((y + 0.5) / n) - 0.5),
                 ),
                 ..default()
