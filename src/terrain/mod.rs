@@ -10,22 +10,22 @@ pub(crate) struct TerrainPlugin;
 
 impl Plugin for TerrainPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, create_terrain);
+        app.add_systems(Startup, create_water);
+        app.add_systems(Startup, create_land);
     }
 }
 
-fn create_terrain(
+const SIZE: f32 = 10.0;
+const SEA_DEPTH: f32 = 2.5;
+
+fn create_water(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let size = 10.0;
-    let sea_depth = 2.5;
-
-    // Water
     #[allow(deprecated)]
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Plane::from_size(size)),
+        mesh: meshes.add(Plane::from_size(SIZE)),
         material: materials.add(StandardMaterial {
             base_color: Color::rgba_u8(173, 216, 230, 96),
             alpha_mode: AlphaMode::Blend,
@@ -34,8 +34,13 @@ fn create_terrain(
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
         ..default()
     });
+}
 
-    // Mountains
+fn create_land(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     let mut rng = rand::thread_rng();
     let n = 6u8;
     for x in 0 .. n {
@@ -45,12 +50,12 @@ fn create_terrain(
             let n = f32::from(n);
             let height = f32::from(rng.gen_range(1u8 ..= 5u8));
             commands.spawn(PbrBundle {
-                mesh: meshes.add(Cuboid::new(size / n, height, size / n)),
+                mesh: meshes.add(Cuboid::new(SIZE / n, height, SIZE / n)),
                 material: materials.add(Color::rgb(rng.gen(), rng.gen(), rng.gen())),
                 transform: Transform::from_xyz(
-                    size * (((x + 0.5) / n) - 0.5),
-                    height / 2.0 - sea_depth,
-                    size * (((y + 0.5) / n) - 0.5),
+                    SIZE * (((x + 0.5) / n) - 0.5),
+                    height / 2.0 - SEA_DEPTH,
+                    SIZE * (((y + 0.5) / n) - 0.5),
                 ),
                 ..default()
             });
