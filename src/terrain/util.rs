@@ -2,9 +2,8 @@ use bevy::prelude::*;
 use bevy::render::mesh::PrimitiveTopology;
 use bevy::render::render_asset::RenderAssetUsages;
 
-// Unused, but could come in handy for some code later, so not removed
-// By ChatGPT
 #[must_use]
+#[allow(clippy::ptr_arg)]
 fn normal_from_height_map(
     x: usize,
     z: usize,
@@ -29,8 +28,7 @@ fn normal_from_height_map(
     Vec3::new(-dx, 1.0, -dz).normalize()
 }
 
-// Unused, but could come in handy for some code later, so not removed
-#[allow(clippy::cast_possible_truncation)]
+#[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
 #[must_use]
 pub fn mesh_from_height_map_data(
     min_x: f32,

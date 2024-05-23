@@ -1,3 +1,5 @@
+mod util;
+
 use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::pbr::{AlphaMode, PbrBundle, StandardMaterial};
@@ -5,6 +7,8 @@ use bevy::pbr::{AlphaMode, PbrBundle, StandardMaterial};
 use bevy::prelude::shape::Plane;
 use bevy::prelude::{default, Color, Commands, Cuboid, Mesh, Plugin, ResMut, Startup, Transform};
 use rand::Rng;
+
+use crate::terrain::util::mesh_from_height_map_data;
 
 pub(crate) struct TerrainPlugin;
 
@@ -16,7 +20,6 @@ impl Plugin for TerrainPlugin {
 }
 
 const SIZE: f32 = 10.0;
-const SEA_DEPTH: f32 = 2.5;
 
 fn create_water(
     mut commands: Commands,
@@ -41,6 +44,32 @@ fn create_land(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    #[rustfmt::skip]
+    let data = vec![
+        vec![-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5],
+        vec![-0.5,  0.5,  0.5,  0.5,  0.5,  0.5, -0.5],
+        vec![-0.5,  0.5,  1.5,  1.5,  1.5,  0.5, -0.5],
+        vec![-0.5,  0.5,  1.5,  2.5,  1.5,  0.5, -0.5],
+        vec![-0.5,  0.5,  1.5,  1.5,  1.5,  0.5, -0.5],
+        vec![-0.5,  0.5,  0.5,  0.5,  0.5,  0.5, -0.5],
+        vec![-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5],
+    ];
+    let mesh = mesh_from_height_map_data(-SIZE / 2.0, SIZE / 2.0, -SIZE / 2.0, SIZE / 2.0, &data);
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(mesh),
+        material: materials.add(Color::DARK_GREEN),
+        transform: Transform::default(),
+        ..default()
+    });
+}
+
+#[allow(dead_code)]
+fn create_blocks(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let sea_depth = -2.0;
     let mut rng = rand::thread_rng();
     let n = 6u8;
     for x in 0 .. n {
@@ -54,7 +83,7 @@ fn create_land(
                 material: materials.add(Color::rgb(rng.gen(), rng.gen(), rng.gen())),
                 transform: Transform::from_xyz(
                     SIZE * (((x + 0.5) / n) - 0.5),
-                    height / 2.0 - SEA_DEPTH,
+                    height / 2.0 - sea_depth,
                     SIZE * (((y + 0.5) / n) - 0.5),
                 ),
                 ..default()
