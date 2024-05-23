@@ -1,0 +1,39 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - '**'
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - '**'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
+      - name: Install Bevy Linux dependencies
+        run: sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev
+      - name: Build
+        working-directory: .
+        run: cargo +nightly build --verbose
+      - name: Run tests
+        working-directory: .
+        run: cargo +nightly test --verbose
+      - name: Clippy
+        working-directory: .
+        run: cargo +nightly clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used
