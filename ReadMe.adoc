@@ -1,5 +1,9 @@
 = Useful Commands
 
+== CI/CD Status
+
+image::https://github.com/jurisk/train-simulator/actions/workflows/rust.yml/badge.svg[Rust,link=https://github.com/jurisk/train-simulator/actions/workflows/rust.yml]
+
 == Housekeeping
 
 [source,bash]
