@@ -9,7 +9,7 @@ mod perspective;
 
 pub(crate) struct CameraPlugin;
 
-#[derive(Default, Eq, PartialEq)]
+#[derive(Default, Eq, PartialEq, Copy, Clone)]
 enum CameraId {
     #[default]
     Orthographic,
@@ -25,7 +25,6 @@ impl CameraId {
     }
 }
 
-// TODO: Camera switching
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(OrthographicCameraPlugin);
@@ -35,19 +34,23 @@ impl Plugin for CameraPlugin {
 }
 
 #[derive(Component, Default)]
-struct ControllableCamera {
+struct CameraComponent {
     id: CameraId,
 }
 
 #[allow(clippy::needless_pass_by_value)]
 fn switch_camera(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&mut Camera, &ControllableCamera)>,
+    mut query: Query<(&mut Camera, &CameraComponent)>,
 ) {
-    if keyboard_input.pressed(KeyCode::KeyC) {
-        let next_camera = CameraId::default().next();
-        for (mut camera, camera_type_component) in &mut query {
-            camera.is_active = camera_type_component.id == next_camera;
+    if keyboard_input.just_pressed(KeyCode::KeyC) {
+        if let Some((_, CameraComponent { id: current_camera })) =
+            query.iter().find(|(camera, _)| camera.is_active)
+        {
+            let next_camera = current_camera.next();
+            for (mut camera, camera_type_component) in &mut query {
+                camera.is_active = camera_type_component.id == next_camera;
+            }
         }
     }
 }

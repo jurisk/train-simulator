@@ -5,7 +5,7 @@ use bevy::prelude::{
     Time, Transform, Update,
 };
 
-use crate::cameras::{CameraId, ControllableCamera};
+use crate::cameras::{CameraComponent, CameraId};
 
 const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
 const ANGLE_COEF: f32 = 0.5;
@@ -34,7 +34,7 @@ fn create_camera(mut commands: Commands) {
             transform: from.looking_at(target, up),
             ..default()
         },
-        ControllableCamera {
+        CameraComponent {
             id: CameraId::Perspective,
         },
     ));
@@ -44,10 +44,10 @@ fn create_camera(mut commands: Commands) {
 fn move_camera(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&mut Transform, &ControllableCamera)>,
+    mut query: Query<(&mut Transform, &CameraComponent, &Camera)>,
 ) {
-    for (mut transform, camera) in &mut query {
-        if camera.id == CameraId::Perspective {
+    for (mut transform, camera_component, camera) in &mut query {
+        if camera_component.id == CameraId::Perspective && camera.is_active {
             let mut direction = Vec3::ZERO;
 
             if keyboard_input.pressed(KeyCode::KeyE) {

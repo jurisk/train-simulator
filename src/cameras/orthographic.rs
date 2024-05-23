@@ -6,7 +6,7 @@ use bevy::prelude::{
 };
 use bevy::render::camera::ScalingMode;
 
-use crate::cameras::{CameraId, ControllableCamera};
+use crate::cameras::{CameraComponent, CameraId};
 
 const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
 const ZOOM_SPEED: f32 = 2.0;
@@ -43,7 +43,7 @@ fn create_camera(mut commands: Commands) {
             .into(),
             ..default()
         },
-        ControllableCamera {
+        CameraComponent {
             id: CameraId::Orthographic,
         },
     ));
@@ -53,10 +53,10 @@ fn create_camera(mut commands: Commands) {
 fn move_camera(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&mut Transform, &ControllableCamera)>,
+    mut query: Query<(&mut Transform, &CameraComponent, &Camera)>,
 ) {
-    for (mut transform, camera) in &mut query {
-        if camera.id == CameraId::Orthographic {
+    for (mut transform, camera_component, camera) in &mut query {
+        if camera_component.id == CameraId::Orthographic && camera.is_active {
             let mut direction = Vec3::ZERO;
 
             if keyboard_input.pressed(KeyCode::KeyE) {
@@ -88,7 +88,7 @@ fn move_camera(
 fn zoom_orthographic_camera(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&mut Projection, &ControllableCamera)>,
+    mut query: Query<(&mut Projection, &CameraComponent)>,
 ) {
     for (projection, camera) in &mut query {
         if camera.id == CameraId::Orthographic {
