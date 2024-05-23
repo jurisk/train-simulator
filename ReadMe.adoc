@@ -1,8 +1,12 @@
 = Useful Commands
 
+== Housekeeping
+
 [source,bash]
 ----
+rustup update
 cargo fmt
-cargo clippy
+cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used
+cargo +nightly udeps --all-targets
 cargo run
 ----

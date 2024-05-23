@@ -1,10 +1,11 @@
 mod lights;
 mod terrain;
 
-use crate::world::lights::LightsPlugin;
-use crate::world::terrain::TerrainPlugin;
 use bevy::app::App;
 use bevy::prelude::Plugin;
+
+use crate::world::lights::LightsPlugin;
+use crate::world::terrain::TerrainPlugin;
 
 pub(crate) struct WorldPlugin;
 

@@ -53,12 +53,13 @@ fn create_cameras(mut commands: Commands) {
     ));
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn move_cameras(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&ControllableCamera, &mut Transform)>,
+    mut query: Query<&mut Transform, With<ControllableCamera>>,
 ) {
-    for (_, mut transform) in query.iter_mut() {
+    for mut transform in &mut query {
         let mut direction = Vec3::ZERO;
 
         if keyboard_input.pressed(KeyCode::KeyE) {
@@ -91,6 +92,7 @@ fn move_cameras(
     }
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn zoom_orthographic_camera(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,

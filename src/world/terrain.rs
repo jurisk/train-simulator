@@ -1,10 +1,8 @@
 use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::pbr::{AlphaMode, PbrBundle, StandardMaterial};
-
 #[allow(deprecated)]
 use bevy::prelude::shape::Plane;
-
 use bevy::prelude::{default, Color, Commands, Cuboid, Mesh, Plugin, ResMut, Startup, Transform};
 use rand::Rng;
 
@@ -39,17 +37,20 @@ fn create_terrain(
 
     // Mountains
     let mut rng = rand::thread_rng();
-    let n = 6;
-    for x in 0..n {
-        for y in 0..n {
-            let height = rng.gen_range(1..=5) as u8 as f32;
+    let n = 6u8;
+    for x in 0 .. n {
+        for y in 0 .. n {
+            let x = f32::from(x);
+            let y = f32::from(y);
+            let n = f32::from(n);
+            let height = f32::from(rng.gen_range(1u8 ..= 5u8));
             commands.spawn(PbrBundle {
-                mesh: meshes.add(Cuboid::new(size / n as f32, height, size / n as f32)),
+                mesh: meshes.add(Cuboid::new(size / n, height, size / n)),
                 material: materials.add(Color::rgb(rng.gen(), rng.gen(), rng.gen())),
                 transform: Transform::from_xyz(
-                    size * (((x as f32 + 0.5) / n as f32) - 0.5),
+                    size * (((x + 0.5) / n) - 0.5),
                     height / 2.0 - sea_depth,
-                    size * (((y as f32 + 0.5) / n as f32) - 0.5),
+                    size * (((y + 0.5) / n) - 0.5),
                 ),
                 ..default()
             });

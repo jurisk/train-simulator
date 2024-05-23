@@ -2,11 +2,12 @@ mod cameras;
 mod debug;
 mod world;
 
+use bevy::prelude::App;
+use bevy::DefaultPlugins;
+
 use crate::cameras::CameraPlugin;
 use crate::debug::DebugPlugin;
 use crate::world::WorldPlugin;
-use bevy::prelude::App;
-use bevy::DefaultPlugins;
 
 fn main() {
     App::new()
