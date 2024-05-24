@@ -1,4 +1,5 @@
 use bevy::app::App;
+use bevy::core::Name;
 use bevy::math::Vec3;
 use bevy::prelude::{
     default, ButtonInput, Camera, Camera3dBundle, Commands, KeyCode, Plugin, Query, Res, Startup,
@@ -37,6 +38,7 @@ fn create_camera(mut commands: Commands) {
         CameraComponent {
             id: CameraId::Perspective,
         },
+        Name::new("Perspective Camera"),
     ));
 }
 

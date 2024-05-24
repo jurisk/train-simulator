@@ -1,3 +1,5 @@
+# TODO: Split into multiple jobs, reuse defaults e.g. `working-directory`, split into `test` and `deploy`
+
 name: Rust
 
 on:

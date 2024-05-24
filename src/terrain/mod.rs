@@ -2,6 +2,7 @@ mod util;
 
 use bevy::app::App;
 use bevy::asset::Assets;
+use bevy::core::Name;
 use bevy::pbr::{AlphaMode, PbrBundle, StandardMaterial};
 #[allow(deprecated)]
 use bevy::prelude::shape::Plane;
@@ -27,16 +28,19 @@ fn create_water(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     #[allow(deprecated)]
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Plane::from_size(SIZE)),
-        material: materials.add(StandardMaterial {
-            base_color: Color::rgba_u8(173, 216, 230, 96),
-            alpha_mode: AlphaMode::Blend,
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(Plane::from_size(SIZE)),
+            material: materials.add(StandardMaterial {
+                base_color: Color::rgba_u8(173, 216, 230, 96),
+                alpha_mode: AlphaMode::Blend,
+                ..default()
+            }),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..default()
-        }),
-        transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        ..default()
-    });
+        },
+        Name::new("Water"),
+    ));
 }
 
 fn create_land(
@@ -46,21 +50,25 @@ fn create_land(
 ) {
     #[rustfmt::skip]
     let data = vec![
-        vec![-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5],
-        vec![-0.5,  0.5,  0.5,  0.5,  0.5,  0.5, -0.5],
-        vec![-0.5,  0.5,  1.5,  1.5,  1.5,  0.5, -0.5],
-        vec![-0.5,  0.5,  1.5,  2.5,  1.5,  0.5, -0.5],
-        vec![-0.5,  0.5,  1.5,  1.5,  1.5,  0.5, -0.5],
-        vec![-0.5,  0.5,  0.5,  0.5,  0.5,  0.5, -0.5],
-        vec![-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5],
+        vec![-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5],
+        vec![-0.5,  0.5,  0.5,  0.5, -0.5, 0.5,  0.5, -0.5],
+        vec![-0.5,  0.5,  1.5,  1.5,  0.5, 0.5,  0.5, -0.5],
+        vec![-0.5,  0.5,  1.5,  2.5,  1.5, 1.5,  0.5, -0.5],
+        vec![-0.5,  0.5,  1.5,  2.5,  2.5, 1.5,  0.5, -0.5],
+        vec![-0.5,  0.5,  1.5,  1.5,  1.5, 1.5,  0.5, -0.5],
+        vec![-0.5,  0.5,  0.5,  0.5,  0.5, 0.5,  0.5, -0.5],
+        vec![-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5],
     ];
     let mesh = mesh_from_height_map_data(-SIZE / 2.0, SIZE / 2.0, -SIZE / 2.0, SIZE / 2.0, &data);
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(mesh),
-        material: materials.add(Color::DARK_GREEN),
-        transform: Transform::default(),
-        ..default()
-    });
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(mesh),
+            material: materials.add(Color::DARK_GREEN),
+            transform: Transform::default(),
+            ..default()
+        },
+        Name::new("Land"),
+    ));
 }
 
 #[allow(dead_code)]
@@ -78,16 +86,19 @@ fn create_blocks(
             let y = f32::from(y);
             let n = f32::from(n);
             let height = f32::from(rng.gen_range(1u8 ..= 5u8));
-            commands.spawn(PbrBundle {
-                mesh: meshes.add(Cuboid::new(SIZE / n, height, SIZE / n)),
-                material: materials.add(Color::rgb(rng.gen(), rng.gen(), rng.gen())),
-                transform: Transform::from_xyz(
-                    SIZE * (((x + 0.5) / n) - 0.5),
-                    height / 2.0 + sea_depth,
-                    SIZE * (((y + 0.5) / n) - 0.5),
-                ),
-                ..default()
-            });
+            commands.spawn((
+                PbrBundle {
+                    mesh: meshes.add(Cuboid::new(SIZE / n, height, SIZE / n)),
+                    material: materials.add(Color::rgb(rng.gen(), rng.gen(), rng.gen())),
+                    transform: Transform::from_xyz(
+                        SIZE * (((x + 0.5) / n) - 0.5),
+                        height / 2.0 + sea_depth,
+                        SIZE * (((y + 0.5) / n) - 0.5),
+                    ),
+                    ..default()
+                },
+                Name::new("Blocks"),
+            ));
         }
     }
 }

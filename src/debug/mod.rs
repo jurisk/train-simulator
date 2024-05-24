@@ -1,12 +1,14 @@
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{Color, Gizmos, Plugin};
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 pub(crate) struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, draw_test_axis);
+        app.add_plugins(WorldInspectorPlugin::new())
+            .add_systems(Update, draw_test_axis);
     }
 }
 

@@ -114,6 +114,10 @@ pub fn mesh_from_height_map_data(
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
 
+    // TODO: This could be improved - why are we calculating normals manually, and then recalculating them?
+    mesh.duplicate_vertices();
+    mesh.compute_flat_normals();
+
     mesh
 }
 
