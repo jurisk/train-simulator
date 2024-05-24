@@ -58,14 +58,14 @@ jobs:
           rustup target add wasm32-unknown-unknown
           cargo install wasm-bindgen-cli
 
-      - name: Build WASM and generate WASM bindings
+      - name: Build WASM target and generate WASM bindings
         working-directory: .
         run: |
           cargo build --profile wasm-release --target wasm32-unknown-unknown
           wasm-bindgen --out-name train-simulator --out-dir web/wasm --target web target/wasm32-unknown-unknown/wasm-release/train-simulator.wasm
 
       - name: Publish to GitHub pages at https://jurisk.github.io/train-simulator-pages/
-        working-directory: ./web
+        working-directory: .
         run: |
           git config --global user.email "jurisk@users.noreply.github.com"
           git config --global user.name "Juris"
@@ -78,5 +78,5 @@ jobs:
           git commit -m "$commit_message"
           git push origin master
         env:
-          # Should have `repo` scope and stored in GitHub Actions `Secrets and variables`
+          # Should have access to the `train-simulator-pages` repository and stored in GitHub Actions `Secrets and variables` of this repository
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
