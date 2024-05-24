@@ -28,6 +28,15 @@ fn normal_from_height_map(
     Vec3::new(-dx, 1.0, -dz).normalize()
 }
 
+// TODO: Use this instead of `normal_from_height_map`:
+#[allow(unused)]
+fn calculate_triangle_normal(v0: &[f32; 3], v1: &[f32; 3], v2: &[f32; 3]) -> [f32; 3] {
+    let edge1 = Vec3::new(v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]);
+    let edge2 = Vec3::new(v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]);
+    let normal = edge1.cross(edge2).normalize();
+    [normal.x, normal.y, normal.z]
+}
+
 #[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
 #[must_use]
 pub fn mesh_from_height_map_data(
@@ -106,4 +115,37 @@ pub fn mesh_from_height_map_data(
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
 
     mesh
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate_triangle_normal_1() {
+        let v0 = [0.0, 0.0, 0.0];
+        let v1 = [1.0, 0.0, 0.0];
+        let v2 = [0.0, 1.0, 0.0];
+
+        let expected_normal = [0.0, 0.0, 1.0];
+        let calculated_normal = calculate_triangle_normal(&v0, &v1, &v2);
+
+        assert_eq!(calculated_normal, expected_normal);
+    }
+
+    #[test]
+    fn test_calculate_triangle_normal_2() {
+        let v0 = [0.0, 1.0, 1.0];
+        let v1 = [1.0, 0.0, 1.0];
+        let v2 = [1.0, 1.0, 0.0];
+
+        let expected_normal = [
+            1.0 / 3.0_f32.sqrt(),
+            1.0 / 3.0_f32.sqrt(),
+            1.0 / 3.0_f32.sqrt(),
+        ];
+        let calculated_normal = calculate_triangle_normal(&v0, &v1, &v2);
+
+        assert_eq!(calculated_normal, expected_normal);
+    }
 }

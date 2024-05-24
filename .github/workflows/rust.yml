@@ -19,25 +19,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
           override: true
           components: rustfmt, clippy
+
+      # From https://github.com/Swatinem/rust-cache
+      - name: Enable cache
+        uses: Swatinem/rust-cache@v2
+
       # From https://github.com/bevyengine/bevy/blob/latest/docs/linux_dependencies.md
       - name: Install Bevy Linux dependencies
         run: sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev
+
       # From https://github.com/bevyengine/bevy/blob/latest/docs/linux_dependencies.md
       - name: Install LLD linker
         run: sudo apt-get install lld clang
+
       - name: Build
         working-directory: .
         run: cargo +nightly build --verbose
+
       - name: Run tests
         working-directory: .
         run: cargo +nightly test --verbose
+
       - name: Clippy
         working-directory: .
         run: cargo +nightly clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used
