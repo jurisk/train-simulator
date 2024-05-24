@@ -14,3 +14,13 @@ cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W c
 cargo +nightly udeps --all-targets
 cargo run
 ----
+
+== Prerequisites
+
+From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional[Enable Fast Compiles]:
+
+[source,bash]
+----
+cargo install -f cargo-binutils
+rustup component add llvm-tools-preview
+----

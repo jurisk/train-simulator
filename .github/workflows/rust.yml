@@ -26,8 +26,12 @@ jobs:
           toolchain: nightly
           override: true
           components: rustfmt, clippy
+      # From https://github.com/bevyengine/bevy/blob/latest/docs/linux_dependencies.md
       - name: Install Bevy Linux dependencies
         run: sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev
+      # From https://github.com/bevyengine/bevy/blob/latest/docs/linux_dependencies.md
+      - name: Install LLD linker
+        run: sudo apt-get install lld clang
       - name: Build
         working-directory: .
         run: cargo +nightly build --verbose
