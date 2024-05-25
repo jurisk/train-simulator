@@ -6,6 +6,7 @@ use crate::cameras::perspective::PerspectiveCameraPlugin;
 
 mod orthographic;
 mod perspective;
+mod util;
 
 pub(crate) struct CameraPlugin;
 
