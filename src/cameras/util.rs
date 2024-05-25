@@ -1,11 +1,8 @@
 use bevy::input::ButtonInput;
 use bevy::math::Vec3;
-use bevy::prelude::{Direction3d, KeyCode, Res, Transform};
+use bevy::prelude::{Direction3d, KeyCode, Mut, Res, Transform};
 
-pub(crate) fn zx_movement(
-    keyboard_input: &Res<ButtonInput<KeyCode>>,
-    transform: &Transform,
-) -> Vec3 {
+fn zx_movement(keyboard_input: &Res<ButtonInput<KeyCode>>, transform: &Transform) -> Vec3 {
     let zx_direction = zx_direction(keyboard_input);
 
     if zx_direction == Vec3::ZERO {
@@ -18,7 +15,7 @@ pub(crate) fn zx_movement(
     }
 }
 
-pub(crate) fn zx_direction(keyboard_input: &Res<ButtonInput<KeyCode>>) -> Vec3 {
+fn zx_direction(keyboard_input: &Res<ButtonInput<KeyCode>>) -> Vec3 {
     let mut direction = Vec3::ZERO;
 
     // Forward
@@ -56,7 +53,7 @@ pub(crate) fn zoom_value(keyboard_input: &Res<ButtonInput<KeyCode>>) -> f32 {
     result
 }
 
-pub(crate) fn rotation_value(keyboard_input: &Res<ButtonInput<KeyCode>>) -> f32 {
+fn rotation_value(keyboard_input: &Res<ButtonInput<KeyCode>>) -> f32 {
     let mut result: f32 = 0.0;
 
     // Rotate left
@@ -71,8 +68,29 @@ pub(crate) fn rotation_value(keyboard_input: &Res<ButtonInput<KeyCode>>) -> f32 
     result
 }
 
-pub(crate) fn flatten_in_y_plane(direction: Direction3d) -> Vec3 {
+fn flatten_in_y_plane(direction: Direction3d) -> Vec3 {
     let mut result = *direction;
     result.y = 0.0;
     result.normalize()
+}
+
+pub(crate) fn movement_and_rotation(
+    delta: f32,
+    keyboard_input: &Res<ButtonInput<KeyCode>>,
+    transform: &mut Mut<Transform>,
+) {
+    let zx_movement = zx_movement(keyboard_input, transform);
+    if zx_movement != Vec3::ZERO {
+        const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
+        let diff = zx_movement * CAMERA_MOVEMENT_SPEED * delta;
+        transform.translation += diff;
+    }
+
+    // TODO: Rotation should be around the point where the camera is looking at in Y axis
+    let rotation_value = rotation_value(keyboard_input);
+    if rotation_value != 0.0 {
+        const CAMERA_ROTATION_SPEED: f32 = 1.0;
+        let rotation = rotation_value * CAMERA_ROTATION_SPEED * delta;
+        transform.rotate_y(rotation);
+    }
 }

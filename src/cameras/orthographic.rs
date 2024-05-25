@@ -7,7 +7,7 @@ use bevy::prelude::{
 };
 use bevy::render::camera::ScalingMode;
 
-use crate::cameras::util::{rotation_value, zoom_value, zx_movement};
+use crate::cameras::util::{movement_and_rotation, zoom_value};
 use crate::cameras::{CameraComponent, CameraId};
 
 pub(crate) struct OrthographicCameraPlugin;
@@ -58,20 +58,7 @@ fn move_camera(
 ) {
     for (mut transform, camera_component, camera) in &mut query {
         if camera_component.id == CameraId::Orthographic && camera.is_active {
-            let zx_movement = zx_movement(&keyboard_input, &transform);
-            if zx_movement != Vec3::ZERO {
-                const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
-                let diff = zx_movement * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
-                transform.translation += diff;
-            }
-
-            // TODO: Rotation should be around the point where the camera is looking at in Y axis
-            let rotation_value = rotation_value(&keyboard_input);
-            if rotation_value != 0.0 {
-                const CAMERA_ROTATION_SPEED: f32 = 1.0;
-                let rotation = rotation_value * CAMERA_ROTATION_SPEED * time.delta_seconds();
-                transform.rotate_y(rotation);
-            }
+            movement_and_rotation(time.delta_seconds(), &keyboard_input, &mut transform);
         }
     }
 }

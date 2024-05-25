@@ -17,11 +17,21 @@
         canvas {
             background-color: white;
         }
+        div {
+            background-color: white;
+        }
     </style>
     <title>WASM Example</title>
 </head>
-<script type="module">
-    import init from './wasm/train-simulator.js'
-    init()
-</script>
+<body>
+    <script type="module">
+        import init from './wasm/train-simulator.js'
+        init()
+    </script>
+    <div>
+        ESDF to move
+        AZ to zoom
+        C to switch camera
+    </div>
+</body>
 </html>
