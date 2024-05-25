@@ -35,13 +35,13 @@ fn create_lights(mut commands: Commands) {
     ));
 }
 
-const LIGHT_ROTATION_COEF: f32 = 0.2;
 #[allow(clippy::needless_pass_by_value)]
 fn animate_light_direction(
     time: Res<Time>,
     mut query: Query<&mut Transform, With<DirectionalLight>>,
 ) {
     for mut transform in &mut query {
+        const LIGHT_ROTATION_COEF: f32 = 0.2;
         transform.rotate_y(time.delta_seconds() * LIGHT_ROTATION_COEF);
     }
 }

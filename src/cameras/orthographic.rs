@@ -7,14 +7,8 @@ use bevy::prelude::{
 };
 use bevy::render::camera::ScalingMode;
 
-use crate::cameras::util::{rotation_value, zx_movement};
+use crate::cameras::util::{rotation_value, zoom_value, zx_movement};
 use crate::cameras::{CameraComponent, CameraId};
-
-const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
-const CAMERA_ROTATION_SPEED: f32 = 1.0;
-
-const ZOOM_SPEED: f32 = 2.0;
-const ANGLE_COEF: f32 = 0.5;
 
 pub(crate) struct OrthographicCameraPlugin;
 
@@ -27,6 +21,8 @@ impl Plugin for OrthographicCameraPlugin {
 }
 
 fn create_camera(mut commands: Commands) {
+    const ANGLE_COEF: f32 = 0.5;
+
     let n = 8.0;
     let from = Transform::from_xyz(n * ANGLE_COEF, n, n * ANGLE_COEF);
     let target = Vec3::ZERO;
@@ -64,6 +60,7 @@ fn move_camera(
         if camera_component.id == CameraId::Orthographic && camera.is_active {
             let zx_movement = zx_movement(&keyboard_input, &transform);
             if zx_movement != Vec3::ZERO {
+                const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
                 let diff = zx_movement * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
                 transform.translation += diff;
             }
@@ -71,6 +68,7 @@ fn move_camera(
             // TODO: Rotation should be around the point where the camera is looking at in Y axis
             let rotation_value = rotation_value(&keyboard_input);
             if rotation_value != 0.0 {
+                const CAMERA_ROTATION_SPEED: f32 = 1.0;
                 let rotation = rotation_value * CAMERA_ROTATION_SPEED * time.delta_seconds();
                 transform.rotate_y(rotation);
             }
@@ -87,18 +85,9 @@ fn zoom_orthographic_camera(
     for (projection, camera) in &mut query {
         if camera.id == CameraId::Orthographic {
             if let Projection::Orthographic(ortho) = projection.into_inner() {
-                let mut zooming = 0.0;
-                if keyboard_input.pressed(KeyCode::NumpadSubtract)
-                    || keyboard_input.pressed(KeyCode::KeyZ)
-                {
-                    zooming += 1.0;
-                }
-                if keyboard_input.pressed(KeyCode::NumpadAdd)
-                    || keyboard_input.pressed(KeyCode::KeyA)
-                {
-                    zooming -= 1.0;
-                }
-                ortho.scale *= 1.0 + time.delta_seconds() * zooming * ZOOM_SPEED;
+                const ZOOM_SPEED: f32 = 2.0;
+                let zoom_value = zoom_value(&keyboard_input);
+                ortho.scale *= 1.0 + time.delta_seconds() * (zoom_value * -1.0) * ZOOM_SPEED;
             }
         }
     }

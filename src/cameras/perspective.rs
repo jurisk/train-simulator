@@ -9,12 +9,6 @@ use bevy::prelude::{
 use crate::cameras::util::{rotation_value, zoom_value, zx_movement};
 use crate::cameras::{CameraComponent, CameraId};
 
-const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
-const CAMERA_ROTATION_SPEED: f32 = 2.0;
-const CAMERA_ZOOM_SPEED: f32 = 8.0;
-
-const ANGLE_COEF: f32 = 0.5;
-
 pub(crate) struct PerspectiveCameraPlugin;
 
 impl Plugin for PerspectiveCameraPlugin {
@@ -25,6 +19,7 @@ impl Plugin for PerspectiveCameraPlugin {
 }
 
 fn create_camera(mut commands: Commands) {
+    const ANGLE_COEF: f32 = 0.5;
     let n = 8.0;
     let from = Transform::from_xyz(n * ANGLE_COEF, n, n * ANGLE_COEF);
     let target = Vec3::ZERO;
@@ -56,12 +51,14 @@ fn move_camera(
         if camera_component.id == CameraId::Perspective && camera.is_active {
             let zx_movement = zx_movement(&keyboard_input, &transform);
             if zx_movement != Vec3::ZERO {
+                const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
                 let diff = zx_movement * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
                 transform.translation += diff;
             }
 
             let zoom_value = zoom_value(&keyboard_input);
             if zoom_value != 0.0 {
+                const CAMERA_ZOOM_SPEED: f32 = 8.0;
                 let forward = transform.forward();
                 transform.translation +=
                     forward * zoom_value * CAMERA_ZOOM_SPEED * time.delta_seconds();
@@ -70,6 +67,7 @@ fn move_camera(
             // TODO: Rotation should be around the point where the camera is looking at in Y axis
             let rotation_value = rotation_value(&keyboard_input);
             if rotation_value != 0.0 {
+                const CAMERA_ROTATION_SPEED: f32 = 2.0;
                 let rotation = rotation_value * CAMERA_ROTATION_SPEED * time.delta_seconds();
                 transform.rotate_y(rotation);
             }

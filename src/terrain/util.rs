@@ -91,17 +91,23 @@ pub fn mesh_from_height_map_data(
 
     for z_idx in 0 .. z_segments {
         for x_idx in 0 .. x_segments {
-            // TODO: Do a similar check as https://github.com/NickToony/gd-retroterrain/blob/master/Terrain.cs#L112 does to improve triangulation
+            const Y_IDX: usize = 1;
 
-            // First triangle
-            triangles.push((z_idx * (x_segments + 1)) + x_idx);
-            triangles.push(((z_idx + 1) * (x_segments + 1)) + x_idx);
-            triangles.push(((z_idx + 1) * (x_segments + 1)) + x_idx + 1);
+            let top_left = z_idx * (x_segments + 1) + x_idx;
+            let bottom_left = (z_idx + 1) * (x_segments + 1) + x_idx;
+            let bottom_right = (z_idx + 1) * (x_segments + 1) + x_idx + 1;
+            let top_right = z_idx * (x_segments + 1) + x_idx + 1;
 
-            // Second triangle
-            triangles.push((z_idx * (x_segments + 1)) + x_idx);
-            triangles.push(((z_idx + 1) * (x_segments + 1)) + x_idx + 1);
-            triangles.push((z_idx * (x_segments + 1)) + x_idx + 1);
+            // Similar to https://github.com/NickToony/gd-retroterrain/blob/master/Terrain.cs#L112
+            if (positions[top_left as usize][Y_IDX] - positions[bottom_right as usize][Y_IDX]).abs()
+                < f32::EPSILON
+            {
+                triangles.extend_from_slice(&[top_left, bottom_left, top_right]);
+                triangles.extend_from_slice(&[bottom_left, bottom_right, top_right]);
+            } else {
+                triangles.extend_from_slice(&[top_left, bottom_left, bottom_right]);
+                triangles.extend_from_slice(&[top_left, bottom_right, top_right]);
+            }
         }
     }
 
