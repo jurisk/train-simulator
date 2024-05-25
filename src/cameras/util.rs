@@ -1,6 +1,6 @@
 use bevy::input::ButtonInput;
 use bevy::math::Vec3;
-use bevy::prelude::{Direction3d, KeyCode, Mut, Res, Transform};
+use bevy::prelude::{Direction3d, KeyCode, Mat3, Mut, Res, Transform};
 
 fn zx_movement(keyboard_input: &Res<ButtonInput<KeyCode>>, transform: &Transform) -> Vec3 {
     let zx_direction = zx_direction(keyboard_input);
@@ -86,11 +86,29 @@ pub(crate) fn movement_and_rotation(
         transform.translation += diff;
     }
 
-    // TODO: Rotation should be around the point where the camera is looking at in Y axis
     let rotation_value = rotation_value(keyboard_input);
     if rotation_value != 0.0 {
         const CAMERA_ROTATION_SPEED: f32 = 1.0;
+
+        let forward = transform.forward();
+        let camera_position = transform.translation;
+        let t = -camera_position.y / forward.y;
+
+        // POI - "Point of interest" - the point around which we do the rotation
+        let poi = camera_position + forward * t;
+
+        // Calculate the new position around the POI
         let rotation = rotation_value * CAMERA_ROTATION_SPEED * delta;
-        transform.rotate_y(rotation);
+
+        let relative_position = transform.translation - poi;
+        let rotation_matrix = Mat3::from_rotation_y(rotation);
+        let new_relative_position = rotation_matrix * relative_position;
+        transform.translation = poi + new_relative_position;
+
+        // Adjust the rotation to look at the same POI
+        let new_forward = poi - transform.translation;
+        let new_forward_normalized = new_forward.normalize();
+        let translation = transform.translation;
+        transform.look_at(translation + new_forward_normalized, Vec3::Y);
     }
 }
