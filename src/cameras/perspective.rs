@@ -6,8 +6,8 @@ use bevy::prelude::{
     Time, Transform, Update,
 };
 
+use crate::cameras::util::{rotation_value, zoom_value, zx_movement};
 use crate::cameras::{CameraComponent, CameraId};
-use crate::cameras::util::{rotation_value, zoom_value, zx_direction};
 
 const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
 const CAMERA_ROTATION_SPEED: f32 = 2.0;
@@ -54,14 +54,9 @@ fn move_camera(
 ) {
     for (mut transform, camera_component, camera) in &mut query {
         if camera_component.id == CameraId::Perspective && camera.is_active {
-            let zx_direction = zx_direction(&keyboard_input);
-
-            if zx_direction != Vec3::ZERO {
-                let rotation = transform.rotation;
-                let mut rotated_direction = rotation * zx_direction;
-                rotated_direction.y = 0.0;
-                rotated_direction = rotated_direction.normalize();
-                let diff = rotated_direction * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
+            let zx_movement = zx_movement(&keyboard_input, &transform);
+            if zx_movement != Vec3::ZERO {
+                let diff = zx_movement * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
                 transform.translation += diff;
             }
 

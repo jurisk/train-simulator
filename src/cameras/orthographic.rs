@@ -7,6 +7,7 @@ use bevy::prelude::{
 };
 use bevy::render::camera::ScalingMode;
 
+use crate::cameras::util::{rotation_value, zx_movement};
 use crate::cameras::{CameraComponent, CameraId};
 
 const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
@@ -61,38 +62,17 @@ fn move_camera(
 ) {
     for (mut transform, camera_component, camera) in &mut query {
         if camera_component.id == CameraId::Orthographic && camera.is_active {
-            let mut direction = Vec3::ZERO;
-
-            // TODO: When the camera is rotated, the movement directions are wrong
-            // TODO: Use useful functions from PerspectiveCamera for this
-            if keyboard_input.pressed(KeyCode::KeyE) {
-                direction.x -= 1.0;
-                direction.z -= 1.0;
-            }
-            if keyboard_input.pressed(KeyCode::KeyS) {
-                direction.x -= 1.0;
-                direction.z += 1.0;
-            }
-            if keyboard_input.pressed(KeyCode::KeyD) {
-                direction.x += 1.0;
-                direction.z += 1.0;
-            }
-            if keyboard_input.pressed(KeyCode::KeyF) {
-                direction.x += 1.0;
-                direction.z -= 1.0;
+            let zx_movement = zx_movement(&keyboard_input, &transform);
+            if zx_movement != Vec3::ZERO {
+                let diff = zx_movement * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
+                transform.translation += diff;
             }
 
-            if direction != Vec3::ZERO {
-                direction = direction.normalize();
-                transform.translation += direction * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
-            }
-
-            let rotation_speed = CAMERA_ROTATION_SPEED * time.delta_seconds();
-            if keyboard_input.pressed(KeyCode::KeyW) {
-                transform.rotate_y(rotation_speed);
-            }
-            if keyboard_input.pressed(KeyCode::KeyR) {
-                transform.rotate_y(-rotation_speed);
+            // TODO: Rotation should be around the point where the camera is looking at in Y axis
+            let rotation_value = rotation_value(&keyboard_input);
+            if rotation_value != 0.0 {
+                let rotation = rotation_value * CAMERA_ROTATION_SPEED * time.delta_seconds();
+                transform.rotate_y(rotation);
             }
         }
     }
