@@ -1,17 +1,18 @@
 use std::f32::consts::PI;
 
-use bevy::app::{App, Startup};
 use bevy::core::Name;
 use bevy::pbr::{DirectionalLight, DirectionalLightBundle};
 use bevy::prelude::light_consts::lux::CLEAR_SUNRISE;
-use bevy::prelude::{default, Commands, Plugin, Quat, Transform, Vec3};
+use bevy::prelude::{
+    default, App, Commands, Plugin, Quat, Query, Res, Startup, Time, Transform, Update, Vec3, With,
+};
 
 pub(crate) struct LightsPlugin;
 
-// TODO: Make the light move over time
 impl Plugin for LightsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, create_lights);
+        app.add_systems(Update, animate_light_direction);
     }
 }
 
@@ -32,4 +33,15 @@ fn create_lights(mut commands: Commands) {
         },
         Name::new("Directional Light"),
     ));
+}
+
+const LIGHT_ROTATION_COEF: f32 = 0.2;
+#[allow(clippy::needless_pass_by_value)]
+fn animate_light_direction(
+    time: Res<Time>,
+    mut query: Query<&mut Transform, With<DirectionalLight>>,
+) {
+    for mut transform in &mut query {
+        transform.rotate_y(time.delta_seconds() * LIGHT_ROTATION_COEF);
+    }
 }

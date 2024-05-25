@@ -2,7 +2,9 @@ use bevy::prelude::*;
 use bevy::render::mesh::PrimitiveTopology;
 use bevy::render::render_asset::RenderAssetUsages;
 
+// This is unused as we are going for low-poly-style flat normals look instead
 #[must_use]
+#[allow(unused)]
 #[allow(clippy::ptr_arg)]
 fn normal_from_height_map(
     x: usize,
@@ -28,7 +30,7 @@ fn normal_from_height_map(
     Vec3::new(-dx, 1.0, -dz).normalize()
 }
 
-// TODO: Use this instead of `normal_from_height_map`:
+// This is unused as we found `compute_flat_normals`
 #[allow(unused)]
 fn calculate_triangle_normal(v0: &[f32; 3], v1: &[f32; 3], v2: &[f32; 3]) -> [f32; 3] {
     let edge1 = Vec3::new(v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]);
@@ -37,7 +39,11 @@ fn calculate_triangle_normal(v0: &[f32; 3], v1: &[f32; 3], v2: &[f32; 3]) -> [f3
     [normal.x, normal.y, normal.z]
 }
 
-#[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_precision_loss,
+    clippy::ptr_arg
+)]
 #[must_use]
 pub fn mesh_from_height_map_data(
     min_x: f32,
@@ -76,14 +82,7 @@ pub fn mesh_from_height_map_data(
             debug_assert!(pos[2] <= max_z);
             positions.push(pos);
 
-            let normal = normal_from_height_map(
-                x_idx as usize,
-                z_idx as usize,
-                data,
-                x_segments as usize,
-                z_segments as usize,
-            );
-            normals.push(normal.into());
+            normals.push([0.0, 0.0, 0.0]);
 
             uvs.push([x / x_segments as f32, z / z_segments as f32]);
         }
@@ -117,7 +116,6 @@ pub fn mesh_from_height_map_data(
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
 
-    // TODO: This could be improved - why are we calculating normals manually, and then recalculating them?
     mesh.duplicate_vertices();
     mesh.compute_flat_normals();
 
