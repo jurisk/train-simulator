@@ -8,6 +8,7 @@ use bevy::prelude::{default, Commands, Plugin, Quat, Transform, Vec3};
 
 pub(crate) struct LightsPlugin;
 
+// TODO: Make the light move over time
 impl Plugin for LightsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, create_lights);

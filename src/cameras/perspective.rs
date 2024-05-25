@@ -9,6 +9,8 @@ use bevy::prelude::{
 use crate::cameras::{CameraComponent, CameraId};
 
 const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
+const CAMERA_ROTATION_SPEED: f32 = 1.0;
+
 const ANGLE_COEF: f32 = 0.5;
 
 pub(crate) struct PerspectiveCameraPlugin;
@@ -52,32 +54,38 @@ fn move_camera(
         if camera_component.id == CameraId::Perspective && camera.is_active {
             let mut direction = Vec3::ZERO;
 
+            // TODO: Actually, Up & Down doesn't work right as it shouldn't change the Y position
             if keyboard_input.pressed(KeyCode::KeyE) {
-                direction.x -= 1.0;
-                direction.z -= 1.0;
+                direction.y += 1.0;
             }
             if keyboard_input.pressed(KeyCode::KeyS) {
                 direction.x -= 1.0;
-                direction.z += 1.0;
             }
             if keyboard_input.pressed(KeyCode::KeyD) {
-                direction.x += 1.0;
-                direction.z += 1.0;
+                direction.y -= 1.0;
             }
             if keyboard_input.pressed(KeyCode::KeyF) {
                 direction.x += 1.0;
-                direction.z -= 1.0;
             }
             if keyboard_input.pressed(KeyCode::KeyA) {
-                direction.y += 1.0;
+                direction.z -= 1.0;
             }
             if keyboard_input.pressed(KeyCode::KeyZ) {
-                direction.y -= 1.0;
+                direction.z += 1.0;
             }
 
             if direction != Vec3::ZERO {
-                direction = direction.normalize();
-                transform.translation += direction * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
+                let rotation = transform.rotation;
+                transform.translation +=
+                    rotation * direction.normalize() * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
+            }
+
+            let rotation_speed = CAMERA_ROTATION_SPEED * time.delta_seconds();
+            if keyboard_input.pressed(KeyCode::KeyW) {
+                transform.rotate_y(rotation_speed);
+            }
+            if keyboard_input.pressed(KeyCode::KeyR) {
+                transform.rotate_y(-rotation_speed);
             }
         }
     }

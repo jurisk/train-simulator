@@ -94,10 +94,13 @@ pub fn mesh_from_height_map_data(
 
     for z_idx in 0 .. z_segments {
         for x_idx in 0 .. x_segments {
+            // TODO: Do a similar check as https://github.com/NickToony/gd-retroterrain/blob/master/Terrain.cs#L112 does to improve triangulation
+
             // First triangle
             triangles.push((z_idx * (x_segments + 1)) + x_idx);
             triangles.push(((z_idx + 1) * (x_segments + 1)) + x_idx);
             triangles.push(((z_idx + 1) * (x_segments + 1)) + x_idx + 1);
+
             // Second triangle
             triangles.push((z_idx * (x_segments + 1)) + x_idx);
             triangles.push(((z_idx + 1) * (x_segments + 1)) + x_idx + 1);

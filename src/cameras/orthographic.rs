@@ -10,6 +10,8 @@ use bevy::render::camera::ScalingMode;
 use crate::cameras::{CameraComponent, CameraId};
 
 const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
+const CAMERA_ROTATION_SPEED: f32 = 1.0;
+
 const ZOOM_SPEED: f32 = 2.0;
 const ANGLE_COEF: f32 = 0.5;
 
@@ -61,6 +63,8 @@ fn move_camera(
         if camera_component.id == CameraId::Orthographic && camera.is_active {
             let mut direction = Vec3::ZERO;
 
+            // TODO: When the camera is rotated, the movement directions are wrong
+            // TODO: Probably extract ESDF movement direction calculation to a utility function, and use from both cameras
             if keyboard_input.pressed(KeyCode::KeyE) {
                 direction.x -= 1.0;
                 direction.z -= 1.0;
@@ -82,6 +86,14 @@ fn move_camera(
                 direction = direction.normalize();
                 transform.translation += direction * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
             }
+
+            let rotation_speed = CAMERA_ROTATION_SPEED * time.delta_seconds();
+            if keyboard_input.pressed(KeyCode::KeyW) {
+                transform.rotate_y(rotation_speed);
+            }
+            if keyboard_input.pressed(KeyCode::KeyR) {
+                transform.rotate_y(-rotation_speed);
+            }
         }
     }
 }
@@ -96,10 +108,14 @@ fn zoom_orthographic_camera(
         if camera.id == CameraId::Orthographic {
             if let Projection::Orthographic(ortho) = projection.into_inner() {
                 let mut zooming = 0.0;
-                if keyboard_input.pressed(KeyCode::NumpadSubtract) {
+                if keyboard_input.pressed(KeyCode::NumpadSubtract)
+                    || keyboard_input.pressed(KeyCode::KeyZ)
+                {
                     zooming += 1.0;
                 }
-                if keyboard_input.pressed(KeyCode::NumpadAdd) {
+                if keyboard_input.pressed(KeyCode::NumpadAdd)
+                    || keyboard_input.pressed(KeyCode::KeyA)
+                {
                     zooming -= 1.0;
                 }
                 ortho.scale *= 1.0 + time.delta_seconds() * zooming * ZOOM_SPEED;
