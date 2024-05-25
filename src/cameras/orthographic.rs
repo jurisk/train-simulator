@@ -64,7 +64,7 @@ fn move_camera(
             let mut direction = Vec3::ZERO;
 
             // TODO: When the camera is rotated, the movement directions are wrong
-            // TODO: Probably extract ESDF movement direction calculation to a utility function, and use from both cameras
+            // TODO: Use useful functions from PerspectiveCamera for this
             if keyboard_input.pressed(KeyCode::KeyE) {
                 direction.x -= 1.0;
                 direction.z -= 1.0;

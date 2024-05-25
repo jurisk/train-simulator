@@ -8,16 +8,39 @@ image::https://github.com/jurisk/train-simulator/actions/workflows/rust.yml/badg
 
 === Housekeeping
 
+Rare:
+
 [source,bash]
 ----
 rustup update
+cargo +nightly update
+cargo +nightly udeps --all-targets
+cargo +nightly audit
+----
+
+Frequent:
+
+[source,bash]
+----
 cargo fmt
 cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used
-cargo +nightly udeps --all-targets
+----
+
+=== Running
+
+[source,bash]
+----
 cargo run --features bevy/dynamic_linking
 ----
 
 === Prerequisites
+
+On macOS:
+
+[source,bash]
+----
+brew install llvm
+----
 
 From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional[Enable Fast Compiles]:
 

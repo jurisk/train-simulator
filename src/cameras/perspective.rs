@@ -9,7 +9,8 @@ use bevy::prelude::{
 use crate::cameras::{CameraComponent, CameraId};
 
 const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
-const CAMERA_ROTATION_SPEED: f32 = 1.0;
+const CAMERA_ROTATION_SPEED: f32 = 2.0;
+const CAMERA_ZOOM_SPEED: f32 = 8.0;
 
 const ANGLE_COEF: f32 = 0.5;
 
@@ -44,6 +45,44 @@ fn create_camera(mut commands: Commands) {
     ));
 }
 
+fn zx_direction(keyboard_input: &Res<ButtonInput<KeyCode>>) -> Vec3 {
+    let mut direction = Vec3::ZERO;
+
+    // Forward
+    if keyboard_input.pressed(KeyCode::KeyE) {
+        direction.z -= 1.0;
+    }
+    // Left
+    if keyboard_input.pressed(KeyCode::KeyS) {
+        direction.x -= 1.0;
+    }
+    // Backward
+    if keyboard_input.pressed(KeyCode::KeyD) {
+        direction.z += 1.0;
+    }
+    // Right
+    if keyboard_input.pressed(KeyCode::KeyF) {
+        direction.x += 1.0;
+    }
+
+    direction
+}
+
+fn zoom_value(keyboard_input: &Res<ButtonInput<KeyCode>>) -> f32 {
+    let mut result: f32 = 0.0;
+
+    // Zoom out
+    if keyboard_input.pressed(KeyCode::KeyA) {
+        result += 1.0;
+    }
+    // Zoom in
+    if keyboard_input.pressed(KeyCode::KeyZ) {
+        result -= 1.0;
+    }
+
+    result
+}
+
 #[allow(clippy::needless_pass_by_value)]
 fn move_camera(
     time: Res<Time>,
@@ -52,38 +91,31 @@ fn move_camera(
 ) {
     for (mut transform, camera_component, camera) in &mut query {
         if camera_component.id == CameraId::Perspective && camera.is_active {
-            let mut direction = Vec3::ZERO;
+            let zx_direction = zx_direction(&keyboard_input);
 
-            // TODO: Actually, Up & Down doesn't work right as it shouldn't change the Y position
-            if keyboard_input.pressed(KeyCode::KeyE) {
-                direction.y += 1.0;
-            }
-            if keyboard_input.pressed(KeyCode::KeyS) {
-                direction.x -= 1.0;
-            }
-            if keyboard_input.pressed(KeyCode::KeyD) {
-                direction.y -= 1.0;
-            }
-            if keyboard_input.pressed(KeyCode::KeyF) {
-                direction.x += 1.0;
-            }
-            if keyboard_input.pressed(KeyCode::KeyA) {
-                direction.z -= 1.0;
-            }
-            if keyboard_input.pressed(KeyCode::KeyZ) {
-                direction.z += 1.0;
-            }
-
-            if direction != Vec3::ZERO {
+            if zx_direction != Vec3::ZERO {
                 let rotation = transform.rotation;
-                transform.translation +=
-                    rotation * direction.normalize() * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
+                let mut rotated_direction = rotation * zx_direction;
+                rotated_direction.y = 0.0;
+                rotated_direction = rotated_direction.normalize();
+                let diff = rotated_direction * CAMERA_MOVEMENT_SPEED * time.delta_seconds();
+                transform.translation += diff;
             }
 
+            let zoom_value = zoom_value(&keyboard_input);
+            if zoom_value != 0.0 {
+                let forward = transform.forward();
+                transform.translation +=
+                    forward * zoom_value * CAMERA_ZOOM_SPEED * time.delta_seconds();
+            }
+
+            // TODO: Rotation should be around the point where the camera is looking at in Y axis
             let rotation_speed = CAMERA_ROTATION_SPEED * time.delta_seconds();
+            // Rotate left
             if keyboard_input.pressed(KeyCode::KeyW) {
                 transform.rotate_y(rotation_speed);
             }
+            // Rotate right
             if keyboard_input.pressed(KeyCode::KeyR) {
                 transform.rotate_y(-rotation_speed);
             }
