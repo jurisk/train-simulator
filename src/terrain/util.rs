@@ -58,7 +58,6 @@ pub fn mesh_from_height_map_data(
     let vertices_count: u32 = (x_segments + 1) * (z_segments + 1);
     let triangle_count: u32 = x_segments * z_segments * 2 * 3;
 
-    // Defining vertices.
     let mut positions: Vec<[f32; 3]> = Vec::with_capacity(vertices_count as usize);
     let mut normals: Vec<[f32; 3]> = Vec::with_capacity(vertices_count as usize);
     let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(vertices_count as usize);
@@ -88,7 +87,6 @@ pub fn mesh_from_height_map_data(
         }
     }
 
-    // Defining triangles.
     let mut triangles: Vec<u32> = Vec::with_capacity(triangle_count as usize);
 
     for z_idx in 0 .. z_segments {

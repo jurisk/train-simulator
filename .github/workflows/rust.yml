@@ -18,7 +18,7 @@ defaults:
     working-directory: .
 
 jobs:
-  prepare:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -28,6 +28,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
+          profile: minimal
           override: true
           components: rustfmt, clippy
 
@@ -47,41 +48,24 @@ jobs:
           rustup target add wasm32-unknown-unknown
           cargo install wasm-bindgen-cli
 
-  test:
-    needs: prepare
-    runs-on: ubuntu-latest
-
-    steps:
       - name: Run rustfmt
-        run: cargo +nightly fmt --check
+        run: cargo fmt --check
 
       - name: Run clippy
-        run: cargo +nightly clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used
+        run: cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used
 
       - name: Run tests
-        run: cargo +nightly test --verbose
+        run: cargo test --verbose
 
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
       - name: Build default target
-        run: cargo +nightly build --verbose
+        run: cargo build --verbose
 
-  wasm-build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
       - name: Build WASM target
-        run: cargo build --profile wasm-release --target wasm32-unknown-unknown
+        run: cargo build --profile wasm-release --target wasm32-unknown-unknown --verbose
 
       - name: Generate WASM bindings
         run: wasm-bindgen --out-name train-simulator --out-dir web/wasm --target web target/wasm32-unknown-unknown/wasm-release/train-simulator.wasm
 
-  deploy:
-    needs: wasm-build
-    runs-on: ubuntu-latest
-    steps:
       - name: Publish to GitHub pages at https://jurisk.github.io/train-simulator-pages/
         run: |
           git config --global user.email "jurisk@users.noreply.github.com"
