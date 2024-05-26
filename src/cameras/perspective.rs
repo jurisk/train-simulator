@@ -20,8 +20,8 @@ impl Plugin for PerspectiveCameraPlugin {
 
 fn create_camera(mut commands: Commands) {
     const ANGLE_COEF: f32 = 0.5;
-    let n = 8.0;
-    let from = Transform::from_xyz(n * ANGLE_COEF, n, n * ANGLE_COEF);
+    let height = 80.0;
+    let from = Transform::from_xyz(-height * ANGLE_COEF, height, -height * ANGLE_COEF);
     let target = Vec3::ZERO;
     let up = Vec3::Y;
 
@@ -53,7 +53,7 @@ fn move_camera(
 
             let zoom_value = zoom_value(&keyboard_input);
             if zoom_value != 0.0 {
-                const CAMERA_ZOOM_SPEED: f32 = 8.0;
+                const CAMERA_ZOOM_SPEED: f32 = 80.0;
                 let forward = transform.forward();
                 transform.translation +=
                     forward * zoom_value * CAMERA_ZOOM_SPEED * time.delta_seconds();

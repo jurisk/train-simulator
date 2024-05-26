@@ -29,6 +29,8 @@ fn server_stub(
                 let level = serde_json::from_str::<Level>(level_json)
                     .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
 
+                assert!(level.is_valid());
+
                 info!("Simulating server responding to JoinGame with GameJoined");
 
                 server_messages.send(ServerMessage::GameJoined { level });

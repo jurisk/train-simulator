@@ -11,30 +11,9 @@ pub struct Terrain {
 }
 
 impl Terrain {
-    #[allow(unused)]
-    fn new(heights: Vec<Vec<u8>>) -> Terrain {
-        let size_z = heights.len();
-        let size_x = heights[0].len();
-
-        for (row_idx, row) in heights.iter().enumerate() {
-            assert_eq!(
-                row.len(),
-                size_x,
-                "Invalid row length {} for row {row_idx}, should be {size_x}",
-                row.len()
-            );
-        }
-
-        let height_map = heights
-            .into_iter()
-            .map(|row| row.into_iter().map(Height).collect())
-            .collect();
-
-        Self {
-            size_x,
-            size_z,
-            height_map,
-        }
+    fn is_valid(&self) -> bool {
+        self.height_map.len() == self.size_z
+            && self.height_map.iter().all(|row| row.len() == self.size_x)
     }
 }
 
@@ -44,16 +23,9 @@ pub struct Water {
 }
 
 impl Water {
-    #[allow(unused)]
-    fn new(above: u8, below: u8) -> Self {
-        assert_eq!(
-            above + 1,
-            below,
-            "Incorrect above {above:?} and below {below:?} - difference should be 1"
-        );
-        Self {
-            between: (Height(above), Height(below)),
-        }
+    fn is_valid(&self) -> bool {
+        let (below, above) = &self.between;
+        below.0 + 1 == above.0
     }
 }
 
@@ -64,11 +36,8 @@ pub struct Level {
 }
 
 impl Level {
-    #[allow(unused)]
-    pub(crate) fn new(terrain_heights: Vec<Vec<u8>>, water_above: u8, water_below: u8) -> Self {
-        let terrain = Terrain::new(terrain_heights);
-        let water = Water::new(water_above, water_below);
-
-        Self { terrain, water }
+    // Could eventually move to some `Validated` instead
+    pub(crate) fn is_valid(&self) -> bool {
+        self.terrain.is_valid() && self.water.is_valid()
     }
 }
