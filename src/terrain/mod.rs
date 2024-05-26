@@ -1,12 +1,14 @@
 mod util;
 
+use std::f32::consts::FRAC_PI_2;
+
 use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::core::Name;
 use bevy::pbr::{AlphaMode, PbrBundle, StandardMaterial};
-#[allow(deprecated)]
-use bevy::prelude::shape::Plane;
-use bevy::prelude::{default, Color, Commands, Mesh, Plugin, ResMut, Startup, Transform};
+use bevy::prelude::{
+    default, Color, Commands, Mesh, Plugin, Quat, Rectangle, ResMut, Startup, Transform,
+};
 
 use crate::terrain::util::mesh_from_height_map_data;
 
@@ -42,17 +44,19 @@ fn create_water(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    #[allow(deprecated)]
+    let rectangle = Rectangle::new(SIZE_X as f32, SIZE_Z as f32);
+    let mesh = meshes.add(rectangle);
+    let transform = Transform::from_rotation(Quat::from_rotation_x(-FRAC_PI_2));
+
     commands.spawn((
         PbrBundle {
-            // TODO: The Plane should no longer be square, so we should probably assemble it as a mesh?
-            mesh: meshes.add(Plane::from_size(f32::max(SIZE_X as f32, SIZE_Z as f32))),
+            mesh,
             material: materials.add(StandardMaterial {
                 base_color: Color::rgba_u8(173, 216, 230, 96),
                 alpha_mode: AlphaMode::Blend,
                 ..default()
             }),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            transform,
             ..default()
         },
         Name::new("Water"),
