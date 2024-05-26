@@ -11,22 +11,10 @@ pub(crate) struct LevelPlugin;
 
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
-        let terrain_heights = vec![
-            vec![1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
-            vec![1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 1],
-            vec![1, 2, 3, 3, 3, 2, 2, 2, 1, 2, 2, 1],
-            vec![1, 2, 3, 4, 4, 3, 3, 3, 3, 3, 2, 1],
-            vec![1, 2, 3, 4, 5, 4, 4, 5, 4, 3, 2, 1],
-            vec![1, 2, 3, 4, 5, 5, 5, 5, 4, 3, 2, 1],
-            vec![1, 2, 3, 4, 4, 4, 4, 4, 4, 3, 2, 1],
-            vec![1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 2, 1],
-            vec![1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-            vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        ];
+        let level_json = include_str!("../../assets/levels/default.json");
+        let level = serde_json::from_str::<Level>(level_json)
+            .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
 
-        let level = Level::new(terrain_heights, 1, 2);
-
-        // TODO: Load from a web service or resources instead
         app.insert_resource(level);
         app.add_plugins(TerrainPlugin);
     }

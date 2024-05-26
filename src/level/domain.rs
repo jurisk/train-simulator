@@ -1,8 +1,10 @@
 use bevy::prelude::Resource;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct Height(pub u8);
 
+#[derive(Serialize, Deserialize)]
 pub struct Terrain {
     pub size_x:     usize,
     pub size_z:     usize,
@@ -10,6 +12,7 @@ pub struct Terrain {
 }
 
 impl Terrain {
+    #[allow(unused)]
     fn new(heights: Vec<Vec<u8>>) -> Terrain {
         let size_z = heights.len();
         let size_x = heights[0].len();
@@ -36,11 +39,13 @@ impl Terrain {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Water {
     pub between: (Height, Height),
 }
 
 impl Water {
+    #[allow(unused)]
     fn new(above: u8, below: u8) -> Self {
         assert_eq!(
             above + 1,
@@ -53,13 +58,14 @@ impl Water {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Serialize, Deserialize)]
 pub struct Level {
     pub terrain: Terrain,
     pub water:   Water,
 }
 
 impl Level {
+    #[allow(unused)]
     pub(crate) fn new(terrain_heights: Vec<Vec<u8>>, water_above: u8, water_below: u8) -> Self {
         let terrain = Terrain::new(terrain_heights);
         let water = Water::new(water_above, water_below);
