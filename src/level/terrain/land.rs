@@ -1,10 +1,9 @@
 use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::core::Name;
-use bevy::pbr::StandardMaterial;
 use bevy::prelude::{
-    default, Asset, Color, Commands, Material, MaterialMeshBundle, MaterialPlugin, Mesh, OnEnter,
-    Plugin, Res, ResMut, Transform, TypePath,
+    default, Asset, Commands, Material, MaterialMeshBundle, MaterialPlugin, Mesh, OnEnter, Plugin,
+    Res, ResMut, Transform, TypePath,
 };
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 
@@ -23,13 +22,17 @@ impl Plugin for LandPlugin {
     }
 }
 
-// TODO: Apply lighting and shadows by reusing PBR
+// TODO: Apply lighting and shadows by reusing PBR, e.g., `pbr_input_from_standard_material`
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub(crate) struct LandMaterial {}
 
 impl Material for LandMaterial {
+    // fn vertex_shader() -> ShaderRef {
+    //     "shaders/land-shader.wgsl".into()
+    // }
+
     fn fragment_shader() -> ShaderRef {
-        "shaders/land_shader.wgsl".into()
+        "shaders/land-shader.wgsl".into()
     }
 }
 
@@ -41,8 +44,8 @@ impl Material for LandMaterial {
 pub(crate) fn create_land(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    // mut materials: ResMut<Assets<LandMaterial>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<LandMaterial>>,
+    // mut materials: ResMut<Assets<StandardMaterial>>,
     level_resource: Res<LevelResource>,
 ) {
     let level = &level_resource.level;
@@ -57,11 +60,11 @@ pub(crate) fn create_land(
     let half_z = (level.terrain.size_z as f32) / 2.0;
     let mesh = mesh_from_height_map_data(-half_x, half_x, -half_z, half_z, Y_COEF, data_slice);
 
-    // let material = LandMaterial {};
-    let material = StandardMaterial {
-        base_color: Color::DARK_GREEN,
-        ..default()
-    };
+    let material = LandMaterial {};
+    // let material = StandardMaterial {
+    //     base_color: Color::DARK_GREEN,
+    //     ..default()
+    // };
 
     commands.spawn((
         MaterialMeshBundle {

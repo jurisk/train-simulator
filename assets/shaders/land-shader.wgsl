@@ -17,8 +17,8 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     // Maximum Y position expected in the scene
     let max_y = 500.0;
 
-    // TODO: This is clip-plane Y position. Instead the Y position in world-coords should be taken.
-    let y_position = in.position.y;
+    // TODO: Use the world Y position instead of the clip-plane Y position
+    let y_position = in.world_position.y;
 
     // Interpolation factor based on the Y position of the fragment
     let height_factor = clamp(y_position / max_y, 0.0, 1.0);
