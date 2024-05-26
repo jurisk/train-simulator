@@ -28,6 +28,7 @@ impl CameraId {
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
+        // Not sure if this works with game states correctly, but it can be solved later
         app.add_plugins(OrthographicCameraPlugin);
         app.add_plugins(PerspectiveCameraPlugin);
         app.add_systems(Update, switch_camera);

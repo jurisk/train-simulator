@@ -1,10 +1,9 @@
-use bevy::prelude::Resource;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Height(pub u8);
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Terrain {
     pub size_x:     usize,
     pub size_z:     usize,
@@ -39,7 +38,7 @@ impl Terrain {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Water {
     pub between: (Height, Height),
 }
@@ -58,7 +57,7 @@ impl Water {
     }
 }
 
-#[derive(Resource, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Level {
     pub terrain: Terrain,
     pub water:   Water,

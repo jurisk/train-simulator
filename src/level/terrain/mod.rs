@@ -5,11 +5,12 @@ use bevy::asset::Assets;
 use bevy::core::Name;
 use bevy::pbr::{AlphaMode, PbrBundle, StandardMaterial};
 use bevy::prelude::{
-    default, Color, Commands, Mesh, Plugin, Rectangle, Res, ResMut, Startup, Transform,
+    default, Color, Commands, Mesh, OnEnter, Plugin, Rectangle, Res, ResMut, Transform,
 };
 
-use crate::level::domain::Level;
 use crate::level::terrain::util::mesh_from_height_map_data;
+use crate::level::LevelResource;
+use crate::states::GameState;
 
 mod util;
 
@@ -17,8 +18,9 @@ pub(crate) struct TerrainPlugin;
 
 impl Plugin for TerrainPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, create_water);
-        app.add_systems(Startup, create_land);
+        app.add_systems(OnEnter(GameState::Playing), create_water);
+        app.add_systems(OnEnter(GameState::Playing), create_land);
+        // Eventually, clean-up will be also needed
     }
 }
 
@@ -31,8 +33,9 @@ fn create_water(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    level: Res<Level>,
+    level_resource: Res<LevelResource>,
 ) {
+    let level = &level_resource.level;
     let rectangle = Rectangle::new(level.terrain.size_x as f32, level.terrain.size_z as f32);
     let mesh = meshes.add(rectangle);
 
@@ -65,8 +68,9 @@ fn create_land(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    level: Res<Level>,
+    level_resource: Res<LevelResource>,
 ) {
+    let level = &level_resource.level;
     let data_slice: Vec<Vec<f32>> = level
         .terrain
         .height_map

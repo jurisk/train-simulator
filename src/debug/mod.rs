@@ -1,14 +1,16 @@
 use bevy::app::{App, Update};
 use bevy::math::Vec3;
-use bevy::prelude::{Color, Gizmos, Plugin};
+use bevy::prelude::{in_state, Color, Gizmos, IntoSystemConfigs, Plugin};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+
+use crate::states::GameState;
 
 pub(crate) struct DebugPlugin;
 
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(WorldInspectorPlugin::new())
-            .add_systems(Update, draw_test_axis);
+            .add_systems(Update, draw_test_axis.run_if(in_state(GameState::Playing)));
     }
 }
 

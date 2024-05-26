@@ -4,15 +4,21 @@ use bevy::core::Name;
 use bevy::pbr::{DirectionalLight, DirectionalLightBundle};
 use bevy::prelude::light_consts::lux::OVERCAST_DAY;
 use bevy::prelude::{
-    default, App, Commands, Plugin, Quat, Query, Res, Startup, Time, Transform, Update, Vec3, With,
+    default, in_state, App, Commands, IntoSystemConfigs, OnEnter, Plugin, Quat, Query, Res, Time,
+    Transform, Update, Vec3, With,
 };
+
+use crate::states::GameState;
 
 pub(crate) struct LightsPlugin;
 
 impl Plugin for LightsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, create_lights);
-        app.add_systems(Update, animate_light_direction);
+        app.add_systems(OnEnter(GameState::Playing), create_lights);
+        app.add_systems(
+            Update,
+            animate_light_direction.run_if(in_state(GameState::Playing)),
+        );
     }
 }
 
