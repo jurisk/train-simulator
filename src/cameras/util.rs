@@ -81,7 +81,7 @@ pub(crate) fn movement_and_rotation(
 ) {
     let zx_movement = zx_movement(keyboard_input, transform);
     if zx_movement != Vec3::ZERO {
-        const CAMERA_MOVEMENT_SPEED: f32 = 4.0;
+        const CAMERA_MOVEMENT_SPEED: f32 = 40.0;
         let diff = zx_movement * CAMERA_MOVEMENT_SPEED * delta;
         transform.translation += diff;
     }
