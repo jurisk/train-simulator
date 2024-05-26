@@ -42,7 +42,8 @@ fn calculate_triangle_normal(v0: &[f32; 3], v1: &[f32; 3], v2: &[f32; 3]) -> [f3
 #[allow(
     clippy::cast_possible_truncation,
     clippy::cast_precision_loss,
-    clippy::ptr_arg
+    clippy::ptr_arg,
+    clippy::needless_pass_by_value
 )]
 #[must_use]
 pub fn mesh_from_height_map_data(
@@ -50,7 +51,7 @@ pub fn mesh_from_height_map_data(
     max_x: f32,
     min_z: f32,
     max_z: f32,
-    data: &[&[f32]],
+    data: Vec<Vec<f32>>,
 ) -> Mesh {
     let z_segments = data.len() as u32 - 1;
     let x_segments = data[0].len() as u32 - 1;
