@@ -104,11 +104,11 @@ pub fn mesh_from_height_map_data(
             if (positions[top_left as usize][Y_IDX] - positions[bottom_right as usize][Y_IDX]).abs()
                 < f32::EPSILON
             {
-                triangles.extend_from_slice(&[top_left, bottom_left, top_right]);
-                triangles.extend_from_slice(&[bottom_left, bottom_right, top_right]);
-            } else {
                 triangles.extend_from_slice(&[top_left, bottom_left, bottom_right]);
                 triangles.extend_from_slice(&[top_left, bottom_right, top_right]);
+            } else {
+                triangles.extend_from_slice(&[top_left, bottom_left, top_right]);
+                triangles.extend_from_slice(&[bottom_left, bottom_right, top_right]);
             }
         }
     }

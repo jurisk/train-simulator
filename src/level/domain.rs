@@ -5,6 +5,7 @@ pub struct Height(pub u8);
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Terrain {
+    // size_x and size_z is for vertices, the number of tiles is smaller by 1 in each dimension
     pub size_x:     usize,
     pub size_z:     usize,
     pub height_map: Vec<Vec<Height>>,

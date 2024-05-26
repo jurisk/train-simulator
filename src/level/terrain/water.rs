@@ -1,13 +1,24 @@
 use std::f32::consts::FRAC_PI_2;
 
+use bevy::app::{App, Plugin};
 use bevy::core::Name;
 use bevy::prelude::{
-    default, AlphaMode, Assets, Color, Commands, Mesh, PbrBundle, Rectangle, Res, ResMut,
+    default, AlphaMode, Assets, Color, Commands, Mesh, OnEnter, PbrBundle, Rectangle, Res, ResMut,
     StandardMaterial, Transform,
 };
 
 use crate::level::terrain::Y_COEF;
 use crate::level::LevelResource;
+use crate::states::GameState;
+
+pub(crate) struct WaterPlugin;
+
+impl Plugin for WaterPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(GameState::Playing), create_water);
+        // Eventually, clean-up will be also needed
+    }
+}
 
 #[allow(
     clippy::cast_precision_loss,
