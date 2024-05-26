@@ -6,8 +6,7 @@ use bevy::core::Name;
 use bevy::pbr::{AlphaMode, PbrBundle, StandardMaterial};
 #[allow(deprecated)]
 use bevy::prelude::shape::Plane;
-use bevy::prelude::{default, Color, Commands, Cuboid, Mesh, Plugin, ResMut, Startup, Transform};
-use rand::Rng;
+use bevy::prelude::{default, Color, Commands, Mesh, Plugin, ResMut, Startup, Transform};
 
 use crate::terrain::util::mesh_from_height_map_data;
 
@@ -20,8 +19,24 @@ impl Plugin for TerrainPlugin {
     }
 }
 
-const SIZE: f32 = 10.0;
+const SIZE_X: usize = 12;
+const SIZE_Z: usize = 10;
 
+#[rustfmt::skip]
+const DATA: [[f32; SIZE_X]; SIZE_Z] = [
+    [-0.5, -0.5, -0.5, -0.5, -0.5, -1.5, -1.5, -1.5, -1.5, -0.5, -0.5, -0.5],
+    [-0.5,  0.5,  0.5,  0.5,  0.5, -0.5, -0.5, -0.5, -0.5,  0.5,  0.5, -0.5],
+    [-0.5,  0.5,  1.5,  1.5,  1.5,  0.5,  0.5,  0.5, -0.5,  0.5,  0.5, -0.5],
+    [-0.5,  0.5,  1.5,  2.5,  2.5,  1.5,  1.5,  1.5,  1.5,  1.5,  0.5, -0.5],
+    [-0.5,  0.5,  1.5,  2.5,  3.5,  2.5,  2.5,  3.5,  2.5,  1.5,  0.5, -0.5],
+    [-0.5,  0.5,  1.5,  2.5,  3.5,  3.5,  3.5,  3.5,  2.5,  1.5,  0.5, -0.5],
+    [-0.5,  0.5,  1.5,  2.5,  2.5,  2.5,  2.5,  2.5,  2.5,  1.5,  0.5, -0.5],
+    [-0.5,  0.5,  1.5,  1.5,  1.5,  1.5,  1.5,  1.5,  1.5,  1.5,  0.5, -0.5],
+    [-0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5, -0.5],
+    [-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5],
+];
+
+#[allow(clippy::cast_precision_loss)]
 fn create_water(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -30,7 +45,8 @@ fn create_water(
     #[allow(deprecated)]
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Plane::from_size(SIZE)),
+            // TODO: The Plane should no longer be square, so we should probably assemble it as a mesh?
+            mesh: meshes.add(Plane::from_size(f32::max(SIZE_X as f32, SIZE_Z as f32))),
             material: materials.add(StandardMaterial {
                 base_color: Color::rgba_u8(173, 216, 230, 96),
                 alpha_mode: AlphaMode::Blend,
@@ -43,25 +59,20 @@ fn create_water(
     ));
 }
 
+#[allow(clippy::cast_precision_loss)]
 fn create_land(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    #[rustfmt::skip]
-    let data = vec![
-        vec![-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5],
-        vec![-0.5,  0.5,  0.5,  0.5, -0.5, -0.5,  0.5,  0.5, -0.5],
-        vec![-0.5,  0.5,  1.5,  1.5,  0.5,  0.5,  0.5,  0.5, -0.5],
-        vec![-0.5,  0.5,  1.5,  2.5,  1.5,  1.5,  1.5,  0.5, -0.5],
-        vec![-0.5,  0.5,  1.5,  2.5,  2.5,  2.5,  1.5,  0.5, -0.5],
-        vec![-0.5,  0.5,  1.5,  2.5,  2.5,  2.5,  1.5,  0.5, -0.5],
-        vec![-0.5,  0.5,  1.5,  2.5,  2.5,  2.5,  1.5,  0.5, -0.5],
-        vec![-0.5,  0.5,  1.5,  1.5,  1.5,  1.5,  1.5,  0.5, -0.5],
-        vec![-0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5,  0.5, -0.5],
-        vec![-0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5],
-    ];
-    let mesh = mesh_from_height_map_data(-SIZE / 2.0, SIZE / 2.0, -SIZE / 2.0, SIZE / 2.0, &data);
+    let data_slice: Vec<&[f32]> = DATA.iter().map(|row| &row[..]).collect();
+    let mesh = mesh_from_height_map_data(
+        -(SIZE_X as f32) / 2.0,
+        (SIZE_X as f32) / 2.0,
+        -(SIZE_Z as f32) / 2.0,
+        (SIZE_Z as f32) / 2.0,
+        &data_slice,
+    );
     commands.spawn((
         PbrBundle {
             mesh: meshes.add(mesh),
@@ -71,36 +82,4 @@ fn create_land(
         },
         Name::new("Land"),
     ));
-}
-
-#[allow(dead_code)]
-fn create_blocks(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    let sea_depth = -2.5;
-    let mut rng = rand::thread_rng();
-    let n = 6u8;
-    for x in 0 .. n {
-        for y in 0 .. n {
-            let x = f32::from(x);
-            let y = f32::from(y);
-            let n = f32::from(n);
-            let height = f32::from(rng.gen_range(1u8 ..= 5u8));
-            commands.spawn((
-                PbrBundle {
-                    mesh: meshes.add(Cuboid::new(SIZE / n, height, SIZE / n)),
-                    material: materials.add(Color::rgb(rng.gen(), rng.gen(), rng.gen())),
-                    transform: Transform::from_xyz(
-                        SIZE * (((x + 0.5) / n) - 0.5),
-                        height / 2.0 + sea_depth,
-                        SIZE * (((y + 0.5) / n) - 0.5),
-                    ),
-                    ..default()
-                },
-                Name::new("Blocks"),
-            ));
-        }
-    }
 }

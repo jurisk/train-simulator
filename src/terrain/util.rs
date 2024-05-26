@@ -50,7 +50,7 @@ pub fn mesh_from_height_map_data(
     max_x: f32,
     min_z: f32,
     max_z: f32,
-    data: &Vec<Vec<f32>>,
+    data: &[&[f32]],
 ) -> Mesh {
     let z_segments = data.len() as u32 - 1;
     let x_segments = data[0].len() as u32 - 1;
