@@ -5,6 +5,7 @@ mod level;
 mod lights;
 mod states;
 
+use bevy::asset::AssetMetaCheck;
 use bevy::prelude::App;
 use bevy::DefaultPlugins;
 
@@ -26,5 +27,6 @@ fn main() {
             CameraPlugin,
             DebugPlugin,
         ))
+        .insert_resource(AssetMetaCheck::Never) // Otherwise we were getting 404-s in WASM for `*.wgsl.meta` files
         .run();
 }
