@@ -3,8 +3,8 @@ use bevy::asset::Assets;
 use bevy::core::Name;
 use bevy::pbr::{ExtendedMaterial, MaterialExtension};
 use bevy::prelude::{
-    default, Asset, Color, Commands, MaterialMeshBundle, MaterialPlugin, Mesh, OnEnter, Plugin,
-    Reflect, Res, ResMut, StandardMaterial, Transform,
+    default, Asset, Commands, MaterialMeshBundle, MaterialPlugin, Mesh, OnEnter, Plugin, Reflect,
+    Res, ResMut, StandardMaterial, Transform,
 };
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 
@@ -30,7 +30,7 @@ pub(crate) struct LandExtension {
     // We need to ensure that the bindings of the base material and the extension do not conflict,
     // so we start from binding slot 100, leaving slots 0-99 for the base material.
     #[uniform(100)]
-    quantize_steps: u32,
+    max_y: f32,
 }
 
 impl MaterialExtension for LandExtension {
@@ -63,12 +63,11 @@ pub(crate) fn create_land(
     let mesh = mesh_from_height_map_data(-half_x, half_x, -half_z, half_z, Y_COEF, data_slice);
 
     let material = ExtendedMaterial {
-        base:      StandardMaterial {
-            base_color: Color::DARK_GREEN,
-            ..default()
-        },
+        base:      StandardMaterial { ..default() },
         extension: LandExtension {
-            quantize_steps: 100,
+            // TODO:    Detect it. And this is not "max_y", but some threshold for when mountains start.
+            //          And we need more thresholds, for water-sand, sand-grass, grass-rocks.
+            max_y: 4.0,
         },
     };
 

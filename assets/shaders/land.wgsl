@@ -9,7 +9,7 @@
 }
 
 struct LandMaterial {
-    quantize_steps: u32,
+    max_y: f32,
 }
 
 @group(2) @binding(100)
@@ -23,8 +23,13 @@ fn fragment(
     // generate a PbrInput struct from the StandardMaterial bindings
     var pbr_input = pbr_input_from_standard_material(in, is_front);
 
-    // we can optionally modify the input before lighting and alpha_discard is applied
-//    pbr_input.material.base_color.b = pbr_input.material.base_color.r;
+    // modify the input before lighting and alpha_discard is applied
+    let green = vec3<f32>(0.0, 1.0, 0.0);
+    let red = vec3<f32>(1.0, 0.0, 0.0);
+
+    let y_position = in.world_position.y;
+    let height_factor = clamp(y_position / land_material.max_y, 0.0, 1.0);
+    pbr_input.material.base_color = vec4<f32>(mix(green, red, height_factor), 1.0);
 
     // alpha discard
     pbr_input.material.base_color = alpha_discard(pbr_input.material, pbr_input.material.base_color);
@@ -34,14 +39,14 @@ fn fragment(
     out.color = apply_pbr_lighting(pbr_input);
 
     // we can optionally modify the lit color before post-processing is applied
-//    out.color = vec4<f32>(vec4<u32>(out.color * f32(land_material.quantize_steps))) / f32(land_material.quantize_steps);
+    // out.color = ...
 
     // apply in-shader post processing (fog, alpha-premultiply, and also tonemapping, debanding if the camera is non-hdr)
     // note this does not include fullscreen postprocessing effects like bloom.
     out.color = main_pass_post_lighting_processing(pbr_input, out.color);
 
     // we can optionally modify the final result here
-//    out.color = out.color * 2.0;
+    // out.color = ...
 
     return out;
 }
