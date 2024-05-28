@@ -76,7 +76,7 @@ jobs:
           cp -r ../web/* .
           cp -r ../assets .
           git add .
-          la -laR
+          ls -laR
           git status
           commit_message="Deploy from GitHub Action - $(date +'%Y-%m-%d %H:%M:%S') - Commit ${GITHUB_SHA::7} - Job $GITHUB_RUN_ID"
           git commit -m "$commit_message"
