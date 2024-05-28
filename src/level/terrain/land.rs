@@ -1,9 +1,10 @@
 use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::core::Name;
+use bevy::pbr::{ExtendedMaterial, MaterialExtension};
 use bevy::prelude::{
-    default, Asset, Commands, Material, MaterialMeshBundle, MaterialPlugin, Mesh, OnEnter, Plugin,
-    Res, ResMut, Transform, TypePath,
+    default, Asset, Color, Commands, MaterialMeshBundle, MaterialPlugin, Mesh, OnEnter, Plugin,
+    Reflect, Res, ResMut, StandardMaterial, Transform,
 };
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 
@@ -16,23 +17,25 @@ pub(crate) struct LandPlugin;
 
 impl Plugin for LandPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(MaterialPlugin::<LandMaterial>::default());
+        app.add_plugins(MaterialPlugin::<
+            ExtendedMaterial<StandardMaterial, LandExtension>,
+        >::default());
         app.add_systems(OnEnter(GameState::Playing), create_land);
         // Eventually, clean-up will be also needed
     }
 }
 
-// TODO: Apply lighting and shadows by reusing PBR, e.g., `pbr_input_from_standard_material`
-#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
-pub(crate) struct LandMaterial {}
+#[derive(Asset, AsBindGroup, Reflect, Debug, Clone)]
+pub(crate) struct LandExtension {
+    // We need to ensure that the bindings of the base material and the extension do not conflict,
+    // so we start from binding slot 100, leaving slots 0-99 for the base material.
+    #[uniform(100)]
+    quantize_steps: u32,
+}
 
-impl Material for LandMaterial {
-    // fn vertex_shader() -> ShaderRef {
-    //     "shaders/land_shader.wgsl".into()
-    // }
-
+impl MaterialExtension for LandExtension {
     fn fragment_shader() -> ShaderRef {
-        "shaders/land_shader.wgsl".into()
+        "shaders/land.wgsl".into()
     }
 }
 
@@ -44,8 +47,7 @@ impl Material for LandMaterial {
 pub(crate) fn create_land(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<LandMaterial>>,
-    // mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, LandExtension>>>,
     level_resource: Res<LevelResource>,
 ) {
     let level = &level_resource.level;
@@ -60,11 +62,15 @@ pub(crate) fn create_land(
     let half_z = (level.terrain.size_z as f32) / 2.0;
     let mesh = mesh_from_height_map_data(-half_x, half_x, -half_z, half_z, Y_COEF, data_slice);
 
-    let material = LandMaterial {};
-    // let material = StandardMaterial {
-    //     base_color: Color::DARK_GREEN,
-    //     ..default()
-    // };
+    let material = ExtendedMaterial {
+        base:      StandardMaterial {
+            base_color: Color::DARK_GREEN,
+            ..default()
+        },
+        extension: LandExtension {
+            quantize_steps: 100,
+        },
+    };
 
     commands.spawn((
         MaterialMeshBundle {
