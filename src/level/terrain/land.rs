@@ -28,11 +28,11 @@ pub(crate) struct LandMaterial {}
 
 impl Material for LandMaterial {
     // fn vertex_shader() -> ShaderRef {
-    //     "shaders/land-shader.wgsl".into()
+    //     "shaders/land_shader.wgsl".into()
     // }
 
     fn fragment_shader() -> ShaderRef {
-        "shaders/land-shader.wgsl".into()
+        "shaders/land_shader.wgsl".into()
     }
 }
 

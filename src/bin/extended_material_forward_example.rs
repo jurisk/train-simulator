@@ -2,7 +2,7 @@
 
 use bevy::render::render_resource::{AsBindGroup, ShaderRef};
 use bevy::{
-    pbr::{ExtendedMaterial, MaterialExtension, OpaqueRendererMethod},
+    pbr::{ExtendedMaterial, MaterialExtension},
     prelude::*,
 };
 
@@ -29,13 +29,6 @@ fn setup(
         material: materials.add(ExtendedMaterial {
             base:      StandardMaterial {
                 base_color: Color::RED,
-                // can be used in forward or deferred mode.
-                opaque_render_method: OpaqueRendererMethod::Auto,
-                // in deferred mode, only the PbrInput can be modified (uvs, color and other material properties),
-                // in forward mode, the output can also be modified after lighting is applied.
-                // see the fragment shader `extended_material.wgsl` for more info.
-                // Note: to run in deferred mode, you must also add a `DeferredPrepass` component to the camera and either
-                // change the above to `OpaqueRendererMethod::Deferred` or add the `DefaultOpaqueRendererMethod` resource.
                 ..Default::default()
             },
             extension: MyExtension { quantize_steps: 3 },
@@ -79,10 +72,6 @@ struct MyExtension {
 
 impl MaterialExtension for MyExtension {
     fn fragment_shader() -> ShaderRef {
-        "shaders/extended_material_example.wgsl".into()
-    }
-
-    fn deferred_fragment_shader() -> ShaderRef {
-        "shaders/extended_material_example.wgsl".into()
+        "shaders/example/extended_material_forward_example.wgsl".into()
     }
 }
