@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Copy, Clone)]
 pub struct Height(pub u8);
 
 #[derive(Serialize, Deserialize, Clone)]

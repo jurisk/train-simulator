@@ -6,8 +6,11 @@ use bevy::prelude::{
     default, Asset, Commands, MaterialMeshBundle, MaterialPlugin, Mesh, OnEnter, Plugin, Reflect,
     Res, ResMut, StandardMaterial, Transform,
 };
-use bevy::render::render_resource::{AsBindGroup, ShaderRef};
+use bevy::render::mesh::MeshVertexAttribute;
+use bevy::render::render_resource::{AsBindGroup, ShaderRef, VertexFormat};
 
+use crate::level::domain::Height;
+use crate::level::terrain::land::TerrainType::{Grass, Rocks, Sand, SeaBottom};
 use crate::level::terrain::util::mesh_from_height_map_data;
 use crate::level::terrain::Y_COEF;
 use crate::level::LevelResource;
@@ -30,12 +33,43 @@ pub(crate) struct LandExtension {
     // We need to ensure that the bindings of the base material and the extension do not conflict,
     // so we start from binding slot 100, leaving slots 0-99 for the base material.
     #[uniform(100)]
-    max_y: f32,
+    max_y:                   f32,
+    // #[uniform(101)]
+    sea_bottom_terrain_type: u32,
+    // #[uniform(102)]
+    sand_terrain_type:       u32,
+    // #[uniform(103)]
+    grass_terrain_type:      u32,
+    // #[uniform(104)]
+    rocks_terrain_type:      u32,
 }
 
 impl MaterialExtension for LandExtension {
     fn fragment_shader() -> ShaderRef {
         "shaders/land.wgsl".into()
+    }
+}
+
+const ATTRIBUTE_TERRAIN_TYPE: MeshVertexAttribute =
+    MeshVertexAttribute::new("TerrainType", 988_540_917, VertexFormat::Uint32);
+
+#[repr(u32)]
+enum TerrainType {
+    SeaBottom = 0,
+    Sand      = 1,
+    Grass     = 2,
+    Rocks     = 3,
+}
+
+fn terrain_type(height: Height) -> TerrainType {
+    if height.0 <= 7 {
+        SeaBottom
+    } else if height.0 <= 9 {
+        Sand
+    } else if height.0 < 12 {
+        Grass
+    } else {
+        Rocks
     }
 }
 
@@ -60,14 +94,23 @@ pub(crate) fn create_land(
 
     let half_x = (level.terrain.size_x as f32) / 2.0;
     let half_z = (level.terrain.size_z as f32) / 2.0;
+    let height_map = &level.terrain.height_map;
+    let terrain_types: Vec<_> = height_map
+        .iter()
+        .flat_map(|row| row.iter().map(|h| terrain_type(*h)).collect::<Vec<_>>())
+        .collect();
     let mesh = mesh_from_height_map_data(-half_x, half_x, -half_z, half_z, Y_COEF, data_slice);
+    // .with_inserted_attribute(ATTRIBUTE_TERRAIN_TYPE, terrain_types);
 
     let material = ExtendedMaterial {
         base:      StandardMaterial { ..default() },
         extension: LandExtension {
-            // TODO:    Detect it. And this is not "max_y", but some threshold for when mountains start.
-            //          And we need more thresholds, for water-sand, sand-grass, grass-rocks.
-            max_y: 4.0,
+            // TODO:    Remove max_y
+            max_y:                   4.0,
+            sea_bottom_terrain_type: SeaBottom as u32,
+            sand_terrain_type:       Sand as u32,
+            grass_terrain_type:      Grass as u32,
+            rocks_terrain_type:      Rocks as u32,
         },
     };
 
