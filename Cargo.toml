@@ -9,6 +9,9 @@ bevy = { version = "0.13.2", default-features = false, features = [
     "bevy_gizmos",
     "bevy_render",
     "bevy_pbr",
+    "bevy_text",
+    "bevy_ui",
+    "default_font",
 # Want to enable this but wasm32 builds then fail
 #   "dynamic_linking",
     "tonemapping_luts",

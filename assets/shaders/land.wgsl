@@ -129,7 +129,7 @@ fn fragment(
 
     let sea_bottom = vec3<f32>(0.75, 0.75, 0.0);
     let sand = vec3<f32>(1.0, 1.0, 0.0);
-    let grass = vec3<f32>(0.0, 1.0, 0.0);
+    let grass = vec3<f32>(0.1, 0.9, 0.1);
     let rocks = vec3<f32>(0.5, 0.5, 0.5);
 
     let color = sea_bottom * input.is_sea_bottom + sand * input.is_sand + grass * input.is_grass + rocks * input.is_rocks;

@@ -1,6 +1,10 @@
 use bevy::app::{App, Update};
+use bevy::diagnostic::{Diagnostic, DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::math::Vec3;
-use bevy::prelude::{in_state, Color, Gizmos, IntoSystemConfigs, Plugin};
+use bevy::prelude::{
+    default, in_state, Color, Commands, Gizmos, IntoSystemConfigs, Plugin, Query, Res, Startup,
+    Text, TextBundle, TextStyle,
+};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 use crate::states::GameState;
@@ -10,7 +14,10 @@ pub(crate) struct DebugPlugin;
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(WorldInspectorPlugin::new())
-            .add_systems(Update, draw_test_axis.run_if(in_state(GameState::Playing)));
+            .add_plugins(FrameTimeDiagnosticsPlugin)
+            .add_systems(Update, draw_test_axis.run_if(in_state(GameState::Playing)))
+            .add_systems(Startup, setup_fps)
+            .add_systems(Update, update_fps);
     }
 }
 
@@ -19,4 +26,26 @@ fn draw_test_axis(mut gizmos: Gizmos) {
     gizmos.arrow(Vec3::ZERO, Vec3::new(length, 0.0, 0.0), Color::RED);
     gizmos.arrow(Vec3::ZERO, Vec3::new(0.0, length, 0.0), Color::GREEN);
     gizmos.arrow(Vec3::ZERO, Vec3::new(0.0, 0.0, length), Color::BLUE);
+}
+
+fn setup_fps(mut commands: Commands) {
+    commands.spawn(TextBundle::from_section(
+        "FPS: ???\n\n",
+        TextStyle {
+            font_size: 30.,
+            ..default()
+        },
+    ));
+}
+
+#[allow(clippy::needless_pass_by_value)]
+fn update_fps(mut query: Query<&mut Text>, diag: Res<DiagnosticsStore>) {
+    let mut text = query.single_mut();
+
+    if let Some(fps) = diag
+        .get(&FrameTimeDiagnosticsPlugin::FPS)
+        .and_then(Diagnostic::smoothed)
+    {
+        text.sections[0].value = format!("FPS: {fps:.0}\n\n");
+    };
 }
