@@ -1,3 +1,5 @@
+// Useful: https://github.com/bevyengine/bevy/blob/main/crates/bevy_pbr/src/render/forward_io.wgsl
+
 #import bevy_pbr::{
     pbr_fragment::pbr_input_from_standard_material,
     pbr_functions::alpha_discard,
@@ -24,8 +26,13 @@ struct LandMaterial {
 @group(2) @binding(100)
 var<uniform> land_material: LandMaterial;
 
+struct Output {
+    vertex_output: VertexOutput,
+    terrain_type: u32,
+}
+
 @vertex
-fn vertex(vertex: Vertex) -> VertexOutput {
+fn vertex(vertex: Vertex, @location(3) terrain_type: u32) -> VertexOutput {
     var out: VertexOutput;
 
     let model = get_model_matrix(vertex.instance_index);
@@ -37,6 +44,8 @@ fn vertex(vertex: Vertex) -> VertexOutput {
         out.uv = vertex.uv;
     #endif
 
+//    out.terrain_type = terrain_type;
+
     return out;
 }
 
@@ -44,6 +53,9 @@ fn vertex(vertex: Vertex) -> VertexOutput {
 fn fragment(
     in: VertexOutput,
     @builtin(front_facing) is_front: bool,
+
+// TODO: Add this as input somehow
+//    terrain_type: u32,
 ) -> FragmentOutput {
     // generate a PbrInput struct from the StandardMaterial bindings
     var pbr_input = pbr_input_from_standard_material(in, is_front);
@@ -56,17 +68,17 @@ fn fragment(
     let rocks = vec3<f32>(0.5, 0.5, 0.5);
 
     // TODO: Read TerrainType vertex attribute instead and use it to decide on colour
-    let terrain_type = in.world_position.y;
+     let terrain_type = in.world_position.y;
 
     // TODO: Use mixing instead of these ifs, and compare with LandMaterial *_terrain_type uniforms
     var color = vec3<f32>(0.0);
 
     // Note - these values from in.world_position.y are so small, because we are using Y_COEF = 0.2, elsewhere in the code
-    if (terrain_type <= 1.2) {
+    if (terrain_type <= 1) { // 1.2
         color = sea_bottom;
-    } else if (terrain_type <= 1.4) {
+    } else if (terrain_type <= 2) { // 1.4
         color = sand;
-    } else if (terrain_type <= 3.2) {
+    } else if (terrain_type <= 3) { // 3.2
         color = grass;
     } else {
         color = rocks;
