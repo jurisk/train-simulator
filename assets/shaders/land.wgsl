@@ -33,6 +33,10 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     out.world_position = mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
     out.position = position_world_to_clip(out.world_position.xyz);
 
+    #ifdef VERTEX_UVS
+        out.uv = vertex.uv;
+    #endif
+
     return out;
 }
 
@@ -58,11 +62,11 @@ fn fragment(
     var color = vec3<f32>(0.0);
 
     // Note - these values from in.world_position.y are so small, because we are using Y_COEF = 0.2, elsewhere in the code
-    if (terrain_type <= 1.0) {
+    if (terrain_type <= 1.2) {
         color = sea_bottom;
-    } else if (terrain_type <= 2.0) {
+    } else if (terrain_type <= 1.4) {
         color = sand;
-    } else if (terrain_type <= 3.0) {
+    } else if (terrain_type <= 3.2) {
         color = grass;
     } else {
         color = rocks;
