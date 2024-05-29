@@ -89,7 +89,7 @@ fn terrain_type(height: Height) -> TerrainType {
         SeaBottom
     } else if height.0 <= 9 {
         Sand
-    } else if height.0 < 12 {
+    } else if height.0 <= 16 {
         Grass
     } else {
         Rocks

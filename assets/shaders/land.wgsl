@@ -27,52 +27,96 @@ struct LandMaterial {
 var<uniform> land_material: LandMaterial;
 
 struct Output {
-    @location(0)
-    pbr: VertexOutput,
-    @location(8)
-    terrain_type: f32,
+//    @location(0)
+//    pbr: VertexOutput,
+
+    // This is `clip position` when the struct is used as a vertex stage output
+    // and `frag coord` when used as a fragment stage input
+    @builtin(position) position: vec4<f32>,
+    @location(0) world_position: vec4<f32>,
+    @location(1) world_normal: vec3<f32>,
+#ifdef VERTEX_UVS
+    @location(2) uv: vec2<f32>,
+#endif
+#ifdef VERTEX_UVS_B
+    @location(3) uv_b: vec2<f32>,
+#endif
+#ifdef VERTEX_TANGENTS
+    @location(4) world_tangent: vec4<f32>,
+#endif
+#ifdef VERTEX_COLORS
+    @location(5) color: vec4<f32>,
+#endif
+#ifdef VERTEX_OUTPUT_INSTANCE_INDEX
+    @location(6) @interpolate(flat) instance_index: u32,
+#endif
+#ifdef VISIBILITY_RANGE_DITHER
+    @location(7) @interpolate(flat) visibility_range_dither: i32,
+#endif
+
+    // From here on come the custom attributes we added
+    // TODO: Should it be f32 or not?
+    @location(8) terrain_type: u32,
 }
 
 // Useful: https://github.com/bevyengine/bevy/blob/main/crates/bevy_pbr/src/render/mesh.wgsl
 @vertex
-fn vertex(vertex: Vertex, @location(8) terrain_type: u32) -> VertexOutput {
+fn vertex(vertex: Vertex, @location(8) terrain_type: u32) -> Output {
     var out: Output;
 
     let model = get_model_matrix(vertex.instance_index);
 
     #ifdef VERTEX_NORMALS
-        out.pbr.world_normal = mesh_normal_local_to_world(vertex.normal, vertex.instance_index);
+        out.world_normal = mesh_normal_local_to_world(vertex.normal, vertex.instance_index);
     #endif
 
     #ifdef VERTEX_POSITIONS
-        out.pbr.world_position = mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
-        out.pbr.position = position_world_to_clip(out.pbr.world_position.xyz);
+        out.world_position = mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
+        out.position = position_world_to_clip(out.world_position.xyz);
     #endif
 
-    #ifdef VERTEX_UVS_A
-        out.pbr.uv = vertex.uv;
+    #ifdef VERTEX_UVS
+        out.uv = vertex.uv;
     #endif
     #ifdef VERTEX_UVS_B
-        out.pbr.uv_b = vertex.uv_b;
+        out.uv_b = vertex.uv_b;
     #endif
 
     #ifdef VERTEX_COLORS
-        out.pbr.color = vertex.color;
+        out.color = vertex.color;
     #endif
 
-    out.terrain_type = f32(terrain_type);
+    #ifdef VERTEX_OUTPUT_INSTANCE_INDEX
+        out.instance_index = vertex.instance_index;
+    #endif
 
-    return out.pbr;
+    out.terrain_type = terrain_type;
+
+    return out;
 }
 
 @fragment
 fn fragment(
-//    input: Output,
-    input: VertexOutput,
+    input: Output,
     @builtin(front_facing) is_front: bool,
 ) -> FragmentOutput {
-//    let in = input.pbr;
-    let in = input;
+    var in = VertexOutput(
+        input.position,
+        input.world_position,
+        input.world_normal,
+    #ifdef VERTEX_UVS
+        input.uv,
+    #endif
+    #ifdef VERTEX_UVS_B
+        input.uv_b,
+    #endif
+    #ifdef VERTEX_COLORS
+        input.color,
+    #endif
+    #ifdef VERTEX_OUTPUT_INSTANCE_INDEX
+        input.instance_index,
+    #endif
+    );
 
     // generate a PbrInput struct from the StandardMaterial bindings
     var pbr_input = pbr_input_from_standard_material(in, is_front);
@@ -84,19 +128,16 @@ fn fragment(
     let sand = vec3<f32>(1.0, 1.0, 0.0);
     let rocks = vec3<f32>(0.5, 0.5, 0.5);
 
-    // TODO: Read TerrainType vertex attribute instead and use it to decide on colour
-     let terrain_type = in.world_position.y;
-//    let terrain_type = input.terrain_type;
+    let terrain_type = input.terrain_type;
 
     // TODO: Use mixing instead of these ifs, and compare with LandMaterial *_terrain_type uniforms
     var color = vec3<f32>(0.0);
 
-    // Note - these values from in.world_position.y are so small, because we are using Y_COEF = 0.2, elsewhere in the code
-    if (terrain_type <= 1) { // 1.2
+    if (terrain_type < 1) {
         color = sea_bottom;
-    } else if (terrain_type <= 2) { // 1.4
+    } else if (terrain_type < 2) {
         color = sand;
-    } else if (terrain_type <= 3) { // 3.2
+    } else if (terrain_type < 3) {
         color = grass;
     } else {
         color = rocks;
