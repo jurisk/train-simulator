@@ -27,9 +27,9 @@ struct LandMaterial {
 var<uniform> land_material: LandMaterial;
 
 struct Output {
-//    @location(0)
+    @location(0)
     pbr: VertexOutput,
-//    @location(1)
+    @location(8)
     terrain_type: u32,
 }
 
