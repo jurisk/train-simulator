@@ -40,6 +40,10 @@ pub(crate) fn create_water(
     let mut transform = Transform::from_xyz(0.0, water_level, 0.0);
     transform.rotate_x(-FRAC_PI_2);
 
+    // Other options:
+    //  * https://github.com/bevyengine/bevy/blob/main/assets/shaders/water_material.wgsl
+    //  * https://github.com/NickToony/gd-retroterrain/blob/master/WaterPlane.gdshader
+    //  * https://github.com/Neopallium/bevy_water/tree/main/assets/shaders
     commands.spawn((
         PbrBundle {
             mesh,

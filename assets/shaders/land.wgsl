@@ -4,7 +4,12 @@
 }
 
 #import bevy_pbr::{
-    forward_io::{VertexOutput, FragmentOutput},
+	mesh_functions,
+	view_transformations::position_world_to_clip,
+}
+
+#import bevy_pbr::{
+    forward_io::{Vertex, VertexOutput, FragmentOutput},
     pbr_functions::{apply_pbr_lighting, main_pass_post_lighting_processing},
 }
 
@@ -18,6 +23,19 @@ struct LandMaterial {
 
 @group(2) @binding(100)
 var<uniform> land_material: LandMaterial;
+
+@vertex
+fn vertex(vertex: Vertex) -> VertexOutput {
+    var out: VertexOutput;
+
+    var model = mesh_functions::get_model_matrix(vertex.instance_index);
+    let world_position = mesh_functions::mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
+
+    out.world_position = world_position;
+    out.position = position_world_to_clip(out.world_position.xyz);
+
+    return out;
+}
 
 @fragment
 fn fragment(
