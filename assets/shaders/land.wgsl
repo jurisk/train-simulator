@@ -6,7 +6,7 @@
 }
 
 #import bevy_pbr::{
-	mesh_functions::{get_model_matrix, mesh_position_local_to_world},
+	mesh_functions::{get_model_matrix, mesh_position_local_to_world, mesh_normal_local_to_world},
 	view_transformations::position_world_to_clip,
 }
 
@@ -30,23 +30,37 @@ struct Output {
     @location(0)
     pbr: VertexOutput,
     @location(8)
-    terrain_type: u32,
+    terrain_type: f32,
 }
 
+// Useful: https://github.com/bevyengine/bevy/blob/main/crates/bevy_pbr/src/render/mesh.wgsl
 @vertex
 fn vertex(vertex: Vertex, @location(8) terrain_type: u32) -> VertexOutput {
     var out: Output;
 
     let model = get_model_matrix(vertex.instance_index);
 
-    out.pbr.world_position = mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
-    out.pbr.position = position_world_to_clip(out.pbr.world_position.xyz);
-
-    #ifdef VERTEX_UVS
-        out.pbr.uv = vertex.uv;
+    #ifdef VERTEX_NORMALS
+        out.pbr.world_normal = mesh_normal_local_to_world(vertex.normal, vertex.instance_index);
     #endif
 
-    out.terrain_type = terrain_type;
+    #ifdef VERTEX_POSITIONS
+        out.pbr.world_position = mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
+        out.pbr.position = position_world_to_clip(out.pbr.world_position.xyz);
+    #endif
+
+    #ifdef VERTEX_UVS_A
+        out.pbr.uv = vertex.uv;
+    #endif
+    #ifdef VERTEX_UVS_B
+        out.pbr.uv_b = vertex.uv_b;
+    #endif
+
+    #ifdef VERTEX_COLORS
+        out.pbr.color = vertex.color;
+    #endif
+
+    out.terrain_type = f32(terrain_type);
 
     return out.pbr;
 }

@@ -1,13 +1,17 @@
 use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::core::Name;
-use bevy::pbr::{ExtendedMaterial, MaterialExtension};
+use bevy::pbr::{
+    ExtendedMaterial, MaterialExtension, MaterialExtensionKey, MaterialExtensionPipeline,
+};
 use bevy::prelude::{
     default, Asset, Commands, MaterialMeshBundle, MaterialPlugin, Mesh, OnEnter, Plugin, Reflect,
     Res, ResMut, StandardMaterial, Transform,
 };
-use bevy::render::mesh::MeshVertexAttribute;
-use bevy::render::render_resource::{AsBindGroup, ShaderRef, VertexFormat};
+use bevy::render::mesh::{MeshVertexAttribute, MeshVertexBufferLayout};
+use bevy::render::render_resource::{
+    AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError, VertexFormat,
+};
 
 use crate::level::domain::Height;
 use crate::level::terrain::land::TerrainType::{Grass, Rocks, Sand, SeaBottom};
@@ -44,8 +48,28 @@ pub(crate) struct LandExtension {
 }
 
 impl MaterialExtension for LandExtension {
+    fn vertex_shader() -> ShaderRef {
+        "shaders/land.wgsl".into()
+    }
+
     fn fragment_shader() -> ShaderRef {
         "shaders/land.wgsl".into()
+    }
+
+    fn specialize(
+        _pipeline: &MaterialExtensionPipeline,
+        descriptor: &mut RenderPipelineDescriptor,
+        layout: &MeshVertexBufferLayout,
+        _key: MaterialExtensionKey<Self>,
+    ) -> Result<(), SpecializedMeshPipelineError> {
+        let vertex_layout = layout.get_layout(&[
+            Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
+            Mesh::ATTRIBUTE_NORMAL.at_shader_location(1),
+            Mesh::ATTRIBUTE_UV_0.at_shader_location(2),
+            ATTRIBUTE_TERRAIN_TYPE.at_shader_location(8),
+        ])?;
+        descriptor.vertex.buffers = vec![vertex_layout];
+        Ok(())
     }
 }
 
