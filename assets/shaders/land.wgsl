@@ -16,7 +16,7 @@
 }
 
 struct LandMaterial {
-    // TODO: Could instead have texture array, indexed by terrain type
+    // Later: Could instead have texture array, indexed by terrain type
     sea_bottom_terrain_type: u32,
     sand_terrain_type: u32,
     grass_terrain_type: u32,
@@ -27,9 +27,6 @@ struct LandMaterial {
 var<uniform> land_material: LandMaterial;
 
 struct Output {
-//    @location(0)
-//    pbr: VertexOutput,
-
     // This is `clip position` when the struct is used as a vertex stage output
     // and `frag coord` when used as a fragment stage input
     @builtin(position) position: vec4<f32>,
@@ -55,8 +52,12 @@ struct Output {
 #endif
 
     // From here on come the custom attributes we added
-    // TODO: Should it be f32 or not?
-    @location(8) terrain_type: u32,
+
+    // Later: If we move to terrain array we could have an array here too
+    @location(8) is_sea_bottom: f32,
+    @location(9) is_sand: f32,
+    @location(10) is_grass: f32,
+    @location(11) is_rocks: f32,
 }
 
 // Useful: https://github.com/bevyengine/bevy/blob/main/crates/bevy_pbr/src/render/mesh.wgsl
@@ -90,7 +91,10 @@ fn vertex(vertex: Vertex, @location(8) terrain_type: u32) -> Output {
         out.instance_index = vertex.instance_index;
     #endif
 
-    out.terrain_type = terrain_type;
+    out.is_sea_bottom = select(0.0, 1.0, terrain_type == land_material.sea_bottom_terrain_type);
+    out.is_sand = select(0.0, 1.0, terrain_type == land_material.sand_terrain_type);
+    out.is_grass = select(0.0, 1.0, terrain_type == land_material.grass_terrain_type);
+    out.is_rocks = select(0.0, 1.0, terrain_type == land_material.rocks_terrain_type);
 
     return out;
 }
@@ -123,25 +127,12 @@ fn fragment(
 
     // modify the input before lighting and alpha_discard is applied
 
-    let sea_bottom = vec3<f32>(1.0, 0.0, 1.0);
-    let grass = vec3<f32>(0.0, 1.0, 0.0);
+    let sea_bottom = vec3<f32>(0.75, 0.75, 0.0);
     let sand = vec3<f32>(1.0, 1.0, 0.0);
+    let grass = vec3<f32>(0.0, 1.0, 0.0);
     let rocks = vec3<f32>(0.5, 0.5, 0.5);
 
-    let terrain_type = input.terrain_type;
-
-    // TODO: Use mixing instead of these ifs, and compare with LandMaterial *_terrain_type uniforms
-    var color = vec3<f32>(0.0);
-
-    if (terrain_type < 1) {
-        color = sea_bottom;
-    } else if (terrain_type < 2) {
-        color = sand;
-    } else if (terrain_type < 3) {
-        color = grass;
-    } else {
-        color = rocks;
-    }
+    let color = sea_bottom * input.is_sea_bottom + sand * input.is_sand + grass * input.is_grass + rocks * input.is_rocks;
 
     pbr_input.material.base_color = vec4<f32>(color, 1.0);
 
