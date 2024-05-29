@@ -9,12 +9,11 @@
 }
 
 struct LandMaterial {
-    max_y: f32,
     // TODO: Could instead have texture array, indexed by terrain type
-//    sea_bottom_terrain_type: u32,
-//    sand_terrain_type: u32,
-//    grass_terrain_type: u32,
-//    rocks_terrain_type: u32,
+    sea_bottom_terrain_type: u32,
+    sand_terrain_type: u32,
+    grass_terrain_type: u32,
+    rocks_terrain_type: u32,
 }
 
 @group(2) @binding(100)
@@ -29,14 +28,30 @@ fn fragment(
     var pbr_input = pbr_input_from_standard_material(in, is_front);
 
     // modify the input before lighting and alpha_discard is applied
-    let green = vec3<f32>(0.0, 1.0, 0.0);
-    let red = vec3<f32>(1.0, 0.0, 0.0);
 
-    // TODO: Read TerrainType vertex attribute and use it to decide on colour
+    let sea_bottom = vec3<f32>(1.0, 0.0, 1.0);
+    let grass = vec3<f32>(0.0, 1.0, 0.0);
+    let sand = vec3<f32>(1.0, 1.0, 0.0);
+    let rocks = vec3<f32>(0.5, 0.5, 0.5);
 
-    let y_position = in.world_position.y;
-    let height_factor = clamp(y_position / land_material.max_y, 0.0, 1.0);
-    pbr_input.material.base_color = vec4<f32>(mix(green, red, height_factor), 1.0);
+    // TODO: Read TerrainType vertex attribute instead and use it to decide on colour
+    let terrain_type = in.world_position.y;
+
+    // TODO: Use mixing instead of these ifs, and compare with LandMaterial *_terrain_type uniforms
+    var color = vec3<f32>(0.0);
+
+    // Note - these values from in.world_position.y are so small, because we are using Y_COEF = 0.2, elsewhere in the code
+    if (terrain_type <= 1.0) {
+        color = sea_bottom;
+    } else if (terrain_type <= 2.0) {
+        color = sand;
+    } else if (terrain_type <= 3.0) {
+        color = grass;
+    } else {
+        color = rocks;
+    }
+
+    pbr_input.material.base_color = vec4<f32>(color, 1.0);
 
     // alpha discard
     pbr_input.material.base_color = alpha_discard(pbr_input.material, pbr_input.material.base_color);

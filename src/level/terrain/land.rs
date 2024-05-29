@@ -29,18 +29,17 @@ impl Plugin for LandPlugin {
 }
 
 #[derive(Asset, AsBindGroup, Reflect, Debug, Clone)]
+#[allow(clippy::struct_field_names)]
 pub(crate) struct LandExtension {
     // We need to ensure that the bindings of the base material and the extension do not conflict,
     // so we start from binding slot 100, leaving slots 0-99 for the base material.
     #[uniform(100)]
-    max_y:                   f32,
-    // #[uniform(101)]
     sea_bottom_terrain_type: u32,
-    // #[uniform(102)]
+    #[uniform(100)]
     sand_terrain_type:       u32,
-    // #[uniform(103)]
+    #[uniform(100)]
     grass_terrain_type:      u32,
-    // #[uniform(104)]
+    #[uniform(100)]
     rocks_terrain_type:      u32,
 }
 
@@ -95,18 +94,26 @@ pub(crate) fn create_land(
     let half_x = (level.terrain.size_x as f32) / 2.0;
     let half_z = (level.terrain.size_z as f32) / 2.0;
     let height_map = &level.terrain.height_map;
+
+    // This allows to change the terrain type depending on something else than the height (e.g. part of the level definition)
     let terrain_types: Vec<_> = height_map
         .iter()
-        .flat_map(|row| row.iter().map(|h| terrain_type(*h)).collect::<Vec<_>>())
+        .flat_map(|row| {
+            row.iter()
+                .map(|h| terrain_type(*h) as u32)
+                .collect::<Vec<_>>()
+        })
         .collect();
-    let mesh = mesh_from_height_map_data(-half_x, half_x, -half_z, half_z, Y_COEF, data_slice);
-    // .with_inserted_attribute(ATTRIBUTE_TERRAIN_TYPE, terrain_types);
+
+    let mut mesh = mesh_from_height_map_data(-half_x, half_x, -half_z, half_z, Y_COEF, data_slice)
+        .with_inserted_attribute(ATTRIBUTE_TERRAIN_TYPE, terrain_types);
+
+    mesh.duplicate_vertices();
+    mesh.compute_flat_normals();
 
     let material = ExtendedMaterial {
         base:      StandardMaterial { ..default() },
         extension: LandExtension {
-            // TODO:    Remove max_y
-            max_y:                   4.0,
             sea_bottom_terrain_type: SeaBottom as u32,
             sand_terrain_type:       Sand as u32,
             grass_terrain_type:      Grass as u32,
