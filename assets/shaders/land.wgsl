@@ -27,36 +27,39 @@ struct LandMaterial {
 var<uniform> land_material: LandMaterial;
 
 struct Output {
-    vertex_output: VertexOutput,
+//    @location(0)
+    pbr: VertexOutput,
+//    @location(1)
     terrain_type: u32,
 }
 
 @vertex
-fn vertex(vertex: Vertex, @location(3) terrain_type: u32) -> VertexOutput {
-    var out: VertexOutput;
+fn vertex(vertex: Vertex, @location(8) terrain_type: u32) -> VertexOutput {
+    var out: Output;
 
     let model = get_model_matrix(vertex.instance_index);
 
-    out.world_position = mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
-    out.position = position_world_to_clip(out.world_position.xyz);
+    out.pbr.world_position = mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
+    out.pbr.position = position_world_to_clip(out.pbr.world_position.xyz);
 
     #ifdef VERTEX_UVS
-        out.uv = vertex.uv;
+        out.pbr.uv = vertex.uv;
     #endif
 
-//    out.terrain_type = terrain_type;
+    out.terrain_type = terrain_type;
 
-    return out;
+    return out.pbr;
 }
 
 @fragment
 fn fragment(
-    in: VertexOutput,
+//    input: Output,
+    input: VertexOutput,
     @builtin(front_facing) is_front: bool,
-
-// TODO: Add this as input somehow
-//    terrain_type: u32,
 ) -> FragmentOutput {
+//    let in = input.pbr;
+    let in = input;
+
     // generate a PbrInput struct from the StandardMaterial bindings
     var pbr_input = pbr_input_from_standard_material(in, is_front);
 
@@ -69,6 +72,7 @@ fn fragment(
 
     // TODO: Read TerrainType vertex attribute instead and use it to decide on colour
      let terrain_type = in.world_position.y;
+//    let terrain_type = input.terrain_type;
 
     // TODO: Use mixing instead of these ifs, and compare with LandMaterial *_terrain_type uniforms
     var color = vec3<f32>(0.0);
