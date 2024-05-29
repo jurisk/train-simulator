@@ -4,7 +4,7 @@
 }
 
 #import bevy_pbr::{
-	mesh_functions,
+	mesh_functions::{get_model_matrix, mesh_position_local_to_world},
 	view_transformations::position_world_to_clip,
 }
 
@@ -28,10 +28,9 @@ var<uniform> land_material: LandMaterial;
 fn vertex(vertex: Vertex) -> VertexOutput {
     var out: VertexOutput;
 
-    var model = mesh_functions::get_model_matrix(vertex.instance_index);
-    let world_position = mesh_functions::mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
+    let model = get_model_matrix(vertex.instance_index);
 
-    out.world_position = world_position;
+    out.world_position = mesh_position_local_to_world(model, vec4<f32>(vertex.position, 1.0));
     out.position = position_world_to_clip(out.world_position.xyz);
 
     return out;
