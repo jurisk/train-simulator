@@ -3,8 +3,8 @@ use bevy::asset::Assets;
 use bevy::core::Name;
 use bevy::pbr::ExtendedMaterial;
 use bevy::prelude::{
-    default, Commands, MaterialMeshBundle, Mesh, OnEnter, Plugin, Res, ResMut, StandardMaterial,
-    Transform,
+    default, Color, Commands, MaterialMeshBundle, Mesh, OnEnter, Plugin, Res, ResMut,
+    StandardMaterial, Transform,
 };
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
@@ -35,6 +35,14 @@ impl Plugin for LandPlugin {
 const ATTRIBUTE_TERRAIN_TYPE: MeshVertexAttribute =
     MeshVertexAttribute::new("TerrainType", 988_540_917, VertexFormat::Uint32);
 
+#[allow(unused)]
+enum LandMaterialType {
+    Advanced,
+    Debug,
+}
+
+const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Debug;
+
 #[allow(
     clippy::cast_precision_loss,
     clippy::needless_pass_by_value,
@@ -43,7 +51,8 @@ const ATTRIBUTE_TERRAIN_TYPE: MeshVertexAttribute =
 pub(crate) fn create_land(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, LandExtension>>>,
+    mut advanced_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, LandExtension>>>,
+    mut standard_materials: ResMut<Assets<StandardMaterial>>,
     level_resource: Res<LevelResource>,
 ) {
     let level = &level_resource.level;
@@ -74,15 +83,36 @@ pub(crate) fn create_land(
     mesh.duplicate_vertices();
     mesh.compute_flat_normals();
 
-    let material = create_advanced_land_material();
+    let mesh = meshes.add(mesh);
+    let transform = Transform::default();
 
-    commands.spawn((
-        MaterialMeshBundle {
-            mesh: meshes.add(mesh),
-            material: materials.add(material),
-            transform: Transform::default(),
-            ..default()
+    match LAND_MATERIAL_TYPE {
+        LandMaterialType::Advanced => {
+            let material = advanced_materials.add(create_advanced_land_material());
+            commands.spawn((
+                MaterialMeshBundle {
+                    mesh,
+                    material,
+                    transform,
+                    ..default()
+                },
+                Name::new("Land"),
+            ));
         },
-        Name::new("Land"),
-    ));
+        LandMaterialType::Debug => {
+            let material = standard_materials.add(StandardMaterial {
+                base_color: Color::rgba(0.1, 0.9, 0.1, 1.0),
+                ..default()
+            });
+            commands.spawn((
+                MaterialMeshBundle {
+                    mesh,
+                    material,
+                    transform,
+                    ..default()
+                },
+                Name::new("Land"),
+            ));
+        },
+    };
 }
