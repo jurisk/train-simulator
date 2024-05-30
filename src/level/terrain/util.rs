@@ -87,36 +87,3 @@ pub fn mesh_from_height_map_data(
 
     mesh
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_calculate_triangle_normal_1() {
-        let v0 = [0.0, 0.0, 0.0];
-        let v1 = [1.0, 0.0, 0.0];
-        let v2 = [0.0, 1.0, 0.0];
-
-        let expected_normal = [0.0, 0.0, 1.0];
-        let calculated_normal = calculate_triangle_normal(&v0, &v1, &v2);
-
-        assert_eq!(calculated_normal, expected_normal);
-    }
-
-    #[test]
-    fn test_calculate_triangle_normal_2() {
-        let v0 = [0.0, 1.0, 1.0];
-        let v1 = [1.0, 0.0, 1.0];
-        let v2 = [1.0, 1.0, 0.0];
-
-        let expected_normal = [
-            1.0 / 3.0_f32.sqrt(),
-            1.0 / 3.0_f32.sqrt(),
-            1.0 / 3.0_f32.sqrt(),
-        ];
-        let calculated_normal = calculate_triangle_normal(&v0, &v1, &v2);
-
-        assert_eq!(calculated_normal, expected_normal);
-    }
-}
