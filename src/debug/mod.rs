@@ -2,8 +2,8 @@ use bevy::app::{App, Update};
 use bevy::diagnostic::{Diagnostic, DiagnosticsStore, FrameTimeDiagnosticsPlugin};
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, in_state, Color, Commands, Gizmos, IntoSystemConfigs, Plugin, Query, Res, Startup,
-    Text, TextBundle, TextStyle,
+    default, in_state, Color, Commands, Gizmos, IntoSystemConfigs, Name, Plugin, Query, Res,
+    Startup, Text, TextBundle, TextStyle,
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
@@ -11,6 +11,7 @@ use crate::states::GameState;
 
 pub(crate) struct DebugPlugin;
 
+// Later: When https://github.com/bevyengine/bevy/blob/main/crates/bevy_dev_tools/src/fps_overlay.rs gets released, migrate to that
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(WorldInspectorPlugin::new())
@@ -29,12 +30,15 @@ fn draw_test_axis(mut gizmos: Gizmos) {
 }
 
 fn setup_fps(mut commands: Commands) {
-    commands.spawn(TextBundle::from_section(
-        "FPS: ???\n\n",
-        TextStyle {
-            font_size: 30.,
-            ..default()
-        },
+    commands.spawn((
+        TextBundle::from_section(
+            "FPS: ???\n\n",
+            TextStyle {
+                font_size: 30.,
+                ..default()
+            },
+        ),
+        Name::new("FPS info"),
     ));
 }
 

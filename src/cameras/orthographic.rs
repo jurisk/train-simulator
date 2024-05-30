@@ -9,6 +9,7 @@ use bevy::render::camera::ScalingMode;
 
 use crate::cameras::util::{movement_and_rotation, zoom_value};
 use crate::cameras::{CameraComponent, CameraId};
+use crate::constants::UP;
 
 pub(crate) struct OrthographicCameraPlugin;
 
@@ -26,7 +27,6 @@ fn create_camera(mut commands: Commands) {
     let height = 80.0;
     let from = Transform::from_xyz(-height * ANGLE_COEF, height, -height * ANGLE_COEF);
     let target = Vec3::ZERO;
-    let up = Vec3::Y;
 
     commands.spawn((
         Camera3dBundle {
@@ -34,7 +34,7 @@ fn create_camera(mut commands: Commands) {
                 is_active: CameraId::default() == CameraId::Orthographic,
                 ..default()
             },
-            transform: from.looking_at(target, up),
+            transform: from.looking_at(target, UP),
             projection: OrthographicProjection {
                 scaling_mode: ScalingMode::FixedVertical(height),
                 ..default()
