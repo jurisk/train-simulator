@@ -4,7 +4,6 @@ use crate::level::terrain::land::LandPlugin;
 use crate::level::terrain::water::WaterPlugin;
 
 pub mod land;
-mod util;
 pub mod water;
 
 pub(crate) struct TerrainPlugin;
