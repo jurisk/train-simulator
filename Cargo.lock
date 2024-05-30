@@ -1963,6 +1963,7 @@ dependencies = [
  "bytemuck",
  "byteorder",
  "color_quant",
+ "jpeg-decoder",
  "num-traits",
 ]
 

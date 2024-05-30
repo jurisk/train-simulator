@@ -34,8 +34,10 @@ mod lights;
 mod states;
 
 fn main() {
+    // TODO: Something is broken, perhaps with loading fonts, as the FPS gets calculated but no longer appears on the screen
     App::new()
         .init_state::<GameState>()
+        // Doing all this instead of DefaultPlugins because we can override window resolution this way
         .add_plugins((
             LogPlugin::default(),
             TaskPoolPlugin::default(),

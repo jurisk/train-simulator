@@ -11,8 +11,10 @@
 }
 
 #import bevy_pbr::{
+    mesh_view_bindings::view,
     forward_io::{Vertex, VertexOutput, FragmentOutput},
     pbr_functions::{apply_pbr_lighting, main_pass_post_lighting_processing},
+    utils::coords_to_viewport_uv,
 }
 
 struct LandMaterial {
@@ -25,6 +27,9 @@ struct LandMaterial {
 
 @group(2) @binding(100)
 var<uniform> land_material: LandMaterial;
+
+@group(2) @binding(101) var grass_texture: texture_2d<f32>;
+@group(2) @binding(102) var grass_texture_sampler: sampler;
 
 struct Output {
     // This is `clip position` when the struct is used as a vertex stage output
@@ -134,7 +139,12 @@ fn fragment(
 
     let color = sea_bottom * input.is_sea_bottom + sand * input.is_sand + grass * input.is_grass + rocks * input.is_rocks;
 
-    pbr_input.material.base_color = vec4<f32>(color, 1.0);
+    // TODO: Something is wrong with these UVs, you should adjust them either here or perhaps when generating the mesh
+    let uv_coef = 100.0;
+    // TODO: This handles just grass, but we should handle all terrain types and mix them
+    pbr_input.material.base_color = textureSample(grass_texture, grass_texture_sampler, input.uv * uv_coef);
+
+//    pbr_input.material.base_color = vec4<f32>(color, 1.0);
 
     // alpha discard
     pbr_input.material.base_color = alpha_discard(pbr_input.material, pbr_input.material.base_color);

@@ -4,7 +4,7 @@ use bevy::pbr::{
     ExtendedMaterial, MaterialExtension, MaterialExtensionKey, MaterialExtensionPipeline,
     MaterialPlugin, StandardMaterial,
 };
-use bevy::prelude::{default, Mesh, Plugin, Reflect};
+use bevy::prelude::{default, AssetServer, Handle, Image, Mesh, Plugin, Reflect, Res};
 use bevy::render::mesh::MeshVertexBufferLayout;
 use bevy::render::render_resource::{
     AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
@@ -36,6 +36,10 @@ pub(crate) struct LandExtension {
     grass_terrain_type:      u32,
     #[uniform(100)]
     rocks_terrain_type:      u32,
+
+    #[texture(101)]
+    #[sampler(102)]
+    grass_texture: Handle<Image>,
 }
 
 impl MaterialExtension for LandExtension {
@@ -64,14 +68,18 @@ impl MaterialExtension for LandExtension {
     }
 }
 
-pub(crate) fn create_advanced_land_material() -> ExtendedMaterial<StandardMaterial, LandExtension> {
+pub(crate) fn create_advanced_land_material(
+    asset_server: &Res<AssetServer>,
+) -> ExtendedMaterial<StandardMaterial, LandExtension> {
+    let grass_texture: Handle<Image> = asset_server.load("textures/grass.jpg");
     ExtendedMaterial {
         base:      StandardMaterial { ..default() },
         extension: LandExtension {
             sea_bottom_terrain_type: SeaBottom as u32,
-            sand_terrain_type:       Sand as u32,
-            grass_terrain_type:      Grass as u32,
-            rocks_terrain_type:      Rocks as u32,
+            sand_terrain_type: Sand as u32,
+            grass_terrain_type: Grass as u32,
+            rocks_terrain_type: Rocks as u32,
+            grass_texture,
         },
     }
 }

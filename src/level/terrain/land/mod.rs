@@ -1,5 +1,5 @@
 use bevy::app::App;
-use bevy::asset::Assets;
+use bevy::asset::{AssetServer, Assets};
 use bevy::core::Name;
 use bevy::pbr::ExtendedMaterial;
 use bevy::prelude::{
@@ -51,6 +51,7 @@ const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
 pub(crate) fn create_land(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
+    asset_server: Res<AssetServer>,
     mut advanced_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, LandExtension>>>,
     mut standard_materials: ResMut<Assets<StandardMaterial>>,
     level_resource: Res<LevelResource>,
@@ -88,7 +89,7 @@ pub(crate) fn create_land(
 
     match LAND_MATERIAL_TYPE {
         LandMaterialType::Advanced => {
-            let material = advanced_materials.add(create_advanced_land_material());
+            let material = advanced_materials.add(create_advanced_land_material(&asset_server));
             commands.spawn((
                 MaterialMeshBundle {
                     mesh,
