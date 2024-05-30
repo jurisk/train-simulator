@@ -2,43 +2,6 @@ use bevy::prelude::*;
 use bevy::render::mesh::PrimitiveTopology;
 use bevy::render::render_asset::RenderAssetUsages;
 
-// This is unused as we are going for low-poly-style flat normals look instead
-#[must_use]
-#[allow(unused)]
-#[allow(clippy::ptr_arg)]
-fn normal_from_height_map(
-    x: usize,
-    z: usize,
-    data: &Vec<Vec<f32>>,
-    x_segments: usize,
-    z_segments: usize,
-) -> Vec3 {
-    // Calculate slopes in the x and z directions
-    let dx = if x > 0 && x < x_segments - 1 {
-        data[z][x + 1] - data[z][x - 1]
-    } else {
-        0.0
-    };
-
-    let dz = if z > 0 && z < z_segments - 1 {
-        data[z + 1][x] - data[z - 1][x]
-    } else {
-        0.0
-    };
-
-    // Calculate normal with unit length
-    Vec3::new(-dx, 1.0, -dz).normalize()
-}
-
-// This is unused as we found `compute_flat_normals`
-#[allow(unused)]
-fn calculate_triangle_normal(v0: &[f32; 3], v1: &[f32; 3], v2: &[f32; 3]) -> [f32; 3] {
-    let edge1 = Vec3::new(v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]);
-    let edge2 = Vec3::new(v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]);
-    let normal = edge1.cross(edge2).normalize();
-    [normal.x, normal.y, normal.z]
-}
-
 #[allow(
     clippy::cast_possible_truncation,
     clippy::cast_precision_loss,
