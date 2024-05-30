@@ -15,4 +15,4 @@ impl Plugin for TerrainPlugin {
     }
 }
 
-const Y_COEF: f32 = 0.2;
+const Y_COEF: f32 = 0.4;

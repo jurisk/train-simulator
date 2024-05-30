@@ -41,7 +41,7 @@ enum LandMaterialType {
     Debug,
 }
 
-const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Debug;
+const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
 
 #[allow(
     clippy::cast_precision_loss,
@@ -101,7 +101,7 @@ pub(crate) fn create_land(
         },
         LandMaterialType::Debug => {
             let material = standard_materials.add(StandardMaterial {
-                base_color: Color::rgba(0.1, 0.9, 0.1, 1.0),
+                base_color: Color::rgba(0.1, 0.9, 0.1, 1.0), // Color::rgba(0.2, 0.2, 0.2, 1.0),
                 ..default()
             });
             commands.spawn((
