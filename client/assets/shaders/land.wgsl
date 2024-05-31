@@ -143,13 +143,24 @@ fn fragment(
 
     // modify the input before lighting and alpha_discard is applied
 
+    // Lines for the grid
+    let lineThickness: f32 = 0.02;
+    let lineVisibility: f32 = 0.3;
+
+	var lines = 1.0;
+	let upperLineThreshold = (1.0 - lineThickness);
+	if (input.uv.x < lineThickness || input.uv.x > upperLineThreshold || input.uv.y < lineThickness || input.uv.y > upperLineThreshold) {
+		lines = 1.0 - lineVisibility;
+	}
+
+    // Mixing the textures according to the terrain type
     let sea_bottom = textureSample(sea_bottom_texture, sea_bottom_sampler, input.uv);
     let sand = textureSample(sand_texture, sand_sampler, input.uv);
     let grass = textureSample(grass_texture, grass_sampler, input.uv);
     let rocks = textureSample(rocks_texture, rocks_sampler, input.uv);
 
     let color = sea_bottom * input.is_sea_bottom + sand * input.is_sand + grass * input.is_grass + rocks * input.is_rocks;
-    pbr_input.material.base_color = color;
+    pbr_input.material.base_color = color * lines;
 
     // alpha discard
     pbr_input.material.base_color = alpha_discard(pbr_input.material, pbr_input.material.base_color);
