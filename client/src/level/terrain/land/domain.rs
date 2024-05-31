@@ -15,7 +15,7 @@ impl TerrainType {
             SeaBottom
         } else if height.0 <= 9 {
             Sand
-        } else if height.0 <= 16 {
+        } else if height.0 <= 15 {
             Grass
         } else {
             Rocks

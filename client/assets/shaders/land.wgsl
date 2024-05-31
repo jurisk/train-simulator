@@ -28,8 +28,19 @@ struct LandMaterial {
 @group(2) @binding(100)
 var<uniform> land_material: LandMaterial;
 
-@group(2) @binding(101) var grass_texture: texture_2d<f32>;
-@group(2) @binding(102) var grass_texture_sampler: sampler;
+@group(2) @binding(101) var sea_bottom_texture: texture_2d<f32>;
+@group(2) @binding(102) var sea_bottom_sampler: sampler;
+
+
+@group(2) @binding(103) var sand_texture: texture_2d<f32>;
+@group(2) @binding(104) var sand_sampler: sampler;
+
+
+@group(2) @binding(105) var grass_texture: texture_2d<f32>;
+@group(2) @binding(106) var grass_sampler: sampler;
+
+@group(2) @binding(107) var rocks_texture: texture_2d<f32>;
+@group(2) @binding(108) var rocks_sampler: sampler;
 
 struct Output {
     // This is `clip position` when the struct is used as a vertex stage output
@@ -132,17 +143,13 @@ fn fragment(
 
     // modify the input before lighting and alpha_discard is applied
 
-    let sea_bottom = vec3<f32>(0.75, 0.75, 0.0);
-    let sand = vec3<f32>(1.0, 1.0, 0.0);
-    let grass = vec3<f32>(0.1, 0.9, 0.1);
-    let rocks = vec3<f32>(0.5, 0.5, 0.5);
+    let sea_bottom = textureSample(sea_bottom_texture, sea_bottom_sampler, input.uv);
+    let sand = textureSample(sand_texture, sand_sampler, input.uv);
+    let grass = textureSample(grass_texture, grass_sampler, input.uv);
+    let rocks = textureSample(rocks_texture, rocks_sampler, input.uv);
 
     let color = sea_bottom * input.is_sea_bottom + sand * input.is_sand + grass * input.is_grass + rocks * input.is_rocks;
-
-    // TODO: This handles just grass, but we should handle all terrain types and mix them
-    pbr_input.material.base_color = textureSample(grass_texture, grass_texture_sampler, input.uv);
-
-//    pbr_input.material.base_color = vec4<f32>(color, 1.0);
+    pbr_input.material.base_color = color;
 
     // alpha discard
     pbr_input.material.base_color = alpha_discard(pbr_input.material, pbr_input.material.base_color);

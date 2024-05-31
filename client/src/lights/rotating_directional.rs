@@ -2,9 +2,8 @@ use std::f32::consts::PI;
 
 use bevy::core::Name;
 use bevy::pbr::{DirectionalLight, DirectionalLightBundle};
-use bevy::prelude::light_consts::lux::OVERCAST_DAY;
 use bevy::prelude::{
-    default, in_state, App, Commands, IntoSystemConfigs, OnEnter, Plugin, Query, Res, Time,
+    App, Commands, default, in_state, IntoSystemConfigs, OnEnter, Plugin, Query, Res, Time,
     Transform, Update, Vec3, With,
 };
 
@@ -36,7 +35,7 @@ fn create_lights(mut commands: Commands) {
     commands.spawn((
         DirectionalLightBundle {
             directional_light: DirectionalLight {
-                illuminance: OVERCAST_DAY,
+                illuminance: 4_000.0,
                 shadows_enabled: true,
                 ..default()
             },

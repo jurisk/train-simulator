@@ -39,7 +39,19 @@ pub(crate) struct LandExtension {
 
     #[texture(101)]
     #[sampler(102)]
+    sea_bottom_texture: Handle<Image>,
+
+    #[texture(103)]
+    #[sampler(104)]
+    sand_texture: Handle<Image>,
+
+    #[texture(105)]
+    #[sampler(106)]
     grass_texture: Handle<Image>,
+
+    #[texture(107)]
+    #[sampler(108)]
+    rocks_texture: Handle<Image>,
 }
 
 impl MaterialExtension for LandExtension {
@@ -71,7 +83,10 @@ impl MaterialExtension for LandExtension {
 pub(crate) fn create_advanced_land_material(
     asset_server: &Res<AssetServer>,
 ) -> ExtendedMaterial<StandardMaterial, LandExtension> {
+    let sea_bottom_texture: Handle<Image> = asset_server.load("textures/sand.jpg");
+    let sand_texture: Handle<Image> = asset_server.load("textures/sand.jpg");
     let grass_texture: Handle<Image> = asset_server.load("textures/grass.jpg");
+    let rocks_texture: Handle<Image> = asset_server.load("textures/rock.jpg");
     ExtendedMaterial {
         base:      StandardMaterial { ..default() },
         extension: LandExtension {
@@ -79,7 +94,10 @@ pub(crate) fn create_advanced_land_material(
             sand_terrain_type: Sand as u32,
             grass_terrain_type: Grass as u32,
             rocks_terrain_type: Rocks as u32,
+            sea_bottom_texture,
+            sand_texture,
             grass_texture,
+            rocks_texture,
         },
     }
 }
