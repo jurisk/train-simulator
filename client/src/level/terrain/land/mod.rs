@@ -1,9 +1,9 @@
 use bevy::app::App;
-use bevy::asset::{AssetServer, Assets};
+use bevy::asset::{AssetServer, Assets, Handle};
 use bevy::core::Name;
 use bevy::pbr::ExtendedMaterial;
 use bevy::prelude::{
-    default, Color, Commands, MaterialMeshBundle, Mesh, OnEnter, Plugin, Res, ResMut,
+    default, Commands, Image, MaterialMeshBundle, Mesh, OnEnter, Plugin, Res, ResMut,
     StandardMaterial, Transform,
 };
 use bevy::render::mesh::MeshVertexAttribute;
@@ -41,7 +41,7 @@ enum LandMaterialType {
     Debug,
 }
 
-const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
+const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Debug;
 
 #[allow(
     clippy::cast_precision_loss,
@@ -100,8 +100,11 @@ pub(crate) fn create_land(
             ));
         },
         LandMaterialType::Debug => {
+            let grass_texture: Handle<Image> = asset_server.load("textures/grass.jpg");
+
             let material = standard_materials.add(StandardMaterial {
-                base_color: Color::rgba(0.1, 0.9, 0.1, 1.0), // Color::rgba(0.2, 0.2, 0.2, 1.0),
+                perceptual_roughness: 0.8,
+                base_color_texture: Some(grass_texture),
                 ..default()
             });
             commands.spawn((
