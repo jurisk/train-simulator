@@ -1,5 +1,6 @@
 use bevy::app::App;
 use bevy::core::Name;
+use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::math::Vec3;
 use bevy::prelude::{
     default, ButtonInput, Camera, Camera3dBundle, Commands, KeyCode, OrthographicProjection,
@@ -44,6 +45,7 @@ fn create_camera(mut commands: Commands) {
                 ..default()
             }
             .into(),
+            tonemapping: Tonemapping::None,
             ..default()
         },
         CameraComponent {

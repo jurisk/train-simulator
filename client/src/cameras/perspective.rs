@@ -1,10 +1,12 @@
 use bevy::app::App;
 use bevy::core::Name;
+use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::math::Vec3;
 use bevy::prelude::{
     default, ButtonInput, Camera, Camera3dBundle, Commands, KeyCode, Plugin, Query, Res, Startup,
     Time, Transform, Update,
 };
+use bevy::render::view::ColorGrading;
 
 use crate::cameras::util::{movement_and_rotation, zoom_value};
 use crate::cameras::{CameraComponent, CameraId};
@@ -30,6 +32,12 @@ fn create_camera(mut commands: Commands) {
             camera: Camera {
                 is_active: CameraId::default() == CameraId::Perspective,
                 hdr: true,
+                ..default()
+            },
+            tonemapping: Tonemapping::None,
+            color_grading: ColorGrading {
+                pre_saturation: 1.05,
+                post_saturation: 1.05,
                 ..default()
             },
             transform: from.looking_at(target, UP),
