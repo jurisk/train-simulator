@@ -1,21 +1,9 @@
-use bevy::a11y::AccessibilityPlugin;
-use bevy::asset::{AssetMetaCheck, AssetPlugin};
-use bevy::core::{FrameCountPlugin, TaskPoolPlugin, TypeRegistrationPlugin};
-use bevy::core_pipeline::CorePipelinePlugin;
-use bevy::diagnostic::DiagnosticsPlugin;
-use bevy::gizmos::GizmoPlugin;
-use bevy::input::InputPlugin;
-use bevy::log::LogPlugin;
-use bevy::pbr::PbrPlugin;
-use bevy::prelude::{App, HierarchyPlugin, ImagePlugin, TransformPlugin};
-use bevy::render::RenderPlugin;
-use bevy::sprite::SpritePlugin;
-use bevy::text::TextPlugin;
-use bevy::time::TimePlugin;
-use bevy::ui::UiPlugin;
+use bevy::asset::AssetMetaCheck;
+use bevy::prelude::App;
+use bevy::prelude::PluginGroup;
 use bevy::utils::default;
 use bevy::window::{Window, WindowPlugin, WindowResolution};
-use bevy::winit::WinitPlugin;
+use bevy::DefaultPlugins;
 
 use crate::cameras::CameraPlugin;
 use crate::communication::CommunicationPlugin;
@@ -34,49 +22,24 @@ mod lights;
 mod states;
 
 fn main() {
-    // TODO: Something is broken, perhaps with loading fonts, as the FPS gets calculated but no longer appears on the screen
-    App::new()
-        .init_state::<GameState>()
-        // Doing all this instead of DefaultPlugins because we can override window resolution this way
-        .add_plugins((
-            LogPlugin::default(),
-            TaskPoolPlugin::default(),
-            TypeRegistrationPlugin,
-            FrameCountPlugin,
-            TimePlugin,
-            TransformPlugin,
-            HierarchyPlugin,
-            DiagnosticsPlugin,
-            InputPlugin,
-        ))
-        .add_plugins((
-            WindowPlugin {
-                primary_window: Some(Window {
-                    #[allow(clippy::cast_precision_loss)]
-                    resolution: WindowResolution::new(WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32),
-                    ..default()
-                }),
-                ..default()
-            },
-            AccessibilityPlugin,
-            AssetPlugin::default(),
-            WinitPlugin::default(),
-            RenderPlugin::default(),
-            ImagePlugin::default(),
-            CorePipelinePlugin,
-            SpritePlugin,
-            TextPlugin,
-            UiPlugin,
-            PbrPlugin::default(),
-            GizmoPlugin,
-        ))
-        .add_plugins((
-            CommunicationPlugin,
-            LightsPlugin,
-            LevelPlugin,
-            CameraPlugin,
-            DebugPlugin,
-        ))
-        .insert_resource(AssetMetaCheck::Never) // Otherwise we were getting 404-s in WASM for `*.wgsl.meta` files
-        .run();
+    let mut app = App::new();
+    app.init_state::<GameState>();
+    app.add_plugins(DefaultPlugins.build().set(WindowPlugin {
+        // Note - I never quite figured out if this makes it more likely the FPS counter does not load properly or not
+        primary_window: Some(Window {
+            #[allow(clippy::cast_precision_loss)]
+            resolution: WindowResolution::new(WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32),
+            ..default()
+        }),
+        ..default()
+    }));
+    app.add_plugins((
+        CommunicationPlugin,
+        LightsPlugin,
+        LevelPlugin,
+        CameraPlugin,
+        DebugPlugin,
+    ));
+    app.insert_resource(AssetMetaCheck::Never); // Otherwise we were getting 404-s in WASM for `*.wgsl.meta` files
+    app.run();
 }

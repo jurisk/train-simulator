@@ -11,7 +11,9 @@ use crate::states::GameState;
 
 pub(crate) struct DebugPlugin;
 
-// Later: When https://github.com/bevyengine/bevy/blob/main/crates/bevy_dev_tools/src/fps_overlay.rs gets released, migrate to that
+// This has some weird race conditions, and it doesn't always appear, but I hope when
+// https://github.com/bevyengine/bevy/blob/main/crates/bevy_dev_tools/src/fps_overlay.rs gets
+// released, we can migrate to that and it will work.
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(WorldInspectorPlugin::new())
