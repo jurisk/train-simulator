@@ -90,6 +90,7 @@ pub(crate) fn create_advanced_land_material(
     ExtendedMaterial {
         base:      StandardMaterial {
             perceptual_roughness: 0.8,
+            reflectance: 0.0,
             ..default()
         },
         extension: LandExtension {

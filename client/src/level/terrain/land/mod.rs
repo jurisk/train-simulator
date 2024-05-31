@@ -104,6 +104,7 @@ pub(crate) fn create_land(
 
             let material = standard_materials.add(StandardMaterial {
                 perceptual_roughness: 0.8,
+                reflectance: 0.0,
                 base_color_texture: Some(grass_texture),
                 ..default()
             });
