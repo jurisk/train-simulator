@@ -2,14 +2,16 @@ use bevy::prelude::*;
 use bevy::render::mesh::PrimitiveTopology;
 use bevy::render::render_asset::RenderAssetUsages;
 
+// UV map has the texture cover the whole mesh
 #[allow(
     clippy::cast_possible_truncation,
     clippy::cast_precision_loss,
     clippy::ptr_arg,
-    clippy::needless_pass_by_value
+    clippy::needless_pass_by_value,
+    unused,
 )]
 #[must_use]
-pub fn mesh_from_height_map_data(
+pub fn stretched_mesh_from_height_map_data(
     min_x: f32,
     max_x: f32,
     min_z: f32,
@@ -86,4 +88,9 @@ pub fn mesh_from_height_map_data(
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
 
     mesh
+
+    // Note: Usually needs:
+    //     mesh.duplicate_vertices();
+    //     mesh.compute_flat_normals();
+    // done by the caller.
 }

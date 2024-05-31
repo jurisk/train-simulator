@@ -8,19 +8,19 @@ use bevy::prelude::{
 };
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
-use util::mesh_from_height_map_data;
 
 use crate::level::terrain::land::advanced_land_material::{
     create_advanced_land_material, AdvancedLandMaterialPlugin, LandExtension,
 };
 use crate::level::terrain::land::domain::TerrainType;
+use crate::level::terrain::land::tiled_mesh_from_height_map_data::tiled_mesh_from_height_map_data;
 use crate::level::terrain::Y_COEF;
 use crate::level::LevelResource;
 use crate::states::GameState;
 
 mod advanced_land_material;
 mod domain;
-mod util;
+mod tiled_mesh_from_height_map_data;
 
 pub(crate) struct LandPlugin;
 
@@ -68,23 +68,22 @@ pub(crate) fn create_land(
     let half_z = (level.terrain.size_z as f32) / 2.0;
     let height_map = &level.terrain.height_map;
 
-    // This allows to change the terrain type depending on something else than the height (e.g. part of the level definition)
-    let terrain_types: Vec<_> = height_map
-        .iter()
-        .flat_map(|row| {
-            row.iter()
-                .map(|h| TerrainType::from_height(*h) as u32)
-                .collect::<Vec<_>>()
-        })
-        .collect();
-
-    let mut mesh = mesh_from_height_map_data(-half_x, half_x, -half_z, half_z, Y_COEF, data_slice)
-        .with_inserted_attribute(ATTRIBUTE_TERRAIN_TYPE, terrain_types);
+    let mut mesh = tiled_mesh_from_height_map_data(
+        -half_x,
+        half_x,
+        -half_z,
+        half_z,
+        Y_COEF,
+        data_slice,
+        ATTRIBUTE_TERRAIN_TYPE,
+        |x, z| TerrainType::from_height(height_map[z][x]) as u32,
+    );
 
     mesh.duplicate_vertices();
     mesh.compute_flat_normals();
 
     let mesh = meshes.add(mesh);
+
     let transform = Transform::default();
 
     match LAND_MATERIAL_TYPE {

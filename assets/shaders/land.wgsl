@@ -139,10 +139,8 @@ fn fragment(
 
     let color = sea_bottom * input.is_sea_bottom + sand * input.is_sand + grass * input.is_grass + rocks * input.is_rocks;
 
-    // TODO: Something is wrong with these UVs, you should adjust them either here or perhaps when generating the mesh
-    let uv_coef = 100.0;
     // TODO: This handles just grass, but we should handle all terrain types and mix them
-    pbr_input.material.base_color = textureSample(grass_texture, grass_texture_sampler, input.uv * uv_coef);
+    pbr_input.material.base_color = textureSample(grass_texture, grass_texture_sampler, input.uv);
 
 //    pbr_input.material.base_color = vec4<f32>(color, 1.0);
 
