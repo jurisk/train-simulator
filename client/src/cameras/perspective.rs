@@ -29,6 +29,7 @@ fn create_camera(mut commands: Commands) {
         Camera3dBundle {
             camera: Camera {
                 is_active: CameraId::default() == CameraId::Perspective,
+                hdr: true,
                 ..default()
             },
             transform: from.looking_at(target, UP),

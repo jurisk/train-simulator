@@ -22,16 +22,20 @@ impl Plugin for OrthographicCameraPlugin {
 }
 
 fn create_camera(mut commands: Commands) {
-    const ANGLE_COEF: f32 = 0.5;
+    // For now, we are trying to match Godot example, eventually may move to something else:
+    // const ANGLE_COEF: f32 = 0.5;
+    // let height = 80.0;
+    // let from = Transform::from_xyz(-height * ANGLE_COEF, height, -height * ANGLE_COEF);
 
-    let height = 80.0;
-    let from = Transform::from_xyz(-height * ANGLE_COEF, height, -height * ANGLE_COEF);
+    let height = 60.0;
+    let from = Transform::from_xyz(-20.0, 50.0, -20.0);
     let target = Vec3::ZERO;
 
     commands.spawn((
         Camera3dBundle {
             camera: Camera {
                 is_active: CameraId::default() == CameraId::Orthographic,
+                hdr: true,
                 ..default()
             },
             transform: from.looking_at(target, UP),

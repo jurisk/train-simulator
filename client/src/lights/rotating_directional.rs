@@ -1,9 +1,10 @@
 use std::f32::consts::PI;
 
 use bevy::core::Name;
+use bevy::math::EulerRot;
 use bevy::pbr::{DirectionalLight, DirectionalLightBundle};
 use bevy::prelude::{
-    default, in_state, App, Commands, IntoSystemConfigs, OnEnter, Plugin, Query, Res, Time,
+    default, in_state, App, Commands, IntoSystemConfigs, OnEnter, Plugin, Quat, Query, Res, Time,
     Transform, Update, Vec3, With,
 };
 
@@ -12,13 +13,18 @@ use crate::states::GameState;
 
 pub(crate) struct RotatingDirectionalLightPlugin;
 
+const ROTATE_LIGHT: bool = false;
+
 impl Plugin for RotatingDirectionalLightPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Playing), create_lights);
-        app.add_systems(
-            Update,
-            animate_light_direction.run_if(in_state(GameState::Playing)),
-        );
+
+        if ROTATE_LIGHT {
+            app.add_systems(
+                Update,
+                animate_light_direction.run_if(in_state(GameState::Playing)),
+            );
+        }
     }
 }
 
@@ -32,6 +38,25 @@ const RADIUS: f32 = 10.0;
 const FULL_ROTATION_SECONDS: f32 = 10.0;
 
 fn create_lights(mut commands: Commands) {
+    // For now, we are matching Godot example, but eventually could do something else:
+    // let transform = Transform {
+    //     translation: Vec3::new(RADIUS, HEIGHT, 0.0),
+    //     ..default()
+    // }
+    // .looking_at(Vec3::ZERO, UP);
+
+    let factor = -PI / 180.0;
+    let transform = Transform {
+        translation: Vec3::new(15.0, 10.0, 64.0),
+        rotation: Quat::from_euler(
+            EulerRot::XYZ,
+            -42.0 * factor,
+            -152.0 * factor,
+            -179.0 * factor,
+        ),
+        ..default()
+    };
+
     commands.spawn((
         DirectionalLightBundle {
             directional_light: DirectionalLight {
@@ -39,11 +64,7 @@ fn create_lights(mut commands: Commands) {
                 shadows_enabled: true,
                 ..default()
             },
-            transform: Transform {
-                translation: Vec3::new(RADIUS, HEIGHT, 0.0),
-                ..default()
-            }
-            .looking_at(Vec3::ZERO, UP),
+            transform,
             ..default()
         },
         Name::new("Directional Light"),

@@ -88,7 +88,10 @@ pub(crate) fn create_advanced_land_material(
     let grass_texture: Handle<Image> = asset_server.load("textures/grass.jpg");
     let rocks_texture: Handle<Image> = asset_server.load("textures/rock.jpg");
     ExtendedMaterial {
-        base:      StandardMaterial { ..default() },
+        base:      StandardMaterial {
+            perceptual_roughness: 0.8,
+            ..default()
+        },
         extension: LandExtension {
             sea_bottom_terrain_type: SeaBottom as u32,
             sand_terrain_type: Sand as u32,
