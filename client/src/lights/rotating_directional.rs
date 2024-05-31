@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::core::Name;
 use bevy::pbr::{DirectionalLight, DirectionalLightBundle};
 use bevy::prelude::{
-    App, Commands, default, in_state, IntoSystemConfigs, OnEnter, Plugin, Query, Res, Time,
+    default, in_state, App, Commands, IntoSystemConfigs, OnEnter, Plugin, Query, Res, Time,
     Transform, Update, Vec3, With,
 };
 

@@ -6,17 +6,17 @@ use bevy::render::render_asset::RenderAssetUsages;
 struct Vertex {
     position: Vec3,
     uv:       Vec2,
+    custom:   u32,
 }
 
 #[derive(Copy, Clone)]
 struct Triangle {
     vertices: [Vertex; 3],
-    custom:   u32,
 }
 
 impl Triangle {
-    fn new(vertices: [Vertex; 3], custom: u32) -> Self {
-        Self { vertices, custom }
+    fn new(vertices: [Vertex; 3]) -> Self {
+        Self { vertices }
     }
 }
 
@@ -61,13 +61,20 @@ where
             let make_vertex = |offset: [usize; 2]| -> Vertex {
                 let x = x_idx + offset[0];
                 let z = z_idx + offset[1];
-                let pos = Vec3::new(
+                let position = Vec3::new(
                     (x as f32 / x_segments as f32) * extent_x + min_x,
                     data[z][x] * y_coef,
                     (z as f32 / z_segments as f32) * extent_z + min_z,
                 );
                 let uv = Vec2::new(offset[0] as f32, offset[1] as f32);
-                Vertex { position: pos, uv }
+
+                let custom = custom_f(x, z);
+
+                Vertex {
+                    position,
+                    uv,
+                    custom,
+                }
             };
 
             let top_left = make_vertex(TOP_LEFT_OFFSET);
@@ -75,18 +82,13 @@ where
             let bottom_left = make_vertex(BOTTOM_LEFT_OFFSET);
             let bottom_right = make_vertex(BOTTOM_RIGHT_OFFSET);
 
-            let custom = custom_f(x_idx, z_idx);
-
             // Similar to https://github.com/NickToony/gd-retroterrain/blob/master/Terrain.cs#L112
             if (top_left.position.y - bottom_right.position.y).abs() < f32::EPSILON {
-                triangles.push(Triangle::new([top_left, bottom_left, bottom_right], custom));
-                triangles.push(Triangle::new([top_left, bottom_right, top_right], custom));
+                triangles.push(Triangle::new([top_left, bottom_left, bottom_right]));
+                triangles.push(Triangle::new([top_left, bottom_right, top_right]));
             } else {
-                triangles.push(Triangle::new([top_left, bottom_left, top_right], custom));
-                triangles.push(Triangle::new(
-                    [bottom_left, bottom_right, top_right],
-                    custom,
-                ));
+                triangles.push(Triangle::new([top_left, bottom_left, top_right]));
+                triangles.push(Triangle::new([bottom_left, bottom_right, top_right]));
             }
         }
     }
@@ -112,7 +114,7 @@ fn convert_to_mesh(input: Vec<Triangle>, custom_attribute: MeshVertexAttribute) 
             normals.push([0.0, 0.0, 0.0]);
             uvs.push(vertex.uv.into());
             triangles.push((triangle_idx * 3 + vertex_idx) as u32);
-            custom.push(triangle.custom);
+            custom.push(vertex.custom);
         }
     }
 
