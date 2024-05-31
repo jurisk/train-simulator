@@ -25,7 +25,6 @@ fn main() {
     let mut app = App::new();
     app.init_state::<GameState>();
     app.add_plugins(DefaultPlugins.build().set(WindowPlugin {
-        // Note - I never quite figured out if this makes it more likely the FPS counter does not load properly or not
         primary_window: Some(Window {
             #[allow(clippy::cast_precision_loss)]
             resolution: WindowResolution::new(WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32),
