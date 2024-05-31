@@ -65,5 +65,5 @@ cargo install wasm-bindgen-cli
 [source,bash]
 ----
 cargo build --profile wasm-release --target wasm32-unknown-unknown
-wasm-bindgen --out-name train-simulator --out-dir web/wasm --target web target/wasm32-unknown-unknown/wasm-release/train-simulator.wasm
+wasm-bindgen --out-name train-simulator-client --out-dir web/wasm --target web target/wasm32-unknown-unknown/wasm-release/train-simulator-client.wasm
 ----
