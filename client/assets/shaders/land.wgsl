@@ -28,6 +28,8 @@ struct LandMaterial {
 @group(2) @binding(100)
 var<uniform> land_material: LandMaterial;
 
+// Later: We could have a texture_2d_array<f32> here, indexed by terrain type
+
 @group(2) @binding(101) var sea_bottom_texture: texture_2d<f32>;
 @group(2) @binding(102) var sea_bottom_sampler: sampler;
 
@@ -69,7 +71,7 @@ struct Output {
 
     // From here on come the custom attributes we added
 
-    // Later: If we move to terrain array we could have an array here too
+    // Later: If we move to terrain array we could have an array here too, or even eliminate this
     @location(8) is_sea_bottom: f32,
     @location(9) is_sand: f32,
     @location(10) is_grass: f32,

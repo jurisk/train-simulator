@@ -28,14 +28,14 @@ bevy = { version = "0.13.2", default-features = false, features = [
     "webgpu", # https://caniuse.com/webgpu
     "x11",
 
-    # This one hopefully supports mip-maps:
+    # For mipmap support, but it doesn't support WebGPU:
     "basis-universal",
 
     # Next ones are development only, see https://bevyengine.org/news/bevy-0-12/#asset-preprocessing:
-    "asset_processor",
-    "file_watcher",
-    "embedded_watcher",
-    "multi-threaded", # Renamed to "multi_threaded" in newer Bevy versions
+     "asset_processor",
+     "file_watcher",
+     "embedded_watcher",
+     "multi-threaded", # Renamed to "multi_threaded" in newer Bevy versions
 ]}
 
 # https://github.com/jakobhellermann/bevy-inspector-egui
