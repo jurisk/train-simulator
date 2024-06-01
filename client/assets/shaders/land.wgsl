@@ -19,7 +19,6 @@
 
 struct LandMaterial {
     // Later: Could instead have texture array, indexed by terrain type
-    sea_bottom_terrain_type: u32,
     sand_terrain_type: u32,
     grass_terrain_type: u32,
     rocks_terrain_type: u32,
@@ -30,19 +29,8 @@ var<uniform> land_material: LandMaterial;
 
 // Later: We could have a texture_2d_array<f32> here, indexed by terrain type
 
-@group(2) @binding(101) var sea_bottom_texture: texture_2d<f32>;
-@group(2) @binding(102) var sea_bottom_sampler: sampler;
-
-
-@group(2) @binding(103) var sand_texture: texture_2d<f32>;
-@group(2) @binding(104) var sand_sampler: sampler;
-
-
-@group(2) @binding(105) var grass_texture: texture_2d<f32>;
-@group(2) @binding(106) var grass_sampler: sampler;
-
-@group(2) @binding(107) var rocks_texture: texture_2d<f32>;
-@group(2) @binding(108) var rocks_sampler: sampler;
+@group(2) @binding(101) var land_textures: texture_2d_array<f32>;
+@group(2) @binding(102) var land_sampler: sampler;
 
 struct Output {
     // This is `clip position` when the struct is used as a vertex stage output
@@ -72,10 +60,9 @@ struct Output {
     // From here on come the custom attributes we added
 
     // Later: If we move to terrain array we could have an array here too, or even eliminate this
-    @location(8) is_sea_bottom: f32,
-    @location(9) is_sand: f32,
-    @location(10) is_grass: f32,
-    @location(11) is_rocks: f32,
+    @location(8) is_sand: f32,
+    @location(9) is_grass: f32,
+    @location(10) is_rocks: f32,
 }
 
 // Useful: https://github.com/bevyengine/bevy/blob/main/crates/bevy_pbr/src/render/mesh.wgsl
@@ -109,7 +96,6 @@ fn vertex(vertex: Vertex, @location(8) terrain_type: u32) -> Output {
         out.instance_index = vertex.instance_index;
     #endif
 
-    out.is_sea_bottom = select(0.0, 1.0, terrain_type == land_material.sea_bottom_terrain_type);
     out.is_sand = select(0.0, 1.0, terrain_type == land_material.sand_terrain_type);
     out.is_grass = select(0.0, 1.0, terrain_type == land_material.grass_terrain_type);
     out.is_rocks = select(0.0, 1.0, terrain_type == land_material.rocks_terrain_type);
@@ -156,12 +142,11 @@ fn fragment(
 	}
 
     // Mixing the textures according to the terrain type
-    let sea_bottom = textureSample(sea_bottom_texture, sea_bottom_sampler, input.uv);
-    let sand = textureSample(sand_texture, sand_sampler, input.uv);
-    let grass = textureSample(grass_texture, grass_sampler, input.uv);
-    let rocks = textureSample(rocks_texture, rocks_sampler, input.uv);
+    let sand = textureSample(land_textures, land_sampler, input.uv, land_material.sand_terrain_type);
+    let grass = textureSample(land_textures, land_sampler, input.uv, land_material.grass_terrain_type);
+    let rocks = textureSample(land_textures, land_sampler, input.uv, land_material.rocks_terrain_type);
 
-    let color = sea_bottom * input.is_sea_bottom + sand * input.is_sand + grass * input.is_grass + rocks * input.is_rocks;
+    let color = sand * input.is_sand + grass * input.is_grass + rocks * input.is_rocks;
     pbr_input.material.base_color = color * lines;
 
     // alpha discard
