@@ -42,7 +42,7 @@ enum LandMaterialType {
     Debug,
 }
 
-const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Debug;
+const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
 
 #[allow(
     clippy::cast_precision_loss,
