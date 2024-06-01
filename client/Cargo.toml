@@ -10,8 +10,61 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-bevy.workspace = true
 bevy-inspector-egui.workspace = true
 rand.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+
+# https://crates.io/crates/bevy/versions
+bevy = { version = "0.13.2", default-features = false, features = [
+    "bevy_core_pipeline",
+    "bevy_gizmos",
+    "bevy_render",
+    "bevy_pbr",
+    "bevy_text",
+    "bevy_ui",
+    "default_font",
+    "png",
+    "tonemapping_luts",
+    "webgpu", # https://caniuse.com/webgpu
+    "x11",
+    "ktx2",
+    "zstd",
+
+    # Enables automatic PNG conversion with mipmap support, but it doesn't support WebGPU:
+   "basis-universal",
+
+
+    # These fail on WASM:
+    # From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional:
+#       "dynamic_linking",
+
+    # Next ones are development only, see https://bevyengine.org/news/bevy-0-12/#asset-preprocessing:
+    "asset_processor",
+    "file_watcher",
+    "embedded_watcher",
+    "multi-threaded", # Renamed to "multi_threaded" in newer Bevy versions
+]}
+
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+
+# https://crates.io/crates/bevy/versions
+bevy = { version = "0.13.2", default-features = false, features = [
+    "bevy_core_pipeline",
+    "bevy_gizmos",
+    "bevy_render",
+    "bevy_pbr",
+    "bevy_text",
+    "bevy_ui",
+    "default_font",
+    "png",
+    "tonemapping_luts",
+    "webgpu", # https://caniuse.com/webgpu
+    "x11",
+    "ktx2",
+    "zstd",
+]}
+
