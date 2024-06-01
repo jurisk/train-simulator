@@ -1,0 +1,12 @@
+Source:
+https://github.com/NickToony/gd-retroterrain
+
+Steps:
+* Install: https://github.com/KhronosGroup/KTX-Software/releases
+* Convert JPEG to PNG
+
+This got odd results, very saturated:
+C:\dev\KTX-Software\bin\ktx.exe create .\sand.jpg sand.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear
+C:\dev\KTX-Software\bin\ktx.exe create .\grass.jpg grass.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear
+C:\dev\KTX-Software\bin\ktx.exe create .\sand.jpg sea_bottom.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear
+C:\dev\KTX-Software\bin\ktx.exe create .\rock.jpg rocks.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear

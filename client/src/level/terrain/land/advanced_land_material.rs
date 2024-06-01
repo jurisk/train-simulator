@@ -84,10 +84,10 @@ pub(crate) fn create_advanced_land_material(
     asset_server: &Res<AssetServer>,
 ) -> ExtendedMaterial<StandardMaterial, LandExtension> {
     // Later: Refer to https://bevyengine.org/examples/Shaders/array-texture/ for how to use array textures instead
-    let sea_bottom_texture: Handle<Image> = asset_server.load("textures/sand.png");
-    let sand_texture: Handle<Image> = asset_server.load("textures/sand.png");
-    let grass_texture: Handle<Image> = asset_server.load("textures/grass.png");
-    let rocks_texture: Handle<Image> = asset_server.load("textures/rock.png");
+    let sea_bottom_texture: Handle<Image> = asset_server.load("textures/sand.ktx2");
+    let sand_texture: Handle<Image> = asset_server.load("textures/sand.ktx2");
+    let grass_texture: Handle<Image> = asset_server.load("textures/grass.ktx2");
+    let rocks_texture: Handle<Image> = asset_server.load("textures/rocks.ktx2");
     ExtendedMaterial {
         base:      StandardMaterial {
             perceptual_roughness: 0.8,

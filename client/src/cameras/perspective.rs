@@ -35,11 +35,7 @@ fn create_camera(mut commands: Commands) {
                 ..default()
             },
             tonemapping: Tonemapping::None,
-            color_grading: ColorGrading {
-                pre_saturation: 1.05,
-                post_saturation: 1.05,
-                ..default()
-            },
+            color_grading: ColorGrading { ..default() },
             transform: from.looking_at(target, UP),
             ..default()
         },

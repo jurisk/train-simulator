@@ -101,7 +101,7 @@ pub(crate) fn create_land(
             ));
         },
         LandMaterialType::Debug => {
-            let grass_texture: Handle<Image> = asset_server.load("textures/grass.png");
+            let grass_texture: Handle<Image> = asset_server.load("textures/grass.ktx2");
 
             let material = standard_materials.add(StandardMaterial {
                 perceptual_roughness: 0.8,

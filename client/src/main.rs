@@ -36,7 +36,7 @@ fn main() {
                 ..default()
             })
             .set(AssetPlugin {
-                mode: AssetMode::Processed,
+                mode: AssetMode::Unprocessed, // Processed requires for the asset processor features to be enabled
                 ..default()
             }),
     );

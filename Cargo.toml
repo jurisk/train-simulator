@@ -22,20 +22,25 @@ bevy = { version = "0.13.2", default-features = false, features = [
     "bevy_ui",
     "default_font",
     "png",
-# Want to enable this but wasm32 builds then fail
-#   "dynamic_linking",
     "tonemapping_luts",
     "webgpu", # https://caniuse.com/webgpu
     "x11",
+    "ktx2",
+    "zstd",
 
-    # For mipmap support, but it doesn't support WebGPU:
-    "basis-universal",
+# Enables automatic PNG conversion with mipmap support, but it doesn't support WebGPU:
+#   "basis-universal",
 
-    # Next ones are development only, see https://bevyengine.org/news/bevy-0-12/#asset-preprocessing:
-     "asset_processor",
-     "file_watcher",
-     "embedded_watcher",
-     "multi-threaded", # Renamed to "multi_threaded" in newer Bevy versions
+
+# These fail on WASM:
+# From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional:
+#   "dynamic_linking",
+
+# Next ones are development only, see https://bevyengine.org/news/bevy-0-12/#asset-preprocessing:
+#    "asset_processor",
+#    "file_watcher",
+#    "embedded_watcher",
+#    "multi-threaded", # Renamed to "multi_threaded" in newer Bevy versions
 ]}
 
 # https://github.com/jakobhellermann/bevy-inspector-egui
