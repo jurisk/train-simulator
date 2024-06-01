@@ -8,7 +8,7 @@ use bevy::render::render_asset::RenderAssetUsages;
     clippy::cast_precision_loss,
     clippy::ptr_arg,
     clippy::needless_pass_by_value,
-    unused,
+    unused
 )]
 #[must_use]
 pub fn stretched_mesh_from_height_map_data(
