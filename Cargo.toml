@@ -50,6 +50,7 @@ rand = "0.9.0-alpha.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 
+# From https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units
 # From https://rapier.rs/docs/user_guides/bevy_plugin/common_mistakes#my-local-build-of-rapier-is-slower-than-the-online-demos
 [profile.release]
 codegen-units = 1
@@ -63,12 +64,6 @@ opt-level = 1
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
 opt-level = 3
-
-[workspace.lints.clippy]
-pedantic = "warn"
-style = "warn"
-unwrap_used = { level = "warn", priority = -1 }
-expect_used = { level = "warn", priority = -1 }
 
 # From https://github.com/bevyengine/bevy/tree/main/examples#1-tweak-your-cargotoml
 [profile.wasm-release]
@@ -86,3 +81,9 @@ lto = "fat"
 # When building crates, optimize larger chunks at a time
 # Slows compile times, marginal improvements
 codegen-units = 1
+
+[workspace.lints.clippy]
+pedantic = "warn"
+style = "warn"
+unwrap_used = { level = "warn", priority = -1 }
+expect_used = { level = "warn", priority = -1 }
