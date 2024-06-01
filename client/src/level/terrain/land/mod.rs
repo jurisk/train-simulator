@@ -42,7 +42,7 @@ enum LandMaterialType {
     Debug,
 }
 
-const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Debug;
+const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
 
 #[allow(
     clippy::cast_precision_loss,
@@ -101,7 +101,7 @@ pub(crate) fn create_land(
             ));
         },
         LandMaterialType::Debug => {
-            let grass_texture: Handle<Image> = asset_server.load("textures/grass.jpg");
+            let grass_texture: Handle<Image> = asset_server.load("textures/grass.png");
 
             let material = standard_materials.add(StandardMaterial {
                 perceptual_roughness: 0.8,

@@ -83,10 +83,10 @@ impl MaterialExtension for LandExtension {
 pub(crate) fn create_advanced_land_material(
     asset_server: &Res<AssetServer>,
 ) -> ExtendedMaterial<StandardMaterial, LandExtension> {
-    let sea_bottom_texture: Handle<Image> = asset_server.load("textures/sand.jpg");
-    let sand_texture: Handle<Image> = asset_server.load("textures/sand.jpg");
-    let grass_texture: Handle<Image> = asset_server.load("textures/grass.jpg");
-    let rocks_texture: Handle<Image> = asset_server.load("textures/rock.jpg");
+    let sea_bottom_texture: Handle<Image> = asset_server.load("textures/sand.png");
+    let sand_texture: Handle<Image> = asset_server.load("textures/sand.png");
+    let grass_texture: Handle<Image> = asset_server.load("textures/grass.png");
+    let rocks_texture: Handle<Image> = asset_server.load("textures/rock.png");
     ExtendedMaterial {
         base:      StandardMaterial {
             perceptual_roughness: 0.8,
