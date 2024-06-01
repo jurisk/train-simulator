@@ -27,6 +27,12 @@ bevy = { version = "0.13.2", default-features = false, features = [
     "tonemapping_luts",
     "webgpu", # https://caniuse.com/webgpu
     "x11",
+
+    # Next ones are development only, see https://bevyengine.org/news/bevy-0-12/#asset-preprocessing:
+    "asset_processor",
+    "file_watcher",
+    "embedded_watcher",
+    "multi-threaded"
 ]}
 
 # https://crates.io/crates/bevy-inspector-egui/versions
