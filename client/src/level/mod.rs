@@ -5,10 +5,12 @@ use bevy::prelude::{
 };
 
 use crate::communication::domain::{ClientMessage, ServerMessage};
+use crate::level::buildings::BuildingPlugin;
 use crate::level::domain::Level;
 use crate::level::terrain::TerrainPlugin;
 use crate::states::GameState;
 
+mod buildings;
 pub mod domain;
 pub mod terrain;
 
@@ -17,6 +19,7 @@ pub(crate) struct LevelPlugin;
 impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TerrainPlugin);
+        app.add_plugins(BuildingPlugin);
         app.add_systems(OnEnter(GameState::Joining), request_join_game);
         app.add_systems(
             Update,
