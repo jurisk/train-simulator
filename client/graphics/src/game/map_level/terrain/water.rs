@@ -6,9 +6,9 @@ use bevy::prelude::{
     default, AlphaMode, Assets, Color, Commands, Mesh, OnEnter, PbrBundle, Rectangle, Res, ResMut,
     StandardMaterial, Transform,
 };
+use crate::game::map_level::GameStateResource;
+use crate::game::map_level::terrain::Y_COEF;
 
-use crate::level::terrain::Y_COEF;
-use crate::level::GameStateResource;
 use crate::states::ClientState;
 
 pub(crate) struct WaterPlugin;
@@ -31,7 +31,7 @@ pub(crate) fn create_water(
     mut materials: ResMut<Assets<StandardMaterial>>,
     game_state_resource: Res<GameStateResource>,
 ) {
-    let level = &game_state_resource.game_state.level;
+    let level = &game_state_resource.game_state.map_level;
     let rectangle = Rectangle::new(level.terrain.vertex_count_x as f32, level.terrain.vertex_count_z as f32);
     let mesh = meshes.add(rectangle);
 

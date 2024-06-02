@@ -9,9 +9,8 @@ use bevy::render::mesh::MeshVertexBufferLayout;
 use bevy::render::render_resource::{
     AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
 };
-
-use crate::level::terrain::land::domain::TerrainType::{Grass, Rocks, Sand};
-use crate::level::terrain::land::ATTRIBUTE_TERRAIN_TYPE;
+use shared_domain::map_level::TerrainType;
+use crate::game::map_level::terrain::land::ATTRIBUTE_TERRAIN_TYPE;
 
 pub(crate) struct AdvancedLandMaterialPlugin;
 
@@ -78,9 +77,9 @@ pub(crate) fn create_advanced_land_material(
             ..default()
         },
         extension: LandExtension {
-            sand_terrain_type: Sand as u32,
-            grass_terrain_type: Grass as u32,
-            rocks_terrain_type: Rocks as u32,
+            sand_terrain_type: TerrainType::Sand as u32,
+            grass_terrain_type: TerrainType::Grass as u32,
+            rocks_terrain_type: TerrainType::Rocks as u32,
             land_textures,
         },
     }

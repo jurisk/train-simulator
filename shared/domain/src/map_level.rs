@@ -1,5 +1,24 @@
 use serde::{Deserialize, Serialize};
 
+#[repr(u32)]
+pub enum TerrainType {
+    Sand  = 0,
+    Grass = 1,
+    Rocks = 2,
+}
+
+impl TerrainType {
+    pub fn default_from_height(height: Height) -> Self {
+        if height.0 <= 9 {
+            TerrainType::Sand
+        } else if height.0 <= 15 {
+            TerrainType::Grass
+        } else {
+            TerrainType::Rocks
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Copy, Clone)]
 pub struct Height(pub u8);
 
@@ -40,12 +59,12 @@ impl Water {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Level {
+pub struct MapLevel {
     pub terrain: Terrain,
     pub water:   Water,
 }
 
-impl Level {
+impl MapLevel {
     // Could eventually move to some `Validated` instead
     #[must_use]
     pub fn is_valid(&self) -> bool {

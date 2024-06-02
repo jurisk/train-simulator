@@ -7,9 +7,9 @@ use bevy::prelude::{
     SceneBundle, Sphere, StandardMaterial, Startup, Transform, Vec3,
 };
 
-pub(crate) struct BuildingPlugin;
+pub(crate) struct BuildingsPlugin;
 
-impl Plugin for BuildingPlugin {
+impl Plugin for BuildingsPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_systems(Startup, setup);
     }

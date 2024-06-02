@@ -7,19 +7,16 @@ use shared_domain::game_state::GameState;
 use shared_protocol::game_selection::{ClientMessage, ServerMessage};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
-use crate::level::buildings::BuildingPlugin;
-use crate::level::terrain::TerrainPlugin;
+use crate::game::map_level::terrain::TerrainPlugin;
 use crate::states::ClientState;
 
-mod buildings;
 pub mod terrain;
 
-pub(crate) struct LevelPlugin;
+pub(crate) struct MapLevelPlugin;
 
-impl Plugin for LevelPlugin {
+impl Plugin for MapLevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TerrainPlugin);
-        app.add_plugins(BuildingPlugin);
         app.add_systems(OnEnter(ClientState::Joining), request_join_game);
         app.add_systems(
             Update,

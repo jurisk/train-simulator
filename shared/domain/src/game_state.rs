@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::level::Level;
+use crate::map_level::MapLevel;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct GameState {
-    pub level: Level,
+    pub map_level: MapLevel,
 }

@@ -1,7 +1,6 @@
 use bevy::prelude::{App, Plugin};
-
-use crate::level::terrain::land::LandPlugin;
-use crate::level::terrain::water::WaterPlugin;
+use crate::game::map_level::terrain::land::LandPlugin;
+use crate::game::map_level::terrain::water::WaterPlugin;
 
 pub mod land;
 pub mod water;

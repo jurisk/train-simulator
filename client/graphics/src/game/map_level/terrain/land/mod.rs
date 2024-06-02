@@ -8,18 +8,15 @@ use bevy::prelude::{
 };
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
+use shared_domain::map_level::TerrainType;
+use crate::game::map_level::GameStateResource;
+use crate::game::map_level::terrain::land::advanced_land_material::{AdvancedLandMaterialPlugin, create_advanced_land_material, LandExtension};
+use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::tiled_mesh_from_height_map_data;
+use crate::game::map_level::terrain::Y_COEF;
 
-use crate::level::terrain::land::advanced_land_material::{
-    create_advanced_land_material, AdvancedLandMaterialPlugin, LandExtension,
-};
-use crate::level::terrain::land::domain::TerrainType;
-use crate::level::terrain::land::tiled_mesh_from_height_map_data::tiled_mesh_from_height_map_data;
-use crate::level::terrain::Y_COEF;
-use crate::level::GameStateResource;
 use crate::states::ClientState;
 
 mod advanced_land_material;
-mod domain;
 mod stretched_mesh_from_height_map_data;
 mod tiled_mesh_from_height_map_data;
 
@@ -33,7 +30,7 @@ impl Plugin for LandPlugin {
     }
 }
 
-const ATTRIBUTE_TERRAIN_TYPE: MeshVertexAttribute =
+pub(crate) const ATTRIBUTE_TERRAIN_TYPE: MeshVertexAttribute =
     MeshVertexAttribute::new("TerrainType", 988_540_917, VertexFormat::Uint32);
 
 #[allow(unused)]
@@ -57,7 +54,7 @@ pub(crate) fn create_land(
     mut standard_materials: ResMut<Assets<StandardMaterial>>,
     game_state_resource: Res<GameStateResource>,
 ) {
-    let level = &game_state_resource.game_state.level;
+    let level = &game_state_resource.game_state.map_level;
     let data_slice: Vec<Vec<f32>> = level
         .terrain
         .vertex_heights
@@ -77,7 +74,7 @@ pub(crate) fn create_land(
         Y_COEF,
         data_slice,
         ATTRIBUTE_TERRAIN_TYPE,
-        |x, z| TerrainType::from_height(height_map[z][x]) as u32,
+        |x, z| TerrainType::default_from_height(height_map[z][x]) as u32,
     );
 
     mesh.duplicate_vertices();
