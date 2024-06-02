@@ -6,7 +6,10 @@ Steps:
 
 * Then do this:
 
-C:\dev\KTX-Software\bin\ktx.exe create .\sand.jpg sand.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear
-C:\dev\KTX-Software\bin\ktx.exe create .\grass.jpg grass.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear
-C:\dev\KTX-Software\bin\ktx.exe create .\sand.jpg sea_bottom.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear
-C:\dev\KTX-Software\bin\ktx.exe create .\rock.jpg rocks.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear
+C:\dev\KTX-Software\bin\ktx.exe create sand.jpg grass.jpg rock.jpg land.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear --zstd 9 --layers 3
+
+* For testing, it can be useful to generate single images:
+
+C:\dev\KTX-Software\bin\ktx.exe create grass.jpg grass.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear
+C:\dev\KTX-Software\bin\ktx.exe create sand.jpg sand.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear
+C:\dev\KTX-Software\bin\ktx.exe create rock.jpg rocks.ktx2 --generate-mipmap --format R8G8B8_UNORM --assign-oetf linear

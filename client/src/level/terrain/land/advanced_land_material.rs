@@ -10,7 +10,7 @@ use bevy::render::render_resource::{
     AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
 };
 
-use crate::level::terrain::land::domain::TerrainType::{Grass, Rocks, Sand, SeaBottom};
+use crate::level::terrain::land::domain::TerrainType::{Grass, Rocks, Sand};
 use crate::level::terrain::land::ATTRIBUTE_TERRAIN_TYPE;
 
 pub(crate) struct AdvancedLandMaterialPlugin;
@@ -29,29 +29,15 @@ pub(crate) struct LandExtension {
     // We need to ensure that the bindings of the base material and the extension do not conflict,
     // so we start from binding slot 100, leaving slots 0-99 for the base material.
     #[uniform(100)]
-    sea_bottom_terrain_type: u32,
+    sand_terrain_type:  u32,
     #[uniform(100)]
-    sand_terrain_type:       u32,
+    grass_terrain_type: u32,
     #[uniform(100)]
-    grass_terrain_type:      u32,
-    #[uniform(100)]
-    rocks_terrain_type:      u32,
+    rocks_terrain_type: u32,
 
-    #[texture(101)]
+    #[texture(101, dimension = "2d_array")]
     #[sampler(102)]
-    sea_bottom_texture: Handle<Image>,
-
-    #[texture(103)]
-    #[sampler(104)]
-    sand_texture: Handle<Image>,
-
-    #[texture(105)]
-    #[sampler(106)]
-    grass_texture: Handle<Image>,
-
-    #[texture(107)]
-    #[sampler(108)]
-    rocks_texture: Handle<Image>,
+    land_textures: Handle<Image>,
 }
 
 impl MaterialExtension for LandExtension {
@@ -84,10 +70,7 @@ pub(crate) fn create_advanced_land_material(
     asset_server: &Res<AssetServer>,
 ) -> ExtendedMaterial<StandardMaterial, LandExtension> {
     // Later: Refer to https://bevyengine.org/examples/Shaders/array-texture/ for how to use array textures instead
-    let sea_bottom_texture: Handle<Image> = asset_server.load("textures/sand.ktx2");
-    let sand_texture: Handle<Image> = asset_server.load("textures/sand.ktx2");
-    let grass_texture: Handle<Image> = asset_server.load("textures/grass.ktx2");
-    let rocks_texture: Handle<Image> = asset_server.load("textures/rocks.ktx2");
+    let land_textures: Handle<Image> = asset_server.load("textures/land.ktx2");
     ExtendedMaterial {
         base:      StandardMaterial {
             perceptual_roughness: 0.8,
@@ -95,14 +78,10 @@ pub(crate) fn create_advanced_land_material(
             ..default()
         },
         extension: LandExtension {
-            sea_bottom_terrain_type: SeaBottom as u32,
             sand_terrain_type: Sand as u32,
             grass_terrain_type: Grass as u32,
             rocks_terrain_type: Rocks as u32,
-            sea_bottom_texture,
-            sand_texture,
-            grass_texture,
-            rocks_texture,
+            land_textures,
         },
     }
 }
