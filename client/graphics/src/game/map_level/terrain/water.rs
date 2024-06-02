@@ -3,20 +3,45 @@ use std::f32::consts::FRAC_PI_2;
 use bevy::app::{App, Plugin};
 use bevy::core::Name;
 use bevy::prelude::{
-    default, AlphaMode, Assets, Color, Commands, Mesh, OnEnter, PbrBundle, Rectangle, Res, ResMut,
-    StandardMaterial, Transform,
+    default, AlphaMode, Assets, Color, Commands, EventReader, Mesh, PbrBundle, Rectangle, ResMut,
+    StandardMaterial, Transform, Update,
 };
+use shared_domain::map_level::MapLevel;
+use shared_protocol::server_response::{GameResponse, ServerResponse};
 
+use crate::communication::domain::ServerMessageEvent;
 use crate::game::map_level::terrain::Y_COEF;
-use crate::game::GameStateResource;
-use crate::states::ClientState;
 
 pub(crate) struct WaterPlugin;
 
 impl Plugin for WaterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(ClientState::Playing), create_water);
-        // Eventually, clean-up will be also needed
+        app.add_systems(Update, handle_game_state_responses);
+    }
+}
+
+fn handle_game_state_responses(
+    mut server_messages: EventReader<ServerMessageEvent>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut commands: Commands,
+) {
+    for message in server_messages.read() {
+        match &message.response {
+            ServerResponse::Game(game_response) => {
+                match game_response {
+                    GameResponse::State(game_state) => {
+                        create_water(
+                            &mut commands,
+                            &mut meshes,
+                            &mut materials,
+                            &game_state.map_level,
+                        )
+                    },
+                }
+            },
+            _ => {},
+        }
     }
 }
 
@@ -26,19 +51,18 @@ impl Plugin for WaterPlugin {
     clippy::cast_lossless
 )]
 pub(crate) fn create_water(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    game_state_resource: Res<GameStateResource>,
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    map_level: &MapLevel,
 ) {
-    let level = &game_state_resource.game_state.map_level;
     let rectangle = Rectangle::new(
-        level.terrain.vertex_count_x() as f32,
-        level.terrain.vertex_count_z() as f32,
+        map_level.terrain.vertex_count_x() as f32,
+        map_level.terrain.vertex_count_z() as f32,
     );
     let mesh = meshes.add(rectangle);
 
-    let (above, below) = &level.water.between;
+    let (above, below) = &map_level.water.between;
     let water_level = ((above.0 as f32 + below.0 as f32) / 2.0) * Y_COEF;
     let mut transform = Transform::from_xyz(0.0, water_level, 0.0);
     transform.rotate_x(-FRAC_PI_2);

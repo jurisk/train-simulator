@@ -5,7 +5,7 @@ use bevy::prelude::{
 };
 use shared_domain::game_state::GameState;
 use shared_protocol::client_command::{ClientCommand, LobbyCommand};
-use shared_protocol::server_response::{GameResponse, LobbyResponse, ServerResponse};
+use shared_protocol::server_response::{GameResponse, ServerResponse};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;
@@ -49,15 +49,6 @@ fn handle_game_joined(
 ) {
     for message in server_messages.read() {
         match &message.response {
-            ServerResponse::Lobby(lobby_response) => {
-                match lobby_response {
-                    LobbyResponse::AvailableGames(_) => todo!(), // TODO: Implement
-                    LobbyResponse::GameJoined(_) => {
-                        // TODO: Insert GameInfo resource?
-                    },
-                    LobbyResponse::GameLeft(_) => todo!(), // TODO: Implement
-                }
-            },
             ServerResponse::Game(game_response) => {
                 match game_response {
                     GameResponse::State(game_state) => {
@@ -68,7 +59,7 @@ fn handle_game_joined(
                     },
                 }
             },
-            _ => todo!(), // TODO: Implement other handling
+            _ => {}, // Ignoring other responses
         }
     }
 }

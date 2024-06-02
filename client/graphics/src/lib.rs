@@ -10,6 +10,7 @@ use crate::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use crate::debug::DebugPlugin;
 use crate::game::GamePlugin;
 use crate::lights::LightsPlugin;
+use crate::lobby::LobbyHandlerPlugin;
 use crate::states::ClientState;
 
 mod cameras;
@@ -18,6 +19,7 @@ mod constants;
 mod debug;
 mod game;
 mod lights;
+mod lobby;
 mod states;
 
 pub struct ClientGraphicsPlugin;
@@ -52,6 +54,7 @@ impl Plugin for ClientGraphicsPlugin {
         app.add_plugins((
             CommunicationPlugin,
             LightsPlugin,
+            LobbyHandlerPlugin,
             GamePlugin,
             CameraPlugin,
             DebugPlugin,
