@@ -4,7 +4,6 @@ use bevy::prelude::{
     ResMut, Resource,
 };
 use shared_domain::game_state::GameState;
-use shared_domain::GameId;
 use shared_protocol::client_command::{ClientCommand, LobbyCommand};
 use shared_protocol::server_response::{GameResponse, LobbyResponse, ServerResponse};
 
@@ -38,9 +37,8 @@ impl Plugin for GamePlugin {
 }
 
 fn request_join_game(mut client_messages: EventWriter<ClientMessageEvent>) {
-    let game_id = GameId::random();
     client_messages.send(ClientMessageEvent::new(ClientCommand::Lobby(
-        LobbyCommand::JoinGame(game_id),
+        LobbyCommand::CreateGame,
     )));
 }
 

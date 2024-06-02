@@ -14,7 +14,8 @@ pub enum AuthenticationCommand {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum LobbyCommand {
     ListGames,
-    JoinGame(GameId),
+    CreateGame,
+    JoinExistingGame(GameId),
     LeaveGame(GameId),
 }
 
