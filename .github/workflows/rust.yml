@@ -73,10 +73,10 @@ jobs:
           git clone https://jurisk:${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}@github.com/jurisk/train-simulator-pages.git
           cd train-simulator-pages
           git rm -rf .
-          cp -r ../client/graphics/web/* .
+          cp -r ../client/single-player/web/* .
           cp -r ../client/graphics/assets .
           git add .
-          ls -laR
+          ls -lR
           git status
           commit_message="Deploy from GitHub Action - $(date +'%Y-%m-%d %H:%M:%S') - Commit ${GITHUB_SHA::7} - Job $GITHUB_RUN_ID"
           git commit -m "$commit_message"
