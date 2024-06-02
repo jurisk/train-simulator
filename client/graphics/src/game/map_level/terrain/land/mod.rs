@@ -3,22 +3,22 @@ use bevy::asset::{AssetServer, Assets};
 use bevy::core::Name;
 use bevy::pbr::ExtendedMaterial;
 use bevy::prelude::{
-    default, Color, Commands, MaterialMeshBundle, Mesh, OnEnter, Plugin, Res, ResMut,
-    StandardMaterial, Transform, Vec3,
+    default, Color, Commands, EventReader, MaterialMeshBundle, Mesh, Plugin, Res, ResMut,
+    StandardMaterial, Transform, Update, Vec3,
 };
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
-use shared_domain::map_level::{Height, Terrain, TerrainType};
+use shared_domain::map_level::{Height, MapLevel, Terrain, TerrainType};
+use shared_protocol::server_response::{GameResponse, ServerResponse};
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
+use crate::communication::domain::ServerMessageEvent;
 use crate::game::map_level::terrain::land::advanced_land_material::{
     create_advanced_land_material, AdvancedLandMaterialPlugin, LandExtension,
 };
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::tiled_mesh_from_height_map_data;
 use crate::game::map_level::terrain::Y_COEF;
-use crate::game::GameStateResource;
-use crate::states::ClientState;
 
 mod advanced_land_material;
 mod tiled_mesh_from_height_map_data;
@@ -28,8 +28,7 @@ pub(crate) struct LandPlugin;
 impl Plugin for LandPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(AdvancedLandMaterialPlugin);
-        app.add_systems(OnEnter(ClientState::Playing), create_land);
-        // Eventually, clean-up will be also needed
+        app.add_systems(Update, handle_game_state_responses);
     }
 }
 
@@ -56,25 +55,54 @@ pub(crate) fn logical_to_world(
     Vec3::new(x, y, z)
 }
 
+#[allow(clippy::needless_pass_by_value)]
+fn handle_game_state_responses(
+    mut server_messages: EventReader<ServerMessageEvent>,
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    asset_server: Res<AssetServer>,
+    mut advanced_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, LandExtension>>>,
+    mut standard_materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for message in server_messages.read() {
+        if let ServerResponse::Game(game_response) = &message.response {
+            match game_response {
+                GameResponse::State(game_state) => {
+                    create_land(
+                        &mut commands,
+                        &mut meshes,
+                        &asset_server,
+                        &mut advanced_materials,
+                        &mut standard_materials,
+                        &game_state.map_level,
+                    );
+                },
+            }
+        }
+    }
+}
+
 #[allow(
     clippy::cast_precision_loss,
     clippy::needless_pass_by_value,
     clippy::cast_lossless
 )]
 pub(crate) fn create_land(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    asset_server: Res<AssetServer>,
-    mut advanced_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, LandExtension>>>,
-    mut standard_materials: ResMut<Assets<StandardMaterial>>,
-    game_state_resource: Res<GameStateResource>,
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    asset_server: &Res<AssetServer>,
+    advanced_materials: &mut ResMut<Assets<ExtendedMaterial<StandardMaterial, LandExtension>>>,
+    standard_materials: &mut ResMut<Assets<StandardMaterial>>,
+    map_level: &MapLevel,
 ) {
-    let level = &game_state_resource.game_state.map_level;
-    let data_slice: GridXZ<f32> = level.terrain.vertex_heights.map(|h| h.0 as f32 * Y_COEF);
+    let data_slice: GridXZ<f32> = map_level
+        .terrain
+        .vertex_heights
+        .map(|h| h.0 as f32 * Y_COEF);
 
-    let half_x = (level.terrain.tile_count_x() as f32) / 2.0;
-    let half_z = (level.terrain.tile_count_z() as f32) / 2.0;
-    let height_map = &level.terrain.vertex_heights;
+    let half_x = (map_level.terrain.tile_count_x() as f32) / 2.0;
+    let half_z = (map_level.terrain.tile_count_z() as f32) / 2.0;
+    let height_map = &map_level.terrain.vertex_heights;
 
     let mesh = tiled_mesh_from_height_map_data(
         -half_x,
@@ -95,7 +123,7 @@ pub(crate) fn create_land(
 
     match LAND_MATERIAL_TYPE {
         LandMaterialType::Advanced => {
-            let material = advanced_materials.add(create_advanced_land_material(&asset_server));
+            let material = advanced_materials.add(create_advanced_land_material(asset_server));
             commands.spawn((
                 MaterialMeshBundle {
                     mesh,
