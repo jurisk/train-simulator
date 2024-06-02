@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
-use shared_domain::{GameId, PlayerId};
-use shared_util::coords_xz::CoordsXZ;
+use shared_domain::{BuildingInfo, GameId, PlayerId};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct AccessToken(pub String);
@@ -20,25 +19,8 @@ pub enum LobbyCommand {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub enum TrackType {
-    NorthSouth,
-    EastWest,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub enum BuildingType {
-    Track(TrackType),
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub struct BuildCommand {
-    pub coords_xz:     CoordsXZ,
-    pub building_type: BuildingType,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameCommand {
-    Build(BuildCommand),
+    BuildBuilding(BuildingInfo),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use shared_util::coords_xz::CoordsXZ;
 use uuid::Uuid;
 
 pub mod game_state;
@@ -22,4 +23,41 @@ impl GameId {
     pub fn random() -> Self {
         Self(Uuid::new_v4())
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct BuildingId(pub Uuid);
+
+impl BuildingId {
+    #[must_use]
+    pub fn random() -> Self {
+        Self(Uuid::new_v4())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub enum TrackType {
+    NorthSouth,
+    EastWest,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub enum ProductionType {
+    CoalMine,
+    IronMine,
+    IronWorks,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub enum BuildingType {
+    Track(TrackType),
+    Production(ProductionType),
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct BuildingInfo {
+    pub building_id:      BuildingId,
+    // TODO: This is bad, as it is vertex and not actually tiles, and also buildings can be multi-tile
+    pub vertex_coords_xz: CoordsXZ,
+    pub building_type:    BuildingType,
 }

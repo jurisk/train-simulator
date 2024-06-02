@@ -1,9 +1,10 @@
 use log::info;
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::MapLevel;
-use shared_domain::GameId;
+use shared_domain::{BuildingId, BuildingInfo, BuildingType, GameId, TrackType};
 use shared_protocol::client_command::{ClientCommand, LobbyCommand};
 use shared_protocol::server_response::{GameInfo, GameResponse, LobbyResponse, ServerResponse};
+use shared_util::coords_xz::CoordsXZ;
 
 // TODO: Should be more stateful and separated into Authentication, Lobby, Game
 #[allow(clippy::module_name_repetitions, clippy::missing_panics_doc)]
@@ -27,6 +28,11 @@ pub fn server_logic(client_command: &ClientCommand) -> Vec<ServerResponse> {
                     vec![
                         ServerResponse::Lobby(LobbyResponse::GameJoined(GameInfo { game_id })),
                         ServerResponse::Game(GameResponse::State(game_state)),
+                        ServerResponse::Game(GameResponse::BuildingBuilt(BuildingInfo {
+                            building_id:      BuildingId::random(),
+                            vertex_coords_xz: CoordsXZ::new(3, 5),
+                            building_type:    BuildingType::Track(TrackType::NorthSouth),
+                        })),
                     ]
                 },
                 _ => todo!(), // TODO: Implement other handling

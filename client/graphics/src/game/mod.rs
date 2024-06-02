@@ -49,13 +49,11 @@ fn handle_game_joined(
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Game(game_response) = &message.response {
-            match game_response {
-                GameResponse::State(game_state) => {
-                    commands.insert_resource(GameStateResource {
-                        game_state: game_state.clone(),
-                    });
-                    client_state.set(ClientState::Playing);
-                },
+            if let GameResponse::State(game_state) = game_response {
+                commands.insert_resource(GameStateResource {
+                    game_state: game_state.clone(),
+                });
+                client_state.set(ClientState::Playing);
             }
         }
     }

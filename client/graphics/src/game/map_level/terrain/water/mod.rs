@@ -28,15 +28,13 @@ fn handle_game_state_responses(
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Game(game_response) = &message.response {
-            match game_response {
-                GameResponse::State(game_state) => {
-                    create_water(
-                        &mut commands,
-                        &mut meshes,
-                        &mut materials,
-                        &game_state.map_level,
-                    );
-                },
+            if let GameResponse::State(game_state) = game_response {
+                create_water(
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                    &game_state.map_level,
+                );
             }
         }
     }

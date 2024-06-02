@@ -66,17 +66,15 @@ fn handle_game_state_responses(
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Game(game_response) = &message.response {
-            match game_response {
-                GameResponse::State(game_state) => {
-                    create_land(
-                        &mut commands,
-                        &mut meshes,
-                        &asset_server,
-                        &mut advanced_materials,
-                        &mut standard_materials,
-                        &game_state.map_level,
-                    );
-                },
+            if let GameResponse::State(game_state) = game_response {
+                create_land(
+                    &mut commands,
+                    &mut meshes,
+                    &asset_server,
+                    &mut advanced_materials,
+                    &mut standard_materials,
+                    &game_state.map_level,
+                );
             }
         }
     }

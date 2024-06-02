@@ -1815,6 +1815,7 @@ dependencies = [
  "serde_json",
  "shared-domain",
  "shared-protocol",
+ "shared-util",
 ]
 
 [[package]]

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use shared_domain::game_state::GameState;
-use shared_domain::{GameId, PlayerId};
+use shared_domain::{BuildingInfo, GameId, PlayerId};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum AuthenticationResponse {
@@ -25,6 +25,7 @@ pub enum LobbyResponse {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
     State(GameState),
+    BuildingBuilt(BuildingInfo),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

@@ -9,6 +9,7 @@ rust-version.workspace = true
 [dependencies]
 shared-domain = { path = "../../shared/domain" }
 shared-protocol = { path = "../../shared/protocol" }
+shared-util = { path = "../../shared/util" }
 serde.workspace = true
 serde_json.workspace = true
 log = "0.4.21"
