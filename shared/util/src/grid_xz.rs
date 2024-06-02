@@ -14,6 +14,18 @@ pub struct GridXZ<T> {
 
 impl<T> GridXZ<T> {
     #[must_use]
+    pub fn new(data: Vec<Vec<T>>) -> Self {
+        let size_x = data.first().map_or(0, Vec::len);
+        let size_z = data.len();
+        debug_assert!(data.iter().all(|row| row.len() == size_x));
+        Self {
+            size_x,
+            size_z,
+            data,
+        }
+    }
+
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         self.data.len() == self.size_z && self.data.iter().all(|row| row.len() == self.size_x)
     }

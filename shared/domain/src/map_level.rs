@@ -21,7 +21,7 @@ impl TerrainType {
     }
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct Height(pub u8);
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -30,6 +30,13 @@ pub struct Terrain {
 }
 
 impl Terrain {
+    #[must_use]
+    pub fn new(vertex_heights: Vec<Vec<u8>>) -> Self {
+        Self {
+            vertex_heights: GridXZ::new(vertex_heights).map(|&height| Height(height)),
+        }
+    }
+
     #[must_use]
     pub fn is_valid(&self) -> bool {
         self.vertex_heights.is_valid()

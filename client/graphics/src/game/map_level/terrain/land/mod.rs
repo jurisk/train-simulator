@@ -4,11 +4,11 @@ use bevy::core::Name;
 use bevy::pbr::ExtendedMaterial;
 use bevy::prelude::{
     default, Color, Commands, MaterialMeshBundle, Mesh, OnEnter, Plugin, Res, ResMut,
-    StandardMaterial, Transform,
+    StandardMaterial, Transform, Vec3,
 };
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
-use shared_domain::map_level::TerrainType;
+use shared_domain::map_level::{Height, Terrain, TerrainType};
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
@@ -44,6 +44,18 @@ enum LandMaterialType {
 
 const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
 
+#[allow(clippy::cast_precision_loss, clippy::cast_lossless)]
+pub(crate) fn logical_to_world(
+    vertex_coords_xz: CoordsXZ,
+    height: Height,
+    terrain: &Terrain,
+) -> Vec3 {
+    let y = (height.0 as f32) * Y_COEF;
+    let x = (vertex_coords_xz.x as f32) - (terrain.tile_count_x() as f32) / 2.0;
+    let z = (vertex_coords_xz.z as f32) - (terrain.tile_count_z() as f32) / 2.0;
+    Vec3::new(x, y, z)
+}
+
 #[allow(
     clippy::cast_precision_loss,
     clippy::needless_pass_by_value,
@@ -60,8 +72,8 @@ pub(crate) fn create_land(
     let level = &game_state_resource.game_state.map_level;
     let data_slice: GridXZ<f32> = level.terrain.vertex_heights.map(|h| h.0 as f32 * Y_COEF);
 
-    let half_x = (level.terrain.vertex_count_x() as f32) / 2.0;
-    let half_z = (level.terrain.vertex_count_z() as f32) / 2.0;
+    let half_x = (level.terrain.tile_count_x() as f32) / 2.0;
+    let half_z = (level.terrain.tile_count_z() as f32) / 2.0;
     let height_map = &level.terrain.vertex_heights;
 
     let mesh = tiled_mesh_from_height_map_data(
@@ -112,4 +124,32 @@ pub(crate) fn create_land(
             ));
         },
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_logical_to_world() {
+        let terrain = Terrain {
+            vertex_heights: GridXZ::new(vec![
+                vec![Height(0), Height(1), Height(2)],
+                vec![Height(3), Height(4), Height(5)],
+                vec![Height(6), Height(7), Height(8)],
+            ]),
+        };
+        assert_eq!(
+            logical_to_world(CoordsXZ::new(0, 0), Height(0), &terrain),
+            Vec3::new(-1.0, 0.0, -1.0)
+        );
+        assert_eq!(
+            logical_to_world(CoordsXZ::new(1, 1), Height(1), &terrain),
+            Vec3::new(0.0, Y_COEF, 0.0)
+        );
+        assert_eq!(
+            logical_to_world(CoordsXZ::new(2, 2), Height(2), &terrain),
+            Vec3::new(1.0, 2.0 * Y_COEF, 1.0)
+        );
+    }
 }
