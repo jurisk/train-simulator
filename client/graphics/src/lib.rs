@@ -37,8 +37,8 @@ impl Plugin for ClientGraphicsPlugin {
                     ..default()
                 })
                 .set(AssetPlugin {
-                    file_path: "../../client/graphics/assets".to_string(),
-                    processed_file_path: "../../client/graphics/processed-assets".to_string(),
+                    file_path: "assets".to_string(),
+                    processed_file_path: "processed-assets".to_string(),
                     mode: AssetMode::Unprocessed, // Processed requires for the asset processor features to be enabled
                     ..default()
                 }),

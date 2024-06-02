@@ -40,6 +40,7 @@ features = [
     "tonemapping_luts",
     "webgpu", # https://caniuse.com/webgpu
     "zstd",
+    "x11",
 ]
 
 # These fail on WASM:
@@ -47,8 +48,6 @@ features = [
 version = "0.13.2"
 default-features = false
 features = [
-    "x11",
-
     # Later - dynamic_linking should be disabled for release builds.
     # From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional:
     "dynamic_linking",
