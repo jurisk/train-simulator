@@ -3,10 +3,11 @@ use shared_protocol::game_selection::{ClientMessage, ServerMessage};
 
 #[derive(Event)]
 pub struct ClientMessageEvent {
-    pub(crate) message: ClientMessage,
+    pub message: ClientMessage,
 }
 
 impl ClientMessageEvent {
+    #[must_use]
     pub fn new(message: ClientMessage) -> Self {
         Self { message }
     }
@@ -18,6 +19,7 @@ pub struct ServerMessageEvent {
 }
 
 impl ServerMessageEvent {
+    #[must_use]
     pub fn new(message: ServerMessage) -> Self {
         Self { message }
     }

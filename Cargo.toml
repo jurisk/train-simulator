@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "client",
+    "client/single-player",
+    "client/graphics",
     "shared/domain",
     "shared/protocol",
 ]

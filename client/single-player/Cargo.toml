@@ -1,0 +1,12 @@
+[package]
+name = "client-single-player"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+client-graphics = { path = "../graphics" }
+game-logic = { path = "../../game/logic"}
+bevy = { version = "0.13.2", default-features = false, features = [] }

@@ -1,5 +1,5 @@
 [package]
-name = "client"
+name = "client-graphics"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -10,8 +10,9 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-shared-domain = { path = "../shared/domain" }
-shared-protocol = { path = "../shared/protocol" }
+shared-domain = { path = "../../shared/domain" }
+shared-protocol = { path = "../../shared/protocol" }
+game-logic = { path = "../../game/logic" }
 
 serde.workspace = true
 serde_json.workspace = true

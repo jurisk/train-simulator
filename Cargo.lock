@@ -1252,16 +1252,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 
 [[package]]
-name = "client"
+name = "client-graphics"
 version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_dylib",
+ "game-logic",
  "serde",
  "serde_json",
  "shared-domain",
  "shared-protocol",
+]
+
+[[package]]
+name = "client-single-player"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "client-graphics",
+ "game-logic",
 ]
 
 [[package]]
@@ -1793,6 +1803,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "54614a3312934d066701a80f20f15fa3b56d67ac7722b39eea5b4c9dd1d66c94"
 dependencies = [
  "thread_local",
+]
+
+[[package]]
+name = "game-logic"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+ "shared-domain",
+ "shared-protocol",
 ]
 
 [[package]]
