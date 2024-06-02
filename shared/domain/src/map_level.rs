@@ -8,6 +8,7 @@ pub enum TerrainType {
 }
 
 impl TerrainType {
+    #[must_use]
     pub fn default_from_height(height: Height) -> Self {
         if height.0 <= 9 {
             TerrainType::Sand
@@ -24,25 +25,30 @@ pub struct Height(pub u8);
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Terrain {
-    pub vertex_count_x:     usize,
-    pub vertex_count_z:     usize,
+    pub vertex_count_x: usize,
+    pub vertex_count_z: usize,
 
     // TODO: Move to GridXZ, which makes the details private
     pub vertex_heights: Vec<Vec<Height>>,
 }
 
 impl Terrain {
+    #[must_use]
     pub fn tile_count_x(&self) -> usize {
         self.vertex_count_x - 1
     }
 
+    #[must_use]
     pub fn tile_count_z(&self) -> usize {
         self.vertex_count_z - 1
     }
 
     fn is_valid(&self) -> bool {
         self.vertex_heights.len() == self.vertex_count_z
-            && self.vertex_heights.iter().all(|row| row.len() == self.vertex_count_x)
+            && self
+                .vertex_heights
+                .iter()
+                .all(|row| row.len() == self.vertex_count_x)
     }
 }
 

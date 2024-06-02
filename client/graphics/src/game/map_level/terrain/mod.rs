@@ -1,4 +1,5 @@
 use bevy::prelude::{App, Plugin};
+
 use crate::game::map_level::terrain::land::LandPlugin;
 use crate::game::map_level::terrain::water::WaterPlugin;
 

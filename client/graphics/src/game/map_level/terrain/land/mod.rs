@@ -9,11 +9,13 @@ use bevy::prelude::{
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
 use shared_domain::map_level::TerrainType;
-use crate::game::map_level::GameStateResource;
-use crate::game::map_level::terrain::land::advanced_land_material::{AdvancedLandMaterialPlugin, create_advanced_land_material, LandExtension};
+
+use crate::game::map_level::terrain::land::advanced_land_material::{
+    create_advanced_land_material, AdvancedLandMaterialPlugin, LandExtension,
+};
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::tiled_mesh_from_height_map_data;
 use crate::game::map_level::terrain::Y_COEF;
-
+use crate::game::GameStateResource;
 use crate::states::ClientState;
 
 mod advanced_land_material;

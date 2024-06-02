@@ -16,9 +16,9 @@ mod cameras;
 pub mod communication;
 mod constants;
 mod debug;
+mod game;
 mod lights;
 mod states;
-mod game;
 
 pub struct ClientGraphicsPlugin;
 
