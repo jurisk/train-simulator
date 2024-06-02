@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::coords_xz::CoordsXZ;
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct GridXZ<T> {
     pub size_x: usize,
     pub size_z: usize,

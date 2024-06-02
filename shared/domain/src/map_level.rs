@@ -21,10 +21,10 @@ impl TerrainType {
     }
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Height(pub u8);
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct Terrain {
     pub vertex_heights: GridXZ<Height>,
 }
@@ -63,7 +63,7 @@ impl Terrain {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct Water {
     pub between: (Height, Height),
 }
@@ -75,7 +75,7 @@ impl Water {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct MapLevel {
     pub terrain: Terrain,
     pub water:   Water,

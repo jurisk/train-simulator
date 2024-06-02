@@ -1,1 +1,2 @@
-pub mod game_selection;
+pub mod client_command;
+pub mod server_response;

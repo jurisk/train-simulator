@@ -4,7 +4,9 @@ use bevy::prelude::{
     ResMut, Resource,
 };
 use shared_domain::game_state::GameState;
-use shared_protocol::game_selection::{ClientMessage, ServerMessage};
+use shared_domain::GameId;
+use shared_protocol::client_command::{ClientCommand, LobbyCommand};
+use shared_protocol::server_response::{GameResponse, LobbyResponse, ServerResponse};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;
@@ -36,7 +38,10 @@ impl Plugin for GamePlugin {
 }
 
 fn request_join_game(mut client_messages: EventWriter<ClientMessageEvent>) {
-    client_messages.send(ClientMessageEvent::new(ClientMessage::JoinGame));
+    let game_id = GameId::random();
+    client_messages.send(ClientMessageEvent::new(ClientCommand::Lobby(
+        LobbyCommand::JoinGame(game_id),
+    )));
 }
 
 fn handle_game_joined(
@@ -45,13 +50,27 @@ fn handle_game_joined(
     mut commands: Commands,
 ) {
     for message in server_messages.read() {
-        match &message.message {
-            ServerMessage::GameJoined { game_state } => {
-                commands.insert_resource(GameStateResource {
-                    game_state: game_state.clone(),
-                });
-                client_state.set(ClientState::Playing);
+        match &message.response {
+            ServerResponse::Lobby(lobby_response) => {
+                match lobby_response {
+                    LobbyResponse::AvailableGames(_) => todo!(), // TODO: Implement
+                    LobbyResponse::GameJoined(_) => {
+                        // TODO: Insert GameInfo resource?
+                    },
+                    LobbyResponse::GameLeft(_) => todo!(), // TODO: Implement
+                }
             },
+            ServerResponse::Game(game_response) => {
+                match game_response {
+                    GameResponse::State(game_state) => {
+                        commands.insert_resource(GameStateResource {
+                            game_state: game_state.clone(),
+                        });
+                        client_state.set(ClientState::Playing);
+                    },
+                }
+            },
+            _ => todo!(), // TODO: Implement other handling
         }
     }
 }

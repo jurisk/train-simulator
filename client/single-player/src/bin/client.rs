@@ -12,12 +12,13 @@ fn main() {
 
 // TODO:    Eventually, we should also introduce a multi-player client with a real server communications component.
 //          Not sure which library is the best - possibly https://github.com/ukoehb/bevy_simplenet
+// TODO:    The server should likely be stateful, separate state for lobby and for each game
 fn process_messages_locally(
     mut client_messages: EventReader<ClientMessageEvent>,
     mut server_messages: EventWriter<ServerMessageEvent>,
 ) {
     for message in client_messages.read() {
-        let responses = server_logic(&message.message);
+        let responses = server_logic(&message.command);
         for response in responses {
             server_messages.send(ServerMessageEvent::new(response));
         }

@@ -24,6 +24,12 @@ pub struct ClientGraphicsPlugin;
 
 impl Plugin for ClientGraphicsPlugin {
     fn build(&self, app: &mut App) {
+        let asset_path_prefix = if cfg!(target_arch = "wasm32") {
+            ""
+        } else {
+            "../../client/graphics/"
+        };
+
         app.init_state::<ClientState>();
         app.add_plugins(
             DefaultPlugins
@@ -37,8 +43,8 @@ impl Plugin for ClientGraphicsPlugin {
                     ..default()
                 })
                 .set(AssetPlugin {
-                    file_path: "assets".to_string(),
-                    processed_file_path: "processed-assets".to_string(),
+                    file_path: (asset_path_prefix.to_owned() + "assets").to_string(),
+                    processed_file_path: (asset_path_prefix.to_owned() + "processed-assets").to_string(),
                     mode: AssetMode::Unprocessed, // Processed requires for the asset processor features to be enabled
                     ..default()
                 }),
