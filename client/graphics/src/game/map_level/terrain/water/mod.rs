@@ -20,6 +20,7 @@ impl Plugin for WaterPlugin {
     }
 }
 
+#[allow(clippy::collapsible_match)]
 fn handle_game_state_responses(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut meshes: ResMut<Assets<Mesh>>,

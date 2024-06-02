@@ -42,6 +42,7 @@ fn request_join_game(mut client_messages: EventWriter<ClientMessageEvent>) {
     )));
 }
 
+#[allow(clippy::collapsible_match)]
 fn handle_game_joined(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut client_state: ResMut<NextState<ClientState>>,

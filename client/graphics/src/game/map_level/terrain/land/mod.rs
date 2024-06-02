@@ -55,7 +55,7 @@ pub(crate) fn logical_to_world(
     Vec3::new(x, y, z)
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::needless_pass_by_value, clippy::collapsible_match)]
 fn handle_game_state_responses(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,

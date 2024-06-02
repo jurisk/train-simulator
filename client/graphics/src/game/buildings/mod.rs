@@ -27,6 +27,7 @@ impl Plugin for BuildingsPlugin {
     }
 }
 
+#[allow(clippy::collapsible_match)]
 fn handle_game_state_responses(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
