@@ -8,7 +8,7 @@ use shared_protocol::game_selection::{ClientMessage, ServerMessage};
 pub fn server_logic(client_message: &ClientMessage) -> Vec<ServerMessage> {
     match client_message {
         ClientMessage::JoinGame => {
-            let level_json = include_str!("../assets/levels/default.json");
+            let level_json = include_str!("../assets/map_levels/default.json");
             let level = serde_json::from_str::<MapLevel>(level_json)
                 .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
 

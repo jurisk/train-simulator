@@ -77,3 +77,18 @@ impl MapLevel {
         self.terrain.is_valid() && self.water.is_valid()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_terrain_can_be_deserialised() {
+        let level_json = include_str!("../../../game/logic/assets/map_levels/default.json");
+        let level = serde_json::from_str::<MapLevel>(level_json)
+            .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
+        assert!(level.is_valid());
+        assert_eq!(level.terrain.vertex_count_x, 100);
+        assert_eq!(level.terrain.vertex_count_z, 100);
+    }
+}
