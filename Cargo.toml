@@ -12,47 +12,6 @@ edition = "2021"
 rust-version = "1.80.0"
 
 [workspace.dependencies]
-# https://crates.io/crates/bevy/versions
-bevy = { version = "0.13.2", default-features = false, features = [
-    "bevy_core_pipeline",
-    "bevy_gizmos",
-    "bevy_gltf",
-    "bevy_render",
-    "bevy_pbr",
-    "bevy_text",
-    "bevy_ui",
-    "default_font",
-    "png",
-    "tonemapping_luts",
-    "webgpu", # https://caniuse.com/webgpu
-    "x11",
-    "ktx2",
-    "zstd",
-
-# Enables automatic PNG conversion with mipmap support, but it doesn't support WebGPU:
-#   "basis-universal",
-
-
-# These fail on WASM:
-# From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional:
-#   "dynamic_linking",
-
-# Next ones are development only, see https://bevyengine.org/news/bevy-0-12/#asset-preprocessing:
-#    "asset_processor",
-#    "file_watcher",
-#    "embedded_watcher",
-#    "multi-threaded", # Renamed to "multi_threaded" in newer Bevy versions
-]}
-
-# https://github.com/jakobhellermann/bevy-inspector-egui
-# https://crates.io/crates/bevy-inspector-egui/versions
-bevy-inspector-egui = {  version = "0.24.0", features = ["highlight_changes", "bevy_pbr"] }
-
-# Want to enable this but wasm32 builds then fail
-# [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-# bevy_dylib = "0.13.2" #
-
-rand = "0.9.0-alpha.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 

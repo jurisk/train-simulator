@@ -10,8 +10,60 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-bevy.workspace = true
-bevy-inspector-egui.workspace = true
-rand.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+
+# https://github.com/jakobhellermann/bevy-inspector-egui
+# https://crates.io/crates/bevy-inspector-egui/versions
+bevy-inspector-egui = {  version = "0.24.0", features = ["highlight_changes", "bevy_pbr"] }
+
+# https://crates.io/crates/bevy/versions
+[dependencies.bevy]
+version = "0.13.2"
+default-features = false
+features = [
+    "bevy_core_pipeline",
+    "bevy_gizmos",
+    "bevy_gltf",
+    "bevy_pbr",
+    "bevy_render",
+    "bevy_text",
+    "bevy_ui",
+    "default_font",
+    "ktx2",
+    "png",
+    "tonemapping_luts",
+    "webgpu", # https://caniuse.com/webgpu
+    "zstd",
+]
+
+# These fail on WASM:
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies.bevy]
+version = "0.13.2"
+default-features = false
+features = [
+    "x11",
+
+    # Later - dynamic_linking should be disabled for release builds.
+    # From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional:
+    "dynamic_linking",
+
+    # Next ones are development only, see https://bevyengine.org/news/bevy-0-12/#asset-preprocessing:
+    "asset_processor",
+    "embedded_watcher",
+    "file_watcher",
+    "multi-threaded", # Renamed to "multi_threaded" in newer Bevy versions
+]
+
+
+[target.'cfg(target_arch = "wasm32")'.dependencies.bevy]
+version = "0.13.2"
+default-features = false
+features = [
+    "webgpu",
+]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# Later - dynamic_linking should be disabled for release builds.
+# From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional:
+bevy_dylib = "0.13.2"
