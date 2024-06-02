@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Copy, Clone)]
 pub struct Height(pub u8);
@@ -38,6 +38,7 @@ pub struct Level {
 
 impl Level {
     // Could eventually move to some `Validated` instead
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         self.terrain.is_valid() && self.water.is_valid()
     }

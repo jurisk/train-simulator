@@ -1,4 +1,5 @@
 use shared_domain::level::Height;
+
 use crate::level::terrain::land::domain::TerrainType::{Grass, Rocks, Sand};
 
 // TODO: Belongs in `shared/domain`

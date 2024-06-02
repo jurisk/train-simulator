@@ -1,9 +1,9 @@
-use shared_domain::level::Level;
+use shared_domain::game_state::GameState;
 
 pub enum ClientMessage {
     JoinGame,
 }
 
 pub enum ServerMessage {
-    GameJoined { level: Level },
+    GameJoined { game_state: GameState },
 }

@@ -8,14 +8,14 @@ use bevy::prelude::{
 };
 
 use crate::level::terrain::Y_COEF;
-use crate::level::LevelResource;
-use crate::states::GameState;
+use crate::level::GameStateResource;
+use crate::states::ClientState;
 
 pub(crate) struct WaterPlugin;
 
 impl Plugin for WaterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Playing), create_water);
+        app.add_systems(OnEnter(ClientState::Playing), create_water);
         // Eventually, clean-up will be also needed
     }
 }
@@ -29,9 +29,9 @@ pub(crate) fn create_water(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    level_resource: Res<LevelResource>,
+    game_state_resource: Res<GameStateResource>,
 ) {
-    let level = &level_resource.level;
+    let level = &game_state_resource.game_state.level;
     let rectangle = Rectangle::new(level.terrain.size_x as f32, level.terrain.size_z as f32);
     let mesh = meshes.add(rectangle);
 

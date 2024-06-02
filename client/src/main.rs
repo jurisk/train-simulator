@@ -11,7 +11,7 @@ use crate::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use crate::debug::DebugPlugin;
 use crate::level::LevelPlugin;
 use crate::lights::LightsPlugin;
-use crate::states::GameState;
+use crate::states::ClientState;
 
 mod cameras;
 mod communication;
@@ -23,7 +23,7 @@ mod states;
 
 fn main() {
     let mut app = App::new();
-    app.init_state::<GameState>();
+    app.init_state::<ClientState>();
     app.add_plugins(
         DefaultPlugins
             .build()

@@ -3,13 +3,13 @@ use bevy::prelude::{
     in_state, Commands, EventReader, EventWriter, IntoSystemConfigs, NextState, OnEnter, Plugin,
     ResMut, Resource, Update,
 };
+use shared_domain::game_state::GameState;
+use shared_protocol::game_selection::{ClientMessage, ServerMessage};
 
+use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::level::buildings::BuildingPlugin;
 use crate::level::terrain::TerrainPlugin;
-use crate::states::GameState;
-use shared_domain::level::Level;
-use shared_protocol::game_selection::{ClientMessage, ServerMessage};
-use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
+use crate::states::ClientState;
 
 mod buildings;
 pub mod terrain;
@@ -20,18 +20,19 @@ impl Plugin for LevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TerrainPlugin);
         app.add_plugins(BuildingPlugin);
-        app.add_systems(OnEnter(GameState::Joining), request_join_game);
+        app.add_systems(OnEnter(ClientState::Joining), request_join_game);
         app.add_systems(
             Update,
-            handle_game_joined.run_if(in_state(GameState::Joining)),
+            handle_game_joined.run_if(in_state(ClientState::Joining)),
         );
     }
 }
 
+// TODO: Move to `game` or something
 #[allow(clippy::module_name_repetitions)]
 #[derive(Resource)]
-pub struct LevelResource {
-    level: Level,
+pub struct GameStateResource {
+    game_state: GameState,
 }
 
 fn request_join_game(mut client_messages: EventWriter<ClientMessageEvent>) {
@@ -40,16 +41,16 @@ fn request_join_game(mut client_messages: EventWriter<ClientMessageEvent>) {
 
 fn handle_game_joined(
     mut server_messages: EventReader<ServerMessageEvent>,
-    mut game_state: ResMut<NextState<GameState>>,
+    mut client_state: ResMut<NextState<ClientState>>,
     mut commands: Commands,
 ) {
     for message in server_messages.read() {
         match &message.message {
-            ServerMessage::GameJoined { level } => {
-                commands.insert_resource(LevelResource {
-                    level: level.clone(),
+            ServerMessage::GameJoined { game_state } => {
+                commands.insert_resource(GameStateResource {
+                    game_state: game_state.clone(),
                 });
-                game_state.set(GameState::Playing);
+                client_state.set(ClientState::Playing);
             },
         }
     }

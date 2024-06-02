@@ -15,8 +15,8 @@ use crate::level::terrain::land::advanced_land_material::{
 use crate::level::terrain::land::domain::TerrainType;
 use crate::level::terrain::land::tiled_mesh_from_height_map_data::tiled_mesh_from_height_map_data;
 use crate::level::terrain::Y_COEF;
-use crate::level::LevelResource;
-use crate::states::GameState;
+use crate::level::GameStateResource;
+use crate::states::ClientState;
 
 mod advanced_land_material;
 mod domain;
@@ -28,7 +28,7 @@ pub(crate) struct LandPlugin;
 impl Plugin for LandPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(AdvancedLandMaterialPlugin);
-        app.add_systems(OnEnter(GameState::Playing), create_land);
+        app.add_systems(OnEnter(ClientState::Playing), create_land);
         // Eventually, clean-up will be also needed
     }
 }
@@ -55,9 +55,9 @@ pub(crate) fn create_land(
     asset_server: Res<AssetServer>,
     mut advanced_materials: ResMut<Assets<ExtendedMaterial<StandardMaterial, LandExtension>>>,
     mut standard_materials: ResMut<Assets<StandardMaterial>>,
-    level_resource: Res<LevelResource>,
+    game_state_resource: Res<GameStateResource>,
 ) {
-    let level = &level_resource.level;
+    let level = &game_state_resource.game_state.level;
     let data_slice: Vec<Vec<f32>> = level
         .terrain
         .height_map

@@ -1,3 +1,5 @@
+#![allow(clippy::needless_pass_by_value)]
+
 use bevy::core::Name;
 use bevy::pbr::PbrBundle;
 use bevy::prelude::{

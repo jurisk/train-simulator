@@ -1,9 +1,10 @@
 use bevy::app::App;
 use bevy::prelude::{info, EventReader, EventWriter, Plugin, Update};
+use shared_domain::game_state::GameState;
+use shared_domain::level::Level;
 use shared_protocol::game_selection::{ClientMessage, ServerMessage};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
-use shared_domain::level::Level;
 pub mod domain;
 
 #[allow(clippy::module_name_repetitions)]
@@ -40,9 +41,11 @@ fn server_stub(client_message: &ClientMessage) -> Vec<ServerMessage> {
 
             assert!(level.is_valid());
 
+            let game_state = GameState { level };
+
             info!("Simulating server responding to JoinGame with GameJoined");
 
-            vec![ServerMessage::GameJoined { level }]
+            vec![ServerMessage::GameJoined { game_state }]
         },
     }
 }

@@ -15,9 +15,9 @@ Rare:
 [source,bash]
 ----
 rustup update
-cargo +nightly update
-cargo +nightly udeps --all-targets
-cargo +nightly audit
+cargo update
+cargo udeps --all-targets
+cargo audit
 ----
 
 Frequent:

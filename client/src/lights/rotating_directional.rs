@@ -9,7 +9,7 @@ use bevy::prelude::{
 };
 
 use crate::constants::UP;
-use crate::states::GameState;
+use crate::states::ClientState;
 
 pub(crate) struct RotatingDirectionalLightPlugin;
 
@@ -17,12 +17,12 @@ const ROTATE_LIGHT: bool = false;
 
 impl Plugin for RotatingDirectionalLightPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Playing), create_lights);
+        app.add_systems(OnEnter(ClientState::Playing), create_lights);
 
         if ROTATE_LIGHT {
             app.add_systems(
                 Update,
-                animate_light_direction.run_if(in_state(GameState::Playing)),
+                animate_light_direction.run_if(in_state(ClientState::Playing)),
             );
         }
     }

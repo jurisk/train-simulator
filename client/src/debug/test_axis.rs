@@ -2,13 +2,16 @@ use bevy::app::{App, Update};
 use bevy::math::Vec3;
 use bevy::prelude::{in_state, Color, Gizmos, IntoSystemConfigs, Plugin};
 
-use crate::states::GameState;
+use crate::states::ClientState;
 
 pub(crate) struct TestAxisPlugin;
 
 impl Plugin for TestAxisPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, draw_test_axis.run_if(in_state(GameState::Playing)));
+        app.add_systems(
+            Update,
+            draw_test_axis.run_if(in_state(ClientState::Playing)),
+        );
     }
 }
 
