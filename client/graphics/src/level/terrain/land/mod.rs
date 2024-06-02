@@ -60,14 +60,14 @@ pub(crate) fn create_land(
     let level = &game_state_resource.game_state.level;
     let data_slice: Vec<Vec<f32>> = level
         .terrain
-        .height_map
+        .vertex_heights
         .iter()
         .map(|row| row.iter().map(|h| h.0 as f32).collect::<Vec<_>>())
         .collect();
 
-    let half_x = (level.terrain.size_x as f32) / 2.0;
-    let half_z = (level.terrain.size_z as f32) / 2.0;
-    let height_map = &level.terrain.height_map;
+    let half_x = (level.terrain.vertex_count_x as f32) / 2.0;
+    let half_z = (level.terrain.vertex_count_z as f32) / 2.0;
+    let height_map = &level.terrain.vertex_heights;
 
     let mut mesh = tiled_mesh_from_height_map_data(
         -half_x,

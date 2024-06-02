@@ -32,7 +32,7 @@ pub(crate) fn create_water(
     game_state_resource: Res<GameStateResource>,
 ) {
     let level = &game_state_resource.game_state.level;
-    let rectangle = Rectangle::new(level.terrain.size_x as f32, level.terrain.size_z as f32);
+    let rectangle = Rectangle::new(level.terrain.vertex_count_x as f32, level.terrain.vertex_count_z as f32);
     let mesh = meshes.add(rectangle);
 
     let (above, below) = &level.water.between;

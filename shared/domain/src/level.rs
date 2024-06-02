@@ -5,16 +5,25 @@ pub struct Height(pub u8);
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Terrain {
-    // TODO: size_x and size_z is for vertices, the number of tiles is smaller by 1 in each dimension. Separate this to make it clear.
-    pub size_x:     usize,
-    pub size_z:     usize,
-    pub height_map: Vec<Vec<Height>>, // TODO: vertex_height_map
+    pub vertex_count_x:     usize,
+    pub vertex_count_z:     usize,
+
+    // TODO: Move to GridXZ, which makes the details private
+    pub vertex_heights: Vec<Vec<Height>>,
 }
 
 impl Terrain {
+    pub fn tile_count_x(&self) -> usize {
+        self.vertex_count_x - 1
+    }
+
+    pub fn tile_count_z(&self) -> usize {
+        self.vertex_count_z - 1
+    }
+
     fn is_valid(&self) -> bool {
-        self.height_map.len() == self.size_z
-            && self.height_map.iter().all(|row| row.len() == self.size_x)
+        self.vertex_heights.len() == self.vertex_count_z
+            && self.vertex_heights.iter().all(|row| row.len() == self.vertex_count_x)
     }
 }
 
