@@ -36,7 +36,6 @@ pub fn tiled_mesh_from_height_map_data<F>(
     max_x: f32,
     min_z: f32,
     max_z: f32,
-    y_coef: f32,
     data: GridXZ<f32>,
     custom_attribute: MeshVertexAttribute,
     custom_f: F,
@@ -65,7 +64,7 @@ where
                 let coords = CoordsXZ::new(x, z);
                 let position = Vec3::new(
                     (x as f32 / x_segments as f32) * extent_x + min_x,
-                    data[&coords] * y_coef,
+                    data[&coords],
                     (z as f32 / z_segments as f32) * extent_z + min_z,
                 );
                 let uv = Vec2::new(offset[0] as f32, offset[1] as f32);

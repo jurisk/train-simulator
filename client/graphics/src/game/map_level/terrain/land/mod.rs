@@ -62,7 +62,7 @@ pub(crate) fn create_land(
         .terrain
         .vertex_heights
         // TODO: Move the Y_COEF division up here?
-        .map(|h| h.0 as f32);
+        .map(|h| h.0 as f32 * Y_COEF);
 
     let half_x = (level.terrain.vertex_count_x() as f32) / 2.0;
     let half_z = (level.terrain.vertex_count_z() as f32) / 2.0;
@@ -73,7 +73,6 @@ pub(crate) fn create_land(
         half_x,
         -half_z,
         half_z,
-        Y_COEF,
         data_slice,
         ATTRIBUTE_TERRAIN_TYPE,
         |coords: CoordsXZ| TerrainType::default_from_height(height_map[&coords]) as u32,
