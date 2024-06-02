@@ -48,18 +48,15 @@ fn handle_game_joined(
     mut commands: Commands,
 ) {
     for message in server_messages.read() {
-        match &message.response {
-            ServerResponse::Game(game_response) => {
-                match game_response {
-                    GameResponse::State(game_state) => {
-                        commands.insert_resource(GameStateResource {
-                            game_state: game_state.clone(),
-                        });
-                        client_state.set(ClientState::Playing);
-                    },
-                }
-            },
-            _ => {}, // Ignoring other responses
+        if let ServerResponse::Game(game_response) = &message.response {
+            match game_response {
+                GameResponse::State(game_state) => {
+                    commands.insert_resource(GameStateResource {
+                        game_state: game_state.clone(),
+                    });
+                    client_state.set(ClientState::Playing);
+                },
+            }
         }
     }
 }

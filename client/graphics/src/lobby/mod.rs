@@ -16,21 +16,18 @@ impl Plugin for LobbyHandlerPlugin {
 // Later: Implement
 fn handle_lobby_responses(mut server_messages: EventReader<ServerMessageEvent>) {
     for message in server_messages.read() {
-        match &message.response {
-            ServerResponse::Lobby(lobby_response) => {
-                match lobby_response {
-                    LobbyResponse::AvailableGames(_game_infos) => {
-                        info(format!("{lobby_response:?}"));
-                    },
-                    LobbyResponse::GameJoined(_game_info) => {
-                        info(format!("{lobby_response:?}"));
-                    },
-                    LobbyResponse::GameLeft(_game_id) => {
-                        info(format!("{lobby_response:?}"));
-                    },
-                }
-            },
-            _ => {}, // Ignoring non-lobby
+        if let ServerResponse::Lobby(lobby_response) = &message.response {
+            match lobby_response {
+                LobbyResponse::AvailableGames(_game_infos) => {
+                    info(format!("{lobby_response:?}"));
+                },
+                LobbyResponse::GameJoined(_game_info) => {
+                    info(format!("{lobby_response:?}"));
+                },
+                LobbyResponse::GameLeft(_game_id) => {
+                    info(format!("{lobby_response:?}"));
+                },
+            }
         }
     }
 }

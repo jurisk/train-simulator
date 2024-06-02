@@ -27,20 +27,17 @@ fn handle_game_state_responses(
     mut commands: Commands,
 ) {
     for message in server_messages.read() {
-        match &message.response {
-            ServerResponse::Game(game_response) => {
-                match game_response {
-                    GameResponse::State(game_state) => {
-                        create_water(
-                            &mut commands,
-                            &mut meshes,
-                            &mut materials,
-                            &game_state.map_level,
-                        )
-                    },
-                }
-            },
-            _ => {},
+        if let ServerResponse::Game(game_response) = &message.response {
+            match game_response {
+                GameResponse::State(game_state) => {
+                    create_water(
+                        &mut commands,
+                        &mut meshes,
+                        &mut materials,
+                        &game_state.map_level,
+                    );
+                },
+            }
         }
     }
 }
