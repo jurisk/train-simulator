@@ -1273,6 +1273,7 @@ dependencies = [
  "bevy",
  "client-graphics",
  "game-logic",
+ "shared-domain",
 ]
 
 [[package]]
@@ -3180,6 +3181,7 @@ dependencies = [
 name = "shared-util"
 version = "0.1.0"
 dependencies = [
+ "fastrand",
  "serde",
  "serde_json",
 ]

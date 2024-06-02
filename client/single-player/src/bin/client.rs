@@ -2,6 +2,7 @@ use bevy::prelude::{App, EventReader, EventWriter, Update};
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::ClientGraphicsPlugin;
 use game_logic::logic::server_logic;
+use shared_domain::PlayerId;
 
 fn main() {
     let mut app = App::new();
@@ -18,9 +19,10 @@ fn process_messages_locally(
     mut server_messages: EventWriter<ServerMessageEvent>,
 ) {
     for message in client_messages.read() {
-        let responses = server_logic(&message.command);
+        let responses = server_logic(&message.command, PlayerId::random());
         for response in responses {
-            server_messages.send(ServerMessageEvent::new(response));
+            // TODO: We are ignoring the response address
+            server_messages.send(ServerMessageEvent::new(response.response));
         }
     }
 }

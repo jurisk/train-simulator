@@ -9,4 +9,5 @@ rust-version.workspace = true
 [dependencies]
 client-graphics = { path = "../graphics" }
 game-logic = { path = "../../game/logic"}
+shared-domain = { path = "../../shared/domain" }
 bevy = { version = "0.13.2", default-features = false, features = [] }

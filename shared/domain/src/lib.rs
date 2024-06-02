@@ -1,9 +1,30 @@
 use serde::{Deserialize, Serialize};
 use shared_util::coords_xz::CoordsXZ;
+use shared_util::random::generate_random_string;
 use uuid::Uuid;
 
 pub mod game_state;
 pub mod map_level;
+
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
+pub struct ClientId(pub Uuid);
+
+impl ClientId {
+    #[must_use]
+    pub fn random() -> Self {
+        Self(Uuid::new_v4())
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
+pub struct PlayerName(pub String);
+
+impl PlayerName {
+    #[must_use]
+    pub fn random() -> Self {
+        Self(generate_random_string(5))
+    }
+}
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub struct PlayerId(pub Uuid);
