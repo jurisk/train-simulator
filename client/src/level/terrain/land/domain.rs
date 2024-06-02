@@ -1,6 +1,7 @@
-use crate::level::domain::Height;
+use shared_domain::level::Height;
 use crate::level::terrain::land::domain::TerrainType::{Grass, Rocks, Sand};
 
+// TODO: Belongs in `shared/domain`
 #[repr(u32)]
 pub(crate) enum TerrainType {
     Sand  = 0,

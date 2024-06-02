@@ -1,13 +1,24 @@
 use bevy::prelude::Event;
-
-use crate::level::domain::Level;
+use shared_protocol::game_selection::{ClientMessage, ServerMessage};
 
 #[derive(Event)]
-pub enum ClientMessage {
-    JoinGame,
+pub struct ClientMessageEvent {
+    pub(crate) message: ClientMessage,
+}
+
+impl ClientMessageEvent {
+    pub fn new(message: ClientMessage) -> Self {
+        Self { message }
+    }
 }
 
 #[derive(Event)]
-pub enum ServerMessage {
-    GameJoined { level: Level },
+pub struct ServerMessageEvent {
+    pub(crate) message: ServerMessage,
+}
+
+impl ServerMessageEvent {
+    pub fn new(message: ServerMessage) -> Self {
+        Self { message }
+    }
 }

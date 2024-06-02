@@ -1,14 +1,14 @@
-use serde::{Deserialize, Serialize};
+use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Copy, Clone)]
 pub struct Height(pub u8);
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Terrain {
-    // size_x and size_z is for vertices, the number of tiles is smaller by 1 in each dimension
+    // TODO: size_x and size_z is for vertices, the number of tiles is smaller by 1 in each dimension. Separate this to make it clear.
     pub size_x:     usize,
     pub size_z:     usize,
-    pub height_map: Vec<Vec<Height>>,
+    pub height_map: Vec<Vec<Height>>, // TODO: vertex_height_map
 }
 
 impl Terrain {
@@ -38,7 +38,7 @@ pub struct Level {
 
 impl Level {
     // Could eventually move to some `Validated` instead
-    pub(crate) fn is_valid(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         self.terrain.is_valid() && self.water.is_valid()
     }
 }

@@ -1,6 +1,8 @@
 [workspace]
 members = [
     "client",
+    "shared/domain",
+    "shared/protocol",
 ]
 resolver = "2"
 

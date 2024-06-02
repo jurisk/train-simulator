@@ -64,7 +64,7 @@ jobs:
         run: cargo build --profile wasm-release --target wasm32-unknown-unknown --verbose
 
       - name: Generate WASM bindings
-        run: wasm-bindgen --out-name train-simulator-client --out-dir client/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/train-simulator-client.wasm
+        run: wasm-bindgen --out-name client --out-dir client/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client.wasm
 
       - name: Publish to GitHub pages at https://jurisk.github.io/train-simulator-pages/
         run: |

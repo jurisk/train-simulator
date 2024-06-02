@@ -1,5 +1,5 @@
 [package]
-name = "train-simulator-client"
+name = "client"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -10,6 +10,9 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
+shared-domain = { path = "../shared/domain" }
+shared-protocol = { path = "../shared/protocol" }
+
 serde.workspace = true
 serde_json.workspace = true
 
