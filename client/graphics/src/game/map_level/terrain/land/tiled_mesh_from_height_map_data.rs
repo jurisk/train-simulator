@@ -97,6 +97,17 @@ where
     convert_to_mesh(triangles, custom_attribute)
 }
 
+fn calculate_flat_normal(triangle: &Triangle) -> Vec3 {
+    let v0 = triangle.vertices[0].position;
+    let v1 = triangle.vertices[1].position;
+    let v2 = triangle.vertices[2].position;
+
+    let u = v1 - v0;
+    let v = v2 - v0;
+
+    u.cross(v).normalize()
+}
+
 #[allow(clippy::cast_possible_truncation)]
 fn convert_to_mesh(input: Vec<Triangle>, custom_attribute: MeshVertexAttribute) -> Mesh {
     println!("Input: {}", input.len());
@@ -112,7 +123,7 @@ fn convert_to_mesh(input: Vec<Triangle>, custom_attribute: MeshVertexAttribute) 
     for (triangle_idx, triangle) in input.into_iter().enumerate() {
         for (vertex_idx, vertex) in triangle.vertices.into_iter().enumerate() {
             positions.push(vertex.position.into());
-            normals.push([0.0, 0.0, 0.0]);
+            normals.push(calculate_flat_normal(&triangle).into());
             uvs.push(vertex.uv.into());
             triangles.push((triangle_idx * 3 + vertex_idx) as u32);
             custom.push(vertex.custom);
@@ -136,8 +147,35 @@ fn convert_to_mesh(input: Vec<Triangle>, custom_attribute: MeshVertexAttribute) 
     mesh.insert_attribute(custom_attribute, custom);
 
     mesh
+}
 
-    // Note:    We don't compute normals here, so callers should do it, e.g.:
-    //              mesh.duplicate_vertices()
-    //              mesh.compute_flat_normals();
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calc_flat_normal() {
+        let triangle = Triangle {
+            vertices: [
+                Vertex {
+                    position: Vec3::new(0.0, 0.0, 0.0),
+                    uv:       Vec2::new(0.0, 0.0),
+                    custom:   0,
+                },
+                Vertex {
+                    position: Vec3::new(0.0, 1.0, 0.0),
+                    uv:       Vec2::new(0.0, 1.0),
+                    custom:   0,
+                },
+                Vertex {
+                    position: Vec3::new(1.0, 0.0, 0.0),
+                    uv:       Vec2::new(1.0, 0.0),
+                    custom:   0,
+                },
+            ],
+        };
+
+        let normal = calculate_flat_normal(&triangle);
+        assert_eq!(normal, Vec3::new(0.0, 0.0, -1.0));
+    }
 }

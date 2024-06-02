@@ -58,17 +58,13 @@ pub(crate) fn create_land(
     game_state_resource: Res<GameStateResource>,
 ) {
     let level = &game_state_resource.game_state.map_level;
-    let data_slice: GridXZ<f32> = level
-        .terrain
-        .vertex_heights
-        // TODO: Move the Y_COEF division up here?
-        .map(|h| h.0 as f32 * Y_COEF);
+    let data_slice: GridXZ<f32> = level.terrain.vertex_heights.map(|h| h.0 as f32 * Y_COEF);
 
     let half_x = (level.terrain.vertex_count_x() as f32) / 2.0;
     let half_z = (level.terrain.vertex_count_z() as f32) / 2.0;
     let height_map = &level.terrain.vertex_heights;
 
-    let mut mesh = tiled_mesh_from_height_map_data(
+    let mesh = tiled_mesh_from_height_map_data(
         -half_x,
         half_x,
         -half_z,
@@ -78,8 +74,8 @@ pub(crate) fn create_land(
         |coords: CoordsXZ| TerrainType::default_from_height(height_map[&coords]) as u32,
     );
 
-    mesh.duplicate_vertices();
-    mesh.compute_flat_normals();
+    // Previously, we did mesh.duplicate_vertices() here, but I didn't figure out if it helps or
+    // hurts performance. At one point it was mandatory as we also did duplicate.calculate_face_normals().
 
     let mesh = meshes.add(mesh);
 
