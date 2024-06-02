@@ -4,6 +4,7 @@ members = [
     "client/graphics",
     "shared/domain",
     "shared/protocol",
+    "shared/util",
 ]
 resolver = "2"
 

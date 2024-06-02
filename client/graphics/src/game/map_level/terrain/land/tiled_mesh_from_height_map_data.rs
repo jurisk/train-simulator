@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy::render::mesh::{MeshVertexAttribute, PrimitiveTopology};
 use bevy::render::render_asset::RenderAssetUsages;
+use shared_util::coords_xz::CoordsXZ;
+use shared_util::grid_xz::GridXZ;
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -35,16 +37,15 @@ pub fn tiled_mesh_from_height_map_data<F>(
     min_z: f32,
     max_z: f32,
     y_coef: f32,
-    data: Vec<Vec<f32>>,
+    data: GridXZ<f32>,
     custom_attribute: MeshVertexAttribute,
     custom_f: F,
 ) -> Mesh
 where
-    F: Fn(usize, usize) -> u32,
+    F: Fn(CoordsXZ) -> u32,
 {
-    let z_segments = data.len() - 1;
-    let x_segments = data[0].len() - 1;
-    assert!(data.iter().all(|row| row.len() == data[0].len()));
+    let z_segments = data.size_z - 1;
+    let x_segments = data.size_x - 1;
 
     let extent_x = max_x - min_x;
     let extent_z = max_z - min_z;
@@ -61,14 +62,15 @@ where
             let make_vertex = |offset: [usize; 2]| -> Vertex {
                 let x = x_idx + offset[0];
                 let z = z_idx + offset[1];
+                let coords = CoordsXZ::new(x, z);
                 let position = Vec3::new(
                     (x as f32 / x_segments as f32) * extent_x + min_x,
-                    data[z][x] * y_coef,
+                    data[&coords] * y_coef,
                     (z as f32 / z_segments as f32) * extent_z + min_z,
                 );
                 let uv = Vec2::new(offset[0] as f32, offset[1] as f32);
 
-                let custom = custom_f(x, z);
+                let custom = custom_f(coords);
 
                 Vertex {
                     position,

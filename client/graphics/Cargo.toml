@@ -12,6 +12,7 @@ workspace = true
 [dependencies]
 shared-domain = { path = "../../shared/domain" }
 shared-protocol = { path = "../../shared/protocol" }
+shared-util = { path = "../../shared/util" }
 game-logic = { path = "../../game/logic" }
 
 serde.workspace = true

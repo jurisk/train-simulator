@@ -33,8 +33,8 @@ pub(crate) fn create_water(
 ) {
     let level = &game_state_resource.game_state.map_level;
     let rectangle = Rectangle::new(
-        level.terrain.vertex_count_x as f32,
-        level.terrain.vertex_count_z as f32,
+        level.terrain.vertex_count_x() as f32,
+        level.terrain.vertex_count_z() as f32,
     );
     let mesh = meshes.add(rectangle);
 

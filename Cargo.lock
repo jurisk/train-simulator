@@ -1263,6 +1263,7 @@ dependencies = [
  "serde_json",
  "shared-domain",
  "shared-protocol",
+ "shared-util",
 ]
 
 [[package]]
@@ -3124,6 +3125,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "shared-util",
 ]
 
 [[package]]
@@ -3131,6 +3133,14 @@ name = "shared-protocol"
 version = "0.1.0"
 dependencies = [
  "shared-domain",
+]
+
+[[package]]
+name = "shared-util"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

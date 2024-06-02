@@ -9,6 +9,8 @@ use bevy::prelude::{
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
 use shared_domain::map_level::TerrainType;
+use shared_util::coords_xz::CoordsXZ;
+use shared_util::grid_xz::GridXZ;
 
 use crate::game::map_level::terrain::land::advanced_land_material::{
     create_advanced_land_material, AdvancedLandMaterialPlugin, LandExtension,
@@ -56,15 +58,14 @@ pub(crate) fn create_land(
     game_state_resource: Res<GameStateResource>,
 ) {
     let level = &game_state_resource.game_state.map_level;
-    let data_slice: Vec<Vec<f32>> = level
+    let data_slice: GridXZ<f32> = level
         .terrain
         .vertex_heights
-        .iter()
-        .map(|row| row.iter().map(|h| h.0 as f32).collect::<Vec<_>>())
-        .collect();
+        // TODO: Move the Y_COEF division up here?
+        .map(|h| h.0 as f32);
 
-    let half_x = (level.terrain.vertex_count_x as f32) / 2.0;
-    let half_z = (level.terrain.vertex_count_z as f32) / 2.0;
+    let half_x = (level.terrain.vertex_count_x() as f32) / 2.0;
+    let half_z = (level.terrain.vertex_count_z() as f32) / 2.0;
     let height_map = &level.terrain.vertex_heights;
 
     let mut mesh = tiled_mesh_from_height_map_data(
@@ -75,7 +76,7 @@ pub(crate) fn create_land(
         Y_COEF,
         data_slice,
         ATTRIBUTE_TERRAIN_TYPE,
-        |x, z| TerrainType::default_from_height(height_map[z][x]) as u32,
+        |coords: CoordsXZ| TerrainType::default_from_height(height_map[&coords]) as u32,
     );
 
     mesh.duplicate_vertices();

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use shared_util::grid_xz::GridXZ;
 
 #[repr(u32)]
 pub enum TerrainType {
@@ -25,30 +26,33 @@ pub struct Height(pub u8);
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Terrain {
-    pub vertex_count_x: usize,
-    pub vertex_count_z: usize,
-
-    // TODO: Move to GridXZ, which makes the details private
-    pub vertex_heights: Vec<Vec<Height>>,
+    pub vertex_heights: GridXZ<Height>,
 }
 
 impl Terrain {
     #[must_use]
+    pub fn is_valid(&self) -> bool {
+        self.vertex_heights.is_valid()
+    }
+
+    #[must_use]
+    pub fn vertex_count_x(&self) -> usize {
+        self.vertex_heights.size_x
+    }
+
+    #[must_use]
+    pub fn vertex_count_z(&self) -> usize {
+        self.vertex_heights.size_z
+    }
+
+    #[must_use]
     pub fn tile_count_x(&self) -> usize {
-        self.vertex_count_x - 1
+        self.vertex_count_x() - 1
     }
 
     #[must_use]
     pub fn tile_count_z(&self) -> usize {
-        self.vertex_count_z - 1
-    }
-
-    fn is_valid(&self) -> bool {
-        self.vertex_heights.len() == self.vertex_count_z
-            && self
-                .vertex_heights
-                .iter()
-                .all(|row| row.len() == self.vertex_count_x)
+        self.vertex_count_z() - 1
     }
 }
 
@@ -88,7 +92,7 @@ mod tests {
         let level = serde_json::from_str::<MapLevel>(level_json)
             .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
         assert!(level.is_valid());
-        assert_eq!(level.terrain.vertex_count_x, 100);
-        assert_eq!(level.terrain.vertex_count_z, 100);
+        assert_eq!(level.terrain.vertex_count_x(), 100);
+        assert_eq!(level.terrain.vertex_count_z(), 100);
     }
 }
