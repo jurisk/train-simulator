@@ -19,7 +19,6 @@ use crate::game::GameStateResource;
 use crate::states::ClientState;
 
 mod advanced_land_material;
-mod stretched_mesh_from_height_map_data;
 mod tiled_mesh_from_height_map_data;
 
 pub(crate) struct LandPlugin;
