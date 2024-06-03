@@ -68,3 +68,20 @@ impl ServerResponseWithAddress {
         Self { address, response }
     }
 }
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[allow(clippy::module_name_repetitions)]
+pub struct ServerResponseWithClientIds {
+    pub client_ids: Vec<ClientId>,
+    pub response:   ServerResponse,
+}
+
+impl ServerResponseWithClientIds {
+    #[must_use]
+    pub fn new(client_ids: Vec<ClientId>, response: ServerResponse) -> Self {
+        Self {
+            client_ids,
+            response,
+        }
+    }
+}

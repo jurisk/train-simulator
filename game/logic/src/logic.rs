@@ -5,8 +5,8 @@ use shared_domain::client_command::{
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, AuthenticationResponse, GameInfo, GameResponse, LobbyResponse, ServerResponse,
-    ServerResponseWithAddress,
+    AuthenticationResponse, GameInfo, GameResponse, LobbyResponse, ServerResponse,
+    ServerResponseWithClientIds,
 };
 use shared_domain::{
     BuildingId, BuildingInfo, BuildingType, GameId, PlayerId, PlayerName, TrackType,
@@ -18,7 +18,7 @@ use shared_util::coords_xz::CoordsXZ;
 #[must_use]
 pub fn server_logic(
     client_command_with_client_id: ClientCommandWithClientId,
-) -> Vec<ServerResponseWithAddress> {
+) -> Vec<ServerResponseWithClientIds> {
     let client_id = client_command_with_client_id.client_id;
     match client_command_with_client_id.command {
         ClientCommand::Authentication(authentication_command) => {
@@ -26,15 +26,15 @@ pub fn server_logic(
                 AuthenticationCommand::Login(player_id, access_token) => {
                     if access_token.0 == "valid-token" {
                         // TODO: Update map between PlayerId and ClientId
-                        vec![ServerResponseWithAddress::new(
-                            AddressEnvelope::ToClient(client_id),
+                        vec![ServerResponseWithClientIds::new(
+                            vec![client_id],
                             ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(
                                 player_id,
                             )),
                         )]
                     } else {
-                        vec![ServerResponseWithAddress::new(
-                            AddressEnvelope::ToClient(client_id),
+                        vec![ServerResponseWithClientIds::new(
+                            vec![client_id],
                             ServerResponse::Authentication(AuthenticationResponse::LoginFailed),
                         )]
                     }
@@ -72,19 +72,19 @@ pub fn server_logic(
                     info!("Simulating server responding to JoinGame with GameJoined");
 
                     vec![
-                        ServerResponseWithAddress::new(
-                            AddressEnvelope::ToAllPlayersInGame(game_id),
+                        ServerResponseWithClientIds::new(
+                            vec![client_id], // TODO: Actually all players in game
                             ServerResponse::Lobby(LobbyResponse::GameJoined(GameInfo {
                                 game_id,
                                 players,
                             })),
                         ),
-                        ServerResponseWithAddress::new(
-                            AddressEnvelope::ToPlayer(player_id),
+                        ServerResponseWithClientIds::new(
+                            vec![client_id],
                             ServerResponse::Game(GameResponse::State(game_state)),
                         ),
-                        ServerResponseWithAddress::new(
-                            AddressEnvelope::ToAllPlayersInGame(game_id),
+                        ServerResponseWithClientIds::new(
+                            vec![client_id], // TODO: Actually all players in game
                             ServerResponse::Game(GameResponse::BuildingBuilt(BuildingInfo {
                                 building_id:          BuildingId::random(),
                                 north_west_vertex_xz: CoordsXZ::new(3, 5),
@@ -99,11 +99,10 @@ pub fn server_logic(
         ClientCommand::Game(game_command) => {
             match game_command {
                 GameCommand::BuildBuilding(building_info) => {
-                    let game_id = GameId::random(); // TODO: Actually detect which game player is in
                     // TODO: Check that you can build there
                     // TODO: Update game state with the buildings
-                    vec![ServerResponseWithAddress::new(
-                        AddressEnvelope::ToAllPlayersInGame(game_id),
+                    vec![ServerResponseWithClientIds::new(
+                        vec![client_id], // TODO: Actually all players in game
                         ServerResponse::Game(GameResponse::BuildingBuilt(building_info.clone())),
                     )]
                 },
