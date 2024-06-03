@@ -8,12 +8,11 @@ use std::collections::HashMap;
 use std::convert::identity;
 
 use log::warn;
-use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId, LobbyCommand};
+use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, LobbyResponse, ServerResponse, ServerResponseWithAddress,
-    ServerResponseWithClientIds,
+    AddressEnvelope, ServerResponse, ServerResponseWithAddress, ServerResponseWithClientIds,
 };
 use shared_domain::{
     BuildingId, BuildingInfo, BuildingType, ClientId, GameId, PlayerId, TrackType,
@@ -22,9 +21,8 @@ use shared_util::coords_xz::CoordsXZ;
 
 use crate::authentication_logic::{lookup_player_id, process_authentication_command};
 use crate::connection_registry::ConnectionRegistry;
-use crate::game_logic::{
-    create_and_join_game, create_game_infos, join_game, lookup_game_state, process_game_command,
-};
+use crate::game_logic::{lookup_game_state, process_game_command};
+use crate::lobby_logic::process_lobby_command;
 
 pub struct ServerState {
     pub connection_registry: ConnectionRegistry,
@@ -65,40 +63,6 @@ impl ServerState {
             connection_registry: ConnectionRegistry::new(),
             games: HashMap::new(),
             game_prototype,
-        }
-    }
-
-    // TODO: Move to lobby_logic.rs
-    fn process_lobby_command(
-        &mut self,
-        requesting_player_id: PlayerId,
-        lobby_command: LobbyCommand,
-    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
-        match lobby_command {
-            LobbyCommand::ListGames => {
-                Ok(vec![ServerResponseWithAddress::new(
-                    AddressEnvelope::ToPlayer(requesting_player_id),
-                    ServerResponse::Lobby(LobbyResponse::AvailableGames(create_game_infos(
-                        &self.games,
-                    ))),
-                )])
-            },
-            LobbyCommand::CreateGame(player_name) => {
-                create_and_join_game(
-                    &mut self.games,
-                    &self.game_prototype,
-                    requesting_player_id,
-                    player_name,
-                )
-            },
-            LobbyCommand::JoinExistingGame(game_id, player_name) => {
-                let game_state = lookup_game_state(&mut self.games, game_id)?;
-                join_game(game_state, game_id, requesting_player_id, player_name)
-            },
-            LobbyCommand::LeaveGame(_) => {
-                // TODO: Implement
-                Ok(vec![])
-            },
         }
     }
 
@@ -156,7 +120,12 @@ impl ServerState {
             },
             ClientCommand::Lobby(lobby_command) => {
                 let requesting_player_id = lookup_player_id(&self.connection_registry, client_id)?;
-                self.process_lobby_command(requesting_player_id, lobby_command)
+                process_lobby_command(
+                    &mut self.games,
+                    requesting_player_id,
+                    lobby_command,
+                    &self.game_prototype,
+                )
             },
             ClientCommand::Game(game_id, game_command) => {
                 let requesting_player_id = lookup_player_id(&self.connection_registry, client_id)?;
