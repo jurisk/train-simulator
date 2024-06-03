@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{BuildingInfo, ClientId, GameId, PlayerId};
+use crate::{BuildingInfo, ClientId, GameId, PlayerId, PlayerName};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct AccessToken(pub String);
@@ -16,8 +16,8 @@ pub enum AuthenticationCommand {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum LobbyCommand {
     ListGames,
-    CreateGame,
-    JoinExistingGame(GameId),
+    CreateGame(PlayerName),
+    JoinExistingGame(GameId, PlayerName),
     LeaveGame(GameId),
 }
 

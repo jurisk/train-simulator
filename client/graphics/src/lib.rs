@@ -44,6 +44,7 @@ impl Plugin for ClientGraphicsPlugin {
                     }),
                     ..default()
                 })
+                // TODO: We have some race conditions where if we get messages quickly enough, we haven't loaded the assets yet and thus they are not visible
                 .set(AssetPlugin {
                     file_path: (asset_path_prefix.to_owned() + "assets").to_string(),
                     processed_file_path: (asset_path_prefix.to_owned() + "processed-assets").to_string(),

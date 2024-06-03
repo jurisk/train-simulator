@@ -83,16 +83,35 @@ impl ServerState {
         lobby_command: LobbyCommand,
     ) -> Vec<ServerResponseWithAddress> {
         match lobby_command {
-            LobbyCommand::ListGames => vec![], // TODO: Implement
-            LobbyCommand::CreateGame => self.lobby_create_game(requesting_player_id),
-            LobbyCommand::JoinExistingGame(_) => vec![], // TODO: Implement
-            LobbyCommand::LeaveGame(_) => vec![],        // TODO: Implement
+            LobbyCommand::ListGames => {
+                vec![ServerResponseWithAddress::new(
+                    AddressEnvelope::ToPlayer(requesting_player_id),
+                    ServerResponse::Lobby(LobbyResponse::AvailableGames(
+                        self.games
+                            .iter()
+                            .map(|(game_id, game_state)| {
+                                // TODO: Move `GameInfo` generation to `GameLogic` probably
+                                GameInfo {
+                                    game_id: *game_id,
+                                    players: game_state.players.clone(),
+                                }
+                            })
+                            .collect(),
+                    )),
+                )]
+            },
+            LobbyCommand::CreateGame(player_name) => {
+                self.lobby_create_game(requesting_player_id, player_name)
+            },
+            LobbyCommand::JoinExistingGame(..) => vec![], // TODO: Implement
+            LobbyCommand::LeaveGame(_) => vec![],         // TODO: Implement
         }
     }
 
     fn lobby_create_game(
         &mut self,
         requesting_player_id: PlayerId,
+        requesting_player_name: PlayerName,
     ) -> Vec<ServerResponseWithAddress> {
         let game_id = GameId::random();
 
@@ -109,17 +128,14 @@ impl ServerState {
             },
         ];
 
+        let players = HashMap::from([(requesting_player_id, requesting_player_name)]);
         let game_state = GameState {
-            map_level:  self.default_level.clone(),
-            buildings:  initial_buildings,
-            player_ids: vec![requesting_player_id],
+            map_level: self.default_level.clone(),
+            buildings: initial_buildings,
+            players:   players.clone(),
         };
 
         self.games.insert(game_id, game_state.clone());
-
-        let players = vec![(requesting_player_id, PlayerName::random())]
-            .into_iter()
-            .collect();
 
         info!("Simulating server responding to JoinGame with GameJoined");
 
@@ -146,6 +162,7 @@ impl ServerState {
             GameCommand::BuildBuilding(building_info) => {
                 // TODO: Check that `player_id` can build there
                 // TODO: Update game state with the buildings
+
                 vec![ServerResponseWithAddress::new(
                     AddressEnvelope::ToAllPlayersInGame(game_id),
                     ServerResponse::Game(GameResponse::BuildingBuilt(building_info.clone())),
@@ -177,7 +194,7 @@ impl ServerState {
                         warn!("Failed to find game for {game_id:?}");
                         vec![]
                     },
-                    Some(game_state) => game_state.player_ids.clone(),
+                    Some(game_state) => game_state.players.keys().copied().collect(),
                 };
 
                 player_ids

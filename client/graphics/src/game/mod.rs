@@ -1,14 +1,15 @@
 use bevy::app::Update;
 use bevy::prelude::{
-    in_state, Commands, EventReader, EventWriter, IntoSystemConfigs, NextState, OnEnter, Plugin,
-    ResMut, Resource,
+    Commands, EventReader, EventWriter, NextState, OnEnter, Plugin, ResMut, Resource,
 };
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
 };
 use shared_domain::game_state::GameState;
-use shared_domain::server_response::{GameResponse, ServerResponse};
-use shared_domain::PlayerId;
+use shared_domain::server_response::{
+    AuthenticationResponse, GameResponse, LobbyResponse, ServerResponse,
+};
+use shared_domain::{PlayerId, PlayerName};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;
@@ -31,23 +32,51 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(BuildingsPlugin);
         app.add_plugins(MapLevelPlugin);
-        app.add_systems(OnEnter(ClientState::Joining), game_startup);
-        app.add_systems(
-            Update,
-            handle_game_joined.run_if(in_state(ClientState::Joining)),
-        );
+        app.add_systems(OnEnter(ClientState::Joining), initiate_login);
+        app.add_systems(Update, handle_login_successful);
+        app.add_systems(Update, handle_available_games);
+        app.add_systems(Update, handle_game_joined);
     }
 }
 
-fn game_startup(mut client_messages: EventWriter<ClientMessageEvent>) {
+fn initiate_login(mut client_messages: EventWriter<ClientMessageEvent>) {
     let player_id = PlayerId::random();
     client_messages.send(ClientMessageEvent::new(ClientCommand::Authentication(
         AuthenticationCommand::Login(player_id, AccessToken("valid-token".to_string())),
     )));
+}
 
-    client_messages.send(ClientMessageEvent::new(ClientCommand::Lobby(
-        LobbyCommand::CreateGame,
-    )));
+fn handle_login_successful(
+    mut server_messages: EventReader<ServerMessageEvent>,
+    mut client_messages: EventWriter<ClientMessageEvent>,
+) {
+    for message in server_messages.read() {
+        if let ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(_player_id)) =
+            &message.response
+        {
+            // We could insert player_id into resources
+            client_messages.send(ClientMessageEvent::new(ClientCommand::Lobby(
+                LobbyCommand::ListGames,
+            )));
+        }
+    }
+}
+
+fn handle_available_games(
+    mut server_messages: EventReader<ServerMessageEvent>,
+    mut client_messages: EventWriter<ClientMessageEvent>,
+) {
+    for message in server_messages.read() {
+        if let ServerResponse::Lobby(LobbyResponse::AvailableGames(games)) = &message.response {
+            let player_name = PlayerName::random();
+            let command = match games.first() {
+                None => LobbyCommand::CreateGame(player_name),
+                Some(game_info) => LobbyCommand::JoinExistingGame(game_info.game_id, player_name),
+            };
+
+            client_messages.send(ClientMessageEvent::new(ClientCommand::Lobby(command)));
+        }
+    }
 }
 
 #[allow(clippy::collapsible_match)]

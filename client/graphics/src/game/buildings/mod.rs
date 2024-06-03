@@ -107,7 +107,7 @@ fn create_track(
         PbrBundle {
             transform: Transform {
                 translation,
-                scale: Vec3::new(0.1, 0.1, 0.1),
+                scale: Vec3::new(0.2, 0.2, 0.2),
                 ..default()
             },
             material: materials.add(color),
@@ -115,7 +115,7 @@ fn create_track(
             ..default()
         },
         Name::new(format!(
-            "Test Sphere at vertex {vertex_coords_xz:?} {height:?}"
+            "Track {track_type:?} at {vertex_coords_xz:?} {height:?}"
         )),
     ));
 }
