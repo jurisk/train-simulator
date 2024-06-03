@@ -46,7 +46,7 @@ impl GameId {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct BuildingId(pub Uuid);
 
 impl BuildingId {
@@ -56,29 +56,29 @@ impl BuildingId {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum TrackType {
     NorthSouth,
     EastWest,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum ProductionType {
     CoalMine,
     IronMine,
     IronWorks,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum BuildingType {
     Track(TrackType),
     Production(ProductionType),
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct BuildingInfo {
-    pub building_id:      BuildingId,
-    // TODO: This is bad, as it is vertex and not actually tiles, and also buildings can be multi-tile. Should it always be the North-West vertex?
-    pub vertex_coords_xz: CoordsXZ,
-    pub building_type:    BuildingType,
+    pub building_id:          BuildingId,
+    // TODO: OK, but which direction is North-West according to our coordinate system? Let us define it somewhere as a Direction class?
+    pub north_west_vertex_xz: CoordsXZ,
+    pub building_type:        BuildingType,
 }

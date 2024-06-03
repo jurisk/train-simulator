@@ -6,8 +6,8 @@ use bevy::prelude::{
     default, in_state, Assets, Color, Commands, EventReader, IntoSystemConfigs, Mesh, Meshable,
     Plugin, Res, ResMut, Sphere, StandardMaterial, Transform, Update, Vec3,
 };
-use shared_domain::map_level::Height;
-use shared_domain::BuildingType;
+use shared_domain::game_state::GameState;
+use shared_domain::{BuildingInfo, BuildingType, TrackType};
 use shared_protocol::server_response::{GameResponse, ServerResponse};
 use shared_util::coords_xz::CoordsXZ;
 
@@ -37,34 +37,71 @@ fn handle_game_state_responses(
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Game(game_response) = &message.response {
-            if let GameResponse::BuildingBuilt(building_info) = game_response {
-                if let BuildingType::Track(_track_type) = &building_info.building_type {
-                    crate_track(
+            match game_response {
+                GameResponse::BuildingBuilt(building_info) => {
+                    create_building(
+                        building_info,
                         &mut commands,
                         &mut meshes,
                         &mut materials,
-                        &game_state,
-                        building_info.vertex_coords_xz,
+                        &game_state.game_state,
                     );
-                }
+                },
+
+                GameResponse::State(game_state) => {
+                    for building_info in &game_state.buildings {
+                        create_building(
+                            &building_info,
+                            &mut commands,
+                            &mut meshes,
+                            &mut materials,
+                            game_state,
+                        );
+                    }
+                },
             }
         }
     }
 }
 
-fn crate_track(
+fn create_building(
+    building_info: &BuildingInfo,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
-    game_state: &Res<GameStateResource>,
-    vertex_coords_xz: CoordsXZ,
+    game_state: &GameState,
 ) {
-    let height = Height(12);
-    let translation = logical_to_world(
-        vertex_coords_xz,
-        height,
-        &game_state.game_state.map_level.terrain,
-    );
+    match &building_info.building_type {
+        BuildingType::Track(track_type) => {
+            create_track(
+                commands,
+                meshes,
+                materials,
+                game_state,
+                building_info.north_west_vertex_xz,
+                *track_type,
+            );
+        },
+        BuildingType::Production(_) => {}, // TODO: Implement
+    }
+}
+
+fn create_track(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    game_state: &GameState,
+    vertex_coords_xz: CoordsXZ,
+    track_type: TrackType,
+) {
+    let terrain = &game_state.map_level.terrain;
+    let height = terrain.vertex_heights[&vertex_coords_xz];
+    let translation = logical_to_world(vertex_coords_xz, height, &terrain);
+
+    let color = match track_type {
+        TrackType::NorthSouth => Color::RED,
+        TrackType::EastWest => Color::BLUE,
+    };
 
     commands.spawn((
         PbrBundle {
@@ -73,7 +110,7 @@ fn crate_track(
                 scale: Vec3::new(0.1, 0.1, 0.1),
                 ..default()
             },
-            material: materials.add(Color::RED),
+            material: materials.add(color),
             mesh: meshes.add(Sphere::default().mesh().uv(32, 18)),
             ..default()
         },

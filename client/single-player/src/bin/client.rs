@@ -1,7 +1,8 @@
-use bevy::prelude::{App, EventReader, EventWriter, Res, Resource, Update};
+use bevy::prelude::{App, EventReader, EventWriter, Res, ResMut, Resource, Update};
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::ClientGraphicsPlugin;
 use game_logic::logic::server_logic;
+use game_logic::server_state::ServerState;
 use shared_domain::ClientId;
 use shared_protocol::client_command::ClientCommandWithClientId;
 
@@ -9,6 +10,7 @@ fn main() {
     let mut app = App::new();
     let client_id = ClientId::random();
     app.insert_resource(ClientIdResource(client_id));
+    app.insert_resource(ServerStateResource(ServerState::new()));
     app.add_plugins(ClientGraphicsPlugin);
     app.add_systems(Update, process_messages_locally);
     app.run();
@@ -17,6 +19,9 @@ fn main() {
 #[derive(Resource)]
 struct ClientIdResource(ClientId);
 
+#[derive(Resource)]
+struct ServerStateResource(pub ServerState);
+
 // TODO:    Eventually, we should also introduce a multi-player client with a real server communications component.
 //          Not sure which library is the best - possibly https://github.com/ukoehb/bevy_simplenet ?
 //          Or maybe start with Renet that you already know, but avoid having a dependency to it anywhere but in `client/multi-player` and `server`?
@@ -24,12 +29,14 @@ struct ClientIdResource(ClientId);
 #[allow(clippy::needless_pass_by_value)]
 fn process_messages_locally(
     client_id_resource: Res<ClientIdResource>,
+    _server_state_resource: ResMut<ServerStateResource>,
     mut client_messages: EventReader<ClientMessageEvent>,
     mut server_messages: EventWriter<ServerMessageEvent>,
 ) {
     for message in client_messages.read() {
         let client_command_with_client_id =
             ClientCommandWithClientId::new(client_id_resource.0, message.command.clone());
+        // TODO: Invoke on `server_state_resource` and make sure changes persist!
         let responses = server_logic(client_command_with_client_id);
         for response in responses {
             // TODO: We are ignoring the response address

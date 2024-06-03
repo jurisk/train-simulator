@@ -6,7 +6,7 @@ members = [
     # TODO: Should you just merge `shared/domain` and `shared/protocol`? They are circularly dependent anyway.
     "shared/domain",
     "shared/protocol",
-    
+
     "shared/util",
 ]
 resolver = "2"
@@ -23,6 +23,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
 fastrand = "2.1.0"
+log = "0.4.21"
+bimap = "0.6.3"
 
 # From https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units
 # From https://rapier.rs/docs/user_guides/bevy_plugin/common_mistakes#my-local-build-of-rapier-is-slower-than-the-online-demos

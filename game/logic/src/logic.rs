@@ -49,12 +49,21 @@ pub fn server_logic(
                 LobbyCommand::CreateGame => {
                     let game_id = GameId::random();
                     let level_json = include_str!("../assets/map_levels/default.json");
-                    let level = serde_json::from_str::<MapLevel>(level_json)
+                    let map_level = serde_json::from_str::<MapLevel>(level_json)
                         .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
 
-                    assert!(level.is_valid());
+                    assert!(map_level.is_valid());
 
-                    let game_state = GameState { map_level: level };
+                    let buildings = vec![BuildingInfo {
+                        building_id:          BuildingId::random(),
+                        north_west_vertex_xz: CoordsXZ::new(10, 10),
+                        building_type:        BuildingType::Track(TrackType::EastWest),
+                    }];
+
+                    let game_state = GameState {
+                        map_level,
+                        buildings,
+                    };
                     let player_id = PlayerId::random();
                     let players = vec![(player_id, PlayerName::random())]
                         .into_iter()
@@ -77,9 +86,9 @@ pub fn server_logic(
                         ServerResponseWithAddress::new(
                             AddressEnvelope::ToAllPlayersInGame(game_id),
                             ServerResponse::Game(GameResponse::BuildingBuilt(BuildingInfo {
-                                building_id:      BuildingId::random(),
-                                vertex_coords_xz: CoordsXZ::new(3, 5),
-                                building_type:    BuildingType::Track(TrackType::NorthSouth),
+                                building_id:          BuildingId::random(),
+                                north_west_vertex_xz: CoordsXZ::new(3, 5),
+                                building_type:        BuildingType::Track(TrackType::NorthSouth),
                             })),
                         ),
                     ]
