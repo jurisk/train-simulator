@@ -4,12 +4,12 @@ use std::collections::HashMap;
 
 use log::{info, warn};
 use shared_domain::client_command::{
-    AuthenticationCommand, ClientCommand, ClientCommandWithClientId, GameCommand, LobbyCommand,
+    ClientCommand, ClientCommandWithClientId, GameCommand, LobbyCommand,
 };
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, AuthenticationResponse, GameInfo, GameResponse, LobbyResponse, ServerError,
+    AddressEnvelope, GameInfo, GameResponse, LobbyResponse, ServerError,
     ServerResponse, ServerResponseWithAddress, ServerResponseWithClientIds,
 };
 use shared_domain::{
@@ -17,6 +17,7 @@ use shared_domain::{
 };
 use shared_util::coords_xz::CoordsXZ;
 
+use crate::authentication_logic::process_authentication_command;
 use crate::connection_registry::ConnectionRegistry;
 
 pub struct ServerState {
@@ -39,41 +40,6 @@ impl ServerState {
             connection_registry: ConnectionRegistry::new(),
             games: HashMap::new(),
             default_level,
-        }
-    }
-
-    // TODO: Move into `AuthenticationLogic` which wraps `ConnectionRegistry`?
-    fn process_authentication_command(
-        &mut self,
-        client_id: ClientId,
-        authentication_command: AuthenticationCommand,
-    ) -> Vec<ServerResponseWithAddress> {
-        match authentication_command {
-            AuthenticationCommand::Login(player_id, access_token) => {
-                if access_token.0 == "valid-token" {
-                    self.connection_registry.register(player_id, client_id);
-
-                    vec![ServerResponseWithAddress::new(
-                        AddressEnvelope::ToClient(client_id),
-                        ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(
-                            player_id,
-                        )),
-                    )]
-                } else {
-                    vec![ServerResponseWithAddress::new(
-                        AddressEnvelope::ToClient(client_id),
-                        ServerResponse::Authentication(AuthenticationResponse::LoginFailed),
-                    )]
-                }
-            },
-            AuthenticationCommand::Logout => {
-                self.connection_registry.unregister_by_client_id(client_id);
-
-                vec![ServerResponseWithAddress::new(
-                    AddressEnvelope::ToClient(client_id),
-                    ServerResponse::Authentication(AuthenticationResponse::LogoutSucceeded),
-                )]
-            },
         }
     }
 
@@ -218,7 +184,11 @@ impl ServerState {
         let client_id = client_command_with_client_id.client_id;
         let responses = match client_command_with_client_id.command {
             ClientCommand::Authentication(authentication_command) => {
-                self.process_authentication_command(client_id, authentication_command)
+                process_authentication_command(
+                    &mut self.connection_registry,
+                    client_id,
+                    authentication_command,
+                )
             },
             ClientCommand::Lobby(lobby_command) => {
                 match self.connection_registry.get_player_id(&client_id) {
