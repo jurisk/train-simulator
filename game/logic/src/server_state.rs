@@ -12,17 +12,19 @@ use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId, Lo
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, GameResponse, LobbyResponse, ServerResponse, ServerResponseWithAddress,
+    AddressEnvelope, LobbyResponse, ServerResponse, ServerResponseWithAddress,
     ServerResponseWithClientIds,
 };
 use shared_domain::{
-    BuildingId, BuildingInfo, BuildingType, ClientId, GameId, PlayerId, PlayerName, TrackType,
+    BuildingId, BuildingInfo, BuildingType, ClientId, GameId, PlayerId, TrackType,
 };
 use shared_util::coords_xz::CoordsXZ;
 
 use crate::authentication_logic::{lookup_player_id, process_authentication_command};
 use crate::connection_registry::ConnectionRegistry;
-use crate::game_logic::{create_game_infos, lookup_game_state, process_game_command};
+use crate::game_logic::{
+    create_and_join_game, create_game_infos, join_game, lookup_game_state, process_game_command,
+};
 
 pub struct ServerState {
     pub connection_registry: ConnectionRegistry,
@@ -82,45 +84,22 @@ impl ServerState {
                 )])
             },
             LobbyCommand::CreateGame(player_name) => {
-                // TODO: Don't allow joining multiple games
-                self.create_and_join_game(requesting_player_id, player_name)
+                create_and_join_game(
+                    &mut self.games,
+                    &self.game_prototype,
+                    requesting_player_id,
+                    player_name,
+                )
             },
-            LobbyCommand::JoinExistingGame(..) => {
-                // TODO: Don't allow joining multiple games
-                // TODO: Implement
-                Ok(vec![])
+            LobbyCommand::JoinExistingGame(game_id, player_name) => {
+                let game_state = lookup_game_state(&mut self.games, game_id)?;
+                join_game(game_state, game_id, requesting_player_id, player_name)
             },
             LobbyCommand::LeaveGame(_) => {
                 // TODO: Implement
                 Ok(vec![])
             },
         }
-    }
-
-    fn create_and_join_game(
-        &mut self,
-        requesting_player_id: PlayerId,
-        requesting_player_name: PlayerName,
-    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
-        let game_id = GameId::random();
-
-        let mut game_state = self.game_prototype.clone();
-
-        game_state
-            .players
-            .insert(requesting_player_id, requesting_player_name);
-        self.games.insert(game_id, game_state.clone());
-
-        Ok(vec![
-            ServerResponseWithAddress::new(
-                AddressEnvelope::ToAllPlayersInGame(game_id),
-                ServerResponse::Lobby(LobbyResponse::GameJoined(game_id)),
-            ),
-            ServerResponseWithAddress::new(
-                AddressEnvelope::ToPlayer(requesting_player_id),
-                ServerResponse::Game(GameResponse::State(game_state)),
-            ),
-        ])
     }
 
     fn client_ids_for_player(&self, player_id: PlayerId) -> Vec<ClientId> {
