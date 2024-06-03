@@ -30,7 +30,7 @@ pub enum GameCommand {
 pub enum ClientCommand {
     Authentication(AuthenticationCommand),
     Lobby(LobbyCommand),
-    Game(GameCommand),
+    Game(GameId, GameCommand),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

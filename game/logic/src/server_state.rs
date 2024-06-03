@@ -1,25 +1,28 @@
-#![allow(clippy::match_same_arms)]
+#![allow(
+    clippy::match_same_arms,
+    clippy::missing_errors_doc,
+    clippy::unnecessary_wraps
+)]
 
 use std::collections::HashMap;
+use std::convert::identity;
 
-use log::{info, warn};
-use shared_domain::client_command::{
-    ClientCommand, ClientCommandWithClientId, GameCommand, LobbyCommand,
-};
+use log::warn;
+use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId, LobbyCommand};
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, GameResponse, LobbyResponse, ServerError, ServerResponse,
-    ServerResponseWithAddress, ServerResponseWithClientIds,
+    AddressEnvelope, GameResponse, LobbyResponse, ServerResponse, ServerResponseWithAddress,
+    ServerResponseWithClientIds,
 };
 use shared_domain::{
     BuildingId, BuildingInfo, BuildingType, ClientId, GameId, PlayerId, PlayerName, TrackType,
 };
 use shared_util::coords_xz::CoordsXZ;
 
-use crate::authentication_logic::process_authentication_command;
+use crate::authentication_logic::{lookup_player_id, process_authentication_command};
 use crate::connection_registry::ConnectionRegistry;
-use crate::game_logic::create_game_infos;
+use crate::game_logic::{create_game_infos, lookup_game_state, process_game_command};
 
 pub struct ServerState {
     pub connection_registry: ConnectionRegistry,
@@ -63,19 +66,20 @@ impl ServerState {
         }
     }
 
+    // TODO: Move to lobby_logic.rs
     fn process_lobby_command(
         &mut self,
         requesting_player_id: PlayerId,
         lobby_command: LobbyCommand,
-    ) -> Vec<ServerResponseWithAddress> {
+    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         match lobby_command {
             LobbyCommand::ListGames => {
-                vec![ServerResponseWithAddress::new(
+                Ok(vec![ServerResponseWithAddress::new(
                     AddressEnvelope::ToPlayer(requesting_player_id),
                     ServerResponse::Lobby(LobbyResponse::AvailableGames(create_game_infos(
                         &self.games,
                     ))),
-                )]
+                )])
             },
             LobbyCommand::CreateGame(player_name) => {
                 // TODO: Don't allow joining multiple games
@@ -84,11 +88,11 @@ impl ServerState {
             LobbyCommand::JoinExistingGame(..) => {
                 // TODO: Don't allow joining multiple games
                 // TODO: Implement
-                vec![]
+                Ok(vec![])
             },
             LobbyCommand::LeaveGame(_) => {
                 // TODO: Implement
-                vec![]
+                Ok(vec![])
             },
         }
     }
@@ -97,7 +101,7 @@ impl ServerState {
         &mut self,
         requesting_player_id: PlayerId,
         requesting_player_name: PlayerName,
-    ) -> Vec<ServerResponseWithAddress> {
+    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         let game_id = GameId::random();
 
         let mut game_state = self.game_prototype.clone();
@@ -107,9 +111,7 @@ impl ServerState {
             .insert(requesting_player_id, requesting_player_name);
         self.games.insert(game_id, game_state.clone());
 
-        info!("Simulating server responding to JoinGame with GameJoined");
-
-        vec![
+        Ok(vec![
             ServerResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(game_id),
                 ServerResponse::Lobby(LobbyResponse::GameJoined(game_id)),
@@ -118,27 +120,7 @@ impl ServerState {
                 AddressEnvelope::ToPlayer(requesting_player_id),
                 ServerResponse::Game(GameResponse::State(game_state)),
             ),
-        ]
-    }
-
-    // TODO: Use `game_id` to actually move this into `GameLogic` (which wraps `GameState`)
-    fn process_game_command(
-        &mut self,
-        _player_id: PlayerId,
-        game_id: GameId,
-        game_command: GameCommand,
-    ) -> Vec<ServerResponseWithAddress> {
-        match game_command {
-            GameCommand::BuildBuilding(building_info) => {
-                // TODO: Check that `player_id` can build there
-                // TODO: Update game state with the buildings
-
-                vec![ServerResponseWithAddress::new(
-                    AddressEnvelope::ToAllPlayersInGame(game_id),
-                    ServerResponse::Game(GameResponse::BuildingBuilt(building_info.clone())),
-                )]
-            },
-        }
+        ])
     }
 
     fn client_ids_for_player(&self, player_id: PlayerId) -> Vec<ClientId> {
@@ -180,13 +162,12 @@ impl ServerState {
         }
     }
 
-    #[must_use]
-    pub fn process(
+    fn process_internal(
         &mut self,
         client_command_with_client_id: ClientCommandWithClientId,
-    ) -> Vec<ServerResponseWithClientIds> {
+    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         let client_id = client_command_with_client_id.client_id;
-        let responses = match client_command_with_client_id.command {
+        match client_command_with_client_id.command {
             ClientCommand::Authentication(authentication_command) => {
                 process_authentication_command(
                     &mut self.connection_registry,
@@ -195,28 +176,35 @@ impl ServerState {
                 )
             },
             ClientCommand::Lobby(lobby_command) => {
-                match self.connection_registry.get_player_id(&client_id) {
-                    None => {
-                        vec![ServerResponseWithAddress::new(
-                            AddressEnvelope::ToClient(client_id),
-                            ServerResponse::Error(ServerError::NotAuthorized),
-                        )]
-                    },
-                    Some(requesting_player_id) => {
-                        self.process_lobby_command(*requesting_player_id, lobby_command)
-                    },
-                }
+                let requesting_player_id = lookup_player_id(&self.connection_registry, client_id)?;
+                self.process_lobby_command(requesting_player_id, lobby_command)
             },
-            ClientCommand::Game(game_command) => {
-                // TODO: Instead of random, we should be looking it up!
-                let player_id = PlayerId::random();
-                // TODO: Instead of random, we should be looking it up!
-                let game_id = GameId::random();
-                self.process_game_command(player_id, game_id, game_command)
+            ClientCommand::Game(game_id, game_command) => {
+                let requesting_player_id = lookup_player_id(&self.connection_registry, client_id)?;
+                let game_state = lookup_game_state(&mut self.games, game_id)?;
+                process_game_command(game_id, game_state, requesting_player_id, game_command)
             },
-        };
+        }
+    }
 
-        responses
+    #[must_use]
+    pub fn process(
+        &mut self,
+        client_command_with_client_id: ClientCommandWithClientId,
+    ) -> Vec<ServerResponseWithClientIds> {
+        let client_id = client_command_with_client_id.client_id;
+        let responses = self.process_internal(client_command_with_client_id);
+
+        let flattened = responses
+            .map_err(|response| {
+                vec![ServerResponseWithAddress {
+                    address: AddressEnvelope::ToClient(client_id),
+                    response,
+                }]
+            })
+            .unwrap_or_else(identity);
+
+        flattened
             .into_iter()
             .map(|response| self.translate_response(response))
             .collect()
