@@ -9,8 +9,8 @@ use shared_domain::client_command::{
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, GameInfo, GameResponse, LobbyResponse, ServerError,
-    ServerResponse, ServerResponseWithAddress, ServerResponseWithClientIds,
+    AddressEnvelope, GameInfo, GameResponse, LobbyResponse, ServerError, ServerResponse,
+    ServerResponseWithAddress, ServerResponseWithClientIds,
 };
 use shared_domain::{
     BuildingId, BuildingInfo, BuildingType, ClientId, GameId, PlayerId, PlayerName, TrackType,
@@ -19,6 +19,7 @@ use shared_util::coords_xz::CoordsXZ;
 
 use crate::authentication_logic::process_authentication_command;
 use crate::connection_registry::ConnectionRegistry;
+use crate::game_logic::create_game_infos;
 
 pub struct ServerState {
     pub connection_registry: ConnectionRegistry,
@@ -52,18 +53,9 @@ impl ServerState {
             LobbyCommand::ListGames => {
                 vec![ServerResponseWithAddress::new(
                     AddressEnvelope::ToPlayer(requesting_player_id),
-                    ServerResponse::Lobby(LobbyResponse::AvailableGames(
-                        self.games
-                            .iter()
-                            .map(|(game_id, game_state)| {
-                                // TODO: Move `GameInfo` generation to `GameLogic` probably
-                                GameInfo {
-                                    game_id: *game_id,
-                                    players: game_state.players.clone(),
-                                }
-                            })
-                            .collect(),
-                    )),
+                    ServerResponse::Lobby(LobbyResponse::AvailableGames(create_game_infos(
+                        &self.games,
+                    ))),
                 )]
             },
             LobbyCommand::CreateGame(player_name) => {
