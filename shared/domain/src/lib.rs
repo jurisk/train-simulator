@@ -78,7 +78,7 @@ pub enum BuildingType {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct BuildingInfo {
     pub building_id:      BuildingId,
-    // TODO: This is bad, as it is vertex and not actually tiles, and also buildings can be multi-tile
+    // TODO: This is bad, as it is vertex and not actually tiles, and also buildings can be multi-tile. Should it always be the North-West vertex?
     pub vertex_coords_xz: CoordsXZ,
     pub building_type:    BuildingType,
 }

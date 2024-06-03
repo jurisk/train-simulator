@@ -1274,6 +1274,7 @@ dependencies = [
  "client-graphics",
  "game-logic",
  "shared-domain",
+ "shared-protocol",
 ]
 
 [[package]]

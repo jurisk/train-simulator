@@ -2,8 +2,11 @@
 members = [
     "client/single-player",
     "client/graphics",
+
+    # TODO: Should you just merge `shared/domain` and `shared/protocol`? They are circularly dependent anyway.
     "shared/domain",
     "shared/protocol",
+    
     "shared/util",
 ]
 resolver = "2"

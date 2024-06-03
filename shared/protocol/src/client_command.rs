@@ -1,5 +1,7 @@
+#![allow(clippy::module_name_repetitions)]
+
 use serde::{Deserialize, Serialize};
-use shared_domain::{BuildingInfo, GameId, PlayerId};
+use shared_domain::{BuildingInfo, ClientId, GameId, PlayerId};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct AccessToken(pub String);
@@ -28,4 +30,17 @@ pub enum ClientCommand {
     Authentication(AuthenticationCommand),
     Lobby(LobbyCommand),
     Game(GameCommand),
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct ClientCommandWithClientId {
+    pub client_id: ClientId,
+    pub command:   ClientCommand,
+}
+
+impl ClientCommandWithClientId {
+    #[must_use]
+    pub fn new(client_id: ClientId, command: ClientCommand) -> Self {
+        Self { client_id, command }
+    }
 }
