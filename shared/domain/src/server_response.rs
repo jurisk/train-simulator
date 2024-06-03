@@ -22,7 +22,7 @@ pub struct GameInfo {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum LobbyResponse {
     AvailableGames(Vec<GameInfo>),
-    GameJoined(GameInfo),
+    GameJoined(GameId),
     GameLeft(GameId),
 }
 

@@ -9,7 +9,7 @@ use shared_domain::client_command::{
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, GameInfo, GameResponse, LobbyResponse, ServerError, ServerResponse,
+    AddressEnvelope, GameResponse, LobbyResponse, ServerError, ServerResponse,
     ServerResponseWithAddress, ServerResponseWithClientIds,
 };
 use shared_domain::{
@@ -24,7 +24,8 @@ use crate::game_logic::create_game_infos;
 pub struct ServerState {
     pub connection_registry: ConnectionRegistry,
     pub games:               HashMap<GameId, GameState>,
-    default_level:           MapLevel,
+
+    game_prototype: GameState,
 }
 
 impl ServerState {
@@ -34,13 +35,31 @@ impl ServerState {
         let level_json = include_str!("../assets/map_levels/default.json");
         let default_level = serde_json::from_str::<MapLevel>(level_json)
             .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
-
         assert!(default_level.is_valid());
+
+        let initial_buildings = vec![
+            BuildingInfo {
+                building_id:          BuildingId::random(),
+                north_west_vertex_xz: CoordsXZ::new(10, 10),
+                building_type:        BuildingType::Track(TrackType::EastWest),
+            },
+            BuildingInfo {
+                building_id:          BuildingId::random(),
+                north_west_vertex_xz: CoordsXZ::new(3, 5),
+                building_type:        BuildingType::Track(TrackType::NorthSouth),
+            },
+        ];
+
+        let game_prototype = GameState {
+            map_level: default_level,
+            buildings: initial_buildings,
+            players:   HashMap::new(),
+        };
 
         Self {
             connection_registry: ConnectionRegistry::new(),
             games: HashMap::new(),
-            default_level,
+            game_prototype,
         }
     }
 
@@ -59,40 +78,33 @@ impl ServerState {
                 )]
             },
             LobbyCommand::CreateGame(player_name) => {
-                self.lobby_create_game(requesting_player_id, player_name)
+                // TODO: Don't allow joining multiple games
+                self.create_and_join_game(requesting_player_id, player_name)
             },
-            LobbyCommand::JoinExistingGame(..) => vec![], // TODO: Implement
-            LobbyCommand::LeaveGame(_) => vec![],         // TODO: Implement
+            LobbyCommand::JoinExistingGame(..) => {
+                // TODO: Don't allow joining multiple games
+                // TODO: Implement
+                vec![]
+            },
+            LobbyCommand::LeaveGame(_) => {
+                // TODO: Implement
+                vec![]
+            },
         }
     }
 
-    fn lobby_create_game(
+    fn create_and_join_game(
         &mut self,
         requesting_player_id: PlayerId,
         requesting_player_name: PlayerName,
     ) -> Vec<ServerResponseWithAddress> {
         let game_id = GameId::random();
 
-        let initial_buildings = vec![
-            BuildingInfo {
-                building_id:          BuildingId::random(),
-                north_west_vertex_xz: CoordsXZ::new(10, 10),
-                building_type:        BuildingType::Track(TrackType::EastWest),
-            },
-            BuildingInfo {
-                building_id:          BuildingId::random(),
-                north_west_vertex_xz: CoordsXZ::new(3, 5),
-                building_type:        BuildingType::Track(TrackType::NorthSouth),
-            },
-        ];
+        let mut game_state = self.game_prototype.clone();
 
-        let players = HashMap::from([(requesting_player_id, requesting_player_name)]);
-        let game_state = GameState {
-            map_level: self.default_level.clone(),
-            buildings: initial_buildings,
-            players:   players.clone(),
-        };
-
+        game_state
+            .players
+            .insert(requesting_player_id, requesting_player_name);
         self.games.insert(game_id, game_state.clone());
 
         info!("Simulating server responding to JoinGame with GameJoined");
@@ -100,7 +112,7 @@ impl ServerState {
         vec![
             ServerResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(game_id),
-                ServerResponse::Lobby(LobbyResponse::GameJoined(GameInfo { game_id, players })),
+                ServerResponse::Lobby(LobbyResponse::GameJoined(game_id)),
             ),
             ServerResponseWithAddress::new(
                 AddressEnvelope::ToPlayer(requesting_player_id),
