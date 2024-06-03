@@ -33,15 +33,16 @@ fn process_messages_locally(
     mut client_messages: EventReader<ClientMessageEvent>,
     mut server_messages: EventWriter<ServerMessageEvent>,
 ) {
+    let ClientIdResource(client_id) = *client_id_resource;
     for message in client_messages.read() {
         let client_command_with_client_id =
-            ClientCommandWithClientId::new(client_id_resource.0, message.command.clone());
+            ClientCommandWithClientId::new(client_id, message.command.clone());
         // TODO: Invoke on `server_state_resource` and make sure changes persist!
         let responses = server_logic(client_command_with_client_id);
         for response in responses {
-            // TODO: Should we assume that we always get server message addressed to ClientId at this level? And thus do the translation elsewhere?
-            // TODO: We are ignoring the response address
-            server_messages.send(ServerMessageEvent::new(response.response));
+            if response.client_ids.contains(&client_id) {
+                server_messages.send(ServerMessageEvent::new(response.response));
+            }
         }
     }
 }
