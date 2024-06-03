@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Formatter};
+
 use serde::{Deserialize, Serialize};
 use shared_util::grid_xz::GridXZ;
 
@@ -24,9 +26,18 @@ impl TerrainType {
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Height(pub u8);
 
-#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct Terrain {
     pub vertex_heights: GridXZ<Height>,
+}
+
+impl Debug for Terrain {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Terrain")
+            .field("size_x", &self.vertex_heights.size_x)
+            .field("size_z", &self.vertex_heights.size_z)
+            .finish()
+    }
 }
 
 impl Terrain {

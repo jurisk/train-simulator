@@ -110,7 +110,7 @@ fn calculate_flat_normal(triangle: &Triangle) -> Vec3 {
 
 #[allow(clippy::cast_possible_truncation)]
 fn convert_to_mesh(input: Vec<Triangle>, custom_attribute: MeshVertexAttribute) -> Mesh {
-    println!("Input: {}", input.len());
+    trace!("Input: {}", input.len());
 
     let vertices_count = input.len() * 3;
 
@@ -130,10 +130,10 @@ fn convert_to_mesh(input: Vec<Triangle>, custom_attribute: MeshVertexAttribute) 
         }
     }
 
-    println!("Triangles: {:?}", triangles.len());
-    println!("Positions: {:?}", positions.len());
-    println!("Normals: {:?}", normals.len());
-    println!("UVs: {:?}", uvs.len());
+    trace!("Triangles: {:?}", triangles.len());
+    trace!("Positions: {:?}", positions.len());
+    trace!("Normals: {:?}", normals.len());
+    trace!("UVs: {:?}", uvs.len());
 
     let mut mesh = Mesh::new(
         PrimitiveTopology::TriangleList,

@@ -1,139 +1,233 @@
+#![allow(clippy::match_same_arms)]
+
 use std::collections::HashMap;
 
-use log::info;
+use log::{info, warn};
 use shared_domain::client_command::{
     AuthenticationCommand, ClientCommand, ClientCommandWithClientId, GameCommand, LobbyCommand,
 };
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AuthenticationResponse, GameInfo, GameResponse, LobbyResponse, ServerResponse,
-    ServerResponseWithClientIds,
+    AddressEnvelope, AuthenticationResponse, GameInfo, GameResponse, LobbyResponse, ServerError,
+    ServerResponse, ServerResponseWithAddress, ServerResponseWithClientIds,
 };
 use shared_domain::{
-    BuildingId, BuildingInfo, BuildingType, GameId, PlayerId, PlayerName, TrackType,
+    BuildingId, BuildingInfo, BuildingType, ClientId, GameId, PlayerId, PlayerName, TrackType,
 };
 use shared_util::coords_xz::CoordsXZ;
 
 use crate::connection_registry::ConnectionRegistry;
 
-#[derive(Default)]
 pub struct ServerState {
     pub connection_registry: ConnectionRegistry,
     pub games:               HashMap<GameId, GameState>,
+    default_level:           MapLevel,
 }
 
 impl ServerState {
     #[must_use]
+    #[allow(clippy::missing_panics_doc, clippy::new_without_default)]
     pub fn new() -> Self {
+        let level_json = include_str!("../assets/map_levels/default.json");
+        let default_level = serde_json::from_str::<MapLevel>(level_json)
+            .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
+
+        assert!(default_level.is_valid());
+
         Self {
             connection_registry: ConnectionRegistry::new(),
-            games:               HashMap::new(),
+            games: HashMap::new(),
+            default_level,
         }
     }
 
-    // TODO: Should be separated into Authentication, Lobby, Game processing, some of them returning ServerResponseWithAddress
+    // TODO: Move into `AuthenticationLogic` which wraps `ConnectionRegistry`?
+    fn process_authentication_command(
+        &mut self,
+        client_id: ClientId,
+        authentication_command: AuthenticationCommand,
+    ) -> Vec<ServerResponseWithAddress> {
+        match authentication_command {
+            AuthenticationCommand::Login(player_id, access_token) => {
+                if access_token.0 == "valid-token" {
+                    self.connection_registry.register(player_id, client_id);
+
+                    vec![ServerResponseWithAddress::new(
+                        AddressEnvelope::ToClient(client_id),
+                        ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(
+                            player_id,
+                        )),
+                    )]
+                } else {
+                    vec![ServerResponseWithAddress::new(
+                        AddressEnvelope::ToClient(client_id),
+                        ServerResponse::Authentication(AuthenticationResponse::LoginFailed),
+                    )]
+                }
+            },
+            AuthenticationCommand::Logout => {
+                self.connection_registry.unregister_by_client_id(client_id);
+
+                vec![ServerResponseWithAddress::new(
+                    AddressEnvelope::ToClient(client_id),
+                    ServerResponse::Authentication(AuthenticationResponse::LogoutSucceeded),
+                )]
+            },
+        }
+    }
+
+    fn process_lobby_command(
+        &mut self,
+        requesting_player_id: PlayerId,
+        lobby_command: LobbyCommand,
+    ) -> Vec<ServerResponseWithAddress> {
+        match lobby_command {
+            LobbyCommand::ListGames => vec![], // TODO: Implement
+            LobbyCommand::CreateGame => self.lobby_create_game(requesting_player_id),
+            LobbyCommand::JoinExistingGame(_) => vec![], // TODO: Implement
+            LobbyCommand::LeaveGame(_) => vec![],        // TODO: Implement
+        }
+    }
+
+    fn lobby_create_game(
+        &mut self,
+        requesting_player_id: PlayerId,
+    ) -> Vec<ServerResponseWithAddress> {
+        let game_id = GameId::random();
+
+        let initial_buildings = vec![
+            BuildingInfo {
+                building_id:          BuildingId::random(),
+                north_west_vertex_xz: CoordsXZ::new(10, 10),
+                building_type:        BuildingType::Track(TrackType::EastWest),
+            },
+            BuildingInfo {
+                building_id:          BuildingId::random(),
+                north_west_vertex_xz: CoordsXZ::new(3, 5),
+                building_type:        BuildingType::Track(TrackType::NorthSouth),
+            },
+        ];
+
+        let game_state = GameState {
+            map_level:  self.default_level.clone(),
+            buildings:  initial_buildings,
+            player_ids: vec![requesting_player_id],
+        };
+
+        self.games.insert(game_id, game_state.clone());
+
+        let players = vec![(requesting_player_id, PlayerName::random())]
+            .into_iter()
+            .collect();
+
+        info!("Simulating server responding to JoinGame with GameJoined");
+
+        vec![
+            ServerResponseWithAddress::new(
+                AddressEnvelope::ToAllPlayersInGame(game_id),
+                ServerResponse::Lobby(LobbyResponse::GameJoined(GameInfo { game_id, players })),
+            ),
+            ServerResponseWithAddress::new(
+                AddressEnvelope::ToPlayer(requesting_player_id),
+                ServerResponse::Game(GameResponse::State(game_state)),
+            ),
+        ]
+    }
+
+    // TODO: Use `game_id` to actually move this into `GameLogic` (which wraps `GameState`)
+    fn process_game_command(
+        &mut self,
+        _player_id: PlayerId,
+        game_id: GameId,
+        game_command: GameCommand,
+    ) -> Vec<ServerResponseWithAddress> {
+        match game_command {
+            GameCommand::BuildBuilding(building_info) => {
+                // TODO: Check that `player_id` can build there
+                // TODO: Update game state with the buildings
+                vec![ServerResponseWithAddress::new(
+                    AddressEnvelope::ToAllPlayersInGame(game_id),
+                    ServerResponse::Game(GameResponse::BuildingBuilt(building_info.clone())),
+                )]
+            },
+        }
+    }
+
+    fn client_ids_for_player(&self, player_id: PlayerId) -> Vec<ClientId> {
+        match self.connection_registry.get_client_id(&player_id) {
+            None => {
+                warn!("Failed to find client_id for {player_id:?}");
+                vec![]
+            },
+            Some(client_id) => vec![*client_id],
+        }
+    }
+
+    fn translate_response(
+        &self,
+        server_response_with_address: ServerResponseWithAddress,
+    ) -> ServerResponseWithClientIds {
+        let client_ids = match server_response_with_address.address {
+            AddressEnvelope::ToClient(client_id) => vec![client_id],
+            AddressEnvelope::ToPlayer(player_id) => self.client_ids_for_player(player_id),
+            AddressEnvelope::ToAllPlayersInGame(game_id) => {
+                let player_ids = match self.games.get(&game_id) {
+                    None => {
+                        warn!("Failed to find game for {game_id:?}");
+                        vec![]
+                    },
+                    Some(game_state) => game_state.player_ids.clone(),
+                };
+
+                player_ids
+                    .into_iter()
+                    .flat_map(|player_id| self.client_ids_for_player(player_id))
+                    .collect()
+            },
+        };
+
+        ServerResponseWithClientIds {
+            client_ids,
+            response: server_response_with_address.response,
+        }
+    }
+
     #[must_use]
-    #[allow(clippy::missing_panics_doc)]
     pub fn process(
         &mut self,
         client_command_with_client_id: ClientCommandWithClientId,
     ) -> Vec<ServerResponseWithClientIds> {
         let client_id = client_command_with_client_id.client_id;
-        match client_command_with_client_id.command {
+        let responses = match client_command_with_client_id.command {
             ClientCommand::Authentication(authentication_command) => {
-                match authentication_command {
-                    AuthenticationCommand::Login(player_id, access_token) => {
-                        if access_token.0 == "valid-token" {
-                            // TODO: Update map between PlayerId and ClientId
-                            vec![ServerResponseWithClientIds::new(
-                                vec![client_id],
-                                ServerResponse::Authentication(
-                                    AuthenticationResponse::LoginSucceeded(player_id),
-                                ),
-                            )]
-                        } else {
-                            vec![ServerResponseWithClientIds::new(
-                                vec![client_id],
-                                ServerResponse::Authentication(AuthenticationResponse::LoginFailed),
-                            )]
-                        }
-                    },
-                    AuthenticationCommand::Logout => {
-                        vec![]
-                    },
-                }
+                self.process_authentication_command(client_id, authentication_command)
             },
             ClientCommand::Lobby(lobby_command) => {
-                match lobby_command {
-                    LobbyCommand::CreateGame => {
-                        let game_id = GameId::random();
-                        let level_json = include_str!("../assets/map_levels/default.json");
-                        let map_level = serde_json::from_str::<MapLevel>(level_json)
-                            .unwrap_or_else(|err| {
-                                panic!("Failed to deserialise {level_json}: {err}")
-                            });
-
-                        assert!(map_level.is_valid());
-
-                        let buildings = vec![BuildingInfo {
-                            building_id:          BuildingId::random(),
-                            north_west_vertex_xz: CoordsXZ::new(10, 10),
-                            building_type:        BuildingType::Track(TrackType::EastWest),
-                        }];
-
-                        let game_state = GameState {
-                            map_level,
-                            buildings,
-                        };
-                        let player_id = PlayerId::random();
-                        let players = vec![(player_id, PlayerName::random())]
-                            .into_iter()
-                            .collect();
-
-                        info!("Simulating server responding to JoinGame with GameJoined");
-
-                        vec![
-                            ServerResponseWithClientIds::new(
-                                vec![client_id], // TODO: Actually all players in game
-                                ServerResponse::Lobby(LobbyResponse::GameJoined(GameInfo {
-                                    game_id,
-                                    players,
-                                })),
-                            ),
-                            ServerResponseWithClientIds::new(
-                                vec![client_id],
-                                ServerResponse::Game(GameResponse::State(game_state)),
-                            ),
-                            ServerResponseWithClientIds::new(
-                                vec![client_id], // TODO: Actually all players in game
-                                ServerResponse::Game(GameResponse::BuildingBuilt(BuildingInfo {
-                                    building_id:          BuildingId::random(),
-                                    north_west_vertex_xz: CoordsXZ::new(3, 5),
-                                    building_type:        BuildingType::Track(
-                                        TrackType::NorthSouth,
-                                    ),
-                                })),
-                            ),
-                        ]
+                match self.connection_registry.get_player_id(&client_id) {
+                    None => {
+                        vec![ServerResponseWithAddress::new(
+                            AddressEnvelope::ToClient(client_id),
+                            ServerResponse::Error(ServerError::NotAuthorized),
+                        )]
                     },
-                    _ => todo!(), // TODO: Implement other handling
+                    Some(requesting_player_id) => {
+                        self.process_lobby_command(*requesting_player_id, lobby_command)
+                    },
                 }
             },
             ClientCommand::Game(game_command) => {
-                match game_command {
-                    GameCommand::BuildBuilding(building_info) => {
-                        // TODO: Check that you can build there
-                        // TODO: Update game state with the buildings
-                        vec![ServerResponseWithClientIds::new(
-                            vec![client_id], // TODO: Actually all players in game
-                            ServerResponse::Game(GameResponse::BuildingBuilt(
-                                building_info.clone(),
-                            )),
-                        )]
-                    },
-                }
+                // TODO: Instead of random, we should be looking it up!
+                let player_id = PlayerId::random();
+                // TODO: Instead of random, we should be looking it up!
+                let game_id = GameId::random();
+                self.process_game_command(player_id, game_id, game_command)
             },
-        }
+        };
+
+        responses
+            .into_iter()
+            .map(|response| self.translate_response(response))
+            .collect()
     }
 }

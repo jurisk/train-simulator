@@ -3,9 +3,12 @@ use bevy::prelude::{
     in_state, Commands, EventReader, EventWriter, IntoSystemConfigs, NextState, OnEnter, Plugin,
     ResMut, Resource,
 };
-use shared_domain::client_command::{ClientCommand, LobbyCommand};
+use shared_domain::client_command::{
+    AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
+};
 use shared_domain::game_state::GameState;
 use shared_domain::server_response::{GameResponse, ServerResponse};
+use shared_domain::PlayerId;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;
@@ -28,7 +31,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(BuildingsPlugin);
         app.add_plugins(MapLevelPlugin);
-        app.add_systems(OnEnter(ClientState::Joining), request_join_game);
+        app.add_systems(OnEnter(ClientState::Joining), game_startup);
         app.add_systems(
             Update,
             handle_game_joined.run_if(in_state(ClientState::Joining)),
@@ -36,7 +39,12 @@ impl Plugin for GamePlugin {
     }
 }
 
-fn request_join_game(mut client_messages: EventWriter<ClientMessageEvent>) {
+fn game_startup(mut client_messages: EventWriter<ClientMessageEvent>) {
+    let player_id = PlayerId::random();
+    client_messages.send(ClientMessageEvent::new(ClientCommand::Authentication(
+        AuthenticationCommand::Login(player_id, AccessToken("valid-token".to_string())),
+    )));
+
     client_messages.send(ClientMessageEvent::new(ClientCommand::Lobby(
         LobbyCommand::CreateGame,
     )));

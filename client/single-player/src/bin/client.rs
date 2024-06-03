@@ -1,3 +1,4 @@
+use bevy::log::info;
 use bevy::prelude::{App, EventReader, EventWriter, Res, ResMut, Resource, Update};
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::ClientGraphicsPlugin;
@@ -37,8 +38,10 @@ fn process_messages_locally(
         let client_command_with_client_id =
             ClientCommandWithClientId::new(client_id, message.command.clone());
 
+        info!("Processing message: {:?}", client_command_with_client_id);
         let responses = server_state.process(client_command_with_client_id);
         for response in responses {
+            info!("Got response: {:?}", response);
             if response.client_ids.contains(&client_id) {
                 server_messages.send(ServerMessageEvent::new(response.response));
             }
