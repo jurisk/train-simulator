@@ -1,7 +1,7 @@
 use bevy::app::App;
 use bevy::prelude::{EventReader, Plugin, Update};
 use bevy::utils::info;
-use shared_protocol::server_response::{LobbyResponse, ServerResponse};
+use shared_domain::server_response::{LobbyResponse, ServerResponse};
 
 use crate::communication::domain::ServerMessageEvent;
 

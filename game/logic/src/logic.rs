@@ -1,15 +1,15 @@
 use log::info;
-use shared_domain::game_state::GameState;
-use shared_domain::map_level::MapLevel;
-use shared_domain::{
-    BuildingId, BuildingInfo, BuildingType, GameId, PlayerId, PlayerName, TrackType,
-};
-use shared_protocol::client_command::{
+use shared_domain::client_command::{
     AuthenticationCommand, ClientCommand, ClientCommandWithClientId, GameCommand, LobbyCommand,
 };
-use shared_protocol::server_response::{
+use shared_domain::game_state::GameState;
+use shared_domain::map_level::MapLevel;
+use shared_domain::server_response::{
     AddressEnvelope, AuthenticationResponse, GameInfo, GameResponse, LobbyResponse, ServerResponse,
     ServerResponseWithAddress,
+};
+use shared_domain::{
+    BuildingId, BuildingInfo, BuildingType, GameId, PlayerId, PlayerName, TrackType,
 };
 use shared_util::coords_xz::CoordsXZ;
 

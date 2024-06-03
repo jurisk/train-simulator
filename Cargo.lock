@@ -1268,7 +1268,6 @@ dependencies = [
  "serde",
  "serde_json",
  "shared-domain",
- "shared-protocol",
  "shared-util",
 ]
 
@@ -1280,7 +1279,6 @@ dependencies = [
  "client-graphics",
  "game-logic",
  "shared-domain",
- "shared-protocol",
 ]
 
 [[package]]
@@ -1823,7 +1821,6 @@ dependencies = [
  "serde",
  "serde_json",
  "shared-domain",
- "shared-protocol",
  "shared-util",
 ]
 
@@ -3173,16 +3170,6 @@ dependencies = [
  "serde_json",
  "shared-util",
  "uuid",
-]
-
-[[package]]
-name = "shared-protocol"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "shared-domain",
- "shared-util",
 ]
 
 [[package]]

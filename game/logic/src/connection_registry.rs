@@ -1,11 +1,13 @@
 use bimap::BiMap;
 use shared_domain::{ClientId, PlayerId};
 
+#[derive(Default)]
 pub struct ConnectionRegistry {
     map: BiMap<PlayerId, ClientId>,
 }
 
 impl ConnectionRegistry {
+    #[must_use]
     pub fn new() -> Self {
         Self { map: BiMap::new() }
     }

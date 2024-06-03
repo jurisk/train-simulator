@@ -3,8 +3,10 @@ use shared_util::coords_xz::CoordsXZ;
 use shared_util::random::generate_random_string;
 use uuid::Uuid;
 
+pub mod client_command;
 pub mod game_state;
 pub mod map_level;
+pub mod server_response;
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub struct ClientId(pub Uuid);

@@ -3,9 +3,9 @@ use bevy::prelude::{
     in_state, Commands, EventReader, EventWriter, IntoSystemConfigs, NextState, OnEnter, Plugin,
     ResMut, Resource,
 };
+use shared_domain::client_command::{ClientCommand, LobbyCommand};
 use shared_domain::game_state::GameState;
-use shared_protocol::client_command::{ClientCommand, LobbyCommand};
-use shared_protocol::server_response::{GameResponse, ServerResponse};
+use shared_domain::server_response::{GameResponse, ServerResponse};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;

@@ -9,7 +9,7 @@ use bevy::prelude::{
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
 use shared_domain::map_level::{Height, MapLevel, Terrain, TerrainType};
-use shared_protocol::server_response::{GameResponse, ServerResponse};
+use shared_domain::server_response::{GameResponse, ServerResponse};
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::grid_xz::GridXZ;
 

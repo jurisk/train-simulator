@@ -1,6 +1,6 @@
 use bevy::prelude::Event;
-use shared_protocol::client_command::ClientCommand;
-use shared_protocol::server_response::ServerResponse;
+use shared_domain::client_command::ClientCommand;
+use shared_domain::server_response::ServerResponse;
 
 #[derive(Event)]
 pub struct ClientMessageEvent {

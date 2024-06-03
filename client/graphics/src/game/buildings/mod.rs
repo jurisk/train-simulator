@@ -7,8 +7,8 @@ use bevy::prelude::{
     Plugin, Res, ResMut, Sphere, StandardMaterial, Transform, Update, Vec3,
 };
 use shared_domain::game_state::GameState;
+use shared_domain::server_response::{GameResponse, ServerResponse};
 use shared_domain::{BuildingInfo, BuildingType, TrackType};
-use shared_protocol::server_response::{GameResponse, ServerResponse};
 use shared_util::coords_xz::CoordsXZ;
 
 use crate::communication::domain::ServerMessageEvent;
@@ -51,7 +51,7 @@ fn handle_game_state_responses(
                 GameResponse::State(game_state) => {
                     for building_info in &game_state.buildings {
                         create_building(
-                            &building_info,
+                            building_info,
                             &mut commands,
                             &mut meshes,
                             &mut materials,
@@ -96,7 +96,7 @@ fn create_track(
 ) {
     let terrain = &game_state.map_level.terrain;
     let height = terrain.vertex_heights[&vertex_coords_xz];
-    let translation = logical_to_world(vertex_coords_xz, height, &terrain);
+    let translation = logical_to_world(vertex_coords_xz, height, terrain);
 
     let color = match track_type {
         TrackType::NorthSouth => Color::RED,

@@ -7,7 +7,7 @@ use bevy::prelude::{
     StandardMaterial, Transform, Update,
 };
 use shared_domain::map_level::MapLevel;
-use shared_protocol::server_response::{GameResponse, ServerResponse};
+use shared_domain::server_response::{GameResponse, ServerResponse};
 
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::map_level::terrain::Y_COEF;

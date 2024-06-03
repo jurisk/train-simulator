@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use shared_domain::game_state::GameState;
-use shared_domain::{BuildingInfo, ClientId, GameId, PlayerId, PlayerName};
+
+use crate::game_state::GameState;
+use crate::{BuildingInfo, ClientId, GameId, PlayerId, PlayerName};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum AuthenticationResponse {

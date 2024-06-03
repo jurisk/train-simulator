@@ -3,8 +3,8 @@ use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEv
 use client_graphics::ClientGraphicsPlugin;
 use game_logic::logic::server_logic;
 use game_logic::server_state::ServerState;
+use shared_domain::client_command::ClientCommandWithClientId;
 use shared_domain::ClientId;
-use shared_protocol::client_command::ClientCommandWithClientId;
 
 fn main() {
     let mut app = App::new();
@@ -39,6 +39,7 @@ fn process_messages_locally(
         // TODO: Invoke on `server_state_resource` and make sure changes persist!
         let responses = server_logic(client_command_with_client_id);
         for response in responses {
+            // TODO: Should we assume that we always get server message addressed to ClientId at this level? And thus do the translation elsewhere?
             // TODO: We are ignoring the response address
             server_messages.send(ServerMessageEvent::new(response.response));
         }

@@ -1,7 +1,8 @@
 #![allow(clippy::module_name_repetitions)]
 
 use serde::{Deserialize, Serialize};
-use shared_domain::{BuildingInfo, ClientId, GameId, PlayerId};
+
+use crate::{BuildingInfo, ClientId, GameId, PlayerId};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct AccessToken(pub String);
