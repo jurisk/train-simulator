@@ -3,12 +3,13 @@
 use std::collections::HashMap;
 
 use shared_domain::client_command::GameCommand;
-use shared_domain::game_state::GameState;
 use shared_domain::server_response::{
     AddressEnvelope, GameInfo, GameResponse, LobbyResponse, ServerError, ServerResponse,
     ServerResponseWithAddress,
 };
 use shared_domain::{GameId, PlayerId, PlayerName};
+
+use crate::game_state::GameState;
 
 #[must_use]
 pub fn create_game_infos(games: &HashMap<GameId, GameState>) -> Vec<GameInfo> {

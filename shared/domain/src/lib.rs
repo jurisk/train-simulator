@@ -4,7 +4,6 @@ use shared_util::random::generate_random_string;
 use uuid::Uuid;
 
 pub mod client_command;
-pub mod game_state;
 pub mod map_level;
 pub mod server_response;
 

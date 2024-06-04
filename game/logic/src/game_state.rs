@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
-use crate::map_level::MapLevel;
-use crate::{BuildingInfo, PlayerId, PlayerName};
+use shared_domain::map_level::MapLevel;
+use shared_domain::{BuildingInfo, PlayerId, PlayerName};
 
-// TODO: Move to `game/logic` - this should not be a DTO!
 #[derive(Debug, Clone)]
 pub struct GameState {
     pub map_level: MapLevel,

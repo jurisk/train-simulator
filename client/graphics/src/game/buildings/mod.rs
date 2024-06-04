@@ -31,16 +31,18 @@ fn handle_building_built(
     mut materials: ResMut<Assets<StandardMaterial>>,
     map_level: Res<MapLevelResource>,
 ) {
-    for message in server_messages.read() {
-        if let ServerResponse::Game(_game_id, game_response) = &message.response {
-            if let GameResponse::BuildingBuilt(building_info) = game_response {
-                create_building(
-                    building_info,
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                    &map_level.map_level,
-                );
+    if let Some(map_level) = map_level.map_level.as_ref() {
+        for message in server_messages.read() {
+            if let ServerResponse::Game(_game_id, game_response) = &message.response {
+                if let GameResponse::BuildingBuilt(building_info) = game_response {
+                    create_building(
+                        building_info,
+                        &mut commands,
+                        &mut meshes,
+                        &mut materials,
+                        map_level,
+                    );
+                }
             }
         }
     }

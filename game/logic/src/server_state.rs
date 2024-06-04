@@ -9,7 +9,6 @@ use std::convert::identity;
 
 use log::warn;
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
-use shared_domain::game_state::GameState;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
     AddressEnvelope, ServerResponse, ServerResponseWithAddress, ServerResponseWithClientIds,
@@ -22,6 +21,7 @@ use shared_util::coords_xz::CoordsXZ;
 use crate::authentication_logic::{lookup_player_id, process_authentication_command};
 use crate::connection_registry::ConnectionRegistry;
 use crate::game_logic::{lookup_game_state, process_game_command};
+use crate::game_state::GameState;
 use crate::lobby_logic::process_lobby_command;
 
 pub struct ServerState {

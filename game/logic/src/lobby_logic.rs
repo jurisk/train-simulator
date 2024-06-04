@@ -3,13 +3,13 @@
 use std::collections::HashMap;
 
 use shared_domain::client_command::LobbyCommand;
-use shared_domain::game_state::GameState;
 use shared_domain::server_response::{
     AddressEnvelope, LobbyResponse, ServerResponse, ServerResponseWithAddress,
 };
 use shared_domain::{GameId, PlayerId};
 
 use crate::game_logic::{create_and_join_game, create_game_infos, join_game, lookup_game_state};
+use crate::game_state::GameState;
 
 pub fn process_lobby_command(
     games: &mut HashMap<GameId, GameState>,
