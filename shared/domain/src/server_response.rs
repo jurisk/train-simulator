@@ -28,7 +28,7 @@ pub enum LobbyResponse {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
-    MapLevelUpdated(MapLevel),
+    MapLevelProvided(MapLevel),
     PlayersUpdated(HashMap<PlayerId, PlayerName>),
     BuildingBuilt(BuildingInfo),
 }
@@ -45,7 +45,7 @@ pub enum ServerError {
 pub enum ServerResponse {
     Authentication(AuthenticationResponse),
     Lobby(LobbyResponse),
-    Game(GameResponse),
+    Game(GameId, GameResponse),
     Error(ServerError),
 }
 

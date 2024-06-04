@@ -23,6 +23,7 @@ pub enum LobbyCommand {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameCommand {
+    QueryBuildings,
     BuildBuilding(BuildingInfo),
 }
 

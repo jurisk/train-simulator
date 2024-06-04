@@ -28,8 +28,8 @@ fn handle_game_state_responses(
     mut commands: Commands,
 ) {
     for message in server_messages.read() {
-        if let ServerResponse::Game(game_response) = &message.response {
-            if let GameResponse::MapLevelUpdated(map_level) = game_response {
+        if let ServerResponse::Game(_game_id, game_response) = &message.response {
+            if let GameResponse::MapLevelProvided(map_level) = game_response {
                 create_water(&mut commands, &mut meshes, &mut materials, map_level);
             }
         }

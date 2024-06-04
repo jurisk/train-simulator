@@ -65,8 +65,8 @@ fn handle_map_level_updated(
     mut standard_materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for message in server_messages.read() {
-        if let ServerResponse::Game(game_response) = &message.response {
-            if let GameResponse::MapLevelUpdated(map_level) = game_response {
+        if let ServerResponse::Game(_game_id, game_response) = &message.response {
+            if let GameResponse::MapLevelProvided(map_level) = game_response {
                 create_land(
                     &mut commands,
                     &mut meshes,

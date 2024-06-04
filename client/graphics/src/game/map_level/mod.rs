@@ -1,9 +1,11 @@
 use bevy::app::{App, Update};
-use bevy::prelude::{Commands, EventReader, NextState, Plugin, ResMut, Resource};
+use bevy::prelude::{Commands, EventReader, EventWriter, NextState, Plugin, ResMut, Resource};
+use shared_domain::client_command::ClientCommand;
+use shared_domain::client_command::GameCommand::QueryBuildings;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, ServerResponse};
 
-use crate::communication::domain::ServerMessageEvent;
+use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::map_level::terrain::TerrainPlugin;
 use crate::states::ClientState;
 
@@ -29,16 +31,22 @@ impl Plugin for MapLevelPlugin {
 #[allow(clippy::collapsible_match)]
 fn handle_map_level_updated(
     mut server_messages: EventReader<ServerMessageEvent>,
+    mut client_messages: EventWriter<ClientMessageEvent>,
     mut client_state: ResMut<NextState<ClientState>>,
     mut commands: Commands,
 ) {
     for message in server_messages.read() {
-        if let ServerResponse::Game(game_response) = &message.response {
-            if let GameResponse::MapLevelUpdated(map_level) = game_response {
+        if let ServerResponse::Game(game_id, game_response) = &message.response {
+            if let GameResponse::MapLevelProvided(map_level) = game_response {
                 commands.insert_resource(MapLevelResource {
                     map_level: map_level.clone(),
                 });
                 client_state.set(ClientState::Playing);
+
+                // We do it like this, because we need the `MapLevelResource` to be set before we can render buildings, so we don't want to receive them too early
+                client_messages.send(ClientMessageEvent {
+                    command: ClientCommand::Game(*game_id, QueryBuildings),
+                });
             }
         }
     }

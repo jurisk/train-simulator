@@ -26,7 +26,7 @@ pub fn create_game_infos(games: &HashMap<GameId, GameState>) -> Vec<GameInfo> {
 pub fn process_game_command(
     game_id: GameId,
     game_state: &mut GameState,
-    _requesting_player_id: PlayerId,
+    requesting_player_id: PlayerId,
     game_command: GameCommand,
 ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
     match game_command {
@@ -37,8 +37,23 @@ pub fn process_game_command(
 
             Ok(vec![ServerResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(game_id),
-                ServerResponse::Game(GameResponse::BuildingBuilt(building_info.clone())),
+                ServerResponse::Game(game_id, GameResponse::BuildingBuilt(building_info.clone())),
             )])
+        },
+        GameCommand::QueryBuildings => {
+            Ok(game_state
+                .buildings
+                .iter()
+                .map(|building_info| {
+                    ServerResponseWithAddress::new(
+                        AddressEnvelope::ToPlayer(requesting_player_id),
+                        ServerResponse::Game(
+                            game_id,
+                            GameResponse::BuildingBuilt(building_info.clone()),
+                        ),
+                    )
+                })
+                .collect())
         },
     }
 }
@@ -72,11 +87,17 @@ pub fn join_game(
         ),
         ServerResponseWithAddress::new(
             AddressEnvelope::ToAllPlayersInGame(game_id),
-            ServerResponse::Game(GameResponse::PlayersUpdated(game_state.players.clone())),
+            ServerResponse::Game(
+                game_id,
+                GameResponse::PlayersUpdated(game_state.players.clone()),
+            ),
         ),
         ServerResponseWithAddress::new(
             AddressEnvelope::ToPlayer(requesting_player_id),
-            ServerResponse::Game(GameResponse::MapLevelUpdated(game_state.map_level.clone())),
+            ServerResponse::Game(
+                game_id,
+                GameResponse::MapLevelProvided(game_state.map_level.clone()),
+            ),
         ),
     ])
 }
