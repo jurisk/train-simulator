@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
-
 use crate::map_level::MapLevel;
 use crate::{BuildingInfo, PlayerId, PlayerName};
 
-#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
+// TODO: Move to `game/logic` - this should not be a DTO!
+#[derive(Debug, Clone)]
 pub struct GameState {
     pub map_level: MapLevel,
     pub buildings: Vec<BuildingInfo>,

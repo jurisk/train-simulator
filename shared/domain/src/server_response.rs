@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::game_state::GameState;
+use crate::map_level::MapLevel;
 use crate::{BuildingInfo, ClientId, GameId, PlayerId, PlayerName};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -28,7 +28,8 @@ pub enum LobbyResponse {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
-    State(GameState),
+    MapLevelUpdated(MapLevel),
+    PlayersUpdated(HashMap<PlayerId, PlayerName>),
     BuildingBuilt(BuildingInfo),
 }
 

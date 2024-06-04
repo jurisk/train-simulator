@@ -6,59 +6,46 @@ use bevy::prelude::{
     default, in_state, Assets, Color, Commands, EventReader, IntoSystemConfigs, Mesh, Meshable,
     Plugin, Res, ResMut, Sphere, StandardMaterial, Transform, Update, Vec3,
 };
-use shared_domain::game_state::GameState;
+use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, ServerResponse};
 use shared_domain::{BuildingInfo, BuildingType, TrackType};
 use shared_util::coords_xz::CoordsXZ;
 
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::map_level::terrain::land::logical_to_world;
-use crate::game::GameStateResource;
+use crate::game::map_level::MapLevelResource;
 use crate::states::ClientState;
 
 pub(crate) struct BuildingsPlugin;
 
 impl Plugin for BuildingsPlugin {
     fn build(&self, app: &mut bevy::app::App) {
+        // TODO: These race conditions are a mess, we only run building of buildings if we are `Playing`, but we receive both messages at once so we haven't become `Playing` yet
         app.add_systems(
             Update,
-            handle_game_state_responses.run_if(in_state(ClientState::Playing)), // Not sure about race conditions
+            handle_building_built.run_if(in_state(ClientState::Playing)),
         );
     }
 }
 
 #[allow(clippy::collapsible_match)]
-fn handle_game_state_responses(
+fn handle_building_built(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    game_state: Res<GameStateResource>,
+    map_level: Res<MapLevelResource>,
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Game(game_response) = &message.response {
-            match game_response {
-                GameResponse::BuildingBuilt(building_info) => {
-                    create_building(
-                        building_info,
-                        &mut commands,
-                        &mut meshes,
-                        &mut materials,
-                        &game_state.game_state,
-                    );
-                },
-
-                GameResponse::State(game_state) => {
-                    for building_info in &game_state.buildings {
-                        create_building(
-                            building_info,
-                            &mut commands,
-                            &mut meshes,
-                            &mut materials,
-                            game_state,
-                        );
-                    }
-                },
+            if let GameResponse::BuildingBuilt(building_info) = game_response {
+                create_building(
+                    building_info,
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                    &map_level.map_level,
+                );
             }
         }
     }
@@ -69,7 +56,7 @@ fn create_building(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
-    game_state: &GameState,
+    map_level: &MapLevel,
 ) {
     match &building_info.building_type {
         BuildingType::Track(track_type) => {
@@ -77,7 +64,7 @@ fn create_building(
                 commands,
                 meshes,
                 materials,
-                game_state,
+                map_level,
                 building_info.north_west_vertex_xz,
                 *track_type,
             );
@@ -90,11 +77,11 @@ fn create_track(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
-    game_state: &GameState,
+    map_level: &MapLevel,
     vertex_coords_xz: CoordsXZ,
     track_type: TrackType,
 ) {
-    let terrain = &game_state.map_level.terrain;
+    let terrain = &map_level.terrain;
     let height = terrain.vertex_heights[&vertex_coords_xz];
     let translation = logical_to_world(vertex_coords_xz, height, terrain);
 

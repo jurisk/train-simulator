@@ -67,12 +67,16 @@ pub fn join_game(
 
     Ok(vec![
         ServerResponseWithAddress::new(
-            AddressEnvelope::ToAllPlayersInGame(game_id),
+            AddressEnvelope::ToPlayer(requesting_player_id),
             ServerResponse::Lobby(LobbyResponse::GameJoined(game_id)),
         ),
         ServerResponseWithAddress::new(
+            AddressEnvelope::ToAllPlayersInGame(game_id),
+            ServerResponse::Game(GameResponse::PlayersUpdated(game_state.players.clone())),
+        ),
+        ServerResponseWithAddress::new(
             AddressEnvelope::ToPlayer(requesting_player_id),
-            ServerResponse::Game(GameResponse::State(game_state.clone())),
+            ServerResponse::Game(GameResponse::MapLevelUpdated(game_state.map_level.clone())),
         ),
     ])
 }

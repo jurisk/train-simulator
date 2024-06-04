@@ -28,7 +28,7 @@ pub(crate) struct LandPlugin;
 impl Plugin for LandPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(AdvancedLandMaterialPlugin);
-        app.add_systems(Update, handle_game_state_responses);
+        app.add_systems(Update, handle_map_level_updated);
     }
 }
 
@@ -56,7 +56,7 @@ pub(crate) fn logical_to_world(
 }
 
 #[allow(clippy::needless_pass_by_value, clippy::collapsible_match)]
-fn handle_game_state_responses(
+fn handle_map_level_updated(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -66,14 +66,14 @@ fn handle_game_state_responses(
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Game(game_response) = &message.response {
-            if let GameResponse::State(game_state) = game_response {
+            if let GameResponse::MapLevelUpdated(map_level) = game_response {
                 create_land(
                     &mut commands,
                     &mut meshes,
                     &asset_server,
                     &mut advanced_materials,
                     &mut standard_materials,
-                    &game_state.map_level,
+                    map_level,
                 );
             }
         }

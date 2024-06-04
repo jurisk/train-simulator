@@ -10,6 +10,8 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
+# TODO: Use https://github.com/NiklasEi/bevy_asset_loader ?
+
 shared-domain = { path = "../../shared/domain" }
 shared-util = { path = "../../shared/util" }
 game-logic = { path = "../../game/logic" }

@@ -1,9 +1,8 @@
 use bevy::app::Update;
-use bevy::prelude::{EventReader, EventWriter, OnEnter, Plugin, Resource};
+use bevy::prelude::{EventReader, EventWriter, OnEnter, Plugin};
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
 };
-use shared_domain::game_state::GameState;
 use shared_domain::server_response::{AuthenticationResponse, ServerResponse};
 use shared_domain::PlayerId;
 
@@ -17,12 +16,6 @@ mod map_level;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct GamePlugin;
-
-#[allow(clippy::module_name_repetitions)]
-#[derive(Resource)]
-pub struct GameStateResource {
-    pub game_state: GameState,
-}
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut bevy::app::App) {
