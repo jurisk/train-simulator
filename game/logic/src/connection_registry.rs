@@ -1,8 +1,10 @@
+#![allow(dead_code)]
+
 use bimap::BiMap;
 use shared_domain::{ClientId, PlayerId};
 
 #[derive(Default)]
-pub struct ConnectionRegistry {
+pub(crate) struct ConnectionRegistry {
     map: BiMap<PlayerId, ClientId>,
 }
 

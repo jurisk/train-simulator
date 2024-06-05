@@ -16,7 +16,7 @@ use shared_util::coords_xz::CoordsXZ;
 
 use crate::game_state::GameState;
 
-pub struct Games {
+pub(crate) struct Games {
     game_map:       HashMap<GameId, GameState>,
     game_prototype: GameState,
 }

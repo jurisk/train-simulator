@@ -12,7 +12,7 @@ use shared_domain::server_response::{
 use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName};
 
 #[derive(Debug, Clone)]
-pub struct GameState {
+pub(crate) struct GameState {
     pub game_id: GameId,
     map_level:   MapLevel,
     buildings:   Vec<BuildingInfo>,
