@@ -51,15 +51,7 @@ impl ServerState {
             AddressEnvelope::ToClient(client_id) => vec![client_id],
             AddressEnvelope::ToPlayer(player_id) => self.client_ids_for_player(player_id),
             AddressEnvelope::ToAllPlayersInGame(game_id) => {
-                // TODO: Move to `games.players_in_game`
-                let player_ids = match self.games.lookup_game_state(game_id) {
-                    Ok(found) => found.players.keys().copied().collect(),
-                    Err(_) => {
-                        warn!("Failed to find game for {game_id:?}");
-                        vec![]
-                    },
-                };
-
+                let player_ids = self.games.players_in_game(game_id);
                 player_ids
                     .into_iter()
                     .flat_map(|player_id| self.client_ids_for_player(player_id))

@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use log::warn;
 use shared_domain::client_command::LobbyCommand;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
@@ -24,7 +25,7 @@ pub struct Games {
 impl Games {
     #[must_use]
     #[allow(clippy::missing_panics_doc, clippy::new_without_default)]
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let level_json = include_str!("../assets/map_levels/default.json");
         let default_level = serde_json::from_str::<MapLevel>(level_json)
             .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
@@ -56,7 +57,7 @@ impl Games {
     }
 
     #[must_use]
-    pub fn create_game_infos(&self) -> Vec<GameInfo> {
+    pub(crate) fn create_game_infos(&self) -> Vec<GameInfo> {
         self.game_map
             .iter()
             .map(|(game_id, game_state)| {
@@ -68,7 +69,7 @@ impl Games {
             .collect()
     }
 
-    pub fn create_and_join_game(
+    pub(crate) fn create_and_join_game(
         &mut self,
         requesting_player_id: PlayerId,
         requesting_player_name: PlayerName,
@@ -87,7 +88,7 @@ impl Games {
         Ok(results)
     }
 
-    pub fn lookup_game_state_mut(
+    pub(crate) fn lookup_game_state_mut(
         &mut self,
         game_id: GameId,
     ) -> Result<&mut GameState, ServerResponse> {
@@ -97,14 +98,14 @@ impl Games {
         }
     }
 
-    pub fn lookup_game_state(&self, game_id: GameId) -> Result<&GameState, ServerResponse> {
+    pub(crate) fn lookup_game_state(&self, game_id: GameId) -> Result<&GameState, ServerResponse> {
         match self.game_map.get(&game_id) {
             None => Err(ServerResponse::Error(ServerError::GameNotFound)),
             Some(result) => Ok(result),
         }
     }
 
-    pub fn process_lobby_command(
+    pub(crate) fn process_lobby_command(
         &mut self,
         requesting_player_id: PlayerId,
         lobby_command: LobbyCommand,
@@ -131,6 +132,17 @@ impl Games {
                     AddressEnvelope::ToAllPlayersInGame(game_id),
                     ServerResponse::Lobby(LobbyResponse::GameLeft(game_id)),
                 )])
+            },
+        }
+    }
+
+    #[allow(clippy::single_match_else)]
+    pub(crate) fn players_in_game(&self, game_id: GameId) -> Vec<PlayerId> {
+        match self.lookup_game_state(game_id) {
+            Ok(found) => found.players.keys().copied().collect(),
+            Err(_) => {
+                warn!("Failed to find game for {game_id:?}");
+                vec![]
             },
         }
     }
