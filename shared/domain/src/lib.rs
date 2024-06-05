@@ -7,13 +7,24 @@ pub mod client_command;
 pub mod map_level;
 pub mod server_response;
 
+// Later: We initially wanted it to be Uuid, but renet uses u64, so we can stick with that for now for easier compatibility
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
-pub struct ClientId(pub Uuid);
+pub struct ClientId(u64);
 
 impl ClientId {
     #[must_use]
     pub fn random() -> Self {
-        Self(Uuid::new_v4())
+        Self(fastrand::u64(.. u64::MAX))
+    }
+
+    #[must_use]
+    pub fn from_raw(raw: u64) -> Self {
+        Self(raw)
+    }
+
+    #[must_use]
+    pub fn raw(self) -> u64 {
+        self.0
     }
 }
 

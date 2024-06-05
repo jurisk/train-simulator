@@ -21,7 +21,8 @@ serde_json.workspace = true
 
 # https://github.com/jakobhellermann/bevy-inspector-egui
 # https://crates.io/crates/bevy-inspector-egui/versions
-bevy-inspector-egui = {  version = "0.24.0", features = ["highlight_changes", "bevy_pbr"] }
+# Pulls in egui and that has to match with Renet Bevy Visualizer egui version!
+bevy-inspector-egui = {  version = "0.23.4", features = ["highlight_changes", "bevy_pbr"] }
 
 # https://crates.io/crates/bevy/versions
 [dependencies.bevy]
@@ -39,7 +40,6 @@ features = [
     "ktx2",
     "png",
     "tonemapping_luts",
-    "webgpu", # https://caniuse.com/webgpu
     "zstd",
     "x11",
 ]

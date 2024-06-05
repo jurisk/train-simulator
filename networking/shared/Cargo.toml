@@ -1,5 +1,5 @@
 [package]
-name = "networking-renet-server"
+name = "networking-renet-shared"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -7,5 +7,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+game-logic = { path = "../../game/logic" }
+
 bevy = { version = "0.13.2", default-features = false, features = [] }
 bevy_renet.workspace = true

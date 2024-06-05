@@ -21,7 +21,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(BuildingsPlugin);
         app.add_plugins(MapLevelPlugin);
-        app.add_systems(OnEnter(ClientState::Joining), initiate_login);
+        app.add_systems(OnEnter(ClientState::JoiningGame), initiate_login);
         app.add_systems(Update, handle_login_successful);
     }
 }

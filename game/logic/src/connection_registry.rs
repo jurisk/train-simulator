@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![allow(dead_code, clippy::trivially_copy_pass_by_ref)]
 
 use bimap::BiMap;
 use shared_domain::{ClientId, PlayerId};

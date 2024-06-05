@@ -1,0 +1,19 @@
+[package]
+name = "networking-renet-client"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+networking-renet-shared = { path = "../shared" }
+client-graphics = {  path = "../../client/graphics" }
+shared-domain = { path = "../../shared/domain" }
+
+bevy = { version = "0.13.2", default-features = false, features = [] }
+bevy_renet.workspace = true
+bevy_egui.workspace = true
+renet_visualizer.workspace = true
+bincode.workspace = true
+serde.workspace = true

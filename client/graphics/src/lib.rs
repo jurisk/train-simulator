@@ -11,7 +11,6 @@ use crate::debug::DebugPlugin;
 use crate::game::GamePlugin;
 use crate::lights::LightsPlugin;
 use crate::lobby::LobbyHandlerPlugin;
-use crate::states::ClientState;
 
 mod cameras;
 pub mod communication;
@@ -20,7 +19,7 @@ mod debug;
 mod game;
 mod lights;
 mod lobby;
-mod states;
+pub mod states;
 
 pub struct ClientGraphicsPlugin;
 
@@ -32,7 +31,6 @@ impl Plugin for ClientGraphicsPlugin {
             "../../client/graphics/"
         };
 
-        app.init_state::<ClientState>();
         app.add_plugins(
             DefaultPlugins
                 .build()

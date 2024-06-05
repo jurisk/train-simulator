@@ -2,7 +2,7 @@ use bevy::prelude::Event;
 use shared_domain::client_command::ClientCommand;
 use shared_domain::server_response::ServerResponse;
 
-#[derive(Event)]
+#[derive(Event, Debug)]
 pub struct ClientMessageEvent {
     pub command: ClientCommand,
 }

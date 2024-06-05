@@ -1,6 +1,7 @@
 use bevy::log::info;
 use bevy::prelude::{App, EventReader, EventWriter, Res, ResMut, Resource, Update};
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
+use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
 use game_logic::server_state::ServerState;
 use shared_domain::client_command::ClientCommandWithClientId;
@@ -11,6 +12,7 @@ fn main() {
     let client_id = ClientId::random();
     app.insert_resource(ClientIdResource(client_id));
     app.insert_resource(ServerStateResource(ServerState::new()));
+    app.insert_state(ClientState::JoiningGame);
     app.add_plugins(ClientGraphicsPlugin);
     app.add_systems(Update, process_messages_locally);
     app.run();
