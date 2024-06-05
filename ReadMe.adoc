@@ -67,3 +67,18 @@ cargo install wasm-bindgen-cli
 cargo build --profile wasm-release --target wasm32-unknown-unknown
 wasm-bindgen --out-name client --out-dir client/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client.wasm
 ----
+
+=== Dependency tree
+
+Not sure why, but the resulting `.dot` files would open in the JetBrains IDE plug-in, but not with the `dot` command-line tool.
+
+[source,bash]
+----
+cargo install cargo-depgraph
+cargo depgraph --all-deps
+cargo depgraph --all-deps --dedup-transitive-deps
+cargo depgraph --workspace-only
+dot -Tsvg input.dot -o output.svg
+----
+
+Later: Could add a CI action to check that the `--workspace-only` graph hasn't changed and isn't circular.
