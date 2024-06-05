@@ -44,11 +44,7 @@ impl Games {
             },
         ];
 
-        let game_prototype = GameState {
-            map_level: default_level,
-            buildings: initial_buildings,
-            players:   HashMap::new(),
-        };
+        let game_prototype = GameState::new(default_level, initial_buildings, HashMap::new());
 
         Self {
             game_map: HashMap::new(),
@@ -59,13 +55,8 @@ impl Games {
     #[must_use]
     pub(crate) fn create_game_infos(&self) -> Vec<GameInfo> {
         self.game_map
-            .iter()
-            .map(|(game_id, game_state)| {
-                GameInfo {
-                    game_id: *game_id,
-                    players: game_state.players.clone(),
-                }
-            })
+            .values()
+            .map(GameState::create_game_info)
             .collect()
     }
 
@@ -76,14 +67,11 @@ impl Games {
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         // Later: Don't allow starting a game if is already a part of another game?
 
-        let game_id = GameId::random();
+        let mut game_state = GameState::from_prototype(&self.game_prototype);
 
-        let mut game_state = self.game_prototype.clone();
+        let results = game_state.join_game(requesting_player_id, requesting_player_name)?;
 
-        let results =
-            game_state.join_game(game_id, requesting_player_id, requesting_player_name)?;
-
-        self.game_map.insert(game_id, game_state);
+        self.game_map.insert(game_state.game_id, game_state);
 
         Ok(results)
     }
@@ -122,16 +110,12 @@ impl Games {
             },
             LobbyCommand::JoinExistingGame(game_id, player_name) => {
                 let game_state = self.lookup_game_state_mut(game_id)?;
-                game_state.join_game(game_id, requesting_player_id, player_name)
+                game_state.join_game(requesting_player_id, player_name)
             },
             LobbyCommand::LeaveGame(game_id) => {
                 // Later: Not sure how this should even work if the player has buildings and vehicles owned in the game?
                 let game_state = self.lookup_game_state_mut(game_id)?;
-                game_state.players.remove(&requesting_player_id);
-                Ok(vec![ServerResponseWithAddress::new(
-                    AddressEnvelope::ToAllPlayersInGame(game_id),
-                    ServerResponse::Lobby(LobbyResponse::GameLeft(game_id)),
-                )])
+                game_state.remove_player(requesting_player_id)
             },
         }
     }
@@ -139,7 +123,7 @@ impl Games {
     #[allow(clippy::single_match_else)]
     pub(crate) fn players_in_game(&self, game_id: GameId) -> Vec<PlayerId> {
         match self.lookup_game_state(game_id) {
-            Ok(found) => found.players.keys().copied().collect(),
+            Ok(found) => found.player_ids(),
             Err(_) => {
                 warn!("Failed to find game for {game_id:?}");
                 vec![]
