@@ -65,7 +65,7 @@ cargo install wasm-bindgen-cli
 [source,bash]
 ----
 cargo build --profile wasm-release --target wasm32-unknown-unknown
-wasm-bindgen --out-name client --out-dir client/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client.wasm
+wasm-bindgen --out-name single-player-client --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/single-player-client.wasm
 ----
 
 === Dependency tree

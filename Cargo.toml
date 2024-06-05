@@ -4,6 +4,9 @@ members = [
     "client/graphics",
     "shared/domain",
     "shared/util",
+    "networking/renet/client",
+    "networking/renet/server",
+    "networking/renet/shared",
 ]
 resolver = "2"
 
@@ -21,6 +24,10 @@ uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
 fastrand = "2.1.0"
 log = "0.4.21"
 bimap = "0.6.3"
+
+
+# Should only be imported by `networking/renet` code
+bevy_renet = "0.0.11"
 
 # From https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units
 # From https://rapier.rs/docs/user_guides/bevy_plugin/common_mistakes#my-local-build-of-rapier-is-slower-than-the-online-demos
