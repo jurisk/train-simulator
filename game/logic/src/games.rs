@@ -1,4 +1,4 @@
-#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::missing_errors_doc, clippy::unnecessary_wraps)]
 
 use std::collections::HashMap;
 
@@ -6,8 +6,7 @@ use log::warn;
 use shared_domain::client_command::{GameCommand, LobbyCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, GameInfo, LobbyResponse, ServerError, ServerResponse,
-    ServerResponseWithAddress,
+    AddressEnvelope, LobbyResponse, ServerError, ServerResponse, ServerResponseWithAddress,
 };
 use shared_domain::{
     BuildingId, BuildingInfo, BuildingType, GameId, PlayerId, PlayerName, TrackType,
@@ -51,12 +50,19 @@ impl Games {
         }
     }
 
-    #[must_use]
-    pub(crate) fn create_game_infos(&self) -> Vec<GameInfo> {
-        self.game_map
+    fn create_game_infos(
+        &self,
+        requesting_player_id: PlayerId,
+    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+        let game_infos = self
+            .game_map
             .values()
             .map(GameState::create_game_info)
-            .collect()
+            .collect();
+        Ok(vec![ServerResponseWithAddress::new(
+            AddressEnvelope::ToPlayer(requesting_player_id),
+            ServerResponse::Lobby(LobbyResponse::AvailableGames(game_infos)),
+        )])
     }
 
     pub(crate) fn create_and_join_game(
@@ -65,13 +71,9 @@ impl Games {
         requesting_player_name: PlayerName,
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         // Later: Don't allow starting a game if is already a part of another game?
-
         let mut game_state = GameState::from_prototype(&self.game_prototype);
-
         let results = game_state.join_game(requesting_player_id, requesting_player_name)?;
-
         self.game_map.insert(game_state.game_id, game_state);
-
         Ok(results)
     }
 
@@ -105,12 +107,7 @@ impl Games {
         lobby_command: LobbyCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         match lobby_command {
-            LobbyCommand::ListGames => {
-                Ok(vec![ServerResponseWithAddress::new(
-                    AddressEnvelope::ToPlayer(requesting_player_id),
-                    ServerResponse::Lobby(LobbyResponse::AvailableGames(self.create_game_infos())),
-                )])
-            },
+            LobbyCommand::ListGames => self.create_game_infos(requesting_player_id),
             LobbyCommand::CreateGame(player_name) => {
                 self.create_and_join_game(requesting_player_id, player_name)
             },

@@ -1,5 +1,4 @@
-#![allow(clippy::unnecessary_wraps)]
-#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::unnecessary_wraps, clippy::missing_errors_doc)]
 
 use std::collections::HashMap;
 
