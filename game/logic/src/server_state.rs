@@ -4,65 +4,31 @@
     clippy::unnecessary_wraps
 )]
 
-use std::collections::HashMap;
 use std::convert::identity;
 
 use log::warn;
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
-use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
     AddressEnvelope, ServerResponse, ServerResponseWithAddress, ServerResponseWithClientIds,
 };
-use shared_domain::{
-    BuildingId, BuildingInfo, BuildingType, ClientId, GameId, PlayerId, TrackType,
-};
-use shared_util::coords_xz::CoordsXZ;
+use shared_domain::{ClientId, PlayerId};
 
 use crate::authentication_logic::{lookup_player_id, process_authentication_command};
 use crate::connection_registry::ConnectionRegistry;
-use crate::game_logic::{lookup_game_state, process_game_command};
-use crate::game_state::GameState;
-use crate::lobby_logic::process_lobby_command;
+use crate::games::Games;
 
 pub struct ServerState {
     pub connection_registry: ConnectionRegistry,
-    pub games:               HashMap<GameId, GameState>,
-
-    game_prototype: GameState,
+    games:                   Games,
 }
 
 impl ServerState {
     #[must_use]
     #[allow(clippy::missing_panics_doc, clippy::new_without_default)]
     pub fn new() -> Self {
-        let level_json = include_str!("../assets/map_levels/default.json");
-        let default_level = serde_json::from_str::<MapLevel>(level_json)
-            .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
-        assert!(default_level.is_valid());
-
-        let initial_buildings = vec![
-            BuildingInfo {
-                building_id:          BuildingId::random(),
-                north_west_vertex_xz: CoordsXZ::new(10, 10),
-                building_type:        BuildingType::Track(TrackType::EastWest),
-            },
-            BuildingInfo {
-                building_id:          BuildingId::random(),
-                north_west_vertex_xz: CoordsXZ::new(3, 5),
-                building_type:        BuildingType::Track(TrackType::NorthSouth),
-            },
-        ];
-
-        let game_prototype = GameState {
-            map_level: default_level,
-            buildings: initial_buildings,
-            players:   HashMap::new(),
-        };
-
         Self {
             connection_registry: ConnectionRegistry::new(),
-            games: HashMap::new(),
-            game_prototype,
+            games:               Games::new(),
         }
     }
 
@@ -76,6 +42,7 @@ impl ServerState {
         }
     }
 
+    #[allow(clippy::single_match_else)]
     fn translate_response(
         &self,
         server_response_with_address: ServerResponseWithAddress,
@@ -84,12 +51,13 @@ impl ServerState {
             AddressEnvelope::ToClient(client_id) => vec![client_id],
             AddressEnvelope::ToPlayer(player_id) => self.client_ids_for_player(player_id),
             AddressEnvelope::ToAllPlayersInGame(game_id) => {
-                let player_ids = match self.games.get(&game_id) {
-                    None => {
+                // TODO: Move to `games.players_in_game`
+                let player_ids = match self.games.lookup_game_state(game_id) {
+                    Ok(found) => found.players.keys().copied().collect(),
+                    Err(_) => {
                         warn!("Failed to find game for {game_id:?}");
                         vec![]
                     },
-                    Some(game_state) => game_state.players.keys().copied().collect(),
                 };
 
                 player_ids
@@ -120,17 +88,13 @@ impl ServerState {
             },
             ClientCommand::Lobby(lobby_command) => {
                 let requesting_player_id = lookup_player_id(&self.connection_registry, client_id)?;
-                process_lobby_command(
-                    &mut self.games,
-                    requesting_player_id,
-                    lobby_command,
-                    &self.game_prototype,
-                )
+                self.games
+                    .process_lobby_command(requesting_player_id, lobby_command)
             },
             ClientCommand::Game(game_id, game_command) => {
                 let requesting_player_id = lookup_player_id(&self.connection_registry, client_id)?;
-                let game_state = lookup_game_state(&mut self.games, game_id)?;
-                process_game_command(game_id, game_state, requesting_player_id, game_command)
+                let game_state = self.games.lookup_game_state_mut(game_id)?;
+                game_state.process_game_command(game_id, requesting_player_id, game_command)
             },
         }
     }
