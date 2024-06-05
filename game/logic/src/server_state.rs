@@ -75,8 +75,8 @@ impl ServerState {
             ClientCommand::Game(game_id, game_command) => {
                 let requesting_player_id =
                     self.authentication_service.lookup_player_id(client_id)?;
-                let game_state = self.games.lookup_game_state_mut(game_id)?;
-                game_state.process_game_command(requesting_player_id, game_command)
+                self.games
+                    .process_command(game_id, requesting_player_id, game_command)
             },
         }
     }

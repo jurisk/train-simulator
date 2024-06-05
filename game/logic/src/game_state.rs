@@ -76,7 +76,7 @@ impl GameState {
         ])
     }
 
-    pub(crate) fn process_game_command(
+    pub(crate) fn process_command(
         &mut self,
         requesting_player_id: PlayerId,
         game_command: GameCommand,

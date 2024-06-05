@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use log::warn;
-use shared_domain::client_command::LobbyCommand;
+use shared_domain::client_command::{GameCommand, LobbyCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
     AddressEnvelope, GameInfo, LobbyResponse, ServerError, ServerResponse,
@@ -21,7 +21,6 @@ pub(crate) struct Games {
     game_prototype: GameState,
 }
 
-// TODO: Make the public API smaller
 impl Games {
     #[must_use]
     #[allow(clippy::missing_panics_doc, clippy::new_without_default)]
@@ -76,17 +75,24 @@ impl Games {
         Ok(results)
     }
 
-    pub(crate) fn lookup_game_state_mut(
+    pub(crate) fn process_command(
         &mut self,
         game_id: GameId,
-    ) -> Result<&mut GameState, ServerResponse> {
+        player_id: PlayerId,
+        game_command: GameCommand,
+    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+        let game_state = self.lookup_game_state_mut(game_id)?;
+        game_state.process_command(player_id, game_command)
+    }
+
+    fn lookup_game_state_mut(&mut self, game_id: GameId) -> Result<&mut GameState, ServerResponse> {
         match self.game_map.get_mut(&game_id) {
             None => Err(ServerResponse::Error(ServerError::GameNotFound)),
             Some(result) => Ok(result),
         }
     }
 
-    pub(crate) fn lookup_game_state(&self, game_id: GameId) -> Result<&GameState, ServerResponse> {
+    fn lookup_game_state(&self, game_id: GameId) -> Result<&GameState, ServerResponse> {
         match self.game_map.get(&game_id) {
             None => Err(ServerResponse::Error(ServerError::GameNotFound)),
             Some(result) => Ok(result),
