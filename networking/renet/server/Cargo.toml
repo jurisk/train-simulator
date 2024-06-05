@@ -7,4 +7,5 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+bevy = { version = "0.13.2", default-features = false, features = [] }
 bevy_renet.workspace = true

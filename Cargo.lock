@@ -2546,6 +2546,7 @@ dependencies = [
 name = "networking-renet-client"
 version = "0.1.0"
 dependencies = [
+ "bevy",
  "bevy_renet",
 ]
 
@@ -2553,6 +2554,7 @@ dependencies = [
 name = "networking-renet-server"
 version = "0.1.0"
 dependencies = [
+ "bevy",
  "bevy_renet",
 ]
 
