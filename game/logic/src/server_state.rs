@@ -11,12 +11,12 @@ use shared_domain::server_response::{
     AddressEnvelope, ServerResponse, ServerResponseWithAddress, ServerResponseWithClientIds,
 };
 
+use crate::authentication_service::AuthenticationService;
 use crate::games::Games;
-use crate::lobby::Lobby;
 
 pub struct ServerState {
-    lobby: Lobby,
-    games: Games,
+    authentication_service: AuthenticationService,
+    games:                  Games,
 }
 
 impl ServerState {
@@ -24,8 +24,8 @@ impl ServerState {
     #[allow(clippy::missing_panics_doc, clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
-            lobby: Lobby::new(),
-            games: Games::new(),
+            authentication_service: AuthenticationService::new(),
+            games:                  Games::new(),
         }
     }
 
@@ -36,12 +36,16 @@ impl ServerState {
     ) -> ServerResponseWithClientIds {
         let client_ids = match server_response_with_address.address {
             AddressEnvelope::ToClient(client_id) => vec![client_id],
-            AddressEnvelope::ToPlayer(player_id) => self.lobby.client_ids_for_player(player_id),
+            AddressEnvelope::ToPlayer(player_id) => {
+                self.authentication_service.client_ids_for_player(player_id)
+            },
             AddressEnvelope::ToAllPlayersInGame(game_id) => {
                 let player_ids = self.games.players_in_game(game_id);
                 player_ids
                     .into_iter()
-                    .flat_map(|player_id| self.lobby.client_ids_for_player(player_id))
+                    .flat_map(|player_id| {
+                        self.authentication_service.client_ids_for_player(player_id)
+                    })
                     .collect()
             },
         };
@@ -59,16 +63,18 @@ impl ServerState {
         let client_id = client_command_with_client_id.client_id;
         match client_command_with_client_id.command {
             ClientCommand::Authentication(authentication_command) => {
-                self.lobby
+                self.authentication_service
                     .process_authentication_command(client_id, authentication_command)
             },
             ClientCommand::Lobby(lobby_command) => {
-                let requesting_player_id = self.lobby.lookup_player_id(client_id)?;
+                let requesting_player_id =
+                    self.authentication_service.lookup_player_id(client_id)?;
                 self.games
                     .process_lobby_command(requesting_player_id, lobby_command)
             },
             ClientCommand::Game(game_id, game_command) => {
-                let requesting_player_id = self.lobby.lookup_player_id(client_id)?;
+                let requesting_player_id =
+                    self.authentication_service.lookup_player_id(client_id)?;
                 let game_state = self.games.lookup_game_state_mut(game_id)?;
                 game_state.process_game_command(requesting_player_id, game_command)
             },

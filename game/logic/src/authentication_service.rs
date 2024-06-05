@@ -7,11 +7,11 @@ use shared_domain::{ClientId, PlayerId};
 
 use crate::connection_registry::ConnectionRegistry;
 
-pub(crate) struct Lobby {
+pub(crate) struct AuthenticationService {
     connection_registry: ConnectionRegistry,
 }
 
-impl Lobby {
+impl AuthenticationService {
     pub(crate) fn new() -> Self {
         Self {
             connection_registry: ConnectionRegistry::new(),
