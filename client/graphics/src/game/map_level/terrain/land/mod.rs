@@ -8,6 +8,7 @@ use bevy::prelude::{
 };
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
+use bevy_mod_raycast::prelude::RaycastMesh;
 use shared_domain::map_level::{Height, MapLevel, Terrain, TerrainType};
 use shared_domain::server_response::{GameResponse, ServerResponse};
 use shared_util::coords_xz::CoordsXZ;
@@ -129,6 +130,7 @@ pub(crate) fn create_land(
                     transform,
                     ..default()
                 },
+                RaycastMesh::<()>::default(), // For bevy_mod_raycast
                 Name::new("Land"),
             ));
         },
@@ -146,6 +148,7 @@ pub(crate) fn create_land(
                     transform,
                     ..default()
                 },
+                RaycastMesh::<()>::default(), // For bevy_mod_raycast
                 Name::new("Land"),
             ));
         },

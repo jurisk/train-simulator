@@ -7,6 +7,7 @@ use bevy::prelude::{
     Time, Transform, Update,
 };
 use bevy::render::view::ColorGrading;
+use bevy_mod_raycast::deferred::RaycastSource;
 
 use crate::cameras::util::{movement_and_rotation, zoom_value};
 use crate::cameras::{CameraComponent, CameraId};
@@ -26,11 +27,12 @@ fn create_camera(mut commands: Commands) {
     let height = 80.0;
     let from = Transform::from_xyz(-height * ANGLE_COEF, height, -height * ANGLE_COEF);
     let target = Vec3::ZERO;
+    let is_active = CameraId::default() == CameraId::Perspective;
 
-    commands.spawn((
+    let mut entity = commands.spawn((
         Camera3dBundle {
             camera: Camera {
-                is_active: CameraId::default() == CameraId::Perspective,
+                is_active,
                 hdr: true,
                 ..default()
             },
@@ -42,8 +44,15 @@ fn create_camera(mut commands: Commands) {
         CameraComponent {
             id: CameraId::Perspective,
         },
+        // RaycastSource::<()>::new_cursor(), // For bevy_mod_raycast
         Name::new("Perspective Camera"),
     ));
+
+    if is_active {
+        entity.insert(
+            RaycastSource::<()>::new_cursor(), // For bevy_mod_raycast
+        );
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]

@@ -1,5 +1,8 @@
 use bevy::input::ButtonInput;
-use bevy::prelude::{App, Camera, Component, KeyCode, Plugin, Query, Res, Update};
+use bevy::prelude::{
+    App, Camera, Commands, Component, Entity, KeyCode, Plugin, Query, Res, Update,
+};
+use bevy_mod_raycast::deferred::RaycastSource;
 
 use crate::cameras::orthographic::OrthographicCameraPlugin;
 use crate::cameras::perspective::PerspectiveCameraPlugin;
@@ -43,15 +46,25 @@ struct CameraComponent {
 #[allow(clippy::needless_pass_by_value)]
 fn switch_camera(
     keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut query: Query<(&mut Camera, &CameraComponent)>,
+    mut query: Query<(Entity, &mut Camera, &CameraComponent)>,
+    mut commands: Commands,
 ) {
     if keyboard_input.just_pressed(KeyCode::KeyC) {
-        if let Some((_, CameraComponent { id: current_camera })) =
-            query.iter().find(|(camera, _)| camera.is_active)
+        if let Some((_entity, _, CameraComponent { id: current_camera })) =
+            query.iter().find(|(_, camera, _)| camera.is_active)
         {
             let next_camera = current_camera.next();
-            for (mut camera, camera_type_component) in &mut query {
-                camera.is_active = camera_type_component.id == next_camera;
+            for (entity, mut camera, camera_type_component) in &mut query {
+                let is_active = camera_type_component.id == next_camera;
+                camera.is_active = is_active;
+
+                // For bevy_mod_raycast
+                let mut entity_commands = commands.entity(entity);
+                if is_active {
+                    entity_commands.insert(RaycastSource::<()>::new_cursor());
+                } else {
+                    entity_commands.remove::<RaycastSource<()>>();
+                }
             }
         }
     }

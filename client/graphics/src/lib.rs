@@ -1,7 +1,7 @@
 use bevy::asset::AssetPlugin;
 use bevy::prelude::{App, AssetMode, Plugin, PluginGroup};
 use bevy::utils::default;
-use bevy::window::{Window, WindowPlugin, WindowResolution};
+use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution};
 use bevy::DefaultPlugins;
 
 use crate::cameras::CameraPlugin;
@@ -11,6 +11,7 @@ use crate::debug::DebugPlugin;
 use crate::game::GamePlugin;
 use crate::lights::LightsPlugin;
 use crate::lobby::LobbyHandlerPlugin;
+use crate::selection::SelectionPlugin;
 
 mod cameras;
 pub mod communication;
@@ -19,6 +20,7 @@ mod debug;
 mod game;
 mod lights;
 mod lobby;
+mod selection;
 pub mod states;
 
 pub struct ClientGraphicsPlugin;
@@ -38,6 +40,7 @@ impl Plugin for ClientGraphicsPlugin {
                     primary_window: Some(Window {
                         #[allow(clippy::cast_precision_loss)]
                         resolution: WindowResolution::new(WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32),
+                        present_mode: PresentMode::AutoNoVsync, // For bevy_mod_raycast, see low_latency_window_plugin()
                         ..default()
                     }),
                     ..default()
@@ -56,6 +59,7 @@ impl Plugin for ClientGraphicsPlugin {
             GamePlugin,
             CameraPlugin,
             DebugPlugin,
+            SelectionPlugin,
         ));
     }
 }

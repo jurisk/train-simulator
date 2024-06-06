@@ -7,6 +7,7 @@ use bevy::prelude::{
     Plugin, Projection, Query, Res, Startup, Time, Transform, Update,
 };
 use bevy::render::camera::ScalingMode;
+use bevy_mod_raycast::prelude::RaycastSource;
 
 use crate::cameras::util::{movement_and_rotation, zoom_value};
 use crate::cameras::{CameraComponent, CameraId};
@@ -32,10 +33,12 @@ fn create_camera(mut commands: Commands) {
     let from = Transform::from_xyz(-20.0, 50.0, -20.0);
     let target = Vec3::ZERO;
 
-    commands.spawn((
+    let is_active = CameraId::default() == CameraId::Orthographic;
+
+    let mut entity = commands.spawn((
         Camera3dBundle {
             camera: Camera {
-                is_active: CameraId::default() == CameraId::Orthographic,
+                is_active,
                 hdr: true,
                 ..default()
             },
@@ -53,6 +56,12 @@ fn create_camera(mut commands: Commands) {
         },
         Name::new("Orthographic Camera"),
     ));
+
+    if is_active {
+        entity.insert(
+            RaycastSource::<()>::new_cursor(), // For bevy_mod_raycast
+        );
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]

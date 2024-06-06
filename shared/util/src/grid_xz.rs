@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::ops::{Index, IndexMut};
 
 use serde::{Deserialize, Serialize};
 
@@ -26,6 +26,18 @@ impl<T> GridXZ<T> {
     }
 
     #[must_use]
+    pub fn filled_with(size_x: usize, size_z: usize, value: T) -> Self
+    where
+        T: Clone,
+    {
+        Self {
+            size_x,
+            size_z,
+            data: vec![vec![value; size_x]; size_z],
+        }
+    }
+
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         self.data.len() == self.size_z && self.data.iter().all(|row| row.len() == self.size_x)
     }
@@ -44,6 +56,10 @@ impl<T> GridXZ<T> {
                 .collect(),
         }
     }
+
+    pub fn coords(&self) -> impl Iterator<Item = CoordsXZ> + '_ {
+        (0 .. self.size_z).flat_map(move |z| (0 .. self.size_x).map(move |x| CoordsXZ::new(x, z)))
+    }
 }
 
 impl<T> Index<&CoordsXZ> for GridXZ<T> {
@@ -51,5 +67,11 @@ impl<T> Index<&CoordsXZ> for GridXZ<T> {
 
     fn index(&self, coords: &CoordsXZ) -> &Self::Output {
         &self.data[coords.z][coords.x]
+    }
+}
+
+impl<T> IndexMut<&CoordsXZ> for GridXZ<T> {
+    fn index_mut(&mut self, coords: &CoordsXZ) -> &mut Self::Output {
+        &mut self.data[coords.z][coords.x]
     }
 }
