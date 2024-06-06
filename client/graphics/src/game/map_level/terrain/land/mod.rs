@@ -22,7 +22,7 @@ use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::tile
 use crate::game::map_level::terrain::Y_COEF;
 
 mod advanced_land_material;
-mod tiled_mesh_from_height_map_data;
+pub mod tiled_mesh_from_height_map_data;
 
 pub(crate) struct LandPlugin;
 
@@ -103,7 +103,7 @@ pub(crate) fn create_land(
     let half_z = (map_level.terrain.tile_count_z() as f32) / 2.0;
     let height_map = &map_level.terrain.vertex_heights;
 
-    let (_tiles, mesh) = tiled_mesh_from_height_map_data(
+    let (tiles, mesh) = tiled_mesh_from_height_map_data(
         -half_x,
         half_x,
         -half_z,
@@ -113,7 +113,7 @@ pub(crate) fn create_land(
         |coords: CoordsXZ| TerrainType::default_from_height(height_map[&coords]) as u32,
     );
 
-    // TODO: Store Tiles as a Resource
+    commands.insert_resource(tiles);
 
     // Previously, we did mesh.duplicate_vertices() here, but I didn't figure out if it helps or
     // hurts performance. At one point it was mandatory as we also did duplicate.calculate_face_normals().

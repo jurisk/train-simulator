@@ -4,19 +4,19 @@ use bevy::render::render_asset::RenderAssetUsages;
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct Vertex {
     position: Vec3,
     uv:       Vec2,
     custom:   u32,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct Triangle {
     vertices: [Vertex; 3],
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Tile {
     triangles: Vec<Triangle>,
 }
@@ -29,8 +29,8 @@ impl Tile {
     }
 }
 
-#[derive(Clone)]
-pub(crate) struct Tiles {
+#[derive(Clone, Resource, Debug)]
+pub struct Tiles {
     tiles: GridXZ<Tile>,
 }
 

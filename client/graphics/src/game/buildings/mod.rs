@@ -29,9 +29,9 @@ fn handle_building_built(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    map_level: Res<MapLevelResource>,
+    map_level: Option<Res<MapLevelResource>>,
 ) {
-    if let Some(map_level) = map_level.map_level.as_ref() {
+    if let Some(map_level) = map_level {
         for message in server_messages.read() {
             if let ServerResponse::Game(_game_id, game_response) = &message.response {
                 if let GameResponse::BuildingBuilt(building_info) = game_response {
@@ -40,7 +40,7 @@ fn handle_building_built(
                         &mut commands,
                         &mut meshes,
                         &mut materials,
-                        map_level,
+                        &map_level.map_level,
                     );
                 }
             }

@@ -12,7 +12,7 @@ use crate::game::map_level::MapLevelPlugin;
 use crate::states::ClientState;
 
 mod buildings;
-mod map_level;
+pub mod map_level;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct GamePlugin;

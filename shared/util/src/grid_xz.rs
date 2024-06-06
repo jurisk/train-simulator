@@ -1,10 +1,11 @@
+use std::fmt::{Debug, Formatter};
 use std::ops::{Index, IndexMut};
 
 use serde::{Deserialize, Serialize};
 
 use crate::coords_xz::CoordsXZ;
 
-#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub struct GridXZ<T> {
     pub size_x: usize,
     pub size_z: usize,
@@ -73,5 +74,14 @@ impl<T> Index<&CoordsXZ> for GridXZ<T> {
 impl<T> IndexMut<&CoordsXZ> for GridXZ<T> {
     fn index_mut(&mut self, coords: &CoordsXZ) -> &mut Self::Output {
         &mut self.data[coords.z][coords.x]
+    }
+}
+
+impl<T> Debug for GridXZ<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GridXZ")
+            .field("size_x", &self.size_x)
+            .field("size_z", &self.size_z)
+            .finish_non_exhaustive()
     }
 }

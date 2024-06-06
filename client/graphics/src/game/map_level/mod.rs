@@ -12,16 +12,15 @@ use crate::states::ClientState;
 pub mod terrain;
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(Resource)]
+#[derive(Resource, Debug)]
 pub struct MapLevelResource {
-    pub map_level: Option<MapLevel>,
+    pub map_level: MapLevel,
 }
 
 pub(crate) struct MapLevelPlugin;
 
 impl Plugin for MapLevelPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(MapLevelResource { map_level: None });
         app.add_plugins(TerrainPlugin);
         app.add_systems(Update, handle_map_level_updated);
     }
@@ -40,7 +39,7 @@ fn handle_map_level_updated(
         if let ServerResponse::Game(game_id, game_response) = &message.response {
             if let GameResponse::MapLevelProvided(map_level) = game_response {
                 commands.insert_resource(MapLevelResource {
-                    map_level: Some(map_level.clone()),
+                    map_level: map_level.clone(),
                 });
                 client_state.set(ClientState::Playing);
 
