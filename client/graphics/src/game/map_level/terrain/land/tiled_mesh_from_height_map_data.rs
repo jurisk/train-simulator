@@ -4,26 +4,53 @@ use bevy::render::render_asset::RenderAssetUsages;
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
-#[derive(Copy, Clone, Debug)]
-struct Vertex {
-    position: Vec3,
-    uv:       Vec2,
-    custom:   u32,
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Vertex {
+    pub position: Vec3,
+    pub uv:       Vec2,
+    pub custom:   u32,
 }
 
 #[derive(Copy, Clone, Debug)]
-struct Triangle {
+pub struct Triangle {
     vertices: [Vertex; 3],
 }
 
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Quad {
+    pub top_left:     Vertex,
+    pub top_right:    Vertex,
+    pub bottom_left:  Vertex,
+    pub bottom_right: Vertex,
+}
+
+impl Quad {
+    pub fn average_distance_to(&self, point: Vec3) -> f32 {
+        let top_left = self.top_left.position;
+        let top_right = self.top_right.position;
+        let bottom_left = self.bottom_left.position;
+        let bottom_right = self.bottom_right.position;
+
+        let distance = |a: Vec3, b: Vec3| (a - b).length();
+
+        (distance(top_left, point)
+            + distance(top_right, point)
+            + distance(bottom_left, point)
+            + distance(bottom_right, point))
+            / 4.0
+    }
+}
+
 #[derive(Clone, Debug)]
-struct Tile {
-    triangles: Vec<Triangle>,
+pub struct Tile {
+    pub quad:      Quad,
+    pub triangles: Vec<Triangle>,
 }
 
 impl Tile {
     fn empty() -> Self {
         Self {
+            quad:      Quad::default(),
             triangles: Vec::new(),
         }
     }
@@ -31,7 +58,7 @@ impl Tile {
 
 #[derive(Clone, Resource, Debug)]
 pub struct Tiles {
-    tiles: GridXZ<Tile>,
+    pub tiles: GridXZ<Tile>,
 }
 
 impl Tiles {
@@ -134,6 +161,13 @@ where
             let bottom_right = make_vertex(BOTTOM_RIGHT_OFFSET);
 
             let mut triangles = Vec::with_capacity(2);
+            let quad = Quad {
+                top_left,
+                top_right,
+                bottom_left,
+                bottom_right,
+            };
+
             // Similar to https://github.com/NickToony/gd-retroterrain/blob/master/Terrain.cs#L112
             if (top_left.position.y - bottom_right.position.y).abs() < f32::EPSILON {
                 triangles.push(Triangle::new([top_left, bottom_left, bottom_right]));
@@ -142,7 +176,7 @@ where
                 triangles.push(Triangle::new([top_left, bottom_left, top_right]));
                 triangles.push(Triangle::new([bottom_left, bottom_right, top_right]));
             }
-            tiles[&CoordsXZ::new(x_idx, z_idx)] = Tile { triangles };
+            tiles[&CoordsXZ::new(x_idx, z_idx)] = Tile { quad, triangles };
         }
     }
 

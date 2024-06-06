@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 use bevy::asset::AssetPlugin;
 use bevy::prelude::{App, AssetMode, Plugin, PluginGroup};
 use bevy::utils::default;
