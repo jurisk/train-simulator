@@ -30,12 +30,12 @@ impl Tile {
 }
 
 #[derive(Clone)]
-struct Tiles {
+pub(crate) struct Tiles {
     tiles: GridXZ<Tile>,
 }
 
 impl Tiles {
-    fn triangles(self) -> Vec<Triangle> {
+    fn triangles(&self) -> Vec<Triangle> {
         self.tiles
             .coords()
             .flat_map(|coords| self.tiles[&coords].triangles.iter().copied())
@@ -65,12 +65,13 @@ pub fn tiled_mesh_from_height_map_data<F>(
     data: GridXZ<f32>,
     custom_attribute: MeshVertexAttribute,
     custom_f: F,
-) -> Mesh
+) -> (Tiles, Mesh)
 where
     F: Fn(CoordsXZ) -> u32,
 {
     let tiles = tiles_from_heights(min_x, max_x, min_z, max_z, data, custom_f);
-    convert_to_mesh(tiles, custom_attribute)
+    let mesh = convert_to_mesh(&tiles, custom_attribute);
+    (tiles, mesh)
 }
 
 #[allow(
@@ -160,7 +161,7 @@ fn calculate_flat_normal(triangle: &Triangle) -> Vec3 {
 }
 
 #[allow(clippy::cast_possible_truncation)]
-fn convert_to_mesh(tiles: Tiles, custom_attribute: MeshVertexAttribute) -> Mesh {
+fn convert_to_mesh(tiles: &Tiles, custom_attribute: MeshVertexAttribute) -> Mesh {
     let input = tiles.triangles();
 
     trace!("Input: {}", input.len());
