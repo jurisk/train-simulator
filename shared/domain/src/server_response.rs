@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 
 use crate::map_level::MapLevel;
@@ -16,7 +14,7 @@ pub enum AuthenticationResponse {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct GameInfo {
     pub game_id: GameId,
-    pub players: HashMap<PlayerId, PlayerName>,
+    pub players: Vec<PlayerInfo>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -27,9 +25,34 @@ pub enum LobbyResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct Colour {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+
+impl Colour {
+    #[must_use]
+    pub fn random() -> Self {
+        Self {
+            r: fastrand::u8(..),
+            g: fastrand::u8(..),
+            b: fastrand::u8(..),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct PlayerInfo {
+    pub id:     PlayerId,
+    pub name:   PlayerName,
+    pub colour: Colour,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
     MapLevelProvided(MapLevel),
-    PlayersUpdated(HashMap<PlayerId, PlayerName>),
+    PlayersUpdated(Vec<PlayerInfo>),
     BuildingBuilt(BuildingInfo),
 }
 

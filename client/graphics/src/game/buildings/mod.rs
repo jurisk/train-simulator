@@ -81,11 +81,13 @@ fn create_track(
     let height = terrain.vertex_heights[&vertex_coords_xz.into()];
     let translation = logical_to_world(vertex_coords_xz, height, terrain);
 
+    // TODO: Take color from the player who owns the track!
     let color = match track_type {
         TrackType::NorthSouth => Color::RED,
         TrackType::EastWest => Color::BLUE,
     };
 
+    // TODO: Track shape instead of a Sphere!
     commands.spawn((
         PbrBundle {
             transform: Transform {

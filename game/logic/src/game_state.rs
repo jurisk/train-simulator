@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use shared_domain::client_command::GameCommand;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, GameInfo, GameResponse, LobbyResponse, ServerResponse,
+    AddressEnvelope, Colour, GameInfo, GameResponse, LobbyResponse, PlayerInfo, ServerResponse,
     ServerResponseWithAddress,
 };
 use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName};
@@ -15,14 +15,14 @@ pub(crate) struct GameState {
     pub game_id: GameId,
     map_level:   MapLevel,
     buildings:   Vec<BuildingInfo>,
-    players:     HashMap<PlayerId, PlayerName>,
+    players:     HashMap<PlayerId, PlayerInfo>,
 }
 
 impl GameState {
     pub(crate) fn new(
         map_level: MapLevel,
         buildings: Vec<BuildingInfo>,
-        players: HashMap<PlayerId, PlayerName>,
+        players: HashMap<PlayerId, PlayerInfo>,
     ) -> Self {
         let game_id = GameId::random();
         Self {
@@ -50,8 +50,15 @@ impl GameState {
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         // Later: Don't allow joining multiple games
 
+        let colour = Colour::random();
+        let requesting_player_info = PlayerInfo {
+            id: requesting_player_id,
+            name: requesting_player_name,
+            colour,
+        };
+
         self.players
-            .insert(requesting_player_id, requesting_player_name);
+            .insert(requesting_player_id, requesting_player_info);
 
         Ok(vec![
             ServerResponseWithAddress::new(
@@ -62,7 +69,7 @@ impl GameState {
                 AddressEnvelope::ToAllPlayersInGame(self.game_id),
                 ServerResponse::Game(
                     self.game_id,
-                    GameResponse::PlayersUpdated(self.players.clone()),
+                    GameResponse::PlayersUpdated(self.players.values().cloned().collect()),
                 ),
             ),
             ServerResponseWithAddress::new(
@@ -119,7 +126,7 @@ impl GameState {
     pub(crate) fn create_game_info(&self) -> GameInfo {
         GameInfo {
             game_id: self.game_id,
-            players: self.players.clone(),
+            players: self.players.values().cloned().collect(),
         }
     }
 
