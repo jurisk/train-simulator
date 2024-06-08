@@ -1,7 +1,9 @@
 use std::fmt::{Debug, Formatter};
+use std::ops::Add;
 
 use serde::{Deserialize, Serialize};
 use shared_util::coords_xz::CoordsXZ;
+use shared_util::direction_xz::DirectionXZ;
 use shared_util::random::generate_random_string;
 use uuid::Uuid;
 
@@ -31,6 +33,14 @@ impl From<VertexCoordsXZ> for CoordsXZ {
     }
 }
 
+impl Add<DirectionXZ> for VertexCoordsXZ {
+    type Output = Self;
+
+    fn add(self, rhs: DirectionXZ) -> Self::Output {
+        Self(self.0 + rhs)
+    }
+}
+
 #[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
 pub struct TileCoordsXZ(pub CoordsXZ);
 
@@ -50,6 +60,14 @@ impl Debug for TileCoordsXZ {
 impl From<TileCoordsXZ> for CoordsXZ {
     fn from(tile_coords_xz: TileCoordsXZ) -> Self {
         tile_coords_xz.0
+    }
+}
+
+impl Add<DirectionXZ> for TileCoordsXZ {
+    type Output = TileCoordsXZ;
+
+    fn add(self, rhs: DirectionXZ) -> Self::Output {
+        Self(self.0 + rhs)
     }
 }
 
