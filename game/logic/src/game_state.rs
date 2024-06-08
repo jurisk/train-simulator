@@ -5,8 +5,8 @@ use std::collections::HashMap;
 use shared_domain::client_command::GameCommand;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, Colour, GameInfo, GameResponse, LobbyResponse, PlayerInfo, ServerResponse,
-    ServerResponseWithAddress,
+    AddressEnvelope, Colour, GameInfo, GameResponse, LobbyResponse, PlayerInfo, ServerError,
+    ServerResponse, ServerResponseWithAddress,
 };
 use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName};
 
@@ -89,17 +89,20 @@ impl GameState {
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         match game_command {
             GameCommand::BuildBuilding(building_info) => {
-                // TODO: Check that `requesting_player_id` can build there, assign ownership
+                if requesting_player_id == building_info.owner_id {
+                    // TODO: Check that the tile is free, there is enough money, etc.
+                    self.buildings.push(building_info.clone());
 
-                self.buildings.push(building_info.clone());
-
-                Ok(vec![ServerResponseWithAddress::new(
-                    AddressEnvelope::ToAllPlayersInGame(self.game_id),
-                    ServerResponse::Game(
-                        self.game_id,
-                        GameResponse::BuildingBuilt(building_info.clone()),
-                    ),
-                )])
+                    Ok(vec![ServerResponseWithAddress::new(
+                        AddressEnvelope::ToAllPlayersInGame(self.game_id),
+                        ServerResponse::Game(
+                            self.game_id,
+                            GameResponse::BuildingBuilt(building_info.clone()),
+                        ),
+                    )])
+                } else {
+                    Err(ServerResponse::Error(ServerError::NotAuthorized))
+                }
             },
             GameCommand::QueryBuildings => {
                 Ok(self

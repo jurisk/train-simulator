@@ -14,6 +14,7 @@ use shared_domain::{BuildingId, BuildingInfo, BuildingType, TrackType, VertexCoo
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::map_level::terrain::land::logical_to_world;
 use crate::game::map_level::MapLevelResource;
+use crate::game::PlayerIdResource;
 
 pub(crate) struct BuildingsPlugin;
 
@@ -28,18 +29,22 @@ impl Plugin for BuildingsPlugin {
 fn handle_game_map_level_provided_for_testing(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut client_messages: EventWriter<ClientMessageEvent>,
+    player_id_resource: Res<PlayerIdResource>,
 ) {
+    let PlayerIdResource(player_id) = *player_id_resource;
     for message in server_messages.read() {
         if let ServerResponse::Game(game_id, game_response) = &message.response {
             if let GameResponse::MapLevelProvided(_map_level) = game_response {
                 // TODO: Everyone will now build the test track on the same spot... That's weird. Make it random or have each find a free spot?
                 let initial_buildings = vec![
                     BuildingInfo {
+                        owner_id:             player_id,
                         building_id:          BuildingId::random(),
                         north_west_vertex_xz: VertexCoordsXZ::from_usizes(10, 10),
                         building_type:        BuildingType::Track(TrackType::EastWest),
                     },
                     BuildingInfo {
+                        owner_id:             player_id,
                         building_id:          BuildingId::random(),
                         north_west_vertex_xz: VertexCoordsXZ::from_usizes(3, 5),
                         building_type:        BuildingType::Track(TrackType::NorthSouth),

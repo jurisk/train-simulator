@@ -1,5 +1,5 @@
 use bevy::app::Update;
-use bevy::prelude::{EventReader, EventWriter, OnEnter, Plugin};
+use bevy::prelude::{EventReader, EventWriter, OnEnter, Plugin, Res, Resource};
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
 };
@@ -23,11 +23,19 @@ impl Plugin for GamePlugin {
         app.add_plugins(MapLevelPlugin);
         app.add_systems(OnEnter(ClientState::JoiningGame), initiate_login);
         app.add_systems(Update, handle_login_successful);
+        app.insert_resource(PlayerIdResource(PlayerId::random()));
     }
 }
 
-fn initiate_login(mut client_messages: EventWriter<ClientMessageEvent>) {
-    let player_id = PlayerId::random();
+#[derive(Resource)]
+pub struct PlayerIdResource(pub PlayerId);
+
+#[allow(clippy::needless_pass_by_value)]
+fn initiate_login(
+    mut client_messages: EventWriter<ClientMessageEvent>,
+    player_id_resource: Res<PlayerIdResource>,
+) {
+    let PlayerIdResource(player_id) = *player_id_resource;
     client_messages.send(ClientMessageEvent::new(ClientCommand::Authentication(
         AuthenticationCommand::Login(player_id, AccessToken("valid-token".to_string())),
     )));
