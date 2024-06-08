@@ -1,21 +1,20 @@
 #![allow(clippy::needless_pass_by_value, clippy::collapsible_match)]
 
+pub mod tracks;
+
 use std::collections::HashMap;
 
-use bevy::core::Name;
-use bevy::pbr::PbrBundle;
 use bevy::prelude::{
-    default, error, Assets, Color, Commands, Cuboid, EventReader, EventWriter, Mesh, Plugin, Quat,
-    Res, ResMut, StandardMaterial, Transform, Update, Vec3,
+    error, Assets, Commands, EventReader, EventWriter, Mesh, Plugin, Res, ResMut, StandardMaterial,
+    Update,
 };
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::{BuildingId, BuildingInfo, BuildingType, PlayerId, TrackType, VertexCoordsXZ};
-use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
-use crate::game::map_level::terrain::land::logical_to_world;
+use crate::game::buildings::tracks::create_track;
 use crate::game::map_level::MapLevelResource;
 use crate::game::{PlayerIdResource, PlayersInfoResource};
 
@@ -124,79 +123,4 @@ fn create_building(
             }
         },
     }
-}
-
-const RAIL_DIAMETER: f32 = 0.1;
-
-#[allow(clippy::similar_names)]
-fn create_track(
-    player_info: &PlayerInfo,
-    commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    map_level: &MapLevel,
-    north_west_vertex_xz: VertexCoordsXZ,
-    track_type: TrackType,
-) {
-    let terrain = &map_level.terrain;
-
-    let north_east_vertex_xz = north_west_vertex_xz + DirectionXZ::East;
-    let south_east_vertex_xz = north_east_vertex_xz + DirectionXZ::South;
-    let south_west_vertex_xz = north_west_vertex_xz + DirectionXZ::South;
-
-    let nw = logical_to_world(north_west_vertex_xz, terrain);
-    let ne = logical_to_world(north_east_vertex_xz, terrain);
-    let se = logical_to_world(south_east_vertex_xz, terrain);
-    let sw = logical_to_world(south_west_vertex_xz, terrain);
-
-    let colour = player_info.colour;
-    let color = Color::rgb_u8(colour.r, colour.g, colour.b);
-
-    // TODO: Two tracks, and going in the right direction!
-    spawn_rail(
-        nw,
-        se,
-        color,
-        commands,
-        meshes,
-        materials,
-        format!("Track #1 {track_type:?} at {north_west_vertex_xz:?}"),
-    );
-    spawn_rail(
-        ne,
-        sw,
-        color,
-        commands,
-        meshes,
-        materials,
-        format!("Track #2 {track_type:?} at {north_west_vertex_xz:?}"),
-    );
-}
-
-fn spawn_rail(
-    a: Vec3,
-    b: Vec3,
-    color: Color,
-    commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    name: String,
-) {
-    let direction = b - a;
-    let length = direction.length();
-    let direction = direction.normalize();
-
-    commands.spawn((
-        PbrBundle {
-            transform: Transform {
-                translation: a + direction * length / 2.0,
-                rotation:    Quat::from_rotation_arc(Vec3::Z, direction),
-                scale:       Vec3::new(RAIL_DIAMETER, RAIL_DIAMETER, length),
-            },
-            material: materials.add(color),
-            mesh: meshes.add(Mesh::from(Cuboid::default())),
-            ..default()
-        },
-        Name::new(name),
-    ));
 }
