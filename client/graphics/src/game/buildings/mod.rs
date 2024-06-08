@@ -38,20 +38,16 @@ fn handle_game_map_level_provided_for_testing(
         if let ServerResponse::Game(game_id, game_response) = &message.response {
             if let GameResponse::MapLevelProvided(_map_level) = game_response {
                 // TODO: Everyone will now build the test track on the same spot... That's weird. Make it random or have each find a free spot?
-                let initial_buildings = vec![
-                    BuildingInfo {
+                let mut initial_buildings = vec![];
+                for z in 34 ..= 50 {
+                    let building_info = BuildingInfo {
                         owner_id:             player_id,
                         building_id:          BuildingId::random(),
-                        north_west_vertex_xz: VertexCoordsXZ::from_usizes(10, 10),
-                        building_type:        BuildingType::Track(TrackType::EastWest),
-                    },
-                    BuildingInfo {
-                        owner_id:             player_id,
-                        building_id:          BuildingId::random(),
-                        north_west_vertex_xz: VertexCoordsXZ::from_usizes(3, 5),
+                        north_west_vertex_xz: VertexCoordsXZ::from_usizes(46, z),
                         building_type:        BuildingType::Track(TrackType::NorthSouth),
-                    },
-                ];
+                    };
+                    initial_buildings.push(building_info);
+                }
 
                 for building in initial_buildings {
                     client_messages.send(ClientMessageEvent::new(ClientCommand::Game(

@@ -33,28 +33,46 @@ pub(crate) fn create_track(
     let se = logical_to_world(south_east_vertex_xz, terrain);
     let sw = logical_to_world(south_west_vertex_xz, terrain);
 
+    let (a1, a2) = match track_type {
+        TrackType::NorthSouth => pick_rail_positions(nw, ne),
+        TrackType::EastWest => pick_rail_positions(ne, se),
+    };
+
+    let (b1, b2) = match track_type {
+        TrackType::NorthSouth => pick_rail_positions(sw, se),
+        TrackType::EastWest => pick_rail_positions(nw, sw),
+    };
+
     let colour = player_info.colour;
     let color = Color::rgb_u8(colour.r, colour.g, colour.b);
 
-    // TODO: Two tracks, and going in the right direction!
     spawn_rail(
-        nw,
-        se,
+        a1,
+        b1,
         color,
         commands,
         meshes,
         materials,
-        format!("Track #1 {track_type:?} at {north_west_vertex_xz:?}"),
+        format!("Track A {track_type:?} at {north_west_vertex_xz:?}"),
     );
     spawn_rail(
-        ne,
-        sw,
+        a2,
+        b2,
         color,
         commands,
         meshes,
         materials,
-        format!("Track #2 {track_type:?} at {north_west_vertex_xz:?}"),
+        format!("Track B {track_type:?} at {north_west_vertex_xz:?}"),
     );
+}
+
+const TRACK_GAUGE: f32 = 0.25;
+fn pick_rail_positions(a: Vec3, b: Vec3) -> (Vec3, Vec3) {
+    let direction = b - a;
+    let midpoint = (a + b) / 2.0;
+    let direction = direction.normalize();
+    let offset = direction * TRACK_GAUGE / 2.0;
+    (midpoint - offset, midpoint + offset)
 }
 
 fn spawn_rail(
