@@ -1,10 +1,16 @@
+#![allow(clippy::needless_pass_by_value)]
+
 use bevy::app::App;
-use bevy::prelude::{Color, Gizmos, Plugin, Query, Res, TypePath, Update};
+use bevy::prelude::{Color, Gizmos, Plugin, Query, Res, ResMut, Resource, TypePath, Update};
 use bevy_mod_raycast::deferred::RaycastSource;
 use bevy_mod_raycast::prelude::{DeferredRaycastingPlugin, RaycastPluginState};
+use shared_domain::TileCoordsXZ;
 
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::Tiles;
 use crate::game::map_level::MapLevelResource;
+
+#[derive(Resource)]
+pub struct SelectedTiles(Vec<TileCoordsXZ>);
 
 pub(crate) struct SelectionPlugin;
 
@@ -12,7 +18,28 @@ impl Plugin for SelectionPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(DeferredRaycastingPlugin::<()>::default());
         app.insert_resource(RaycastPluginState::<()>::default()); // Add .with_debug_cursor() for default debug cursor
-        app.add_systems(Update, update_selection::<()>);
+        app.add_systems(Update, (update_selection::<()>, highlight_selection));
+        app.insert_resource(SelectedTiles(vec![]));
+    }
+}
+
+fn highlight_selection(
+    tiles: Option<Res<Tiles>>,
+    selected_tiles: Res<SelectedTiles>,
+    mut gizmos: Gizmos,
+) {
+    if let Some(tiles) = tiles {
+        let tiles = &tiles.tiles;
+        let SelectedTiles(selection) = selected_tiles.as_ref();
+        for tile_coords in selection {
+            let tile = &tiles[*tile_coords];
+            let quad = tile.quad;
+            let color = Color::PURPLE;
+            gizmos.line(quad.top_left.position, quad.top_right.position, color);
+            gizmos.line(quad.top_right.position, quad.bottom_right.position, color);
+            gizmos.line(quad.bottom_right.position, quad.bottom_left.position, color);
+            gizmos.line(quad.bottom_left.position, quad.top_left.position, color);
+        }
     }
 }
 
@@ -23,11 +50,12 @@ impl Plugin for SelectionPlugin {
     clippy::module_name_repetitions,
     clippy::cast_possible_truncation
 )]
-pub fn update_selection<T: TypePath + Send + Sync>(
+fn update_selection<T: TypePath + Send + Sync>(
     sources: Query<&RaycastSource<T>>,
     mut gizmos: Gizmos,
     map_level: Option<Res<MapLevelResource>>,
     tiles: Option<Res<Tiles>>,
+    mut selected_tiles: ResMut<SelectedTiles>,
 ) {
     for (is_first, intersection) in sources.iter().flat_map(|m| {
         m.intersections()
@@ -57,12 +85,8 @@ pub fn update_selection<T: TypePath + Send + Sync>(
             // TODO: Split into two systems - first one selects the tile (or tiles), second one uses gizmos to highlight
 
             if let Some(closest) = closest {
-                let quad = tiles[closest].quad;
-                let color = Color::PURPLE;
-                gizmos.line(quad.top_left.position, quad.top_right.position, color);
-                gizmos.line(quad.top_right.position, quad.bottom_right.position, color);
-                gizmos.line(quad.bottom_right.position, quad.bottom_left.position, color);
-                gizmos.line(quad.bottom_left.position, quad.top_left.position, color);
+                let SelectedTiles(selected_tiles) = selected_tiles.as_mut();
+                *selected_tiles = vec![closest];
             }
         }
     }
