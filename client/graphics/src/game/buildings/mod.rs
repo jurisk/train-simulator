@@ -14,7 +14,7 @@ use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::{BuildingId, BuildingInfo, BuildingType, PlayerId, TrackType, VertexCoordsXZ};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
-use crate::game::buildings::tracks::create_track;
+use crate::game::buildings::tracks::{build_track_when_mouse_released, create_track};
 use crate::game::map_level::MapLevelResource;
 use crate::game::{PlayerIdResource, PlayersInfoResource};
 
@@ -24,6 +24,7 @@ impl Plugin for BuildingsPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_systems(Update, handle_building_built);
         app.add_systems(Update, handle_game_map_level_provided_for_testing);
+        app.add_systems(Update, build_track_when_mouse_released);
     }
 }
 

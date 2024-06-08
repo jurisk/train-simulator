@@ -55,6 +55,12 @@ impl TileCoordsXZ {
     pub fn from_usizes(x: usize, z: usize) -> Self {
         Self(CoordsXZ::from_usizes(x, z))
     }
+
+    #[must_use]
+    pub fn north_west_vertex(self) -> VertexCoordsXZ {
+        let coords: CoordsXZ = self.into();
+        coords.into()
+    }
 }
 
 impl Debug for TileCoordsXZ {

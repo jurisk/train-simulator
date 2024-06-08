@@ -1,3 +1,5 @@
+#![allow(clippy::module_name_repetitions)]
+
 use std::collections::HashMap;
 
 use bevy::app::Update;
@@ -8,7 +10,7 @@ use shared_domain::client_command::{
 use shared_domain::server_response::{
     AuthenticationResponse, GameResponse, PlayerInfo, ServerResponse,
 };
-use shared_domain::PlayerId;
+use shared_domain::{GameId, PlayerId};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;
@@ -29,6 +31,7 @@ impl Plugin for GamePlugin {
         app.add_systems(Update, handle_players_updated);
         app.add_systems(Update, handle_login_successful);
         app.insert_resource(PlayerIdResource(PlayerId::random()));
+        app.insert_resource(GameIdResource(GameId::random())); // Questionable, but dealing with it being missing may be worse
         app.insert_resource(PlayersInfoResource(HashMap::default()));
     }
 }
@@ -38,6 +41,9 @@ pub struct PlayerIdResource(pub PlayerId);
 
 #[derive(Resource)]
 pub struct PlayersInfoResource(pub HashMap<PlayerId, PlayerInfo>);
+
+#[derive(Resource)]
+pub struct GameIdResource(pub GameId);
 
 #[allow(clippy::needless_pass_by_value)]
 fn initiate_login(
@@ -58,7 +64,6 @@ fn handle_login_successful(
         if let ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(_player_id)) =
             &message.response
         {
-            // We could insert player_id into resources
             client_messages.send(ClientMessageEvent::new(ClientCommand::Lobby(
                 LobbyCommand::ListGames,
             )));
@@ -69,13 +74,18 @@ fn handle_login_successful(
 fn handle_players_updated(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut players_info: ResMut<PlayersInfoResource>,
+    mut game_id_resource: ResMut<GameIdResource>,
 ) {
     for message in server_messages.read() {
-        if let ServerResponse::Game(_game_id, GameResponse::PlayersUpdated(new_player_infos)) =
+        if let ServerResponse::Game(game_id, GameResponse::PlayersUpdated(new_player_infos)) =
             &message.response
         {
             let PlayersInfoResource(player_infos) = players_info.as_mut();
             player_infos.clone_from(new_player_infos);
+
+            // Questionable we do it every time the players change, but this will have to do for now
+            let GameIdResource(game_id_resource) = game_id_resource.as_mut();
+            game_id_resource.clone_from(game_id);
         }
     }
 }

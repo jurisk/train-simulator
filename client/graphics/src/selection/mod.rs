@@ -16,10 +16,10 @@ use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::{Til
 use crate::game::map_level::MapLevelResource;
 
 #[derive(Resource)]
-pub struct HoveredTile(Option<TileCoordsXZ>);
+pub struct HoveredTile(pub Option<TileCoordsXZ>);
 
 #[derive(Resource)]
-pub struct SelectedTiles(HashSet<TileCoordsXZ>);
+pub struct SelectedTiles(pub HashSet<TileCoordsXZ>);
 
 pub(crate) struct SelectionPlugin;
 
@@ -119,9 +119,9 @@ fn update_selection<T: TypePath + Send + Sync>(
                 if let Some(closest) = closest {
                     selected_tiles.insert(closest);
                 }
-            } else {
-                selected_tiles.clear();
             }
+
+            // We don't clear the selected tiles here as it will be done by the system that handles the action
         }
     }
 }
