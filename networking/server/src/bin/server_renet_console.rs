@@ -3,7 +3,6 @@ use bevy::prelude::{info, App};
 use bevy::MinimalPlugins;
 use networking_renet_server::server::networking::MultiPlayerRenetNetworkingPlugin;
 
-// TODO: Make it a) work b) work under Docker
 fn main() {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins);

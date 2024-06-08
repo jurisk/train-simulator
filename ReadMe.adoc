@@ -32,7 +32,9 @@ cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W c
 
 [source,bash]
 ----
-cargo run --features bevy/dynamic_linking
+cargo run --features bevy/dynamic_linking --bin server_renet_console
+cargo run --features bevy/dynamic_linking --bin client_renet
+cargo run --features bevy/dynamic_linking --bin client_single_player
 ----
 
 === Prerequisites
@@ -65,7 +67,7 @@ cargo install wasm-bindgen-cli
 [source,bash]
 ----
 cargo build --profile wasm-release --target wasm32-unknown-unknown
-wasm-bindgen --out-name single-player-client --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/single-player-client.wasm
+wasm-bindgen --out-name client_single_player --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_single_player.wasm
 ----
 
 === Dependency tree
@@ -82,3 +84,32 @@ dot -Tsvg input.dot -o output.svg
 ----
 
 Later: Could add a CI action to check that the `--workspace-only` graph hasn't changed and isn't circular.
+
+=== Visualise structure
+
+Example, for the `game-logic` package:
+
+[source,bash]
+----
+cargo install cargo-modules
+cargo modules dependencies --no-externs --no-fns --no-sysroot --no-traits --no-types --no-uses --package game-logic > game-logic-module.dot
+----
+
+=== Run as Docker
+
+Building:
+
+[source,bash]
+----
+docker build --tag train-simulator .
+docker image ls train-simulator
+docker run --interactive --tty --rm --name train-simulator --publish 5000:5000 train-simulator
+----
+
+Pruning:
+
+[source,bash]
+----
+docker system prune -f
+docker builder prune -f
+----

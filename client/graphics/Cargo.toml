@@ -51,9 +51,10 @@ features = [
 version = "0.13.2"
 default-features = false
 features = [
-    # Later - dynamic_linking should be disabled for release builds.
     # From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional:
-    "dynamic_linking",
+    # and https://lib.rs/crates/bevy_dylib:
+    # We do not include this, as we have to remove it anyway for release builds.
+    # "dynamic_linking",
 
     # Next ones are development only, see https://bevyengine.org/news/bevy-0-12/#asset-preprocessing:
     "asset_processor",
