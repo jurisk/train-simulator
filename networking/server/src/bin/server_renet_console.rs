@@ -1,5 +1,5 @@
-use bevy::log::{info, LogPlugin};
-use bevy::prelude::App;
+use bevy::log::LogPlugin;
+use bevy::prelude::{info, App};
 use bevy::MinimalPlugins;
 use networking_renet_server::server::networking::MultiPlayerRenetNetworkingPlugin;
 

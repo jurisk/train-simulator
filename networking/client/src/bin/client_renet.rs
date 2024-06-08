@@ -3,9 +3,8 @@
 use std::net::UdpSocket;
 use std::time::SystemTime;
 
-use bevy::log::info;
 use bevy::prelude::{
-    error, App, ButtonInput, EventReader, EventWriter, IntoSystemConfigs, KeyCode, Local,
+    error, info, App, ButtonInput, EventReader, EventWriter, IntoSystemConfigs, KeyCode, Local,
     NextState, Res, ResMut, Update,
 };
 use bevy_egui::{EguiContexts, EguiPlugin};
@@ -22,6 +21,7 @@ use renet_visualizer::{RenetClientVisualizer, RenetVisualizerStyle};
 use shared_domain::server_response::ServerResponse;
 
 // Later: Could clean it up to merge with server code and avoid unwraps, but it doesn't matter
+// Note: We were also considering https://github.com/ukoehb/bevy_simplenet
 fn main() {
     let mut app = App::new();
 

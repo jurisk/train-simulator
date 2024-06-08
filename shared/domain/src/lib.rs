@@ -137,7 +137,6 @@ pub enum BuildingType {
 pub struct BuildingInfo {
     pub owner_id:             PlayerId,
     pub building_id:          BuildingId,
-    // TODO: OK, but which direction is North-West according to our coordinate system? Let us define it somewhere as a Direction class?
     pub north_west_vertex_xz: VertexCoordsXZ,
     pub building_type:        BuildingType,
 }

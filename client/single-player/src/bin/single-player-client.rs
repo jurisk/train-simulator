@@ -1,5 +1,4 @@
-use bevy::log::info;
-use bevy::prelude::{App, EventReader, EventWriter, Res, ResMut, Resource, Update};
+use bevy::prelude::{info, App, EventReader, EventWriter, Res, ResMut, Resource, Update};
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
@@ -24,9 +23,6 @@ struct ClientIdResource(ClientId);
 #[derive(Resource)]
 struct ServerStateResource(pub ServerState);
 
-// TODO:    Eventually, we should also introduce a multi-player client with a real server communications component.
-//          Not sure which library is the best - possibly https://github.com/ukoehb/bevy_simplenet ?
-//          Or maybe start with Renet that you already know, but avoid having a dependency to it anywhere but in `client/multi-player` and `server`?
 #[allow(clippy::needless_pass_by_value)]
 fn process_messages_locally(
     client_id_resource: Res<ClientIdResource>,
