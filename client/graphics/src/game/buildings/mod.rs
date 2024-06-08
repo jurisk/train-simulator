@@ -140,10 +140,14 @@ fn create_track(
 ) {
     let terrain = &map_level.terrain;
 
-    let south_east_vertex_xz = north_west_vertex_xz + DirectionXZ::South + DirectionXZ::East;
+    let north_east_vertex_xz = north_west_vertex_xz + DirectionXZ::East;
+    let south_east_vertex_xz = north_east_vertex_xz + DirectionXZ::South;
+    let south_west_vertex_xz = north_west_vertex_xz + DirectionXZ::South;
 
     let nw = logical_to_world(north_west_vertex_xz, terrain);
+    let ne = logical_to_world(north_east_vertex_xz, terrain);
     let se = logical_to_world(south_east_vertex_xz, terrain);
+    let sw = logical_to_world(south_west_vertex_xz, terrain);
 
     let colour = player_info.colour;
     let color = Color::rgb_u8(colour.r, colour.g, colour.b);
@@ -156,7 +160,16 @@ fn create_track(
         commands,
         meshes,
         materials,
-        format!("Track {track_type:?} at {north_west_vertex_xz:?}"),
+        format!("Track #1 {track_type:?} at {north_west_vertex_xz:?}"),
+    );
+    spawn_rail(
+        ne,
+        sw,
+        color,
+        commands,
+        meshes,
+        materials,
+        format!("Track #2 {track_type:?} at {north_west_vertex_xz:?}"),
     );
 }
 
