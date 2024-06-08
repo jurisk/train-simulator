@@ -8,9 +8,7 @@ use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
     AddressEnvelope, LobbyResponse, ServerError, ServerResponse, ServerResponseWithAddress,
 };
-use shared_domain::{
-    BuildingId, BuildingInfo, BuildingType, GameId, PlayerId, PlayerName, TrackType, VertexCoordsXZ,
-};
+use shared_domain::{GameId, PlayerId, PlayerName};
 
 use crate::game_state::GameState;
 
@@ -28,20 +26,7 @@ impl Games {
             .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
         assert!(default_level.is_valid());
 
-        let initial_buildings = vec![
-            BuildingInfo {
-                building_id:          BuildingId::random(),
-                north_west_vertex_xz: VertexCoordsXZ::from_usizes(10, 10),
-                building_type:        BuildingType::Track(TrackType::EastWest),
-            },
-            BuildingInfo {
-                building_id:          BuildingId::random(),
-                north_west_vertex_xz: VertexCoordsXZ::from_usizes(3, 5),
-                building_type:        BuildingType::Track(TrackType::NorthSouth),
-            },
-        ];
-
-        let game_prototype = GameState::new(default_level, initial_buildings, HashMap::new());
+        let game_prototype = GameState::new(default_level, vec![], HashMap::new());
 
         Self {
             game_map: HashMap::new(),

@@ -16,12 +16,12 @@ pub(crate) struct WaterPlugin;
 
 impl Plugin for WaterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, handle_game_state_responses);
+        app.add_systems(Update, handle_game_map_level_provided);
     }
 }
 
 #[allow(clippy::collapsible_match)]
-fn handle_game_state_responses(
+fn handle_game_map_level_provided(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
