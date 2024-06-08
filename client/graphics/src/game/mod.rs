@@ -1,9 +1,13 @@
+use std::collections::HashMap;
+
 use bevy::app::Update;
-use bevy::prelude::{EventReader, EventWriter, OnEnter, Plugin, Res, Resource};
+use bevy::prelude::{EventReader, EventWriter, OnEnter, Plugin, Res, ResMut, Resource};
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
 };
-use shared_domain::server_response::{AuthenticationResponse, ServerResponse};
+use shared_domain::server_response::{
+    AuthenticationResponse, GameResponse, PlayerInfo, ServerResponse,
+};
 use shared_domain::PlayerId;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
@@ -22,13 +26,18 @@ impl Plugin for GamePlugin {
         app.add_plugins(BuildingsPlugin);
         app.add_plugins(MapLevelPlugin);
         app.add_systems(OnEnter(ClientState::JoiningGame), initiate_login);
+        app.add_systems(Update, handle_players_updated);
         app.add_systems(Update, handle_login_successful);
         app.insert_resource(PlayerIdResource(PlayerId::random()));
+        app.insert_resource(PlayersInfoResource(HashMap::default()));
     }
 }
 
 #[derive(Resource)]
 pub struct PlayerIdResource(pub PlayerId);
+
+#[derive(Resource)]
+pub struct PlayersInfoResource(pub HashMap<PlayerId, PlayerInfo>);
 
 #[allow(clippy::needless_pass_by_value)]
 fn initiate_login(
@@ -53,6 +62,20 @@ fn handle_login_successful(
             client_messages.send(ClientMessageEvent::new(ClientCommand::Lobby(
                 LobbyCommand::ListGames,
             )));
+        }
+    }
+}
+
+fn handle_players_updated(
+    mut server_messages: EventReader<ServerMessageEvent>,
+    mut players_info: ResMut<PlayersInfoResource>,
+) {
+    for message in server_messages.read() {
+        if let ServerResponse::Game(_game_id, GameResponse::PlayersUpdated(new_player_infos)) =
+            &message.response
+        {
+            let PlayersInfoResource(player_infos) = players_info.as_mut();
+            player_infos.clone_from(new_player_infos);
         }
     }
 }

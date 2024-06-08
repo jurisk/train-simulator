@@ -1,20 +1,22 @@
 #![allow(clippy::needless_pass_by_value, clippy::collapsible_match)]
 
+use std::collections::HashMap;
+
 use bevy::core::Name;
 use bevy::pbr::PbrBundle;
 use bevy::prelude::{
-    default, Assets, Color, Commands, EventReader, EventWriter, Mesh, Meshable, Plugin, Res,
+    default, error, Assets, Color, Commands, EventReader, EventWriter, Mesh, Meshable, Plugin, Res,
     ResMut, Sphere, StandardMaterial, Transform, Update, Vec3,
 };
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
-use shared_domain::server_response::{GameResponse, ServerResponse};
-use shared_domain::{BuildingId, BuildingInfo, BuildingType, TrackType, VertexCoordsXZ};
+use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
+use shared_domain::{BuildingId, BuildingInfo, BuildingType, PlayerId, TrackType, VertexCoordsXZ};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::map_level::terrain::land::logical_to_world;
 use crate::game::map_level::MapLevelResource;
-use crate::game::PlayerIdResource;
+use crate::game::{PlayerIdResource, PlayersInfoResource};
 
 pub(crate) struct BuildingsPlugin;
 
@@ -69,7 +71,10 @@ fn handle_building_built(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     map_level: Option<Res<MapLevelResource>>,
+    players_info_resource: Res<PlayersInfoResource>,
 ) {
+    let PlayersInfoResource(players_info) = players_info_resource.as_ref();
+
     if let Some(map_level) = map_level {
         for message in server_messages.read() {
             if let ServerResponse::Game(_game_id, game_response) = &message.response {
@@ -80,6 +85,7 @@ fn handle_building_built(
                         &mut meshes,
                         &mut materials,
                         &map_level.map_level,
+                        players_info,
                     );
                 }
             }
@@ -87,29 +93,41 @@ fn handle_building_built(
     }
 }
 
+#[allow(clippy::similar_names)]
 fn create_building(
     building_info: &BuildingInfo,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
+    players_info: &HashMap<PlayerId, PlayerInfo>,
 ) {
-    match &building_info.building_type {
-        BuildingType::Track(track_type) => {
-            create_track(
-                commands,
-                meshes,
-                materials,
-                map_level,
-                building_info.north_west_vertex_xz,
-                *track_type,
-            );
+    match players_info.get(&building_info.owner_id) {
+        None => {
+            error!("Player with ID {:?} not found", building_info.owner_id);
         },
-        BuildingType::Production(_) => {}, // TODO: Implement
+        Some(player_info) => {
+            match &building_info.building_type {
+                BuildingType::Track(track_type) => {
+                    create_track(
+                        player_info,
+                        commands,
+                        meshes,
+                        materials,
+                        map_level,
+                        building_info.north_west_vertex_xz,
+                        *track_type,
+                    );
+                },
+                BuildingType::Production(_) => {}, // TODO: Implement
+            }
+        },
     }
 }
 
+#[allow(clippy::similar_names)]
 fn create_track(
+    player_info: &PlayerInfo,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
@@ -120,11 +138,8 @@ fn create_track(
     let terrain = &map_level.terrain;
     let translation = logical_to_world(north_west_vertex_xz, terrain);
 
-    // TODO: Take color from the player who owns the track!
-    let color = match track_type {
-        TrackType::NorthSouth => Color::RED,
-        TrackType::EastWest => Color::BLUE,
-    };
+    let colour = player_info.colour;
+    let color = Color::rgb_u8(colour.r, colour.g, colour.b);
 
     // TODO: Track shape instead of a Sphere!
     commands.spawn((

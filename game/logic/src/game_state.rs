@@ -69,7 +69,7 @@ impl GameState {
                 AddressEnvelope::ToAllPlayersInGame(self.game_id),
                 ServerResponse::Game(
                     self.game_id,
-                    GameResponse::PlayersUpdated(self.players.values().cloned().collect()),
+                    GameResponse::PlayersUpdated(self.players.clone()),
                 ),
             ),
             ServerResponseWithAddress::new(
@@ -129,7 +129,7 @@ impl GameState {
     pub(crate) fn create_game_info(&self) -> GameInfo {
         GameInfo {
             game_id: self.game_id,
-            players: self.players.values().cloned().collect(),
+            players: self.players.clone(),
         }
     }
 
