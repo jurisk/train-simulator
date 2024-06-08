@@ -33,6 +33,12 @@ impl From<VertexCoordsXZ> for CoordsXZ {
     }
 }
 
+impl From<CoordsXZ> for VertexCoordsXZ {
+    fn from(coords_xz: CoordsXZ) -> Self {
+        Self(coords_xz)
+    }
+}
+
 impl Add<DirectionXZ> for VertexCoordsXZ {
     type Output = Self;
 
@@ -60,6 +66,12 @@ impl Debug for TileCoordsXZ {
 impl From<TileCoordsXZ> for CoordsXZ {
     fn from(tile_coords_xz: TileCoordsXZ) -> Self {
         tile_coords_xz.0
+    }
+}
+
+impl From<CoordsXZ> for TileCoordsXZ {
+    fn from(coords_xz: CoordsXZ) -> Self {
+        Self(coords_xz)
     }
 }
 

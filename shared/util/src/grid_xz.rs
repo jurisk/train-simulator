@@ -1,6 +1,7 @@
 #![allow(clippy::cast_sign_loss)]
 
 use std::fmt::{Debug, Formatter};
+use std::marker::PhantomData;
 use std::ops::{Index, IndexMut};
 
 use serde::{Deserialize, Serialize};
@@ -8,16 +9,19 @@ use serde::{Deserialize, Serialize};
 use crate::coords_xz::CoordsXZ;
 
 #[derive(Clone, Serialize, Deserialize, Eq, PartialEq)]
-pub struct GridXZ<T> {
+pub struct GridXZ<K, V> {
     pub size_x: usize,
     pub size_z: usize,
     // Note: We could instead use a flat Vec<T>, but serialisation would have to be handled differently then
-    data:       Vec<Vec<T>>,
+    data:       Vec<Vec<V>>,
+
+    #[serde(skip)]
+    _marker: PhantomData<K>,
 }
 
-impl<T> GridXZ<T> {
+impl<K, V> GridXZ<K, V> {
     #[must_use]
-    pub fn new(data: Vec<Vec<T>>) -> Self {
+    pub fn new(data: Vec<Vec<V>>) -> Self {
         let size_x = data.first().map_or(0, Vec::len);
         let size_z = data.len();
         debug_assert!(data.iter().all(|row| row.len() == size_x));
@@ -25,18 +29,20 @@ impl<T> GridXZ<T> {
             size_x,
             size_z,
             data,
+            _marker: PhantomData,
         }
     }
 
     #[must_use]
-    pub fn filled_with(size_x: usize, size_z: usize, value: T) -> Self
+    pub fn filled_with(size_x: usize, size_z: usize, value: V) -> Self
     where
-        T: Clone,
+        V: Clone,
     {
         Self {
             size_x,
             size_z,
             data: vec![vec![value; size_x]; size_z],
+            _marker: PhantomData,
         }
     }
 
@@ -45,42 +51,56 @@ impl<T> GridXZ<T> {
         self.data.len() == self.size_z && self.data.iter().all(|row| row.len() == self.size_x)
     }
 
-    pub fn map<F, U>(&self, f: F) -> GridXZ<U>
+    pub fn map<F, U>(&self, f: F) -> GridXZ<K, U>
     where
-        F: Fn(&T) -> U,
+        F: Fn(&V) -> U,
     {
-        GridXZ::<U> {
-            size_x: self.size_x,
-            size_z: self.size_z,
-            data:   self
+        GridXZ::<K, U> {
+            size_x:  self.size_x,
+            size_z:  self.size_z,
+            data:    self
                 .data
                 .iter()
                 .map(|row| row.iter().map(&f).collect())
                 .collect(),
+            _marker: PhantomData,
         }
-    }
-
-    pub fn coords(&self) -> impl Iterator<Item = CoordsXZ> + '_ {
-        (0 .. self.size_z)
-            .flat_map(move |z| (0 .. self.size_x).map(move |x| CoordsXZ::from_usizes(x, z)))
     }
 }
 
-impl<T> Index<&CoordsXZ> for GridXZ<T> {
+impl<K, V> GridXZ<K, V>
+where
+    K: From<CoordsXZ>,
+{
+    pub fn coords(&self) -> impl Iterator<Item = K> + '_ {
+        (0 .. self.size_z)
+            .flat_map(move |z| (0 .. self.size_x).map(move |x| CoordsXZ::from_usizes(x, z).into()))
+    }
+}
+
+impl<K, T> Index<K> for GridXZ<K, T>
+where
+    K: Into<CoordsXZ>,
+{
     type Output = T;
 
-    fn index(&self, coords: &CoordsXZ) -> &Self::Output {
+    fn index(&self, coords: K) -> &Self::Output {
+        let coords: CoordsXZ = coords.into();
         &self.data[coords.z as usize][coords.x as usize]
     }
 }
 
-impl<T> IndexMut<&CoordsXZ> for GridXZ<T> {
-    fn index_mut(&mut self, coords: &CoordsXZ) -> &mut Self::Output {
+impl<K, T> IndexMut<K> for GridXZ<K, T>
+where
+    K: Into<CoordsXZ>,
+{
+    fn index_mut(&mut self, coords: K) -> &mut Self::Output {
+        let coords: CoordsXZ = coords.into();
         &mut self.data[coords.z as usize][coords.x as usize]
     }
 }
 
-impl<T> Debug for GridXZ<T> {
+impl<K: From<CoordsXZ>, T> Debug for GridXZ<K, T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("GridXZ")
             .field("size_x", &self.size_x)

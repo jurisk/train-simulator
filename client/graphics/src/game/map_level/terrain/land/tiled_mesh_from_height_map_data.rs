@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::mesh::{MeshVertexAttribute, PrimitiveTopology};
 use bevy::render::render_asset::RenderAssetUsages;
-use shared_domain::VertexCoordsXZ;
+use shared_domain::{TileCoordsXZ, VertexCoordsXZ};
 use shared_util::grid_xz::GridXZ;
 
 #[derive(Copy, Clone, Debug, Default)]
@@ -56,16 +56,16 @@ impl Tile {
     }
 }
 
-#[derive(Clone, Resource, Debug)]
+#[derive(Clone, Resource)]
 pub struct Tiles {
-    pub tiles: GridXZ<Tile>,
+    pub tiles: GridXZ<TileCoordsXZ, Tile>,
 }
 
 impl Tiles {
     fn triangles(&self) -> Vec<Triangle> {
         self.tiles
             .coords()
-            .flat_map(|coords| self.tiles[&coords].triangles.iter().copied())
+            .flat_map(|coords| self.tiles[coords].triangles.iter().copied())
             .collect()
     }
 }
@@ -89,7 +89,7 @@ pub fn tiled_mesh_from_height_map_data<F>(
     max_x: f32,
     min_z: f32,
     max_z: f32,
-    data: GridXZ<f32>,
+    data: GridXZ<VertexCoordsXZ, f32>,
     custom_attribute: MeshVertexAttribute,
     custom_f: F,
 ) -> (Tiles, Mesh)
@@ -114,7 +114,7 @@ fn tiles_from_heights<F>(
     max_x: f32,
     min_z: f32,
     max_z: f32,
-    data: GridXZ<f32>,
+    data: GridXZ<VertexCoordsXZ, f32>,
     custom_f: F,
 ) -> Tiles
 where
@@ -126,7 +126,8 @@ where
     let extent_x = max_x - min_x;
     let extent_z = max_z - min_z;
 
-    let mut tiles: GridXZ<Tile> = GridXZ::filled_with(x_segments, z_segments, Tile::empty());
+    let mut tiles: GridXZ<TileCoordsXZ, Tile> =
+        GridXZ::filled_with(x_segments, z_segments, Tile::empty());
 
     for z_idx in 0 .. z_segments {
         for x_idx in 0 .. x_segments {
@@ -141,7 +142,7 @@ where
                 let coords = VertexCoordsXZ::from_usizes(x, z);
                 let position = Vec3::new(
                     (x as f32 / x_segments as f32) * extent_x + min_x,
-                    data[&coords.into()],
+                    data[coords],
                     (z as f32 / z_segments as f32) * extent_z + min_z,
                 );
                 let uv = Vec2::new(offset[0] as f32, offset[1] as f32);
@@ -176,7 +177,7 @@ where
                 triangles.push(Triangle::new([top_left, bottom_left, top_right]));
                 triangles.push(Triangle::new([bottom_left, bottom_right, top_right]));
             }
-            tiles[&VertexCoordsXZ::from_usizes(x_idx, z_idx).into()] = Tile { quad, triangles };
+            tiles[TileCoordsXZ::from_usizes(x_idx, z_idx)] = Tile { quad, triangles };
         }
     }
 

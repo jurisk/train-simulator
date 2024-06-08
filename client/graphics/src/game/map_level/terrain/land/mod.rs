@@ -47,7 +47,7 @@ const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
 
 #[allow(clippy::cast_precision_loss, clippy::cast_lossless)]
 pub(crate) fn logical_to_world(vertex_coords_xz: VertexCoordsXZ, terrain: &Terrain) -> Vec3 {
-    let Height(height) = terrain.vertex_heights[&vertex_coords_xz.into()];
+    let Height(height) = terrain.vertex_heights[vertex_coords_xz];
     let coords_xz: CoordsXZ = vertex_coords_xz.into();
     let y = (height as f32) * Y_COEF;
     let x = (coords_xz.x as f32) - (terrain.tile_count_x() as f32) / 2.0;
@@ -93,7 +93,7 @@ pub(crate) fn create_land(
     standard_materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
 ) {
-    let data_slice: GridXZ<f32> = map_level
+    let data_slice: GridXZ<VertexCoordsXZ, f32> = map_level
         .terrain
         .vertex_heights
         .map(|h| h.0 as f32 * Y_COEF);
@@ -109,9 +109,7 @@ pub(crate) fn create_land(
         half_z,
         data_slice,
         ATTRIBUTE_TERRAIN_TYPE,
-        |coords: VertexCoordsXZ| {
-            TerrainType::default_from_height(height_map[&coords.into()]) as u32
-        },
+        |coords: VertexCoordsXZ| TerrainType::default_from_height(height_map[coords]) as u32,
     );
 
     commands.insert_resource(tiles);

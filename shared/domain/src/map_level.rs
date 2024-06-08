@@ -3,6 +3,8 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use shared_util::grid_xz::GridXZ;
 
+use crate::VertexCoordsXZ;
+
 #[repr(u32)]
 pub enum TerrainType {
     Sand  = 0,
@@ -28,7 +30,7 @@ pub struct Height(pub u8);
 
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub struct Terrain {
-    pub vertex_heights: GridXZ<Height>,
+    pub vertex_heights: GridXZ<VertexCoordsXZ, Height>,
 }
 
 impl Debug for Terrain {

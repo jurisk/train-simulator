@@ -7,6 +7,7 @@ use bevy::prelude::{
 // This has some weird race conditions, and it doesn't always appear, but I hope when
 // https://github.com/bevyengine/bevy/blob/main/crates/bevy_dev_tools/src/fps_overlay.rs gets
 // released, we can migrate to that and it will work better. Or we need to have "assets loaded" state.
+// https://github.com/IyesGames/iyes_perf_ui also exists.
 pub(crate) struct FpsPlugin;
 
 impl Plugin for FpsPlugin {

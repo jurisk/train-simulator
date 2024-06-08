@@ -49,11 +49,15 @@ pub fn update_selection<T: TypePath + Send + Sync>(
             let tiles = &tiles.tiles;
             let intersection = intersection.position();
             let closest = tiles.coords().min_by_key(|coords| {
-                let quad = tiles[coords].quad;
+                let quad = tiles[*coords].quad;
                 (quad.average_distance_to(intersection) * 1_000_000.0) as i32 // Hack as f32 doesn't implement Ord
             });
+
+            // TODO: If selection is too far away, there is no selection
+            // TODO: Split into two systems - first one selects the tile (or tiles), second one uses gizmos to highlight
+
             if let Some(closest) = closest {
-                let quad = tiles[&closest].quad;
+                let quad = tiles[closest].quad;
                 let color = Color::PURPLE;
                 gizmos.line(quad.top_left.position, quad.top_right.position, color);
                 gizmos.line(quad.top_right.position, quad.bottom_right.position, color);
