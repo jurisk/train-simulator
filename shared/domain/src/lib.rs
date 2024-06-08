@@ -11,7 +11,7 @@ pub mod client_command;
 pub mod map_level;
 pub mod server_response;
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone)]
 pub struct VertexCoordsXZ(pub CoordsXZ);
 
 impl Debug for VertexCoordsXZ {
@@ -47,7 +47,7 @@ impl Add<DirectionXZ> for VertexCoordsXZ {
     }
 }
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone)]
 pub struct TileCoordsXZ(pub CoordsXZ);
 
 impl TileCoordsXZ {
