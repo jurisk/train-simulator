@@ -1,3 +1,6 @@
+#![allow(clippy::unused_self)]
+
+use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 use std::ops::Add;
 
@@ -25,6 +28,12 @@ impl VertexCoordsXZ {
     pub fn from_usizes(x: usize, z: usize) -> Self {
         Self(CoordsXZ::from_usizes(x, z))
     }
+
+    #[must_use]
+    pub fn to_tile_coords_xz(self) -> TileCoordsXZ {
+        let coords: CoordsXZ = self.into();
+        coords.into()
+    }
 }
 
 impl From<VertexCoordsXZ> for CoordsXZ {
@@ -51,6 +60,8 @@ impl Add<DirectionXZ> for VertexCoordsXZ {
 pub struct TileCoordsXZ(pub CoordsXZ);
 
 impl TileCoordsXZ {
+    pub const ZERO: TileCoordsXZ = TileCoordsXZ(CoordsXZ::ZERO);
+
     #[must_use]
     pub fn from_usizes(x: usize, z: usize) -> Self {
         Self(CoordsXZ::from_usizes(x, z))
@@ -86,6 +97,14 @@ impl Add<DirectionXZ> for TileCoordsXZ {
 
     fn add(self, rhs: DirectionXZ) -> Self::Output {
         Self(self.0 + rhs)
+    }
+}
+
+impl Add<TileCoordsXZ> for TileCoordsXZ {
+    type Output = TileCoordsXZ;
+
+    fn add(self, rhs: TileCoordsXZ) -> Self::Output {
+        Self(self.0 + rhs.0)
     }
 }
 
@@ -156,11 +175,25 @@ pub enum TrackType {
     EastWest,
 }
 
+impl TrackType {
+    #[must_use]
+    fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
+        HashSet::from([TileCoordsXZ::ZERO])
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum ProductionType {
     CoalMine,
     IronMine,
     IronWorks,
+}
+
+impl ProductionType {
+    #[must_use]
+    fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
+        HashSet::new() // TODO: Implement
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
@@ -169,10 +202,36 @@ pub enum BuildingType {
     Production(ProductionType),
 }
 
+impl BuildingType {
+    #[must_use]
+    fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
+        match self {
+            BuildingType::Track(track_type) => track_type.relative_tiles_used(),
+            BuildingType::Production(production_type) => production_type.relative_tiles_used(),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct BuildingInfo {
     pub owner_id:             PlayerId,
     pub building_id:          BuildingId,
     pub north_west_vertex_xz: VertexCoordsXZ,
     pub building_type:        BuildingType,
+}
+
+impl BuildingInfo {
+    #[must_use]
+    fn base_tile(&self) -> TileCoordsXZ {
+        self.north_west_vertex_xz.to_tile_coords_xz()
+    }
+
+    #[must_use]
+    pub fn tiles_used(&self) -> HashSet<TileCoordsXZ> {
+        self.building_type
+            .relative_tiles_used()
+            .into_iter()
+            .map(|diff| self.base_tile() + diff)
+            .collect()
+    }
 }

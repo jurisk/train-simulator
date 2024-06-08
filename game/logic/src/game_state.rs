@@ -90,16 +90,33 @@ impl GameState {
         match game_command {
             GameCommand::BuildBuilding(building_info) => {
                 if requesting_player_id == building_info.owner_id {
-                    // TODO: Check that the tile is free, there is enough money, etc.
-                    self.buildings.push(building_info.clone());
+                    // TODO: Check that this is a valid building and there is enough money to build it
+                    // TODO: Check that terrain matches building requirements
 
-                    Ok(vec![ServerResponseWithAddress::new(
-                        AddressEnvelope::ToAllPlayersInGame(self.game_id),
-                        ServerResponse::Game(
+                    // Later: This is an inefficient check, but it will have to do for now
+                    let tiles_are_free = building_info.tiles_used().into_iter().all(|tile| {
+                        !self
+                            .buildings
+                            .iter()
+                            .any(|building| building.tiles_used().contains(&tile))
+                    });
+
+                    if tiles_are_free {
+                        self.buildings.push(building_info.clone());
+
+                        Ok(vec![ServerResponseWithAddress::new(
+                            AddressEnvelope::ToAllPlayersInGame(self.game_id),
+                            ServerResponse::Game(
+                                self.game_id,
+                                GameResponse::BuildingBuilt(building_info.clone()),
+                            ),
+                        )])
+                    } else {
+                        Err(ServerResponse::Game(
                             self.game_id,
-                            GameResponse::BuildingBuilt(building_info.clone()),
-                        ),
-                    )])
+                            GameResponse::CannotBuild(building_info.building_id),
+                        ))
+                    }
                 } else {
                     Err(ServerResponse::Error(ServerError::NotAuthorized))
                 }

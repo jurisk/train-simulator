@@ -15,6 +15,8 @@ pub struct CoordsXZ {
 }
 
 impl CoordsXZ {
+    pub const ZERO: CoordsXZ = CoordsXZ { x: 0, z: 0 };
+
     #[must_use]
     pub fn new(x: i32, z: i32) -> Self {
         Self { x, z }
