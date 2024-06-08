@@ -46,13 +46,10 @@ enum LandMaterialType {
 const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
 
 #[allow(clippy::cast_precision_loss, clippy::cast_lossless)]
-pub(crate) fn logical_to_world(
-    vertex_coords_xz: VertexCoordsXZ,
-    height: Height,
-    terrain: &Terrain,
-) -> Vec3 {
+pub(crate) fn logical_to_world(vertex_coords_xz: VertexCoordsXZ, terrain: &Terrain) -> Vec3 {
+    let Height(height) = terrain.vertex_heights[&vertex_coords_xz.into()];
     let coords_xz: CoordsXZ = vertex_coords_xz.into();
-    let y = (height.0 as f32) * Y_COEF;
+    let y = (height as f32) * Y_COEF;
     let x = (coords_xz.x as f32) - (terrain.tile_count_x() as f32) / 2.0;
     let z = (coords_xz.z as f32) - (terrain.tile_count_z() as f32) / 2.0;
     Vec3::new(x, y, z)

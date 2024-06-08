@@ -1,3 +1,5 @@
+#![allow(clippy::cast_sign_loss)]
+
 use std::fmt::{Debug, Formatter};
 use std::ops::{Index, IndexMut};
 
@@ -59,7 +61,8 @@ impl<T> GridXZ<T> {
     }
 
     pub fn coords(&self) -> impl Iterator<Item = CoordsXZ> + '_ {
-        (0 .. self.size_z).flat_map(move |z| (0 .. self.size_x).map(move |x| CoordsXZ::new(x, z)))
+        (0 .. self.size_z)
+            .flat_map(move |z| (0 .. self.size_x).map(move |x| CoordsXZ::from_usizes(x, z)))
     }
 }
 
@@ -67,13 +70,13 @@ impl<T> Index<&CoordsXZ> for GridXZ<T> {
     type Output = T;
 
     fn index(&self, coords: &CoordsXZ) -> &Self::Output {
-        &self.data[coords.z][coords.x]
+        &self.data[coords.z as usize][coords.x as usize]
     }
 }
 
 impl<T> IndexMut<&CoordsXZ> for GridXZ<T> {
     fn index_mut(&mut self, coords: &CoordsXZ) -> &mut Self::Output {
-        &mut self.data[coords.z][coords.x]
+        &mut self.data[coords.z as usize][coords.x as usize]
     }
 }
 

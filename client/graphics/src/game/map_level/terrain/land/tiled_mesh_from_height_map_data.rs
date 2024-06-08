@@ -138,7 +138,7 @@ where
             let make_vertex = |offset: [usize; 2]| -> Vertex {
                 let x = x_idx + offset[0];
                 let z = z_idx + offset[1];
-                let coords = VertexCoordsXZ::new(x, z);
+                let coords = VertexCoordsXZ::from_usizes(x, z);
                 let position = Vec3::new(
                     (x as f32 / x_segments as f32) * extent_x + min_x,
                     data[&coords.into()],
@@ -176,7 +176,7 @@ where
                 triangles.push(Triangle::new([top_left, bottom_left, top_right]));
                 triangles.push(Triangle::new([bottom_left, bottom_right, top_right]));
             }
-            tiles[&VertexCoordsXZ::new(x_idx, z_idx).into()] = Tile { quad, triangles };
+            tiles[&VertexCoordsXZ::from_usizes(x_idx, z_idx).into()] = Tile { quad, triangles };
         }
     }
 

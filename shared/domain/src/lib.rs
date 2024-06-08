@@ -20,8 +20,8 @@ impl Debug for VertexCoordsXZ {
 
 impl VertexCoordsXZ {
     #[must_use]
-    pub fn new(x: usize, z: usize) -> Self {
-        Self(CoordsXZ::new(x, z))
+    pub fn from_usizes(x: usize, z: usize) -> Self {
+        Self(CoordsXZ::from_usizes(x, z))
     }
 }
 
@@ -36,8 +36,8 @@ pub struct TileCoordsXZ(pub CoordsXZ);
 
 impl TileCoordsXZ {
     #[must_use]
-    pub fn new(x: usize, z: usize) -> Self {
-        Self(CoordsXZ::new(x, z))
+    pub fn from_usizes(x: usize, z: usize) -> Self {
+        Self(CoordsXZ::from_usizes(x, z))
     }
 }
 

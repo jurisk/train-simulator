@@ -74,12 +74,11 @@ fn create_track(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
-    vertex_coords_xz: VertexCoordsXZ,
+    north_west_vertex_xz: VertexCoordsXZ,
     track_type: TrackType,
 ) {
     let terrain = &map_level.terrain;
-    let height = terrain.vertex_heights[&vertex_coords_xz.into()];
-    let translation = logical_to_world(vertex_coords_xz, height, terrain);
+    let translation = logical_to_world(north_west_vertex_xz, terrain);
 
     // TODO: Take color from the player who owns the track!
     let color = match track_type {
@@ -99,8 +98,6 @@ fn create_track(
             mesh: meshes.add(Sphere::default().mesh().uv(32, 18)),
             ..default()
         },
-        Name::new(format!(
-            "Track {track_type:?} at {vertex_coords_xz:?} {height:?}"
-        )),
+        Name::new(format!("Track {track_type:?} at {north_west_vertex_xz:?}")),
     ));
 }
