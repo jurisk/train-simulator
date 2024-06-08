@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Formatter};
+
 use serde::{Deserialize, Serialize};
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::random::generate_random_string;
@@ -6,6 +8,50 @@ use uuid::Uuid;
 pub mod client_command;
 pub mod map_level;
 pub mod server_response;
+
+#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
+pub struct VertexCoordsXZ(pub CoordsXZ);
+
+impl Debug for VertexCoordsXZ {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "V{:?}", <VertexCoordsXZ as Into<CoordsXZ>>::into(*self))
+    }
+}
+
+impl VertexCoordsXZ {
+    #[must_use]
+    pub fn new(x: usize, z: usize) -> Self {
+        Self(CoordsXZ::new(x, z))
+    }
+}
+
+impl From<VertexCoordsXZ> for CoordsXZ {
+    fn from(vertex_coords_xz: VertexCoordsXZ) -> Self {
+        vertex_coords_xz.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
+pub struct TileCoordsXZ(pub CoordsXZ);
+
+impl TileCoordsXZ {
+    #[must_use]
+    pub fn new(x: usize, z: usize) -> Self {
+        Self(CoordsXZ::new(x, z))
+    }
+}
+
+impl Debug for TileCoordsXZ {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "T{:?}", <TileCoordsXZ as Into<CoordsXZ>>::into(*self))
+    }
+}
+
+impl From<TileCoordsXZ> for CoordsXZ {
+    fn from(tile_coords_xz: TileCoordsXZ) -> Self {
+        tile_coords_xz.0
+    }
+}
 
 // Later: We initially wanted it to be Uuid, but renet uses u64, so we can stick with that for now for easier compatibility
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
@@ -91,6 +137,6 @@ pub enum BuildingType {
 pub struct BuildingInfo {
     pub building_id:          BuildingId,
     // TODO: OK, but which direction is North-West according to our coordinate system? Let us define it somewhere as a Direction class?
-    pub north_west_vertex_xz: CoordsXZ,
+    pub north_west_vertex_xz: VertexCoordsXZ,
     pub building_type:        BuildingType,
 }

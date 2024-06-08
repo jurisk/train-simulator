@@ -11,6 +11,7 @@ use bevy::render::render_resource::VertexFormat;
 use bevy_mod_raycast::prelude::RaycastMesh;
 use shared_domain::map_level::{Height, MapLevel, Terrain, TerrainType};
 use shared_domain::server_response::{GameResponse, ServerResponse};
+use shared_domain::VertexCoordsXZ;
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
@@ -46,13 +47,14 @@ const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
 
 #[allow(clippy::cast_precision_loss, clippy::cast_lossless)]
 pub(crate) fn logical_to_world(
-    vertex_coords_xz: CoordsXZ,
+    vertex_coords_xz: VertexCoordsXZ,
     height: Height,
     terrain: &Terrain,
 ) -> Vec3 {
+    let coords_xz: CoordsXZ = vertex_coords_xz.into();
     let y = (height.0 as f32) * Y_COEF;
-    let x = (vertex_coords_xz.x as f32) - (terrain.tile_count_x() as f32) / 2.0;
-    let z = (vertex_coords_xz.z as f32) - (terrain.tile_count_z() as f32) / 2.0;
+    let x = (coords_xz.x as f32) - (terrain.tile_count_x() as f32) / 2.0;
+    let z = (coords_xz.z as f32) - (terrain.tile_count_z() as f32) / 2.0;
     Vec3::new(x, y, z)
 }
 
@@ -110,7 +112,9 @@ pub(crate) fn create_land(
         half_z,
         data_slice,
         ATTRIBUTE_TERRAIN_TYPE,
-        |coords: CoordsXZ| TerrainType::default_from_height(height_map[&coords]) as u32,
+        |coords: VertexCoordsXZ| {
+            TerrainType::default_from_height(height_map[&coords.into()]) as u32
+        },
     );
 
     commands.insert_resource(tiles);

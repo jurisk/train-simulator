@@ -9,9 +9,8 @@ use shared_domain::server_response::{
     AddressEnvelope, LobbyResponse, ServerError, ServerResponse, ServerResponseWithAddress,
 };
 use shared_domain::{
-    BuildingId, BuildingInfo, BuildingType, GameId, PlayerId, PlayerName, TrackType,
+    BuildingId, BuildingInfo, BuildingType, GameId, PlayerId, PlayerName, TrackType, VertexCoordsXZ,
 };
-use shared_util::coords_xz::CoordsXZ;
 
 use crate::game_state::GameState;
 
@@ -32,12 +31,12 @@ impl Games {
         let initial_buildings = vec![
             BuildingInfo {
                 building_id:          BuildingId::random(),
-                north_west_vertex_xz: CoordsXZ::new(10, 10),
+                north_west_vertex_xz: VertexCoordsXZ::new(10, 10),
                 building_type:        BuildingType::Track(TrackType::EastWest),
             },
             BuildingInfo {
                 building_id:          BuildingId::random(),
-                north_west_vertex_xz: CoordsXZ::new(3, 5),
+                north_west_vertex_xz: VertexCoordsXZ::new(3, 5),
                 building_type:        BuildingType::Track(TrackType::NorthSouth),
             },
         ];

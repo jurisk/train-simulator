@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::mesh::{MeshVertexAttribute, PrimitiveTopology};
 use bevy::render::render_asset::RenderAssetUsages;
-use shared_util::coords_xz::CoordsXZ;
+use shared_domain::VertexCoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
 #[derive(Copy, Clone, Debug, Default)]
@@ -94,7 +94,7 @@ pub fn tiled_mesh_from_height_map_data<F>(
     custom_f: F,
 ) -> (Tiles, Mesh)
 where
-    F: Fn(CoordsXZ) -> u32,
+    F: Fn(VertexCoordsXZ) -> u32,
 {
     let tiles = tiles_from_heights(min_x, max_x, min_z, max_z, data, custom_f);
     let mesh = convert_to_mesh(&tiles, custom_attribute);
@@ -118,7 +118,7 @@ fn tiles_from_heights<F>(
     custom_f: F,
 ) -> Tiles
 where
-    F: Fn(CoordsXZ) -> u32,
+    F: Fn(VertexCoordsXZ) -> u32,
 {
     let z_segments = data.size_z - 1;
     let x_segments = data.size_x - 1;
@@ -138,10 +138,10 @@ where
             let make_vertex = |offset: [usize; 2]| -> Vertex {
                 let x = x_idx + offset[0];
                 let z = z_idx + offset[1];
-                let coords = CoordsXZ::new(x, z);
+                let coords = VertexCoordsXZ::new(x, z);
                 let position = Vec3::new(
                     (x as f32 / x_segments as f32) * extent_x + min_x,
-                    data[&coords],
+                    data[&coords.into()],
                     (z as f32 / z_segments as f32) * extent_z + min_z,
                 );
                 let uv = Vec2::new(offset[0] as f32, offset[1] as f32);
@@ -176,7 +176,7 @@ where
                 triangles.push(Triangle::new([top_left, bottom_left, top_right]));
                 triangles.push(Triangle::new([bottom_left, bottom_right, top_right]));
             }
-            tiles[&CoordsXZ::new(x_idx, z_idx)] = Tile { quad, triangles };
+            tiles[&VertexCoordsXZ::new(x_idx, z_idx).into()] = Tile { quad, triangles };
         }
     }
 

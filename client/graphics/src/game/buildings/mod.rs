@@ -8,8 +8,7 @@ use bevy::prelude::{
 };
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, ServerResponse};
-use shared_domain::{BuildingInfo, BuildingType, TrackType};
-use shared_util::coords_xz::CoordsXZ;
+use shared_domain::{BuildingInfo, BuildingType, TrackType, VertexCoordsXZ};
 
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::map_level::terrain::land::logical_to_world;
@@ -75,11 +74,11 @@ fn create_track(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
-    vertex_coords_xz: CoordsXZ,
+    vertex_coords_xz: VertexCoordsXZ,
     track_type: TrackType,
 ) {
     let terrain = &map_level.terrain;
-    let height = terrain.vertex_heights[&vertex_coords_xz];
+    let height = terrain.vertex_heights[&vertex_coords_xz.into()];
     let translation = logical_to_world(vertex_coords_xz, height, terrain);
 
     let color = match track_type {
