@@ -171,8 +171,12 @@ impl BuildingId {
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum TrackType {
+    NorthEast,
     NorthSouth,
+    NorthWest,
     EastWest,
+    SouthEast,
+    SouthWest,
 }
 
 impl TrackType {

@@ -38,14 +38,41 @@ fn handle_game_map_level_provided_for_testing(
     for message in server_messages.read() {
         if let ServerResponse::Game(game_id, game_response) = &message.response {
             if let GameResponse::MapLevelProvided(_map_level) = game_response {
-                // TODO: Everyone will now build the test track on the same spot... That's weird. Make it random or have each find a free spot?
+                // TODO: This is debug-only and to be removed
+                let test_track = vec![
+                    ((49, 43), TrackType::SouthWest),
+                    ((48, 43), TrackType::EastWest),
+                    ((47, 43), TrackType::EastWest),
+                    ((46, 43), TrackType::SouthEast),
+                    ((46, 44), TrackType::NorthSouth),
+                    ((46, 45), TrackType::NorthSouth),
+                    ((46, 46), TrackType::NorthSouth),
+                    ((46, 47), TrackType::NorthSouth),
+                    ((46, 48), TrackType::NorthSouth),
+                    ((46, 49), TrackType::NorthSouth),
+                    ((46, 50), TrackType::NorthSouth),
+                    ((46, 51), TrackType::NorthSouth),
+                    ((46, 52), TrackType::NorthEast),
+                    ((47, 52), TrackType::EastWest),
+                    ((48, 52), TrackType::EastWest),
+                    ((49, 52), TrackType::NorthWest),
+                    ((49, 44), TrackType::NorthSouth),
+                    ((49, 45), TrackType::NorthSouth),
+                    ((49, 46), TrackType::NorthSouth),
+                    ((49, 47), TrackType::NorthSouth),
+                    ((49, 48), TrackType::NorthSouth),
+                    ((49, 49), TrackType::NorthSouth),
+                    ((49, 50), TrackType::NorthSouth),
+                    ((49, 51), TrackType::NorthSouth),
+                ];
+
                 let mut initial_buildings = vec![];
-                for z in 34 ..= 50 {
+                for ((x, z), track_type) in test_track {
                     let building_info = BuildingInfo {
                         owner_id:             player_id,
                         building_id:          BuildingId::random(),
-                        north_west_vertex_xz: VertexCoordsXZ::from_usizes(46, z),
-                        building_type:        BuildingType::Track(TrackType::NorthSouth),
+                        north_west_vertex_xz: VertexCoordsXZ::from_usizes(x, z),
+                        building_type:        BuildingType::Track(track_type),
                     };
                     initial_buildings.push(building_info);
                 }

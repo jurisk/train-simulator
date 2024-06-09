@@ -43,7 +43,9 @@ fn highlight_selection(
     if let Some(tiles) = tiles {
         let tiles = &tiles.tiles;
 
-        let SelectedTiles { ordered: ordered_selected_tiles }  = selected_tiles.as_ref();
+        let SelectedTiles {
+            ordered: ordered_selected_tiles,
+        } = selected_tiles.as_ref();
         for tile_coords in ordered_selected_tiles {
             debug_draw_tile(&mut gizmos, *tile_coords, tiles, Color::PURPLE);
         }
@@ -114,7 +116,9 @@ fn update_selection<T: TypePath + Send + Sync>(
             let HoveredTile(hovered_tile) = hovered_tile.as_mut();
             *hovered_tile = closest;
 
-            let SelectedTiles { ordered: ordered_selected_tiles } = selected_tiles.as_mut();
+            let SelectedTiles {
+                ordered: ordered_selected_tiles,
+            } = selected_tiles.as_mut();
 
             if mouse_buttons.pressed(MouseButton::Left) {
                 if let Some(closest) = closest {

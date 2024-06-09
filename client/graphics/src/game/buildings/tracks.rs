@@ -40,14 +40,19 @@ pub(crate) fn create_track(
     let se = logical_to_world(south_east_vertex_xz, terrain);
     let sw = logical_to_world(south_west_vertex_xz, terrain);
 
-    let (a1, a2) = match track_type {
-        TrackType::NorthSouth => pick_rail_positions(nw, ne),
-        TrackType::EastWest => pick_rail_positions(ne, se),
-    };
+    let n_positions = pick_rail_positions(nw, ne);
+    let e_positions = pick_rail_positions(ne, se);
+    let s_positions = pick_rail_positions(se, sw);
+    let w_positions = pick_rail_positions(sw, nw);
 
-    let (b1, b2) = match track_type {
-        TrackType::NorthSouth => pick_rail_positions(sw, se),
-        TrackType::EastWest => pick_rail_positions(nw, sw),
+    // Note - `b2` and `b1` are reversed on purpose
+    let ((a1, a2), (b2, b1)) = match track_type {
+        TrackType::NorthSouth => (n_positions, s_positions),
+        TrackType::EastWest => (e_positions, w_positions),
+        TrackType::NorthEast => (n_positions, e_positions),
+        TrackType::NorthWest => (w_positions, n_positions),
+        TrackType::SouthEast => (e_positions, s_positions),
+        TrackType::SouthWest => (s_positions, w_positions),
     };
 
     let colour = player_info.colour;
@@ -122,15 +127,28 @@ pub(crate) fn build_track_when_mouse_released(
         let PlayerIdResource(player_id) = *player_id_resource;
         let GameIdResource(game_id) = *game_id_resource;
         let selected_tiles = selected_tiles.as_mut();
-        let SelectedTiles { ordered: ordered_selected_tiles } = selected_tiles;
+        let SelectedTiles {
+            ordered: ordered_selected_tiles,
+        } = selected_tiles;
         for tile in ordered_selected_tiles.into_iter() {
             info!("Building track at {:?}", tile);
+            // TODO: Debug only, replace with a proper route planner
+            let tmp_track_types = [
+                TrackType::NorthSouth,
+                TrackType::EastWest,
+                TrackType::NorthEast,
+                TrackType::NorthWest,
+                TrackType::SouthEast,
+                TrackType::SouthWest,
+            ];
+            let tmp_selected_track = tmp_track_types[fastrand::usize(0 .. tmp_track_types.len())];
+
             let track = BuildingInfo {
                 owner_id:             player_id,
                 building_id:          BuildingId::random(),
                 north_west_vertex_xz: tile.north_west_vertex(),
                 // TODO: Do not hardcode track type, determine based on direction or based on build mode
-                building_type:        BuildingType::Track(TrackType::NorthSouth),
+                building_type:        BuildingType::Track(tmp_selected_track),
             };
 
             client_messages.send(ClientMessageEvent::new(ClientCommand::Game(

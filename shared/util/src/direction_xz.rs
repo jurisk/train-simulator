@@ -1,7 +1,7 @@
 use crate::coords_xz::CoordsXZ;
 
-// SW = X axis
-// NS = Z axis
+// SW = X axis, smaller is W, larger is E
+// NS = Z axis, smaller is N, larger is S
 pub enum DirectionXZ {
     North,
     East,

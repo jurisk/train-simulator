@@ -1328,6 +1328,7 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy_dylib",
  "bevy_mod_raycast",
+ "fastrand",
  "game-logic",
  "serde",
  "serde_json",
