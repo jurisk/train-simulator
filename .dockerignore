@@ -1,0 +1,21 @@
+# Created automatically by flyctl
+
+# flyctl launch added from .gitignore
+target
+**\.idea
+
+# flyctl launch added from .idea\.gitignore
+# Default ignored files
+.idea\shelf
+.idea\workspace.xml
+
+# flyctl launch added from client\graphics\.gitignore
+# From Bevy Assets V2: https://bevyengine.org/news/bevy-0-12/#asset-preprocessing
+client\graphics\**\imported_assets
+
+# flyctl launch added from client\single-player\web\.gitignore
+client\single-player\web\**\wasm-build
+
+# This is really just for local testing purposes.
+client\single-player\web\**\assets
+fly.toml
