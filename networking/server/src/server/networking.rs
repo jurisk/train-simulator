@@ -25,6 +25,7 @@ impl MultiplayerRenetServerPlugin {
 }
 
 impl Plugin for MultiplayerRenetServerPlugin {
+    #[allow(clippy::expect_used)]
     fn build(&self, app: &mut App) {
         info!("Starting server {}...", self.address);
 

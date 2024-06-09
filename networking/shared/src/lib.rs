@@ -11,7 +11,8 @@ pub struct ServerStateResource(pub ServerState);
 
 pub const DEFAULT_PORT: u16 = 5000;
 
-pub fn parse_address(parameter: Option<String>) -> Result<SocketAddr, impl Error> {
+#[allow(clippy::missing_errors_doc)]
+pub fn parse_server_address(parameter: Option<String>) -> Result<SocketAddr, impl Error> {
     match parameter {
         None => {
             Ok::<SocketAddr, AddrParseError>(SocketAddr::new(

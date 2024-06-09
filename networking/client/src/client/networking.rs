@@ -26,6 +26,7 @@ impl MultiplayerRenetClientPlugin {
 
 // Note: We were also considering https://github.com/ukoehb/bevy_simplenet
 impl Plugin for MultiplayerRenetClientPlugin {
+    #[allow(clippy::expect_used)]
     fn build(&self, app: &mut App) {
         app.add_plugins(RenetClientPlugin);
 
