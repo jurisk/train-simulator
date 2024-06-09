@@ -1,7 +1,5 @@
 #![allow(clippy::needless_pass_by_value)]
 
-use std::collections::HashSet;
-
 use bevy::app::App;
 use bevy::input::ButtonInput;
 use bevy::prelude::{
@@ -15,11 +13,14 @@ use shared_util::grid_xz::GridXZ;
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::{Tile, Tiles};
 use crate::game::map_level::MapLevelResource;
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct HoveredTile(pub Option<TileCoordsXZ>);
 
-#[derive(Resource)]
-pub struct SelectedTiles(pub HashSet<TileCoordsXZ>);
+#[derive(Resource, Default)]
+pub struct SelectedTiles {
+    // Ordered on purpose instead of a set, because we care about which one was selected first
+    pub ordered: Vec<TileCoordsXZ>,
+}
 
 pub(crate) struct SelectionPlugin;
 
@@ -28,8 +29,8 @@ impl Plugin for SelectionPlugin {
         app.add_plugins(DeferredRaycastingPlugin::<()>::default());
         app.insert_resource(RaycastPluginState::<()>::default()); // Add .with_debug_cursor() for default debug cursor
         app.add_systems(Update, (update_selection::<()>, highlight_selection));
-        app.insert_resource(HoveredTile(None));
-        app.insert_resource(SelectedTiles(HashSet::new()));
+        app.insert_resource(HoveredTile::default());
+        app.insert_resource(SelectedTiles::default());
     }
 }
 
@@ -42,8 +43,8 @@ fn highlight_selection(
     if let Some(tiles) = tiles {
         let tiles = &tiles.tiles;
 
-        let SelectedTiles(selection) = selected_tiles.as_ref();
-        for tile_coords in selection {
+        let SelectedTiles { ordered: ordered_selected_tiles }  = selected_tiles.as_ref();
+        for tile_coords in ordered_selected_tiles {
             debug_draw_tile(&mut gizmos, *tile_coords, tiles, Color::PURPLE);
         }
 
@@ -113,11 +114,13 @@ fn update_selection<T: TypePath + Send + Sync>(
             let HoveredTile(hovered_tile) = hovered_tile.as_mut();
             *hovered_tile = closest;
 
-            let SelectedTiles(selected_tiles) = selected_tiles.as_mut();
+            let SelectedTiles { ordered: ordered_selected_tiles } = selected_tiles.as_mut();
 
             if mouse_buttons.pressed(MouseButton::Left) {
                 if let Some(closest) = closest {
-                    selected_tiles.insert(closest);
+                    if !ordered_selected_tiles.contains(&closest) {
+                        ordered_selected_tiles.push(closest);
+                    }
                 }
             }
 

@@ -122,8 +122,8 @@ pub(crate) fn build_track_when_mouse_released(
         let PlayerIdResource(player_id) = *player_id_resource;
         let GameIdResource(game_id) = *game_id_resource;
         let selected_tiles = selected_tiles.as_mut();
-        let SelectedTiles(selected_tiles) = selected_tiles;
-        for tile in selected_tiles.iter() {
+        let SelectedTiles { ordered: ordered_selected_tiles } = selected_tiles;
+        for tile in ordered_selected_tiles.into_iter() {
             info!("Building track at {:?}", tile);
             let track = BuildingInfo {
                 owner_id:             player_id,
@@ -138,6 +138,6 @@ pub(crate) fn build_track_when_mouse_released(
                 GameCommand::BuildBuilding(track),
             )));
         }
-        selected_tiles.clear();
+        ordered_selected_tiles.clear();
     }
 }
