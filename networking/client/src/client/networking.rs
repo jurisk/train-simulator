@@ -1,4 +1,4 @@
-use std::net::UdpSocket;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr, UdpSocket};
 use std::time::SystemTime;
 
 use bevy::app::Update;
@@ -13,11 +13,17 @@ use client_graphics::states::ClientState;
 use networking_renet_shared::channels::{ClientChannel, ServerChannel};
 use shared_domain::server_response::ServerResponse;
 
-pub struct MultiplayerRenetClientPlugin;
+pub struct MultiplayerRenetClientPlugin {
+    server_address: SocketAddr,
+}
 
-// TODO: Clean it up to merge with server code and avoid unwraps, but it doesn't matter
+impl MultiplayerRenetClientPlugin {
+    pub fn new(server_address: SocketAddr) -> Self {
+        Self { server_address }
+    }
+}
+
 // Note: We were also considering https://github.com/ukoehb/bevy_simplenet
-
 impl Plugin for MultiplayerRenetClientPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(RenetClientPlugin);
@@ -27,12 +33,14 @@ impl Plugin for MultiplayerRenetClientPlugin {
 
         app.add_plugins(NetcodeClientPlugin);
 
-        let server_addr = "127.0.0.1:5000".parse().unwrap();
         let current_time = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap();
+            .expect("Failed to get current time");
 
-        let client_id = u64::try_from(current_time.as_millis()).unwrap();
+        let client_id =
+            u64::try_from(current_time.as_millis()).expect("Failed to create client ID");
+
+        let server_addr = self.server_address;
 
         let authentication = ClientAuthentication::Unsecure {
             server_addr,
@@ -40,11 +48,15 @@ impl Plugin for MultiplayerRenetClientPlugin {
             user_data: None,
             protocol_id: 0,
         };
-        let socket = UdpSocket::bind("127.0.0.1:0").unwrap();
+
+        let self_socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);
+        let socket = UdpSocket::bind(self_socket)
+            .expect(format!("Failed to bind to {self_socket}").as_str());
         let current_time = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap();
-        let transport = NetcodeClientTransport::new(current_time, authentication, socket).unwrap();
+            .expect("Failed to get current time");
+        let transport = NetcodeClientTransport::new(current_time, authentication, socket)
+            .expect("Failed to create client transport");
 
         app.insert_resource(transport);
 
