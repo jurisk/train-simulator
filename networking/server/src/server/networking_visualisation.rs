@@ -4,9 +4,9 @@ use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_renet::renet::{RenetServer, ServerEvent};
 use renet_visualizer::RenetServerVisualizer;
 
-pub struct MultiPlayerRenetVisualisationPlugin;
+pub struct MultiplayerRenetServerVisualisationPlugin;
 
-impl Plugin for MultiPlayerRenetVisualisationPlugin {
+impl Plugin for MultiplayerRenetServerVisualisationPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(EguiPlugin);
 

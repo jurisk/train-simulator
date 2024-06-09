@@ -1,12 +1,12 @@
 use bevy::prelude::App;
 use bevy::DefaultPlugins;
-use networking_renet_server::server::networking::MultiPlayerRenetNetworkingPlugin;
-use networking_renet_server::server::networking_visualisation::MultiPlayerRenetVisualisationPlugin;
+use networking_renet_server::server::networking::MultiplayerRenetServerPlugin;
+use networking_renet_server::server::networking_visualisation::MultiplayerRenetServerVisualisationPlugin;
 
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
-    app.add_plugins(MultiPlayerRenetNetworkingPlugin);
-    app.add_plugins(MultiPlayerRenetVisualisationPlugin);
+    app.add_plugins(MultiplayerRenetServerPlugin);
+    app.add_plugins(MultiplayerRenetServerVisualisationPlugin);
     app.run();
 }

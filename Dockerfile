@@ -29,7 +29,7 @@ RUN cargo build --release --bin server_renet_console
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bookworm-slim AS runtime
-EXPOSE 5000
+EXPOSE 5000/udp
 WORKDIR app
 COPY --from=builder /app/target/release/server_renet_console /usr/local/bin
 ENTRYPOINT ["/usr/local/bin/server_renet_console"]

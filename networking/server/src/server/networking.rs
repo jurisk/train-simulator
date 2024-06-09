@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used)]
 use std::net::UdpSocket;
 use std::time::SystemTime;
 
@@ -14,10 +13,10 @@ use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
 use shared_domain::server_response::ServerResponseWithClientIds;
 use shared_domain::ClientId;
 
-pub struct MultiPlayerRenetNetworkingPlugin;
+pub struct MultiplayerRenetServerPlugin;
 
-// Later: Could clean it up to merge with client code and avoid unwraps, but it doesn't matter
-impl Plugin for MultiPlayerRenetNetworkingPlugin {
+// TODO: Clean it up to merge with client code and avoid unwraps, but it doesn't matter
+impl Plugin for MultiplayerRenetServerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ServerStateResource(ServerState::new()));
 

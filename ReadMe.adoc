@@ -30,6 +30,8 @@ cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W c
 
 === Running
 
+Reminder. Do not forget to use `--features bevy/dynamic_linking` when running from the IDE.
+
 [source,bash]
 ----
 cargo run --features bevy/dynamic_linking --bin server_renet_console
@@ -97,16 +99,17 @@ cargo modules dependencies --no-externs --no-fns --no-sysroot --no-traits --no-t
 
 === Run as Docker
 
-Building:
+Building and running the Docker image:
 
 [source,bash]
 ----
 docker build --tag train-simulator .
 docker image ls train-simulator
-docker run --interactive --tty --rm --name train-simulator --publish 5000:5000 train-simulator
+docker run --interactive --tty --rm --name train-simulator --publish 5000:5000/udp train-simulator
+docker stop train-simulator
 ----
 
-Pruning:
+Pruning, as Rancher tends to eat up all available space:
 
 [source,bash]
 ----
