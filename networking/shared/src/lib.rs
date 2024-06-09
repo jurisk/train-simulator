@@ -5,3 +5,5 @@ pub mod channels;
 
 #[derive(Resource)]
 pub struct ServerStateResource(pub ServerState);
+
+pub const DEFAULT_PORT: u16 = 5000;

@@ -1,4 +1,4 @@
-use std::net::UdpSocket;
+use std::net::{SocketAddr, UdpSocket};
 use std::time::SystemTime;
 
 use bevy::prelude::{error, info, App, EventReader, Plugin, ResMut, Update};
@@ -13,11 +13,20 @@ use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
 use shared_domain::server_response::ServerResponseWithClientIds;
 use shared_domain::ClientId;
 
-pub struct MultiplayerRenetServerPlugin;
+pub struct MultiplayerRenetServerPlugin {
+    address: SocketAddr,
+}
 
-// TODO: Clean it up to merge with client code and avoid unwraps, but it doesn't matter
+impl MultiplayerRenetServerPlugin {
+    pub fn new(address: SocketAddr) -> Self {
+        Self { address }
+    }
+}
+
 impl Plugin for MultiplayerRenetServerPlugin {
     fn build(&self, app: &mut App) {
+        info!("Starting server {}...", self.address);
+
         app.insert_resource(ServerStateResource(ServerState::new()));
 
         app.add_plugins(RenetServerPlugin);
@@ -26,18 +35,19 @@ impl Plugin for MultiplayerRenetServerPlugin {
         app.insert_resource(server);
 
         app.add_plugins(NetcodeServerPlugin);
-        let server_addr = "127.0.0.1:5000".parse().unwrap();
-        let socket = UdpSocket::bind(server_addr).unwrap();
+        let socket = UdpSocket::bind(self.address)
+            .expect(format!("Failed to bind to {:?}", self.address).as_str());
         let server_config = ServerConfig {
             current_time:     SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap(),
+                .expect("Failed to get current time"),
             max_clients:      64,
             protocol_id:      0,
-            public_addresses: vec![server_addr],
+            public_addresses: vec![self.address],
             authentication:   ServerAuthentication::Unsecure,
         };
-        let transport = NetcodeServerTransport::new(server_config, socket).unwrap();
+        let transport = NetcodeServerTransport::new(server_config, socket)
+            .expect("Failed to create server transport");
         app.insert_resource(transport);
 
         app.add_systems(Update, receive_message_system);
