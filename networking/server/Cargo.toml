@@ -32,3 +32,5 @@ bevy_egui.workspace = true
 renet_visualizer.workspace = true
 bincode.workspace = true
 serde.workspace = true
+axum.workspace = true
+tokio.workspace = true

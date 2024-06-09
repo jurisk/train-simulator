@@ -31,6 +31,8 @@ bevy_egui = "0.25.0" # For renet_visualizer
 bevy_mod_raycast = "0.17.0"
 renet_visualizer = { version = "0.0.8", features = ["bevy"] }
 bincode = "1.3.3"
+axum = "0.7.5"
+tokio = { version = "1.0", features = ["full"] }
 
 # From https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units
 # From https://rapier.rs/docs/user_guides/bevy_plugin/common_mistakes#my-local-build-of-rapier-is-slower-than-the-online-demos
