@@ -165,20 +165,20 @@ mod tests {
         let terrain = Terrain {
             vertex_heights: GridXZ::new(vec![
                 vec![Height(0), Height(1), Height(2)],
-                vec![Height(3), Height(4), Height(5)],
-                vec![Height(6), Height(7), Height(8)],
+                vec![Height(3), Height(1), Height(5)],
+                vec![Height(6), Height(7), Height(2)],
             ]),
         };
         assert_eq!(
-            logical_to_world(CoordsXZ::new(0, 0), Height(0), &terrain),
+            logical_to_world(VertexCoordsXZ::from_usizes(0, 0), &terrain),
             Vec3::new(-1.0, 0.0, -1.0)
         );
         assert_eq!(
-            logical_to_world(CoordsXZ::new(1, 1), Height(1), &terrain),
+            logical_to_world(VertexCoordsXZ::from_usizes(1, 1), &terrain),
             Vec3::new(0.0, Y_COEF, 0.0)
         );
         assert_eq!(
-            logical_to_world(CoordsXZ::new(2, 2), Height(2), &terrain),
+            logical_to_world(VertexCoordsXZ::from_usizes(2, 2), &terrain),
             Vec3::new(1.0, 2.0 * Y_COEF, 1.0)
         );
     }
