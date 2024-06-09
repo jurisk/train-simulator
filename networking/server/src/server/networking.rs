@@ -18,6 +18,7 @@ pub struct MultiplayerRenetServerPlugin {
 }
 
 impl MultiplayerRenetServerPlugin {
+    #[must_use]
     pub fn new(address: SocketAddr) -> Self {
         Self { address }
     }
@@ -36,7 +37,7 @@ impl Plugin for MultiplayerRenetServerPlugin {
 
         app.add_plugins(NetcodeServerPlugin);
         let socket = UdpSocket::bind(self.address)
-            .expect(format!("Failed to bind to {:?}", self.address).as_str());
+            .unwrap_or_else(|_| panic!("Failed to bind to {:?}", self.address));
         let server_config = ServerConfig {
             current_time:     SystemTime::now()
                 .duration_since(SystemTime::UNIX_EPOCH)

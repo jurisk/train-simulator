@@ -18,6 +18,7 @@ pub struct MultiplayerRenetClientPlugin {
 }
 
 impl MultiplayerRenetClientPlugin {
+    #[must_use]
     pub fn new(server_address: SocketAddr) -> Self {
         Self { server_address }
     }
@@ -51,7 +52,7 @@ impl Plugin for MultiplayerRenetClientPlugin {
 
         let self_socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);
         let socket = UdpSocket::bind(self_socket)
-            .expect(format!("Failed to bind to {self_socket}").as_str());
+            .unwrap_or_else(|_| panic!("Failed to bind to {self_socket}"));
         let current_time = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .expect("Failed to get current time");
