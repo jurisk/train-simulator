@@ -68,7 +68,7 @@ cargo install wasm-bindgen-cli
 
 [source,bash]
 ----
-cargo build --profile wasm-release --target wasm32-unknown-unknown --bin client_single_player
+cargo build --profile wasm-release --target wasm32-unknown-unknown --bin client_single_player --bin client_simplenet_graphical
 wasm-bindgen --out-name client_single_player --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_single_player.wasm
 ----
 

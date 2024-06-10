@@ -60,9 +60,8 @@ jobs:
       - name: Build default target
         run: cargo build --verbose
 
-      # TODO: Also build and bind `--bin client_simplenet_graphical`
       - name: Build WASM target
-        run: cargo build --profile wasm-release --target wasm32-unknown-unknown --verbose --bin client_single_player
+        run: cargo build --profile wasm-release --target wasm32-unknown-unknown --verbose --bin client_single_player --bin client_simplenet_graphical
 
       - name: Generate WASM bindings
         run: wasm-bindgen --out-name client_single_player --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_single_player.wasm
