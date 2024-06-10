@@ -11,8 +11,8 @@ fn main() {
     let client_id = ClientId::random();
     app.insert_resource(ClientIdResource(client_id));
     app.insert_resource(ServerStateResource(ServerState::new()));
-    app.insert_state(ClientState::JoiningGame);
     app.add_plugins(ClientGraphicsPlugin);
+    app.insert_state(ClientState::JoiningGame);
     app.add_systems(Update, process_messages_locally);
     app.run();
 }

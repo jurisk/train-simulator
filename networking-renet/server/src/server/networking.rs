@@ -69,7 +69,7 @@ fn receive_message_system(
                 Ok(command) => {
                     info!("Received {command:?}");
                     let responses = server_state.process(ClientCommandWithClientId {
-                        client_id: ClientId::from_raw(client_id.raw()),
+                        client_id: ClientId::from_u64(client_id.raw()),
                         command,
                     });
                     process_responses(&mut server, responses);
@@ -92,7 +92,7 @@ fn process_responses(
             match bincode::serialize(&response.response) {
                 Ok(encoded) => {
                     server.send_message(
-                        renet::ClientId::from_raw(client_id.raw()),
+                        renet::ClientId::from_raw(client_id.as_u64()),
                         ServerChannel::ServerMessages,
                         encoded,
                     );

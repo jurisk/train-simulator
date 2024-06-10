@@ -1,0 +1,11 @@
+[package]
+name = "networking-simplenet-shared"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+bevy_simplenet.workspace = true
+serde.workspace = true

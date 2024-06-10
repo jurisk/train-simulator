@@ -1,7 +1,7 @@
 #![feature(let_chains)]
 
 use bevy::asset::AssetPlugin;
-use bevy::prelude::{App, AssetMode, Plugin, PluginGroup};
+use bevy::prelude::{info, App, AssetMode, Plugin, PluginGroup};
 use bevy::utils::default;
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution};
 use bevy::DefaultPlugins;
@@ -63,5 +63,10 @@ impl Plugin for ClientGraphicsPlugin {
             DebugPlugin,
             SelectionPlugin,
         ));
+
+        info!("Arch: {}", std::env::consts::ARCH);
+        info!("Target OS: {}", std::env::consts::OS);
+        info!("Asset path prefix: {}", asset_path_prefix);
+        info!("Current dir: {:?}", std::env::current_dir());
     }
 }
