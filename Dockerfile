@@ -1,4 +1,4 @@
-# TODO: Also build the single-player WASM app and serve it with a web server, so we can get rid of Google Pages
+# TODO: Build the single-player and SimpleNet mutliplayer WASM client apps and serve it with a web server, so we can get rid of Google Pages
 
 # See https://github.com/LukeMathWalker/cargo-chef?tab=readme-ov-file#without-the-pre-built-image
 
@@ -25,12 +25,12 @@ RUN apt-get install -y lld clang
 RUN cargo chef cook --release --recipe-path recipe.json
 # Build application
 COPY . .
-RUN cargo build --release --bin server_renet_console
+RUN cargo build --release --bin server_simplenet_console
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bookworm-slim AS runtime
-EXPOSE 5000/udp
+EXPOSE 48888/tcp
 EXPOSE 8080/tcp
 WORKDIR app
-COPY --from=builder /app/target/release/server_renet_console /usr/local/bin
-ENTRYPOINT ["/usr/local/bin/server_renet_console"]
+COPY --from=builder /app/target/release/server_simplenet_console /usr/local/bin
+ENTRYPOINT ["/usr/local/bin/server_simplenet_console"]
