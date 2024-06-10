@@ -7,8 +7,15 @@ use networking_simplenet_server::MultiplayerSimpleNetServerPlugin;
 use networking_simplenet_shared::DEFAULT_PORT;
 
 fn main() {
-    // TODO: Read from args
-    let address = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), DEFAULT_PORT);
+    let args: Vec<String> = std::env::args().collect();
+    let address = match args.get(1).cloned() {
+        None => SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), DEFAULT_PORT),
+        Some(address_string) => {
+            address_string
+                .parse()
+                .unwrap_or_else(|_| panic!("Unable to parse socket address {address_string}"))
+        },
+    };
 
     let mut app = App::new();
 
