@@ -24,6 +24,7 @@ pub enum LobbyCommand {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameCommand {
     QueryBuildings,
+    // TODO: Should actually be `BuildBuildings` as a transaction, so we either manage to build all of the track segments or none
     BuildBuilding(BuildingInfo),
 }
 

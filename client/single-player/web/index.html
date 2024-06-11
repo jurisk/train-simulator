@@ -1,38 +1,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <style>
-        body {
-            background: linear-gradient(
-                    135deg,
-                    white 0%,
-                    white 49%,
-                    black 49%,
-                    black 51%,
-                    white 51%,
-                    white 100%
-            ) repeat;
-            background-size: 20px 20px;
-        }
-        canvas {
-            background-color: white;
-        }
-        div {
-            background-color: white;
-        }
-    </style>
-    <title>WASM Example</title>
+    <title>Train Simulator</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <script type="module">
-        import init from './wasm-build/client_single_player.js'
-        init()
-    </script>
-    <div>
-        ESDF to move
-        AZ to zoom
-        WR to rotate
-        C to switch camera
-    </div>
+    <h1>Train Simulator</h1>
+    <ul>
+        <li><a href="single.html">Single-player</a></li>
+        <li><a href="multi.html">Multi-player</a></li>
+    </ul>
 </body>
 </html>

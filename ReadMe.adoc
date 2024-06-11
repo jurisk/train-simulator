@@ -66,10 +66,20 @@ cargo install wasm-bindgen-cli
 
 === WASM build
 
+Later: Consider using `wasm-pack` and `wasm-opt` as described in `enfync` docs.
+
+From https://github.com/UkoeHB/enfync?tab=readme-ov-file#recommended-wasm-build[enfync]:
+
 [source,bash]
 ----
-cargo build --profile wasm-release --target wasm32-unknown-unknown --bin client_single_player --bin client_simplenet_graphical
+rustup target install wasm32-unknown-unknown
+----
+
+[source,bash]
+----
+cargo build --profile wasm-release --target wasm32-unknown-unknown --package client-single-player --package networking-simplenet-client --bin client_single_player --bin client_simplenet_graphical
 wasm-bindgen --out-name client_single_player --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_single_player.wasm
+wasm-bindgen --out-name client_simplenet_graphical --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_simplenet_graphical.wasm
 ----
 
 === Dependency tree
