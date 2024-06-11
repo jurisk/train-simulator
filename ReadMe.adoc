@@ -1,4 +1,5 @@
 = Train Simulator
+:toc:
 
 == CI/CD Status
 
@@ -41,7 +42,7 @@ cargo run --features bevy/dynamic_linking --package networking-client --bin clie
 cargo run --features bevy/dynamic_linking --package client-single-player --bin client_single_player
 ----
 
-=== Prerequisites
+=== Install Prerequisites
 
 On macOS:
 
@@ -102,7 +103,7 @@ cargo install cargo-modules
 cargo modules dependencies --no-externs --no-fns --no-sysroot --no-traits --no-types --no-uses --package game-logic > game-logic-module.dot
 ----
 
-=== Run as Docker
+=== Package and run as Docker
 
 Building and running the Docker image:
 
@@ -122,14 +123,24 @@ docker system prune -f
 docker builder prune -f
 ----
 
-== Deploy to Google Cloud Engine
+== Deploy to Google Cloud Platform
 
-Initially, install https://cloud.google.com/sdk/docs/install-sdk[Google Cloud SDK].
+=== Overall pre-requisites
+
+Install https://cloud.google.com/sdk/docs/install-sdk[Google Cloud SDK].
 
 [source,bash]
 ----
 gcloud auth login
 gcloud config set project train-simulator-gcp
+----
+
+=== Deploy to Google Compute Engine
+
+==== Initial setup
+
+[source,bash]
+----
 gcloud services enable artifactregistry.googleapis.com
 gcloud services enable compute.googleapis.com
 gcloud auth configure-docker
@@ -149,7 +160,7 @@ docker ps
 gcloud compute firewall-rules create allow-http --allow tcp:8080,tcp:5000 --target-tags game-server
 ----
 
-Redeploy:
+==== Redeploy
 
 [source,bash]
 ----
@@ -159,4 +170,13 @@ docker push gcr.io/train-simulator-gcp/train-simulator
 gcloud compute instances update-container train-simulator-instance-1 --container-image gcr.io/train-simulator-gcp/train-simulator:latest --zone us-east1
 gcloud compute instances describe train-simulator-instance-1 --zone us-east1-c
 gcloud compute instances describe train-simulator-instance-1 --zone us-east1-c --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
+----
+
+==== Stop & delete
+
+[source,bash]
+----
+gcloud compute instances stop train-simulator-instance-1 --zone us-east1-c
+gcloud compute instances delete train-simulator-instance-1 --zone us-east1-c
+gcloud services disable compute.googleapis.com --force
 ----
