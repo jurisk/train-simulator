@@ -1,4 +1,4 @@
-= Useful Commands
+= Train Simulator
 
 == CI/CD Status
 
@@ -122,19 +122,41 @@ docker system prune -f
 docker builder prune -f
 ----
 
-=== Deploy to Fly.io
+== Deploy to Google Cloud Engine
 
-Initially:
+Initially, install https://cloud.google.com/sdk/docs/install-sdk[Google Cloud SDK].
 
 [source,bash]
 ----
-fly launch
-fly scale count 1
+gcloud auth login
+gcloud config set project train-simulator-gcp
+gcloud services enable artifactregistry.googleapis.com
+gcloud services enable compute.googleapis.com
+gcloud auth configure-docker
+docker build --tag train-simulator .
+docker tag train-simulator gcr.io/train-simulator-gcp/train-simulator
+docker push gcr.io/train-simulator-gcp/train-simulator
+gcloud compute instances create-with-container train-simulator-instance-1 --container-image gcr.io/train-simulator-gcp/train-simulator --zone us-east1-c --tags game-server --machine-type e2-micro
+gcloud compute instances describe train-simulator-instance-1 --zone us-east1-c --format="get(machineType)"
+gcloud compute ssh train-simulator-instance-1 --zone us-east1-c
+----
+
+From within the instance:
+
+[source,bash]
+----
+docker ps
+gcloud compute firewall-rules create allow-http --allow tcp:8080,tcp:5000 --target-tags game-server
 ----
 
 Redeploy:
 
 [source,bash]
 ----
-fly deploy
+docker build --tag train-simulator .
+docker tag train-simulator gcr.io/train-simulator-gcp/train-simulator
+docker push gcr.io/train-simulator-gcp/train-simulator
+gcloud compute instances update-container train-simulator-instance-1 --container-image gcr.io/train-simulator-gcp/train-simulator:latest --zone us-east1
+gcloud compute instances describe train-simulator-instance-1 --zone us-east1-c
+gcloud compute instances describe train-simulator-instance-1 --zone us-east1-c --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
 ----
