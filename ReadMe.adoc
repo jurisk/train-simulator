@@ -32,7 +32,7 @@ cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W c
 
 Reminder. Do not forget to use `--features bevy/dynamic_linking` when running from the IDE.
 
-TODO: Not sure if `--features bevy/dynamic_linking` works with simplenet.
+TODO: Not sure if `--features bevy/dynamic_linking` works with `bevy_simplenet`.
 
 [source,bash]
 ----
@@ -68,14 +68,7 @@ cargo install wasm-bindgen-cli
 
 === WASM build
 
-Later: Consider using `wasm-pack` and `wasm-opt` as described in `enfync` docs.
-
-From https://github.com/UkoeHB/enfync?tab=readme-ov-file#recommended-wasm-build[enfync]:
-
-[source,bash]
-----
-rustup target install wasm32-unknown-unknown
-----
+Later: Consider using `wasm-pack` and `wasm-opt` as described in https://github.com/UkoeHB/enfync?tab=readme-ov-file#recommended-wasm-build[`enfync` docs]:
 
 [source,bash]
 ----
@@ -131,9 +124,17 @@ docker builder prune -f
 
 === Deploy to Fly.io
 
+Initially:
+
 [source,bash]
 ----
 fly launch
-fly deploy
 fly scale count 1
+----
+
+Redeploy:
+
+[source,bash]
+----
+fly deploy
 ----
