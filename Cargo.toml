@@ -5,6 +5,7 @@ members = [
     "shared/domain",
     "shared/util",
     # Later: We actually wanted to have `networking/renet` and `networking/simplenet`, but asset loading relative paths became more complicated then
+    # TODO: Probably can remove `renet`
     "networking-renet/client",
     "networking-renet/server",
     "networking-renet/shared",

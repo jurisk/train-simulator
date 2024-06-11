@@ -128,3 +128,11 @@ Pruning, as Rancher tends to eat up all available space:
 docker system prune -f
 docker builder prune -f
 ----
+
+=== Deploy to Fly.io
+
+[source,bash]
+----
+fly launch
+fly deploy
+----

@@ -17,4 +17,5 @@ impl ChannelPack for GameChannel {
     type ServerResponse = ();
 }
 
+// TODO: Migrate to 8080/tcp, share with static file serving
 pub const WEBSOCKETS_PORT: u16 = 5000;
