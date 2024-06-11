@@ -11,7 +11,7 @@ networking-simplenet-shared = { path = "../shared" }
 game-logic = { path = "../../game/logic" }
 shared-domain = { path = "../../shared/domain" }
 
-bevy_simplenet = { version = "0.9.2", default-features = false, features = ["bevy", "server"] }
+bevy_simplenet = { version = "0.11.0", default-features = false, features = ["bevy", "server"] }
 url.workspace = true
 enfync.workspace = true
 bincode.workspace = true

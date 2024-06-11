@@ -29,7 +29,7 @@ RUN cargo build --release --bin server_simplenet_console
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bookworm-slim AS runtime
-EXPOSE 48888/tcp
+EXPOSE 5000/tcp
 EXPOSE 8080/tcp
 WORKDIR app
 COPY --from=builder /app/target/release/server_simplenet_console /usr/local/bin

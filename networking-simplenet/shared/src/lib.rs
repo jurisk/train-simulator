@@ -28,4 +28,4 @@ impl ChannelPack for TestChannel {
     type ServerResponse = TestServerResponse;
 }
 
-pub const DEFAULT_PORT: u16 = 48888;
+pub const DEFAULT_PORT: u16 = 5000;
