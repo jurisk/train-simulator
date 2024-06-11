@@ -1,15 +1,30 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
+use axum::Router;
 use bevy::app::App;
 use bevy::log::LogPlugin;
+use bevy::prelude::info;
 use bevy::MinimalPlugins;
 use networking_simplenet_server::MultiplayerSimpleNetServerPlugin;
-use networking_simplenet_shared::DEFAULT_PORT;
+use networking_simplenet_shared::WEBSOCKETS_PORT;
+use tower_http::services::ServeDir;
 
-fn main() {
+#[allow(clippy::expect_used)]
+#[tokio::main]
+async fn main() {
+    let bevy_thread = std::thread::spawn(|| {
+        run_bevy();
+    });
+
+    run_axum().await;
+
+    bevy_thread.join().expect("Bevy thread panicked");
+}
+
+fn run_bevy() {
     let args: Vec<String> = std::env::args().collect();
     let address = match args.get(1).cloned() {
-        None => SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), DEFAULT_PORT),
+        None => SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), WEBSOCKETS_PORT),
         Some(address_string) => {
             address_string
                 .parse()
@@ -24,4 +39,22 @@ fn main() {
     app.add_plugins(MultiplayerSimpleNetServerPlugin { address });
 
     app.run();
+}
+
+async fn serve(app: Router, port: u16) {
+    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), port);
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    info!("listening on {}", listener.local_addr().unwrap());
+    axum::serve(listener, app)
+        .await
+        .unwrap();
+}
+
+async fn run_axum() {
+    let router = make_router().await;
+    serve(router, 8080).await;
+}
+
+async fn make_router() -> Router {
+    Router::new().nest_service("/", ServeDir::new("static"))
 }

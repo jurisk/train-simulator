@@ -2,12 +2,12 @@ use bevy::prelude::App;
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
 use networking_simplenet_client::MultiplayerSimpleNetClientPlugin;
-use networking_simplenet_shared::DEFAULT_PORT;
+use networking_simplenet_shared::WEBSOCKETS_PORT;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
     let url = match args.get(1).cloned() {
-        None => url::Url::parse(format!("ws://127.0.0.1:{DEFAULT_PORT}/ws").as_str())?,
+        None => url::Url::parse(format!("ws://127.0.0.1:{WEBSOCKETS_PORT}/ws").as_str())?,
         Some(address_string) => {
             address_string
                 .parse()

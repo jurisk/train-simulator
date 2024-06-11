@@ -17,4 +17,4 @@ impl ChannelPack for GameChannel {
     type ServerResponse = ();
 }
 
-pub const DEFAULT_PORT: u16 = 5000;
+pub const WEBSOCKETS_PORT: u16 = 5000;
