@@ -4,14 +4,9 @@ members = [
     "client/graphics",
     "shared/domain",
     "shared/util",
-    # Later: We actually wanted to have `networking/renet` and `networking/simplenet`, but asset loading relative paths became more complicated then
-    # TODO: Probably can remove `renet`
-    "networking-renet/client",
-    "networking-renet/server",
-    "networking-renet/shared",
-    "networking-simplenet/client",
-    "networking-simplenet/server",
-    "networking-simplenet/shared",
+    "networking/client",
+    "networking/server",
+    "networking/shared",
 ]
 resolver = "2"
 
@@ -32,15 +27,10 @@ bimap = "0.6.3"
 bincode = "1.3.3"
 bevy_mod_raycast = "0.17.0"
 
-# Should only be imported by `networking-simplenet` code
+# Should only be imported by `networking` code
 # Later: Sort out TLS and features in general, see: https://github.com/UkoeHB/bevy_simplenet/tree/master?tab=readme-ov-file#features
 enfync = "0.1.0"
 url = "2.4.1"
-
-# Should only be imported by `networking-renet` code
-bevy_renet = "0.0.11"
-bevy_egui = "0.25.0" # For renet_visualizer
-renet_visualizer = { version = "0.0.8", features = ["bevy"] }
 
 # Should only be imported by the `networking-*` code
 axum = "0.7.5"

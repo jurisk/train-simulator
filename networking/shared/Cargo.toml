@@ -1,5 +1,5 @@
 [package]
-name = "networking-simplenet-shared"
+name = "networking-shared"
 version.workspace = true
 authors.workspace = true
 license.workspace = true

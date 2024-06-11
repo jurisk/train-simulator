@@ -1,8 +1,8 @@
 use bevy::prelude::App;
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
-use networking_simplenet_client::MultiplayerSimpleNetClientPlugin;
-use networking_simplenet_shared::WEBSOCKETS_PORT;
+use networking_client::MultiplayerSimpleNetClientPlugin;
+use networking_shared::WEBSOCKETS_PORT;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();

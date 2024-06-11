@@ -108,7 +108,7 @@ impl Add<TileCoordsXZ> for TileCoordsXZ {
     }
 }
 
-// Later: We initially wanted it to be Uuid, but renet uses u64, so we can stick with that for now for easier compatibility
+// Later: We initially wanted it to be Uuid, but bevy_simplenet uses u128, so we can stick with that for now for easier compatibility
 #[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub struct ClientId(u128);
 
@@ -116,22 +116,12 @@ pub struct ClientId(u128);
 impl ClientId {
     #[must_use]
     pub fn random() -> Self {
-        Self::from_u64(fastrand::u64(.. u64::MAX))
+        Self::from_u128(fastrand::u128(.. u128::MAX))
     }
 
     #[must_use]
     pub fn from_u128(raw: u128) -> Self {
         Self(raw)
-    }
-
-    #[must_use]
-    pub fn from_u64(raw: u64) -> Self {
-        Self(raw as u128)
-    }
-
-    #[must_use]
-    pub fn as_u64(self) -> u64 {
-        self.0 as u64
     }
 
     #[must_use]

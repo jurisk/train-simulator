@@ -1,5 +1,5 @@
 [package]
-name = "networking-renet-server"
+name = "networking-server"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
@@ -7,9 +7,21 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-shared-domain = { path = "../../shared/domain" }
-networking-renet-shared = { path = "../shared" }
+networking-shared = { path = "../shared" }
 game-logic = { path = "../../game/logic" }
+shared-domain = { path = "../../shared/domain" }
+
+bevy_simplenet = { version = "0.11.0", default-features = false, features = ["bevy", "server"] }
+url.workspace = true
+enfync.workspace = true
+bincode.workspace = true
+serde.workspace = true
+
+axum.workspace = true
+tokio.workspace = true
+
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.5.0", features = ["fs"] }
 
 bevy = { version = "0.13.2", default-features = false, features = [
     "bevy_core_pipeline",
@@ -26,13 +38,3 @@ bevy = { version = "0.13.2", default-features = false, features = [
     "zstd",
     "x11",
 ] }
-
-bevy_renet.workspace = true
-bevy_egui.workspace = true
-renet_visualizer.workspace = true
-bincode.workspace = true
-serde.workspace = true
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-axum.workspace = true
-tokio.workspace = true

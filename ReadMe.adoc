@@ -36,8 +36,8 @@ TODO: Not sure if `--features bevy/dynamic_linking` works with simplenet.
 
 [source,bash]
 ----
-cargo run --features bevy/dynamic_linking --package networking-simplenet-server --bin server_simplenet_console
-cargo run --features bevy/dynamic_linking --package networking-simplenet-client --bin client_simplenet_graphical
+cargo run --features bevy/dynamic_linking --package networking-server --bin server_console
+cargo run --features bevy/dynamic_linking --package networking-client --bin client_graphical
 cargo run --features bevy/dynamic_linking --package client-single-player --bin client_single_player
 ----
 
@@ -79,9 +79,9 @@ rustup target install wasm32-unknown-unknown
 
 [source,bash]
 ----
-cargo build --profile wasm-release --target wasm32-unknown-unknown --package client-single-player --package networking-simplenet-client --bin client_single_player --bin client_simplenet_graphical
+cargo build --profile wasm-release --target wasm32-unknown-unknown --package client-single-player --package networking-client --bin client_single_player --bin client_graphical
 wasm-bindgen --out-name client_single_player --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_single_player.wasm
-wasm-bindgen --out-name client_simplenet_graphical --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_simplenet_graphical.wasm
+wasm-bindgen --out-name client_graphical --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_graphical.wasm
 ----
 
 === Dependency tree
@@ -135,4 +135,5 @@ docker builder prune -f
 ----
 fly launch
 fly deploy
+fly scale count 1
 ----

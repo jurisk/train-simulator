@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn test_default_terrain_can_be_deserialised() {
-        let level_json = include_str!("../../../game/logic/assets/map_levels/default.json");
+        let level_json = include_str!("../../../assets/map_levels/default.json");
         let level = serde_json::from_str::<MapLevel>(level_json)
             .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
         assert!(level.is_valid());

@@ -5,8 +5,8 @@ use bevy::app::App;
 use bevy::log::LogPlugin;
 use bevy::prelude::info;
 use bevy::MinimalPlugins;
-use networking_simplenet_server::MultiplayerSimpleNetServerPlugin;
-use networking_simplenet_shared::WEBSOCKETS_PORT;
+use networking_server::MultiplayerSimpleNetServerPlugin;
+use networking_shared::WEBSOCKETS_PORT;
 use tower_http::services::ServeDir;
 
 #[allow(clippy::expect_used)]
@@ -41,20 +41,15 @@ fn run_bevy() {
     app.run();
 }
 
+#[allow(clippy::unwrap_used)]
 async fn serve(app: Router, port: u16) {
     let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), port);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     info!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app)
-        .await
-        .unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
 async fn run_axum() {
-    let router = make_router().await;
+    let router = Router::new().nest_service("/", ServeDir::new("static"));
     serve(router, 8080).await;
-}
-
-async fn make_router() -> Router {
-    Router::new().nest_service("/", ServeDir::new("static"))
 }

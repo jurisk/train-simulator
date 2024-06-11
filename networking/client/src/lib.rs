@@ -7,7 +7,7 @@ use bevy_simplenet::{
 };
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::states::ClientState;
-use networking_simplenet_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
+use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::server_response::ServerResponse;
 use url::Url;
 

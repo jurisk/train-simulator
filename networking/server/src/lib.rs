@@ -9,7 +9,7 @@ use bevy_simplenet::{
     ServerFactory, ServerReport,
 };
 use game_logic::server_state::ServerState;
-use networking_simplenet_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
+use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
 use shared_domain::server_response::ServerResponseWithClientIds;
 use shared_domain::ClientId;

@@ -26,10 +26,10 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 # Build application
 COPY . .
-RUN cargo build --release  --package networking-simplenet-server --bin server_simplenet_console
-RUN cargo build --profile wasm-release --target wasm32-unknown-unknown --package client-single-player --package networking-simplenet-client --bin client_single_player --bin client_simplenet_graphical
+RUN cargo build --release  --package networking-server --bin server_console
+RUN cargo build --profile wasm-release --target wasm32-unknown-unknown --package client-single-player --package networking-client --bin client_single_player --bin client_graphical
 RUN wasm-bindgen --out-name client_single_player --out-dir static/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_single_player.wasm
-RUN wasm-bindgen --out-name client_simplenet_graphical --out-dir static/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_simplenet_graphical.wasm
+RUN wasm-bindgen --out-name client_graphical --out-dir static/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_graphical.wasm
 RUN cp -r assets static
 
 # We do not need the Rust toolchain to run the binary!
@@ -37,6 +37,6 @@ FROM debian:bookworm-slim AS runtime
 EXPOSE 5000/tcp
 EXPOSE 8080/tcp
 WORKDIR app
-COPY --from=builder /app/target/release/server_simplenet_console /app
+COPY --from=builder /app/target/release/server_console /app
 COPY --from=builder /app/static /app/static
-ENTRYPOINT ["/app/server_simplenet_console"]
+ENTRYPOINT ["/app/server_console"]
