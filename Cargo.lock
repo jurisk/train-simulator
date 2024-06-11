@@ -3394,6 +3394,7 @@ dependencies = [
  "bincode",
  "client-graphics",
  "enfync",
+ "fastrand",
  "networking-simplenet-shared",
  "serde",
  "shared-domain",

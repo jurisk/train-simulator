@@ -1,5 +1,3 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use bevy::app::{App, Update};
 use bevy::prelude::{
     error, info, trace, warn, EventReader, EventWriter, NextState, Plugin, ResMut,
@@ -21,10 +19,8 @@ pub struct MultiplayerSimpleNetClientPlugin {
 
 impl Plugin for MultiplayerSimpleNetClientPlugin {
     fn build(&self, app: &mut App) {
-        let client_id = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis();
+        // Note that examples use SystemTime::now(), but it fails on WASM: https://github.com/rust-lang/rust/issues/48564
+        let client_id = fastrand::u128(..);
         let client = client_factory().new_client(
             enfync::builtin::Handle::default(), // automatically selects native/WASM runtime
             self.url.clone(),
