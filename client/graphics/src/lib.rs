@@ -32,7 +32,7 @@ impl Plugin for ClientGraphicsPlugin {
         let asset_path_prefix = if cfg!(target_arch = "wasm32") {
             ""
         } else {
-            "../../client/graphics/"
+            "../../"
         };
 
         app.add_plugins(

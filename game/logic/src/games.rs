@@ -21,7 +21,7 @@ impl Games {
     #[must_use]
     #[allow(clippy::missing_panics_doc, clippy::new_without_default)]
     pub(crate) fn new() -> Self {
-        let level_json = include_str!("../assets/map_levels/default.json");
+        let level_json = include_str!("../../../assets/map_levels/default.json");
         let default_level = serde_json::from_str::<MapLevel>(level_json)
             .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
         assert!(default_level.is_valid());
