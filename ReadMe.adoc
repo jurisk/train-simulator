@@ -188,6 +188,22 @@ gcloud services disable compute.googleapis.com --force
 
 [source,bash]
 ----
-helm install game-service ./helm/game-service
-helm upgrade game-service ./helm/game-service
+gcloud iam service-accounts create gcr-reader --display-name "GCR Reader"
+gcloud projects add-iam-policy-binding train-simulator-gcp --member="serviceAccount:gcr-reader@train-simulator-gcp.iam.gserviceaccount.com" --role="roles/artifactregistry.reader"
+gcloud iam service-accounts keys create gcp-reader-key-file.json --iam-account gcr-reader@train-simulator-gcp.iam.gserviceaccount.com
+kubectl create secret docker-registry gcr-json-key --docker-server=gcr.io --docker-username=_json_key --docker-password="$(cat gcp-reader-key-file.json)" --docker-email=gcr-reader@train-simulator-gcp.iam.gserviceaccount.com
+kubectl get secret gcr-json-key
+helm install game-service ./charts/game-service
+helm uninstall game-service
+----
+
+[source,bash]
+----
+helm upgrade game-service ./charts/game-service
+kubectl get pods
+kubectl get services
+kubectl get ingress
+kubectl get ingress game-service
+kubectl describe ingress game-service
+kubectl get ingress game-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
 ----
