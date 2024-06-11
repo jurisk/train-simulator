@@ -31,9 +31,10 @@ cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W c
 
 === Running
 
-Reminder. Do not forget to use `--features bevy/dynamic_linking` when running from the IDE.
-
-TODO: Not sure if `--features bevy/dynamic_linking` works with `bevy_simplenet`.
+[NOTE]
+====
+Do not forget to use `--features bevy/dynamic_linking` when running from the IDE.
+====
 
 [source,bash]
 ----
@@ -179,4 +180,14 @@ gcloud compute instances describe train-simulator-instance-1 --zone us-east1-c -
 gcloud compute instances stop train-simulator-instance-1 --zone us-east1-c
 gcloud compute instances delete train-simulator-instance-1 --zone us-east1-c
 gcloud services disable compute.googleapis.com --force
+----
+
+== Deploy to Kubernetes
+
+#TODO: Incomplete section as I figure it out.#
+
+[source,bash]
+----
+helm install game-service ./helm/game-service
+helm upgrade game-service ./helm/game-service
 ----
