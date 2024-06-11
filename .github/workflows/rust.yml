@@ -60,16 +60,17 @@ jobs:
       - name: Build default target
         run: cargo build --verbose
 
-      - name: Build WASM target
+      - name: Build WASM targets
         run: cargo build --profile wasm-release --target wasm32-unknown-unknown --package client-single-player --package networking-simplenet-client --bin client_single_player --bin client_simplenet_graphical
 
-      # TODO: The location where you generate the bindings is wrong, move it elsewhere
       - name: Generate WASM bindings
         run: | 
-          wasm-bindgen --out-name client_single_player --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_single_player.wasm
-          wasm-bindgen --out-name client_simplenet_graphical --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_simplenet_graphical.wasm
+          wasm-bindgen --out-name client_single_player --out-dir static/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_single_player.wasm
+          wasm-bindgen --out-name client_simplenet_graphical --out-dir static/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_simplenet_graphical.wasm
 
-      # TODO: The location of the web assets is wrong, move it elsewhere
+      - name: Copy assets to web directory
+        run: cp -r assets static
+
       - name: Publish to GitHub pages at https://jurisk.github.io/train-simulator-pages/
         run: |
           git config --global user.email "jurisk@users.noreply.github.com"
@@ -77,8 +78,7 @@ jobs:
           git clone https://jurisk:${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}@github.com/jurisk/train-simulator-pages.git
           cd train-simulator-pages
           git rm -rf .
-          cp -r ../client/single-player/web/* .
-          cp -r ../client/graphics/assets .
+          cp -r ../static/* .
           git add .
           ls -lR
           git status
