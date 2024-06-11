@@ -32,11 +32,13 @@ cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W c
 
 Reminder. Do not forget to use `--features bevy/dynamic_linking` when running from the IDE.
 
+TODO: Not sure if `--features bevy/dynamic_linking` works with simplenet.
+
 [source,bash]
 ----
-cargo run --features bevy/dynamic_linking --bin server_simplenet_console
-cargo run --features bevy/dynamic_linking --bin client_simplenet_graphical
-cargo run --features bevy/dynamic_linking --bin client_single_player
+cargo run --features bevy/dynamic_linking --package networking-simplenet-server --bin server_simplenet_console
+cargo run --features bevy/dynamic_linking --package networking-simplenet-client --bin client_simplenet_graphical
+cargo run --features bevy/dynamic_linking --package client-single-player --bin client_single_player
 ----
 
 === Prerequisites

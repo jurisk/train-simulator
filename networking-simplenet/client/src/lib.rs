@@ -7,11 +7,11 @@ use bevy_simplenet::{
 };
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::states::ClientState;
-use networking_simplenet_shared::{TestChannel, TestClientMsg, TestConnectMsg, TestServerMsg};
+use networking_simplenet_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::server_response::ServerResponse;
 use url::Url;
 
-pub type TestClientEvent = ClientEventFrom<TestChannel>;
+pub type TestClientEvent = ClientEventFrom<GameChannel>;
 
 pub struct MultiplayerSimpleNetClientPlugin {
     pub url: Url,
@@ -30,7 +30,7 @@ impl Plugin for MultiplayerSimpleNetClientPlugin {
                 reconnect_on_server_close: true,
                 ..Default::default()
             },
-            TestConnectMsg(String::from("hello")),
+            (),
         );
 
         app.insert_resource(client);
@@ -43,14 +43,14 @@ impl Plugin for MultiplayerSimpleNetClientPlugin {
 #[allow(clippy::needless_pass_by_value)]
 pub fn client_send_player_commands(
     mut player_commands: EventReader<ClientMessageEvent>,
-    client: ResMut<Client<TestChannel>>,
+    client: ResMut<Client<GameChannel>>,
 ) {
     for command in player_commands.read() {
         let command_message = bincode::serialize(&command.command);
         match command_message {
             Ok(command_message) => {
                 info!("Sending command: {command:?}");
-                client.send(TestClientMsg(command_message));
+                client.send(EncodedClientMsg(command_message));
             },
             Err(error) => error!("Failed to serialize {command:?}: {error:?}"),
         }
@@ -58,7 +58,7 @@ pub fn client_send_player_commands(
 }
 
 fn read_on_client(
-    mut client: ResMut<Client<TestChannel>>,
+    mut client: ResMut<Client<GameChannel>>,
     mut client_state: ResMut<NextState<ClientState>>,
     mut server_messages: EventWriter<ServerMessageEvent>,
 ) {
@@ -77,7 +77,7 @@ fn read_on_client(
                     ClientReport::IsDead(_pending_requests) => panic!("Client is dead"),
                 }
             },
-            TestClientEvent::Msg(TestServerMsg(message)) => {
+            TestClientEvent::Msg(EncodedServerMsg(message)) => {
                 match bincode::deserialize::<ServerResponse>(&message) {
                     Ok(response) => {
                         info!("Received server message: {response:?}");
@@ -99,7 +99,8 @@ fn read_on_client(
     }
 }
 
-fn client_factory() -> ClientFactory<TestChannel> {
+fn client_factory() -> ClientFactory<GameChannel> {
     // You must use the same protocol version string as the server factory.
-    ClientFactory::<TestChannel>::new("test")
+    info!("CARGO_PKG_VERSION: {}", env!("CARGO_PKG_VERSION"));
+    ClientFactory::<GameChannel>::new("test")
 }

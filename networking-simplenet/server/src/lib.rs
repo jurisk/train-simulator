@@ -9,12 +9,12 @@ use bevy_simplenet::{
     ServerFactory, ServerReport,
 };
 use game_logic::server_state::ServerState;
-use networking_simplenet_shared::{TestChannel, TestClientMsg, TestServerMsg};
+use networking_simplenet_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
 use shared_domain::server_response::ServerResponseWithClientIds;
 use shared_domain::ClientId;
 
-pub type TestServerEvent = ServerEventFrom<TestChannel>;
+pub type TestServerEvent = ServerEventFrom<GameChannel>;
 
 #[derive(Resource)]
 struct ServerStateResource(pub ServerState);
@@ -49,7 +49,7 @@ impl Plugin for MultiplayerSimpleNetServerPlugin {
 }
 
 fn read_on_server(
-    mut server: ResMut<Server<TestChannel>>,
+    mut server: ResMut<Server<GameChannel>>,
     mut server_state_resource: ResMut<ServerStateResource>,
 ) {
     let ServerStateResource(ref mut server_state) = server_state_resource.as_mut();
@@ -64,7 +64,7 @@ fn read_on_server(
                     ServerReport::Disconnected => info!("Disconnected {session_id}"),
                 }
             },
-            TestServerEvent::Msg(TestClientMsg(message)) => {
+            TestServerEvent::Msg(EncodedClientMsg(message)) => {
                 match bincode::deserialize::<ClientCommand>(&message) {
                     Ok(command) => {
                         info!("Received {command:?}");
@@ -88,7 +88,7 @@ fn read_on_server(
 }
 
 fn process_responses(
-    server: &mut Server<TestChannel>,
+    server: &mut Server<GameChannel>,
     responses: Vec<ServerResponseWithClientIds>,
 ) {
     for response in responses {
@@ -96,7 +96,7 @@ fn process_responses(
         for client_id in response.client_ids {
             match bincode::serialize(&response.response) {
                 Ok(encoded) => {
-                    server.send(client_id.as_u128(), TestServerMsg(encoded));
+                    server.send(client_id.as_u128(), EncodedServerMsg(encoded));
                 },
                 Err(error) => {
                     error!("Failed to deserialize {:?}: {error}", response.response);
@@ -106,8 +106,9 @@ fn process_responses(
     }
 }
 
-fn server_factory() -> ServerFactory<TestChannel> {
+fn server_factory() -> ServerFactory<GameChannel> {
     // It is recommended to make server/client factories with baked-in protocol versions (e.g.
     //   with env!("CARGO_PKG_VERSION")).
-    ServerFactory::<TestChannel>::new("test")
+    info!("CARGO_PKG_VERSION: {}", env!("CARGO_PKG_VERSION"));
+    ServerFactory::<GameChannel>::new("test")
 }

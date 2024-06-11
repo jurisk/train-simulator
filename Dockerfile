@@ -25,7 +25,7 @@ RUN apt-get install -y lld clang
 RUN cargo chef cook --release --recipe-path recipe.json
 # Build application
 COPY . .
-RUN cargo build --release --bin server_simplenet_console
+RUN cargo build --release  --package networking-simplenet-server --bin server_simplenet_console
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bookworm-slim AS runtime
