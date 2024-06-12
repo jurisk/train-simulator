@@ -3309,6 +3309,7 @@ dependencies = [
  "serde",
  "shared-domain",
  "url",
+ "web-sys",
 ]
 
 [[package]]

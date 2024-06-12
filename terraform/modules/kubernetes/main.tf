@@ -2,6 +2,7 @@
 resource "google_project_service" "container" {
   project = var.gcp_project
   service = "container.googleapis.com"
+  disable_on_destroy = false
 }
 
 resource "google_container_cluster" "primary" {
@@ -9,6 +10,7 @@ resource "google_container_cluster" "primary" {
   location = var.gcp_zone
 
   initial_node_count = 1
+  deletion_protection = false
 
   node_config {
     machine_type = "e2-micro"

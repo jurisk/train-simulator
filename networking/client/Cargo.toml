@@ -19,3 +19,6 @@ url.workspace = true
 bincode.workspace = true
 serde.workspace = true
 fastrand.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = { version = "0.3", features = ["Window", "Location", "console"] }

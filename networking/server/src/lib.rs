@@ -107,7 +107,7 @@ fn process_responses(
 }
 
 fn server_factory() -> ServerFactory<GameChannel> {
-    // It is recommended to make server/client factories with baked-in protocol versions (e.g.
+    // TODO: It is recommended to make server/client factories with baked-in protocol versions (e.g.
     //   with env!("CARGO_PKG_VERSION")).
     info!("CARGO_PKG_VERSION: {}", env!("CARGO_PKG_VERSION"));
     ServerFactory::<GameChannel>::new("test")

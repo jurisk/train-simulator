@@ -1,5 +1,7 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
+use axum::response::IntoResponse;
+use axum::routing::get;
 use axum::Router;
 use bevy::app::App;
 use bevy::log::LogPlugin;
@@ -50,6 +52,19 @@ async fn serve(app: Router, port: u16) {
 }
 
 async fn run_axum() {
-    let router = Router::new().nest_service("/", ServeDir::new("static"));
+    let router = Router::new()
+        .nest_service("/", ServeDir::new("static"))
+        .route("/health", get(health_check))
+        .route("/liveness", get(liveness_check));
     serve(router, 8080).await;
+}
+
+async fn health_check() -> impl IntoResponse {
+    info!("Health check OK");
+    "OK"
+}
+
+async fn liveness_check() -> impl IntoResponse {
+    info!("Liveness check OK");
+    "OK"
 }

@@ -2,6 +2,7 @@
 resource "google_project_service" "compute" {
   project = var.gcp_project
   service = "compute.googleapis.com"
+  disable_on_destroy = false
 }
 
 resource "google_compute_address" "static_ip" {

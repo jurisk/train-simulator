@@ -75,8 +75,8 @@ Later: Consider using `wasm-pack` and `wasm-opt` as described in https://github.
 [source,bash]
 ----
 cargo build --profile wasm-release --target wasm32-unknown-unknown --package client-single-player --package networking-client --bin client_single_player --bin client_graphical
-wasm-bindgen --out-name client_single_player --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_single_player.wasm
-wasm-bindgen --out-name client_graphical --out-dir client/single-player/web/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_graphical.wasm
+wasm-bindgen --out-name client_single_player --out-dir static/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_single_player.wasm
+wasm-bindgen --out-name client_graphical --out-dir static/wasm-build --target web target/wasm32-unknown-unknown/wasm-release/client_graphical.wasm
 ----
 
 === Dependency tree
@@ -193,7 +193,10 @@ gcloud projects add-iam-policy-binding train-simulator-gcp --member="serviceAcco
 gcloud iam service-accounts keys create gcp-reader-key-file.json --iam-account gcr-reader@train-simulator-gcp.iam.gserviceaccount.com
 kubectl create secret docker-registry gcr-json-key --docker-server=gcr.io --docker-username=_json_key --docker-password="$(cat gcp-reader-key-file.json)" --docker-email=gcr-reader@train-simulator-gcp.iam.gserviceaccount.com
 kubectl get secret gcr-json-key
-helm install game-service ./charts/game-service
+helm lint ./charts/game-service
+helm template game-service ./charts/game-service
+helm install game-service ./charts/game-service --set environment=local
+helm install game-service ./charts/game-service --set environment=production
 helm uninstall game-service
 ----
 
@@ -219,6 +222,8 @@ terraform plan
 terraform apply
 terraform refresh
 terraform output
+terraform state list
+terraform destroy
 ----
 
 Set up the DNS records at the registrar (we could do it using Terraform, but that can wait):

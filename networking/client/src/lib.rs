@@ -100,7 +100,7 @@ fn read_on_client(
 }
 
 fn client_factory() -> ClientFactory<GameChannel> {
-    // You must use the same protocol version string as the server factory.
+    // TODO: You must use the same protocol version string as the server factory.
     info!("CARGO_PKG_VERSION: {}", env!("CARGO_PKG_VERSION"));
     ClientFactory::<GameChannel>::new("test")
 }
