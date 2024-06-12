@@ -58,7 +58,7 @@ provider "helm" {
 
 resource "helm_release" "game_service_helm_release" {
   name       = "game-service-release"
-  chart      = "../../../charts/game-service"
+  chart      = "../charts/game-service"
   namespace  = "default"
 
   set {
