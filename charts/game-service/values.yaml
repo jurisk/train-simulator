@@ -60,8 +60,15 @@ ingress:
     traefik.ingress.kubernetes.io/router.tls: "true"
     # kubernetes.io/tls-acme: "true"
   hosts:
-    # TODO: Depending on "environment", switch URLs
     - host: train-simulator.local
+      paths:
+        - path: /ws
+          port: 5000
+          pathType: Prefix
+        - path: /
+          port: 8080
+          pathType: Prefix
+    - host: ts.krikis.online
       paths:
         - path: /ws
           port: 5000
@@ -73,6 +80,9 @@ ingress:
     - secretName: train-simulator-tls
       hosts:
       - train-simulator.local
+    - secretName: ts-krikis-online-tls
+      hosts:
+      - ts.krikis.online
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

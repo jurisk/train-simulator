@@ -11,7 +11,7 @@ use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::server_response::ServerResponse;
 use url::Url;
 
-pub type TestClientEvent = ClientEventFrom<GameChannel>;
+pub type GameClientEvent = ClientEventFrom<GameChannel>;
 
 pub struct MultiplayerSimpleNetClientPlugin {
     pub url: Url,
@@ -64,7 +64,7 @@ fn read_on_client(
 ) {
     while let Some(client_event) = client.next() {
         match client_event {
-            TestClientEvent::Report(connection_report) => {
+            GameClientEvent::Report(connection_report) => {
                 info!("Connection report: {connection_report:?}");
 
                 match connection_report {
@@ -77,7 +77,7 @@ fn read_on_client(
                     ClientReport::IsDead(_pending_requests) => panic!("Client is dead"),
                 }
             },
-            TestClientEvent::Msg(EncodedServerMsg(message)) => {
+            GameClientEvent::Msg(EncodedServerMsg(message)) => {
                 match bincode::deserialize::<ServerResponse>(&message) {
                     Ok(response) => {
                         info!("Received server message: {response:?}");
@@ -88,19 +88,17 @@ fn read_on_client(
                     },
                 }
             },
-            TestClientEvent::Response(response, request_id) => {
+            GameClientEvent::Response(response, request_id) => {
                 warn!("Unexpected response: {response:?} {request_id}");
             },
-            TestClientEvent::Ack(request_id) => trace!("Ack: {request_id}"),
-            TestClientEvent::Reject(request_id) => trace!("Reject: {request_id}"),
-            TestClientEvent::SendFailed(request_id) => warn!("Send failed: {request_id}"),
-            TestClientEvent::ResponseLost(request_id) => warn!("Response lost: {request_id}"),
+            GameClientEvent::Ack(request_id) => trace!("Ack: {request_id}"),
+            GameClientEvent::Reject(request_id) => trace!("Reject: {request_id}"),
+            GameClientEvent::SendFailed(request_id) => warn!("Send failed: {request_id}"),
+            GameClientEvent::ResponseLost(request_id) => warn!("Response lost: {request_id}"),
         }
     }
 }
 
 fn client_factory() -> ClientFactory<GameChannel> {
-    // TODO: You must use the same protocol version string as the server factory.
-    info!("CARGO_PKG_VERSION: {}", env!("CARGO_PKG_VERSION"));
-    ClientFactory::<GameChannel>::new("test")
+    ClientFactory::<GameChannel>::new(env!("CARGO_PKG_VERSION"))
 }

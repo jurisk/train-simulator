@@ -14,7 +14,7 @@ use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
 use shared_domain::server_response::ServerResponseWithClientIds;
 use shared_domain::ClientId;
 
-pub type TestServerEvent = ServerEventFrom<GameChannel>;
+pub type GameServerEvent = ServerEventFrom<GameChannel>;
 
 #[derive(Resource)]
 struct ServerStateResource(pub ServerState);
@@ -56,7 +56,7 @@ fn read_on_server(
 
     while let Some((session_id, server_event)) = server.next() {
         match server_event {
-            TestServerEvent::Report(connection_report) => {
+            GameServerEvent::Report(connection_report) => {
                 match connection_report {
                     ServerReport::Connected(env, message) => {
                         info!("Connected {session_id} {env:?} {message:?}");
@@ -64,7 +64,7 @@ fn read_on_server(
                     ServerReport::Disconnected => info!("Disconnected {session_id}"),
                 }
             },
-            TestServerEvent::Msg(EncodedClientMsg(message)) => {
+            GameServerEvent::Msg(EncodedClientMsg(message)) => {
                 match bincode::deserialize::<ClientCommand>(&message) {
                     Ok(command) => {
                         info!("Received {command:?}");
@@ -80,7 +80,7 @@ fn read_on_server(
                     },
                 }
             },
-            TestServerEvent::Request(token, request) => {
+            GameServerEvent::Request(token, request) => {
                 error!("Unexpected request: {token:?} {request:?}");
             },
         }
@@ -107,8 +107,5 @@ fn process_responses(
 }
 
 fn server_factory() -> ServerFactory<GameChannel> {
-    // TODO: It is recommended to make server/client factories with baked-in protocol versions (e.g.
-    //   with env!("CARGO_PKG_VERSION")).
-    info!("CARGO_PKG_VERSION: {}", env!("CARGO_PKG_VERSION"));
-    ServerFactory::<GameChannel>::new("test")
+    ServerFactory::<GameChannel>::new(env!("CARGO_PKG_VERSION"))
 }
