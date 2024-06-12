@@ -57,6 +57,7 @@ ingress:
   className: "traefik"
   annotations:
     kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "true"
     # kubernetes.io/tls-acme: "true"
   hosts:
     # TODO: Depending on "environment", switch URLs

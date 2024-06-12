@@ -14,10 +14,11 @@ fn ws_url_from_window_location() -> Option<String> {
     let ws_url = origin_url.clone();
     if origin_url.protocol().starts_with(&"https") { // It can be "https:"...
         ws_url.set_protocol("wss");
+        // If it's `https` then we assume ingress is doing SSL termination and it stays on the same port
     } else {
         ws_url.set_protocol("ws");
+        ws_url.set_port(&format!("{WEBSOCKETS_PORT}"));
     }
-    ws_url.set_port(&format!("{WEBSOCKETS_PORT}"));
     ws_url.set_pathname("/ws");
 
     Some(ws_url.to_string().into())
