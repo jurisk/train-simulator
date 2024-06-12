@@ -207,3 +207,20 @@ kubectl get ingress game-service
 kubectl describe ingress game-service
 kubectl get ingress game-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
 ----
+
+[source,bash]
+----
+gcloud auth application-default login
+cd terraform
+terraform init
+terraform fmt
+terraform validate
+terraform plan
+----
+
+Set up the DNS records at the registrar (we could do it using Terraform, but that can wait):
+[source,bash]
+----
+gcloud dns managed-zones describe ts-krikis-online
+----
+
