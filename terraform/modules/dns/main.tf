@@ -12,3 +12,12 @@ resource "google_dns_managed_zone" "dns_zone" {
   visibility = "public"
   project    = var.gcp_project
 }
+
+resource "google_dns_record_set" "a_record" {
+  name         = "ts.krikis.online."
+  managed_zone = google_dns_managed_zone.dns_zone.name
+  type         = "A"
+  ttl          = 300
+  rrdatas      = [var.ip_address]
+  project      = var.gcp_project
+}

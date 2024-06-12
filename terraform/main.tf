@@ -1,6 +1,13 @@
 module "dns" {
   source      = "./modules/dns"
   gcp_project = var.gcp_project
+  ip_address  = module.network.static_ip_address
+}
+
+module "network" {
+  source      = "./modules/network"
+  gcp_project = var.gcp_project
+  gcp_region  = var.gcp_region
 }
 
 provider "google" {

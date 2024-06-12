@@ -3,7 +3,7 @@ variable "gcp_project" {
   type        = string
 }
 
-variable "ip_address" {
-  description = "The external IP address to associate with the DNS record"
+variable "gcp_region" {
+  description = "The Google Cloud region"
   type        = string
 }

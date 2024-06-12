@@ -216,11 +216,20 @@ terraform init
 terraform fmt
 terraform validate
 terraform plan
+terraform apply
+terraform refresh
+terraform output
 ----
 
 Set up the DNS records at the registrar (we could do it using Terraform, but that can wait):
 [source,bash]
 ----
 gcloud dns managed-zones describe ts-krikis-online
+dig ns-cloud-a1.googledomains.com +short
+dig ns-cloud-a2.googledomains.com +short
+dig ns-cloud-a3.googledomains.com +short
+dig ns-cloud-a4.googledomains.com +short
 ----
+
+Then https://cloud.google.com/dns/docs/update-name-servers#change-name-servers[change your domain registrar's name servers].
 
