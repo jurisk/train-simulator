@@ -124,7 +124,7 @@ docker system prune -f
 docker builder prune -f
 ----
 
-== Deploy to Google Cloud Platform
+== Deploy to Kubernetes on Google Cloud Platform
 
 === Overall pre-requisites
 
@@ -136,53 +136,7 @@ gcloud auth login
 gcloud config set project train-simulator-gcp
 ----
 
-=== Deploy to Google Compute Engine
-
-==== Initial setup
-
-[source,bash]
-----
-gcloud services enable artifactregistry.googleapis.com
-gcloud services enable compute.googleapis.com
-gcloud auth configure-docker
-docker build --tag train-simulator .
-docker tag train-simulator gcr.io/train-simulator-gcp/train-simulator
-docker push gcr.io/train-simulator-gcp/train-simulator
-gcloud compute instances create-with-container train-simulator-instance-1 --container-image gcr.io/train-simulator-gcp/train-simulator --zone us-east1-c --tags game-server --machine-type e2-micro
-gcloud compute instances describe train-simulator-instance-1 --zone us-east1-c --format="get(machineType)"
-gcloud compute ssh train-simulator-instance-1 --zone us-east1-c
-----
-
-From within the instance:
-
-[source,bash]
-----
-docker ps
-gcloud compute firewall-rules create allow-http --allow tcp:8080,tcp:5000 --target-tags game-server
-----
-
-==== Redeploy
-
-[source,bash]
-----
-docker build --tag train-simulator .
-docker tag train-simulator gcr.io/train-simulator-gcp/train-simulator
-docker push gcr.io/train-simulator-gcp/train-simulator
-gcloud compute instances update-container train-simulator-instance-1 --container-image gcr.io/train-simulator-gcp/train-simulator:latest --zone us-east1
-gcloud compute instances describe train-simulator-instance-1 --zone us-east1-c
-gcloud compute instances describe train-simulator-instance-1 --zone us-east1-c --format="get(networkInterfaces[0].accessConfigs[0].natIP)"
-----
-
-==== Stop & delete
-
-[source,bash]
-----
-gcloud compute instances stop train-simulator-instance-1 --zone us-east1-c
-gcloud compute instances delete train-simulator-instance-1 --zone us-east1-c
-gcloud services disable compute.googleapis.com --force
-----
-
-== Deploy to Kubernetes
+=== Helm charts
 
 #TODO: Incomplete section as I figure it out.#
 
@@ -200,6 +154,17 @@ helm install game-service ./charts/game-service --set environment=production
 helm uninstall game-service
 ----
 
+=== Build and push Docker image
+
+[source,bash]
+----
+gcloud services enable artifactregistry.googleapis.com
+gcloud auth configure-docker
+docker build --tag train-simulator .
+docker tag train-simulator gcr.io/train-simulator-gcp/train-simulator
+docker push gcr.io/train-simulator-gcp/train-simulator
+----
+
 [source,bash]
 ----
 helm upgrade game-service ./charts/game-service
@@ -210,6 +175,8 @@ kubectl get ingress game-service
 kubectl describe ingress game-service
 kubectl get ingress game-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
 ----
+
+=== Terraform
 
 [source,bash]
 ----
@@ -226,6 +193,8 @@ terraform state list
 terraform destroy
 ----
 
+=== DNS setup
+
 Set up the DNS records at the registrar (we could do it using Terraform, but that can wait):
 [source,bash]
 ----
@@ -237,4 +206,3 @@ dig ns-cloud-a4.googledomains.com +short
 ----
 
 Then https://cloud.google.com/dns/docs/update-name-servers#change-name-servers[change your domain registrar's name servers].
-
