@@ -45,10 +45,11 @@ url = "2.4.1"
 web-sys = { version = "0.3", default-features = false, features = [] }
 
 # Should only be imported by the `networking-*` code
-axum = "0.7.5"
+# Axum version should match bevy_simplenet's version
+axum = "0.6.2"
 tokio = { version = "1.0", features = ["full"] }
-tower = { version = "0.4", features = ["util"] }
-tower-http = { version = "0.5.0", features = ["fs"] }
+tower = { version = "0.4" }
+tower-http = { version = "0.3.0" }
 
 # From https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units
 # From https://rapier.rs/docs/user_guides/bevy_plugin/common_mistakes#my-local-build-of-rapier-is-slower-than-the-online-demos

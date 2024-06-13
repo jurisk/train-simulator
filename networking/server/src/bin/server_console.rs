@@ -1,34 +1,36 @@
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::convert::Infallible;
+use std::net::{IpAddr, Ipv4Addr};
+use std::sync::{Arc, Mutex};
+use std::{io, net::SocketAddr};
 
+use axum::body::Body;
+use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::get;
+use axum::routing::{get, get_service, MethodRouter};
 use axum::Router;
 use bevy::app::App;
 use bevy::log::LogPlugin;
 use bevy::prelude::{info, trace};
 use bevy::MinimalPlugins;
 use networking_server::MultiplayerSimpleNetServerPlugin;
-use networking_shared::WEBSOCKETS_PORT;
+use networking_shared::PORT;
 use tower_http::services::ServeDir;
 
-#[allow(clippy::expect_used)]
 #[tokio::main]
 async fn main() {
-    println!("Starting  server...");
+    info!("Starting server on {PORT}...");
 
-    let bevy_thread = std::thread::spawn(|| {
-        run_bevy();
-    });
+    let serve_dir = ServeDir::new("static");
+    let serve_dir_static: MethodRouter<(), Body, Infallible> =
+        get_service(serve_dir).handle_error(handle_error);
+    let router: Router<(), Body> = Router::new()
+        .nest_service("/", serve_dir_static)
+        .route("/health", get(health_check))
+        .route("/liveness", get(liveness_check));
 
-    run_axum().await;
-
-    bevy_thread.join().expect("Bevy thread panicked");
-}
-
-fn run_bevy() {
     let args: Vec<String> = std::env::args().collect();
     let address = match args.get(1).cloned() {
-        None => SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), WEBSOCKETS_PORT),
+        None => SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), PORT),
         Some(address_string) => {
             address_string
                 .parse()
@@ -40,25 +42,12 @@ fn run_bevy() {
 
     app.add_plugins(MinimalPlugins);
     app.add_plugins(LogPlugin::default());
-    app.add_plugins(MultiplayerSimpleNetServerPlugin { address });
+    app.add_plugins(MultiplayerSimpleNetServerPlugin {
+        router: Arc::new(Mutex::new(router)),
+        address,
+    });
 
     app.run();
-}
-
-#[allow(clippy::unwrap_used)]
-async fn serve(app: Router, port: u16) {
-    let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), port);
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    info!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app).await.unwrap();
-}
-
-async fn run_axum() {
-    let router = Router::new()
-        .nest_service("/", ServeDir::new("static"))
-        .route("/health", get(health_check))
-        .route("/liveness", get(liveness_check));
-    serve(router, 8080).await;
 }
 
 async fn health_check() -> impl IntoResponse {
@@ -69,4 +58,9 @@ async fn health_check() -> impl IntoResponse {
 async fn liveness_check() -> impl IntoResponse {
     trace!("Liveness check OK");
     "OK"
+}
+
+async fn handle_error(err: io::Error) -> impl IntoResponse {
+    trace!("Error: {err:?}");
+    (StatusCode::INTERNAL_SERVER_ERROR, "Something went wrong...")
 }

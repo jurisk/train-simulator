@@ -47,10 +47,6 @@ service:
       port: 8080
       targetPort: 8080
       protocol: TCP
-    - name: ws
-      port: 5000
-      targetPort: 5000
-      protocol: TCP
 
 ingress:
   enabled: true
@@ -62,17 +58,11 @@ ingress:
   hosts:
     - host: train-simulator.local
       paths:
-        - path: /ws
-          port: 5000
-          pathType: Prefix
         - path: /
           port: 8080
           pathType: Prefix
     - host: ts.krikis.online
       paths:
-        - path: /ws
-          port: 5000
-          pathType: Prefix
         - path: /
           port: 8080
           pathType: Prefix

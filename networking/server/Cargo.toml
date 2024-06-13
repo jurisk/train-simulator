@@ -19,8 +19,13 @@ serde.workspace = true
 axum.workspace = true
 tokio.workspace = true
 
-tower.workspace = true
-tower-http.workspace = true
+[dependencies.tower]
+workspace = true
+features = ["util"]
+
+[dependencies.tower-http]
+workspace = true
+features = ["fs"]
 
 [dependencies.bevy_simplenet]
 workspace = true

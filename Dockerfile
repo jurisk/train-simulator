@@ -33,7 +33,6 @@ RUN cp -r assets static
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:bookworm-slim AS runtime
-EXPOSE 5000/tcp
 EXPOSE 8080/tcp
 WORKDIR app
 COPY --from=builder /app/target/release/server_console /app

@@ -1,6 +1,11 @@
+#![allow(clippy::expect_used)]
+
 use std::net::SocketAddr;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use axum::body::Body;
+use axum::Router;
 use bevy::app::{App, Update};
 use bevy::log::info;
 use bevy::prelude::{default, error, Plugin, ResMut, Resource};
@@ -20,6 +25,7 @@ pub type GameServerEvent = ServerEventFrom<GameChannel>;
 struct ServerStateResource(pub ServerState);
 
 pub struct MultiplayerSimpleNetServerPlugin {
+    pub router:  Arc<Mutex<Router<(), Body>>>,
     pub address: SocketAddr,
 }
 
@@ -28,19 +34,26 @@ impl Plugin for MultiplayerSimpleNetServerPlugin {
         app.insert_resource(ServerStateResource(ServerState::new()));
         app.add_systems(Update, read_on_server);
 
-        let server = server_factory().new_server(
-            enfync::builtin::native::TokioHandle::default(),
-            self.address,
-            AcceptorConfig::Default,
-            Authenticator::None,
-            ServerConfig {
-                rate_limit_config: RateLimitConfig {
-                    period:    Duration::from_millis(100),
-                    max_count: 100,
+        let router = self.router.clone();
+
+        let server = {
+            let mut router = router.lock().expect("Locking the router failed");
+            let router = &mut *router;
+            server_factory().new_server_with_router(
+                enfync::builtin::native::TokioHandle::default(),
+                self.address,
+                AcceptorConfig::Default,
+                Authenticator::None,
+                ServerConfig {
+                    rate_limit_config: RateLimitConfig {
+                        period:    Duration::from_millis(100),
+                        max_count: 100,
+                    },
+                    ..default()
                 },
-                ..default()
-            },
-        );
+                router.clone(),
+            )
+        };
 
         info!("Server started on {:?}.", self.address);
 

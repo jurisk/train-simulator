@@ -19,6 +19,7 @@ rustup update
 cargo update
 cargo udeps --all-targets
 cargo audit
+cargo tree --duplicates
 ----
 
 Frequent:
@@ -112,7 +113,7 @@ Building and running the Docker image:
 ----
 docker build --tag train-simulator .
 docker image ls train-simulator
-docker run --interactive --tty --rm --name train-simulator --publish 5000:5000/tcp --publish 8080:8080/tcp train-simulator
+docker run --interactive --tty --rm --name train-simulator --publish 8080:8080/tcp train-simulator
 docker stop train-simulator
 ----
 

@@ -2,7 +2,7 @@ use bevy::prelude::App;
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
 use networking_client::MultiplayerSimpleNetClientPlugin;
-use networking_shared::WEBSOCKETS_PORT;
+use networking_shared::PORT;
 
 #[cfg(target_arch = "wasm32")]
 fn ws_url_from_window_location() -> Option<String> {
@@ -18,7 +18,7 @@ fn ws_url_from_window_location() -> Option<String> {
         // If it's `https` then we assume ingress is doing SSL termination and it stays on the same port
     } else {
         ws_url.set_protocol("ws");
-        ws_url.set_port(&format!("{WEBSOCKETS_PORT}"));
+        ws_url.set_port(&format!("{PORT}"));
     }
     ws_url.set_pathname("/ws");
 
@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let url = match args.get(1).cloned() {
         None => {
             let url_string = ws_url_from_window_location()
-                .unwrap_or_else(|| format!("ws://127.0.0.1:{WEBSOCKETS_PORT}/ws"));
+                .unwrap_or_else(|| format!("ws://127.0.0.1:{PORT}/ws"));
             url::Url::parse(url_string.as_str())?
         },
         Some(address_string) => {
