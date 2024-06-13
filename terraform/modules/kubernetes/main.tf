@@ -25,21 +25,6 @@ resource "google_container_cluster" "primary" {
   }
 }
 
-resource "google_container_node_pool" "primary_nodes" {
-  cluster    = google_container_cluster.primary.name
-  location   = google_container_cluster.primary.location
-  node_count = 1
-
-  node_config {
-    preemptible  = true
-    machine_type = "e2-medium"
-
-    oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform",
-    ]
-  }
-}
-
 data "google_client_config" "default" {}
 
 provider "kubernetes" {
@@ -76,5 +61,5 @@ resource "helm_release" "game_service_helm_release" {
     value = var.dns_name
   }
 
-  depends_on = [google_container_cluster.primary, google_container_node_pool.primary_nodes]
+  depends_on = [google_container_cluster.primary]
 }

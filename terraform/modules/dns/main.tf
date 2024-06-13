@@ -12,6 +12,11 @@ resource "google_dns_managed_zone" "dns_zone" {
 
   visibility = "public"
   project    = var.gcp_project
+
+  # We pointed the NS records to the right Google Cloud DNS servers, and if we destroy, these links will be broken
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_dns_record_set" "a_record" {
