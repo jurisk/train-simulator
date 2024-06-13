@@ -1,5 +1,3 @@
-#![feature(let_chains)]
-
 use bevy::asset::AssetPlugin;
 use bevy::prelude::{info, App, AssetMode, Plugin, PluginGroup};
 use bevy::utils::default;
@@ -41,7 +39,10 @@ impl Plugin for ClientGraphicsPlugin {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         #[allow(clippy::cast_precision_loss)]
-                        resolution: WindowResolution::new(WINDOW_WIDTH as f32, WINDOW_HEIGHT as f32),
+                        resolution: WindowResolution::new(
+                            WINDOW_WIDTH as f32,
+                            WINDOW_HEIGHT as f32,
+                        ),
                         present_mode: PresentMode::AutoNoVsync, // For bevy_mod_raycast, see low_latency_window_plugin()
                         ..default()
                     }),
@@ -49,7 +50,8 @@ impl Plugin for ClientGraphicsPlugin {
                 })
                 .set(AssetPlugin {
                     file_path: (asset_path_prefix.to_owned() + "assets").to_string(),
-                    processed_file_path: (asset_path_prefix.to_owned() + "processed-assets").to_string(),
+                    processed_file_path: (asset_path_prefix.to_owned() + "processed-assets")
+                        .to_string(),
                     mode: AssetMode::Unprocessed, // Processed requires for the asset processor features to be enabled
                     ..default()
                 }),

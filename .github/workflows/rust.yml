@@ -24,10 +24,10 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      - name: Install latest nightly
+      - name: Install latest stable
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: stable
           profile: minimal
           override: true
           components: rustfmt, clippy
@@ -48,8 +48,9 @@ jobs:
           rustup target add wasm32-unknown-unknown
           cargo install wasm-bindgen-cli
 
-      - name: Run rustfmt
-        run: cargo fmt --check
+# Nightly has more flags which we use, but we switched to using stable, and don't want to install both toolchains.
+#      - name: Run rustfmt
+#        run: cargo fmt --check
 
       - name: Run clippy
         run: cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used

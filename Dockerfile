@@ -1,7 +1,6 @@
 # See https://github.com/LukeMathWalker/cargo-chef?tab=readme-ov-file#without-the-pre-built-image
 
-# FROM rust:1 AS chef <-- switching to nightly as some flags we use require it
-FROM rustlang/rust:nightly as chef
+FROM rustlang/rust:1 as chef
 
 # We only pay the installation cost once,
 # it will be cached from the second build onwards
