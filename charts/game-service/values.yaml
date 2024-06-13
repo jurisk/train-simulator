@@ -101,14 +101,14 @@ livenessProbe:
     path: /liveness
     port: 8080
   initialDelaySeconds: 3
-  periodSeconds: 3
+  periodSeconds: 60
 
 readinessProbe:
   httpGet:
     path: /health
     port: 8080
   initialDelaySeconds: 3
-  periodSeconds: 3
+  periodSeconds: 60
 
 autoscaling:
   enabled: false

@@ -5,7 +5,7 @@ use axum::routing::get;
 use axum::Router;
 use bevy::app::App;
 use bevy::log::LogPlugin;
-use bevy::prelude::info;
+use bevy::prelude::{info, trace};
 use bevy::MinimalPlugins;
 use networking_server::MultiplayerSimpleNetServerPlugin;
 use networking_shared::WEBSOCKETS_PORT;
@@ -14,6 +14,8 @@ use tower_http::services::ServeDir;
 #[allow(clippy::expect_used)]
 #[tokio::main]
 async fn main() {
+    println!("Starting  server...");
+
     let bevy_thread = std::thread::spawn(|| {
         run_bevy();
     });
@@ -60,11 +62,11 @@ async fn run_axum() {
 }
 
 async fn health_check() -> impl IntoResponse {
-    info!("Health check OK");
+    trace!("Health check OK");
     "OK"
 }
 
 async fn liveness_check() -> impl IntoResponse {
-    info!("Liveness check OK");
+    trace!("Liveness check OK");
     "OK"
 }
