@@ -46,16 +46,13 @@ resource "helm_release" "game_service_helm_release" {
   chart      = "../charts/game-service"
   namespace  = "default"
 
+  # TODO: Actually use this value
   set {
-    name  = "service.type"
-    value = "LoadBalancer"
-  }
-
-  set {
-    name  = "service.loadBalancerIP"
+    name  = "ingress.staticIP"
     value = var.static_ip_address
   }
 
+  # TODO: Actually use this value
   set {
     name  = "service.annotations.external-dns.alpha.kubernetes.io/hostname"
     value = var.dns_name
