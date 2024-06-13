@@ -7,9 +7,10 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+shared-util = { path = "../util" }
+
 # Note - not allowed to have a `bevy` or any networking dependencies!
 serde.workspace = true
 serde_json.workspace = true
-shared-util = { path = "../util" }
 uuid.workspace = true
 fastrand.workspace = true

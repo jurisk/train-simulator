@@ -11,7 +11,6 @@ networking-shared = { path = "../shared" }
 client-graphics = {  path = "../../client/graphics" }
 shared-domain = { path = "../../shared/domain" }
 
-bevy_simplenet = { version = "0.11.0", default-features = false, features = ["bevy", "client"] }
 enfync.workspace = true
 bevy.workspace = true
 url.workspace = true
@@ -19,13 +18,18 @@ url.workspace = true
 bincode.workspace = true
 serde.workspace = true
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { version = "0.3", features = ["Window", "Location", "console"] }
+[dependencies.bevy_simplenet]
+workspace = true
+features = ["bevy", "client"]
+
+[target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
+workspace = true
+features = ["Window", "Location", "console"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies.fastrand]
-version = "2.1.0"
+workspace = true
 
 # Fastrand needs the `js` feature to avoid having fully predetermistic output on WASM
 [target.'cfg(target_arch = "wasm32")'.dependencies.fastrand]
-version = "2.1.0"
+workspace = true
 features = ["js"]

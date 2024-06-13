@@ -7,9 +7,10 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-# Note - not allowed to have a `bevy` or any networking dependencies!
 shared-domain = { path = "../../shared/domain" }
 shared-util = { path = "../../shared/util" }
+
+# Note - not allowed to have a `bevy` or any networking dependencies!
 serde.workspace = true
 serde_json.workspace = true
 log.workspace = true

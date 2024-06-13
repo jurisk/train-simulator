@@ -10,8 +10,6 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-# TODO: Use https://github.com/NiklasEi/bevy_asset_loader ?
-
 shared-domain = { path = "../../shared/domain" }
 shared-util = { path = "../../shared/util" }
 game-logic = { path = "../../game/logic" }
@@ -22,10 +20,9 @@ fastrand.workspace = true
 
 bevy_mod_raycast.workspace = true
 
-# https://github.com/jakobhellermann/bevy-inspector-egui
-# https://crates.io/crates/bevy-inspector-egui/versions
-# Pulls in egui and that has to match with other egui versions used!
-bevy-inspector-egui = {  version = "0.23.4", features = ["highlight_changes", "bevy_pbr"] }
+bevy-inspector-egui.workspace = true
+
+# TODO: Use https://github.com/NiklasEi/bevy_asset_loader ?
 
 # https://crates.io/crates/bevy/versions
 [dependencies.bevy]
