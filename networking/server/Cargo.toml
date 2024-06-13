@@ -23,7 +23,9 @@ tokio.workspace = true
 tower = { version = "0.4", features = ["util"] }
 tower-http = { version = "0.5.0", features = ["fs"] }
 
-bevy = { version = "0.13.2", default-features = false, features = [
+[dependencies.bevy]
+workspace = true
+features = [
     "bevy_core_pipeline",
     "bevy_gizmos",
     "bevy_gltf",
@@ -37,4 +39,4 @@ bevy = { version = "0.13.2", default-features = false, features = [
     "tonemapping_luts",
     "zstd",
     "x11",
-] }
+]

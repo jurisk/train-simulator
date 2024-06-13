@@ -29,8 +29,7 @@ bevy-inspector-egui = {  version = "0.23.4", features = ["highlight_changes", "b
 
 # https://crates.io/crates/bevy/versions
 [dependencies.bevy]
-version = "0.13.2"
-default-features = false
+workspace = true
 features = [
     "bevy_core_pipeline",
     "bevy_gizmos",
@@ -49,8 +48,7 @@ features = [
 
 # These fail on WASM:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies.bevy]
-version = "0.13.2"
-default-features = false
+workspace = true
 features = [
     # From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional:
     # and https://lib.rs/crates/bevy_dylib:
@@ -66,8 +64,7 @@ features = [
 
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.bevy]
-version = "0.13.2"
-default-features = false
+workspace = true
 features = [
     "webgpu",
 ]

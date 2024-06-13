@@ -13,7 +13,7 @@ shared-domain = { path = "../../shared/domain" }
 
 bevy_simplenet = { version = "0.11.0", default-features = false, features = ["bevy", "client"] }
 enfync.workspace = true
-bevy = { version = "0.13.2", default-features = false, features = [] }
+bevy.workspace = true
 url.workspace = true
 
 bincode.workspace = true

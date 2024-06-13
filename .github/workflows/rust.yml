@@ -72,6 +72,7 @@ jobs:
       - name: Copy assets to web directory
         run: cp -r assets static
 
+      # The GitHub pages repository was made private, so this could be dropped
       - name: Publish to GitHub pages at https://jurisk.github.io/train-simulator-pages/
         run: |
           git config --global user.email "jurisk@users.noreply.github.com"
