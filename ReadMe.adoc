@@ -186,6 +186,8 @@ cd terraform
 terraform init
 terraform fmt
 terraform validate
+terraform graph
+terraform graph -type=plan
 terraform plan
 terraform apply
 terraform refresh

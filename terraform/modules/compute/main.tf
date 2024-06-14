@@ -1,39 +1,71 @@
-resource "google_compute_instance_template" "train_simulator_template" {
-  name        = "train-simulator-template"
+# Inspired from https://github.com/terraform-google-modules/terraform-google-container-vm/tree/master/examples/simple_instance
+
+locals {
+  instance_name = format("%s-%s", var.instance_name, substr(md5(module.gce-container.container.image), 0, 8))
+}
+
+module "gce-container" {
+  source  = "terraform-google-modules/container-vm/google"
+  version = "~> 3.0"
+
+  cos_image_name = var.cos_image_name
+
+  container = {
+    image = "gcr.io/train-simulator-gcp/train-simulator:latest"
+
+    # Could not launch threads otherwise
+    securityContext = {
+      privileged: true
+    }
+
+    env = [
+      {
+        name  = "RUST_BACKTRACE"
+        value = "full"
+      },
+      {
+        name = "RUST_LOG"
+        value = "info"
+      }
+    ]
+  }
+
+  restart_policy = "Never" # Always, OnFailure, UnlessStopped are the other options
+}
+
+resource "google_compute_instance" "vm" {
+  project      = var.project_id
+  name         = local.instance_name
   machine_type = "e2-micro"
+  zone         = var.zone
 
-  tags = ["game-server"]
-
-  disk {
-    source_image = "projects/cos-cloud/global/images/family/cos-stable" # Container-Optimized OS
-    auto_delete  = true
-    boot         = true
+  boot_disk {
+    initialize_params {
+      image = module.gce-container.source_image
+    }
   }
 
   network_interface {
     network = var.network_name
-    access_config {
-      # Ephemeral public IP
-    }
+    access_config {}
   }
 
-  # TODO: Use var.container_port for the containerPort instead of hardcoding it
+  tags = ["game-server"]
+
   metadata = {
-    "gce-container-declaration" = <<-EOF
-      spec:
-        containers:
-          - name: train-simulator
-            image: gcr.io/train-simulator-gcp/train-simulator
-            ports:
-              - name: http
-                containerPort: 8080
-        restartPolicy: Always
-    EOF
+    gce-container-declaration = module.gce-container.metadata_value
+    google-logging-enabled    = "true"
+    google-monitoring-enabled = "true"
   }
-}
 
-resource "google_compute_instance_from_template" "train_simulator_instance" {
-  name       = google_compute_instance_template.train_simulator_template.name
-  zone       = var.gcp_zone
-  source_instance_template = google_compute_instance_template.train_simulator_template.id
+  labels = {
+    container-vm = module.gce-container.vm_container_label
+  }
+
+  service_account {
+    email = var.client_email
+    scopes = [
+      "https://www.googleapis.com/auth/cloud-platform",
+    ]
+  }
 }

@@ -12,16 +12,7 @@ module "network" {
 }
 
 module "compute" {
-  source            = "./modules/compute"
-  gcp_project       = var.gcp_project
-  gcp_zone          = var.gcp_zone
-  static_ip_address = module.network.static_ip_address
-  service_port      = var.service_port
-  network_name      = module.network.network_name
-}
-
-module "simple" {
-  source       = "./modules/simple"
+  source       = "./modules/compute"
   project_id   = var.gcp_project
   network_name = module.network.network_name
   zone         = var.gcp_zone
