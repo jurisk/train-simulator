@@ -1,7 +1,9 @@
 module "dns" {
   source      = "./modules/dns"
   gcp_project = var.gcp_project
-  ip_address  = module.network.static_ip_address
+  #   ip_address  = module.network.static_ip_address
+  # TODO: Temporarily not using a static IP address, but updating DNS A records to the instance IP address
+  ip_address = module.compute.public_ip_address
 }
 
 module "network" {

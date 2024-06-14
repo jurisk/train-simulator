@@ -1,9 +1,9 @@
-resource "google_compute_address" "static_ip" {
-  name         = "train-simulator-static-ip"
-  project      = var.gcp_project
-  region       = var.gcp_region
-  address_type = "EXTERNAL"
-}
+# resource "google_compute_address" "static_ip" {
+#   name         = "train-simulator-static-ip"
+#   project      = var.gcp_project
+#   region       = var.gcp_region
+#   address_type = "EXTERNAL"
+# }
 
 resource "google_compute_network" "default" {
   name = "train-simulator"
