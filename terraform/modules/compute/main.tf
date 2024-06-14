@@ -33,7 +33,7 @@ resource "google_compute_instance_template" "train_simulator_template" {
 }
 
 resource "google_compute_instance_from_template" "train_simulator_instance" {
-  name       = "train-simulator-instance"
+  name       = google_compute_instance_template.train_simulator_template.name
   zone       = var.gcp_zone
   source_instance_template = google_compute_instance_template.train_simulator_template.id
 }
