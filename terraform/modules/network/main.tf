@@ -6,8 +6,24 @@ resource "google_project_service" "compute" {
 }
 
 resource "google_compute_address" "static_ip" {
-  name         = "ts-static-ip"
+  name         = "train-simulator-static-ip"
   project      = var.gcp_project
   region       = var.gcp_region
   address_type = "EXTERNAL"
+}
+
+resource "google_compute_network" "default" {
+  name = "train-simulator"
+}
+
+resource "google_compute_firewall" "default" {
+  name    = "train-simulator"
+  network = google_compute_network.default.self_link
+
+  allow {
+    protocol = "tcp"
+    ports    = [var.service_port]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
 }

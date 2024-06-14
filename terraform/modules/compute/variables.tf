@@ -8,17 +8,17 @@ variable "gcp_zone" {
   type        = string
 }
 
-variable "cluster_name" {
-  description = "The name of the GKE cluster"
-  type        = string
-}
-
 variable "static_ip_address" {
   description = "The static IP address for the service"
   type        = string
 }
 
-variable "dns_name" {
-  description = "The DNS name for the service"
+variable "service_port" {
+  description = "The port the service listens on"
+  type        = number
+}
+
+variable "network_name" {
+  description = "The name of the network"
   type        = string
 }

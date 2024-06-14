@@ -15,3 +15,9 @@ variable "gcp_region" {
   type        = string
   default     = "us-east1"
 }
+
+variable "service_port" {
+  description = "The port the service listens on"
+  type        = number
+  default     = 8080
+}
