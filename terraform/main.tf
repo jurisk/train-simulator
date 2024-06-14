@@ -20,6 +20,13 @@ module "compute" {
   network_name      = module.network.network_name
 }
 
+module "simple" {
+  source       = "./modules/simple"
+  project_id   = var.gcp_project
+  network_name = module.network.network_name
+  zone         = var.gcp_zone
+}
+
 provider "google" {
   # credentials = file("<path-to-your-service-account-key>.json") # https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/google-cloud-platform-build#authenticate-to-google-cloud
   project = var.gcp_project
