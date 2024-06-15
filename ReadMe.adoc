@@ -105,6 +105,16 @@ cargo install cargo-modules
 cargo modules dependencies --no-externs --no-fns --no-sysroot --no-traits --no-types --no-uses --package game-logic > game-logic-module.dot
 ----
 
+=== Profiling
+
+Does not work on Windows.
+
+[source,bash]
+----
+cargo install flamegraph
+cargo flamegraph --bin server_console
+----
+
 == Deploy locally
 
 === Package and run as Docker
