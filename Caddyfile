@@ -1,0 +1,24 @@
+{
+    log {
+        output stdout
+        level DEBUG
+    }
+}
+
+# Production
+ts.krikis.online:80, ts.krikis.online:443 {
+    reverse_proxy game-server.ts.krikis.online:8080
+    log {
+        output stdout
+        format console
+    }
+}
+
+# Development
+local-ts.krikis.online:80, local-ts.krikis.online:443 {
+    reverse_proxy game-server.local-ts.krikis.online:8080
+    log {
+        output stdout
+        format console
+    }
+}

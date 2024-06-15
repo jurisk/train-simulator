@@ -3,7 +3,12 @@ variable "gcp_project" {
   type        = string
 }
 
-variable "ip_address" {
-  description = "The external IP address to associate with the DNS record"
+variable "proxy_server_ip_address" {
+  description = "The IP address to associate with the DNS record for the proxy server"
+  type        = string
+}
+
+variable "game_server_ip_address" {
+  description = "The IP address to associate with the DNS record for the game server"
   type        = string
 }

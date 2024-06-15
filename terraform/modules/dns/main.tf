@@ -12,11 +12,20 @@ resource "google_dns_managed_zone" "dns_zone" {
   }
 }
 
-resource "google_dns_record_set" "a_record" {
+resource "google_dns_record_set" "proxy_server_a_record" {
   name         = "ts.krikis.online."
   managed_zone = google_dns_managed_zone.dns_zone.name
   type         = "A"
-  ttl          = 300
-  rrdatas      = [var.ip_address]
+  ttl          = 60 # Later: Increase
+  rrdatas      = [var.proxy_server_ip_address]
+  project      = var.gcp_project
+}
+
+resource "google_dns_record_set" "game_server_a_record" {
+  name         = "game-server.ts.krikis.online."
+  managed_zone = google_dns_managed_zone.dns_zone.name
+  type         = "A"
+  ttl          = 60 # Later: Increase
+  rrdatas      = [var.game_server_ip_address]
   project      = var.gcp_project
 }

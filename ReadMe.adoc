@@ -105,24 +105,34 @@ cargo install cargo-modules
 cargo modules dependencies --no-externs --no-fns --no-sysroot --no-traits --no-types --no-uses --package game-logic > game-logic-module.dot
 ----
 
+== Deploy locally
+
 === Package and run as Docker
 
-Building and running the Docker image:
+==== Build and run the Docker image:
 
 [source,bash]
 ----
+docker network create train-simulator
 docker build --tag train-simulator --file game-server.dockerfile .
 docker image ls train-simulator
-docker run --interactive --tty --rm --name train-simulator --publish 8080:8080/tcp train-simulator
+docker run --interactive --tty --rm --name train-simulator --publish 8080:8080/tcp --network=train-simulator train-simulator
 docker stop train-simulator
 ----
 
+==== Run local proxy (incomplete)
+
 [source,bash]
 ----
+docker run --interactive --tty --rm  -d -p 80:80 -p 443:443 -p 2019:2019 --network=train-simulator --name train-simulator-proxy -v $(pwd)/Caddyfile:/etc/caddy/Caddyfile caddy
+docker logs train-simulator-proxy --follow
+
 docker build --tag train-simulator-proxy --file caddy.dockerfile .
-docker run --interactive --tty --rm --name train-simulator-proxy --publish 443:443/tcp train-simulator-proxy
+docker run --interactive --tty --rm --name train-simulator-proxy --publish 443:443/tcp --network=train-simulator train-simulator-proxy
 docker stop train-simulator-proxy
 ----
+
+==== Maintenance
 
 Pruning, as Rancher tends to eat up all available space:
 
@@ -132,7 +142,7 @@ docker system prune -f
 docker builder prune -f
 ----
 
-== Deploy to Kubernetes on Google Cloud Platform
+== Deploy to Google Cloud Platform
 
 === Overall pre-requisites
 
@@ -144,47 +154,37 @@ gcloud auth login
 gcloud config set project train-simulator-gcp
 ----
 
-=== Helm charts
+=== Build and push Docker images
 
-#TODO: Incomplete section as I figure it out.#
-
-[source,bash]
-----
-gcloud iam service-accounts create gcr-reader --display-name "GCR Reader"
-gcloud projects add-iam-policy-binding train-simulator-gcp --member="serviceAccount:gcr-reader@train-simulator-gcp.iam.gserviceaccount.com" --role="roles/artifactregistry.reader"
-gcloud iam service-accounts keys create gcp-reader-key-file.json --iam-account gcr-reader@train-simulator-gcp.iam.gserviceaccount.com
-kubectl create secret docker-registry gcr-json-key --docker-server=gcr.io --docker-username=_json_key --docker-password="$(cat gcp-reader-key-file.json)" --docker-email=gcr-reader@train-simulator-gcp.iam.gserviceaccount.com
-kubectl get secret gcr-json-key
-helm lint ./charts/game-service
-helm template game-service ./charts/game-service
-helm install game-service ./charts/game-service --set environment=local
-helm install game-service ./charts/game-service --set environment=production
-helm uninstall game-service
-----
-
-=== Build and push Docker image
+==== Pre-requisites:
 
 [source,bash]
 ----
 gcloud services enable artifactregistry.googleapis.com
 gcloud auth configure-docker
-docker build --tag train-simulator .
+----
+
+==== Game server:
+
+[source,bash]
+----
+docker build --tag train-simulator --file game-server.dockerfile .
 docker tag train-simulator gcr.io/train-simulator-gcp/train-simulator
 docker push gcr.io/train-simulator-gcp/train-simulator
 ----
 
+==== Proxy:
+
 [source,bash]
 ----
-helm upgrade game-service ./charts/game-service
-kubectl get pods
-kubectl get services
-kubectl get ingress
-kubectl get ingress game-service
-kubectl describe ingress game-service
-kubectl get ingress game-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+docker build --tag train-simulator-proxy --file caddy.dockerfile .
+docker tag train-simulator-proxy gcr.io/train-simulator-gcp/train-simulator-proxy
+docker push gcr.io/train-simulator-gcp/train-simulator-proxy
 ----
 
 === Terraform
+
+==== Useful commands
 
 [source,bash]
 ----
@@ -203,9 +203,10 @@ terraform state list
 terraform destroy
 ----
 
-=== DNS setup
+==== DNS setup
 
 Set up the DNS records at the registrar (we could do it using Terraform, but that can wait):
+
 [source,bash]
 ----
 gcloud dns managed-zones describe ts-krikis-online

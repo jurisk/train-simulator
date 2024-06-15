@@ -11,7 +11,7 @@ module "gce-container" {
   cos_image_name = var.cos_image_name
 
   container = {
-    image = "gcr.io/train-simulator-gcp/train-simulator:latest"
+    image = var.container_image
 
     # Could not launch threads otherwise
     securityContext = {
@@ -19,13 +19,9 @@ module "gce-container" {
     }
 
     env = [
-      {
-        name  = "RUST_BACKTRACE"
-        value = "full"
-      },
-      {
-        name = "RUST_LOG"
-        value = "info"
+      for key, value in var.env_vars : {
+        name  = key
+        value = value
       }
     ]
   }
@@ -50,7 +46,7 @@ resource "google_compute_instance" "vm" {
     access_config {}
   }
 
-  tags = ["game-server"]
+  tags = []
 
   metadata = {
     gce-container-declaration = module.gce-container.metadata_value
