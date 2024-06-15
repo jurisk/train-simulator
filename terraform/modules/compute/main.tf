@@ -24,7 +24,33 @@ module "gce-container" {
         value = value
       }
     ]
+
+    // TODO: This is temporary, we should probably abstract it away as we are reusing this module for the game-server too
+    volumeMounts = [
+      {
+        mountPath = "/data"
+        name      = "caddy_data"
+        readOnly  = false
+      },
+    ]
   }
+
+  // TODO: This is temporary, we should probably abstract it away as we are reusing this module for the game-server too
+  volumes = [
+    {
+      name = "caddy_data"
+
+#       emptyDir = {
+#         medium = "Memory"
+#       }
+
+      # I think it should not be under /tmp/ but some other locations I tried were read-only file systems
+      hostPath = {
+        path = "/tmp/caddy"
+        type = "DirectoryOrCreate"
+      }
+    },
+  ]
 
   restart_policy = "Never" # Always, OnFailure, UnlessStopped are the other options
 }
