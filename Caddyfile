@@ -1,12 +1,12 @@
 {
 	log {
 		output stdout
-		level DEBUG
+		level INFO
 	}
 }
 
 # Production
-ts.krikis.online:8000, ts.krikis.online:443 {
+ts.krikis.online {
 	reverse_proxy game-server.ts.krikis.online:8080
 	log {
 		output stdout
