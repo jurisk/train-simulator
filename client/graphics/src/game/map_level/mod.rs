@@ -1,5 +1,6 @@
-use bevy::app::{App, Update};
-use bevy::prelude::{Commands, EventReader, EventWriter, NextState, Plugin, ResMut, Resource};
+use bevy::prelude::{
+    App, Commands, EventReader, EventWriter, FixedUpdate, NextState, Plugin, ResMut, Resource,
+};
 use shared_domain::client_command::ClientCommand;
 use shared_domain::client_command::GameCommand::QueryBuildings;
 use shared_domain::map_level::MapLevel;
@@ -22,7 +23,7 @@ pub(crate) struct MapLevelPlugin;
 impl Plugin for MapLevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TerrainPlugin);
-        app.add_systems(Update, handle_map_level_updated);
+        app.add_systems(FixedUpdate, handle_map_level_updated);
     }
 }
 

@@ -1,10 +1,9 @@
-use bevy::app::App;
 use bevy::asset::{AssetServer, Assets};
 use bevy::core::Name;
 use bevy::pbr::ExtendedMaterial;
 use bevy::prelude::{
-    default, Color, Commands, EventReader, MaterialMeshBundle, Mesh, Plugin, Res, ResMut,
-    StandardMaterial, Transform, Update, Vec3,
+    default, App, Color, Commands, EventReader, FixedUpdate, MaterialMeshBundle, Mesh, Plugin, Res,
+    ResMut, StandardMaterial, Transform, Vec3,
 };
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
@@ -30,7 +29,7 @@ pub(crate) struct LandPlugin;
 impl Plugin for LandPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(AdvancedLandMaterialPlugin);
-        app.add_systems(Update, handle_map_level_updated);
+        app.add_systems(FixedUpdate, handle_map_level_updated);
     }
 }
 

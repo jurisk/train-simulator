@@ -5,8 +5,8 @@ pub mod tracks;
 use std::collections::HashMap;
 
 use bevy::prelude::{
-    error, Assets, Commands, EventReader, EventWriter, Mesh, Plugin, Res, ResMut, StandardMaterial,
-    Update,
+    error, Assets, Commands, EventReader, EventWriter, FixedUpdate, Mesh, Plugin, Res, ResMut,
+    StandardMaterial, Update,
 };
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
@@ -22,8 +22,8 @@ pub(crate) struct BuildingsPlugin;
 
 impl Plugin for BuildingsPlugin {
     fn build(&self, app: &mut bevy::app::App) {
-        app.add_systems(Update, handle_building_built);
-        app.add_systems(Update, handle_game_map_level_provided_for_testing);
+        app.add_systems(FixedUpdate, handle_building_built);
+        app.add_systems(FixedUpdate, handle_game_map_level_provided_for_testing);
         app.add_systems(Update, build_track_when_mouse_released);
     }
 }

@@ -1,6 +1,5 @@
-use bevy::app::{App, Update};
 use bevy::prelude::{
-    error, info, trace, warn, EventReader, EventWriter, NextState, Plugin, ResMut,
+    error, info, trace, warn, App, EventReader, EventWriter, FixedUpdate, NextState, Plugin, ResMut,
 };
 use bevy_simplenet::{
     AuthRequest, Client, ClientConfig, ClientEventFrom, ClientFactory, ClientReport,
@@ -35,8 +34,8 @@ impl Plugin for MultiplayerSimpleNetClientPlugin {
 
         app.insert_resource(client);
 
-        app.add_systems(Update, read_on_client);
-        app.add_systems(Update, client_send_player_commands);
+        app.add_systems(FixedUpdate, read_on_client);
+        app.add_systems(FixedUpdate, client_send_player_commands);
     }
 }
 

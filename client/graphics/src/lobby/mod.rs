@@ -1,5 +1,4 @@
-use bevy::app::App;
-use bevy::prelude::{EventReader, EventWriter, Plugin, Update};
+use bevy::prelude::{App, EventReader, EventWriter, FixedUpdate, Plugin};
 use shared_domain::client_command::{ClientCommand, LobbyCommand};
 use shared_domain::server_response::{LobbyResponse, ServerResponse};
 use shared_domain::PlayerName;
@@ -10,7 +9,7 @@ pub(crate) struct LobbyHandlerPlugin;
 
 impl Plugin for LobbyHandlerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, handle_available_games);
+        app.add_systems(FixedUpdate, handle_available_games);
     }
 }
 

@@ -111,10 +111,17 @@ Building and running the Docker image:
 
 [source,bash]
 ----
-docker build --tag train-simulator .
+docker build --tag train-simulator --file game-server.dockerfile .
 docker image ls train-simulator
 docker run --interactive --tty --rm --name train-simulator --publish 8080:8080/tcp train-simulator
 docker stop train-simulator
+----
+
+[source,bash]
+----
+docker build --tag train-simulator-proxy --file caddy.dockerfile .
+docker run --interactive --tty --rm --name train-simulator-proxy --publish 443:443/tcp train-simulator-proxy
+docker stop train-simulator-proxy
 ----
 
 Pruning, as Rancher tends to eat up all available space:

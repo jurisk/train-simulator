@@ -1,4 +1,4 @@
-use bevy::prelude::{info, App, EventReader, EventWriter, Res, ResMut, Resource, Update};
+use bevy::prelude::{info, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource};
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
@@ -13,7 +13,7 @@ fn main() {
     app.insert_resource(ServerStateResource(ServerState::new()));
     app.add_plugins(ClientGraphicsPlugin);
     app.insert_state(ClientState::JoiningGame);
-    app.add_systems(Update, process_messages_locally);
+    app.add_systems(FixedUpdate, process_messages_locally);
     app.run();
 }
 

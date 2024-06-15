@@ -6,9 +6,8 @@ use std::time::Duration;
 
 use axum::body::Body;
 use axum::Router;
-use bevy::app::{App, Update};
 use bevy::log::info;
-use bevy::prelude::{default, error, Plugin, ResMut, Resource};
+use bevy::prelude::{default, error, App, FixedUpdate, Plugin, ResMut, Resource};
 use bevy_simplenet::{
     AcceptorConfig, Authenticator, RateLimitConfig, Server, ServerConfig, ServerEventFrom,
     ServerFactory, ServerReport,
@@ -32,7 +31,7 @@ pub struct MultiplayerSimpleNetServerPlugin {
 impl Plugin for MultiplayerSimpleNetServerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ServerStateResource(ServerState::new()));
-        app.add_systems(Update, read_on_server);
+        app.add_systems(FixedUpdate, read_on_server);
 
         let router = self.router.clone();
 

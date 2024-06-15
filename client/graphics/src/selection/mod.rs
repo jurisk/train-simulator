@@ -107,7 +107,8 @@ fn update_selection<T: TypePath + Send + Sync>(
                     let intersection = intersection.position();
                     let closest = tiles.coords().min_by_key(|coords| {
                         let quad = tiles[*coords].quad;
-                        (quad.average_distance_to(intersection) * 1_000_000.0) as i32 // Hack as f32 doesn't implement Ord
+                        (quad.average_distance_to(intersection) * 1_000_000.0) as i32
+                        // Hack as f32 doesn't implement Ord
                     });
 
                     // Later: If selection is too far away, there is no selection. To avoid sides getting selected when the actual mouse is outside the playing field.

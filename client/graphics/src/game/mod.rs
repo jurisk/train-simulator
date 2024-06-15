@@ -2,8 +2,9 @@
 
 use std::collections::HashMap;
 
-use bevy::app::Update;
-use bevy::prelude::{EventReader, EventWriter, OnEnter, Plugin, Res, ResMut, Resource};
+use bevy::prelude::{
+    EventReader, EventWriter, FixedUpdate, OnEnter, Plugin, Res, ResMut, Resource,
+};
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
 };
@@ -28,8 +29,8 @@ impl Plugin for GamePlugin {
         app.add_plugins(BuildingsPlugin);
         app.add_plugins(MapLevelPlugin);
         app.add_systems(OnEnter(ClientState::JoiningGame), initiate_login);
-        app.add_systems(Update, handle_players_updated);
-        app.add_systems(Update, handle_login_successful);
+        app.add_systems(FixedUpdate, handle_players_updated);
+        app.add_systems(FixedUpdate, handle_login_successful);
         app.insert_resource(PlayerIdResource(PlayerId::random()));
         app.insert_resource(GameIdResource(GameId::random())); // Questionable, but dealing with it being missing may be worse
         app.insert_resource(PlayersInfoResource(HashMap::default()));

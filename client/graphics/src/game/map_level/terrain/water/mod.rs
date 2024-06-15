@@ -1,10 +1,9 @@
 use std::f32::consts::FRAC_PI_2;
 
-use bevy::app::{App, Plugin};
 use bevy::core::Name;
 use bevy::prelude::{
-    default, AlphaMode, Assets, Color, Commands, EventReader, Mesh, PbrBundle, Rectangle, ResMut,
-    StandardMaterial, Transform, Update,
+    default, AlphaMode, App, Assets, Color, Commands, EventReader, FixedUpdate, Mesh, PbrBundle,
+    Plugin, Rectangle, ResMut, StandardMaterial, Transform,
 };
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, ServerResponse};
@@ -16,7 +15,7 @@ pub(crate) struct WaterPlugin;
 
 impl Plugin for WaterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, handle_game_map_level_provided);
+        app.add_systems(FixedUpdate, handle_game_map_level_provided);
     }
 }
 
