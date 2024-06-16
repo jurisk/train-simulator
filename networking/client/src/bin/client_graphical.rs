@@ -1,50 +1,32 @@
-use bevy::prelude::App;
+use bevy::prelude::{info, App};
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
 use networking_client::MultiplayerSimpleNetClientPlugin;
 use networking_shared::PORT;
 
 #[cfg(target_arch = "wasm32")]
-fn ws_url_from_window_location() -> Option<String> {
-    let window = web_sys::window().expect("no global `window` exists");
-    let location = window.location();
-    let origin = location.origin().expect("should have origin");
-    let origin_url = web_sys::Url::new(&origin).ok()?;
-
-    let ws_url = origin_url.clone();
-    if origin_url.protocol().starts_with(&"https") {
-        // It can be "https:"...
-        ws_url.set_protocol("wss");
-        // If it's `https` then we assume ingress is doing SSL termination and it stays on the same port
-    } else {
-        ws_url.set_protocol("ws");
-        ws_url.set_port(&format!("{PORT}"));
-    }
-    ws_url.set_pathname("/ws");
-
-    Some(ws_url.to_string().into())
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn start(url: &str) {
+    run_with_string(url);
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-fn ws_url_from_window_location() -> Option<String> {
-    None
-}
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let args: Vec<String> = std::env::args().collect();
-    let url = match args.get(1).cloned() {
-        None => {
-            let url_string = ws_url_from_window_location()
-                .unwrap_or_else(|| format!("ws://127.0.0.1:{PORT}/ws"));
-            url::Url::parse(url_string.as_str())?
-        },
-        Some(address_string) => {
-            address_string
-                .parse()
-                .unwrap_or_else(|_| panic!("Unable to parse URL {address_string}"))
-        },
-    };
+    let url: String = args
+        .get(1)
+        .cloned()
+        .unwrap_or_else(|| format!("ws://127.0.0.1:{PORT}/ws"));
 
+    run_with_string(url.as_str());
+}
+
+fn run_with_string(url: &str) {
+    let parsed = url::Url::parse(url).unwrap_or_else(|err| panic!("Invalid URL {url:?}: {err}"));
+    run_with_url(parsed);
+}
+
+fn run_with_url(url: url::Url) {
+    info!("Starting client with URL: {url}");
     let mut app = App::new();
 
     app.add_plugins(ClientGraphicsPlugin);
@@ -53,6 +35,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     app.add_plugins(MultiplayerSimpleNetClientPlugin { url });
 
     app.run();
-
-    Ok(())
 }

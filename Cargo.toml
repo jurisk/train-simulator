@@ -41,8 +41,7 @@ bevy_mod_raycast = "0.17.0"
 # Later: Sort out TLS and features in general for `bevy_simplenet`, see: https://github.com/UkoeHB/bevy_simplenet/tree/master?tab=readme-ov-file#features
 enfync = "0.1.0"
 url = "2.4.1"
-
-web-sys = { version = "0.3", default-features = false, features = [] }
+wasm-bindgen = "0.2.92"
 
 # Should only be imported by the `networking-*` code
 # Axum version should match bevy_simplenet's version

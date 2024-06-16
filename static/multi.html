@@ -7,8 +7,11 @@
 </head>
 <body>
     <script type="module">
-        import init from './wasm-build/client_graphical.js'
-        init()
+        import { start } from './wasm-build/client_graphical.js'
+        const currentUrl = window.location;
+        const wsProtocol = currentUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${currentUrl.host}/ws`;
+        start(wsUrl);
     </script>
     <div>
         ESDF to move

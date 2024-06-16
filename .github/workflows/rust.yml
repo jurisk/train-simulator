@@ -72,21 +72,4 @@ jobs:
       - name: Copy assets to web directory
         run: cp -r assets static
 
-      # The GitHub pages repository was made private, so this could be dropped
-      - name: Publish to GitHub pages at https://jurisk.github.io/train-simulator-pages/
-        run: |
-          git config --global user.email "jurisk@users.noreply.github.com"
-          git config --global user.name "Juris"
-          git clone https://jurisk:${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}@github.com/jurisk/train-simulator-pages.git
-          cd train-simulator-pages
-          git rm -rf .
-          cp -r ../static/* .
-          git add .
-          ls -lR
-          git status
-          commit_message="Deploy from GitHub Action - $(date +'%Y-%m-%d %H:%M:%S') - Commit ${GITHUB_SHA::7} - Job $GITHUB_RUN_ID"
-          git commit -m "$commit_message"
-          git push origin master
-        env:
-          # Should have access to the `train-simulator-pages` repository and stored in GitHub Actions `Secrets and variables` of this repository
-          GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+      # Later: Copy the static assets to Google Cloud Storage?

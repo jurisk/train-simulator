@@ -3180,7 +3180,7 @@ dependencies = [
  "serde",
  "shared-domain",
  "url",
- "web-sys",
+ "wasm-bindgen",
 ]
 
 [[package]]
