@@ -12,8 +12,8 @@ use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::{
-    BuildingId, BuildingInfo, BuildingType, PlayerId, TileCoordsXZ, TrackType, VehicleId,
-    VehicleInfo, VehicleType, VertexCoordsXZ,
+    BuildingId, BuildingInfo, BuildingType, PlayerId, TileCoordsXZ, TileCoverage, TrackType,
+    VehicleId, VehicleInfo, VehicleType,
 };
 use shared_util::direction_xz::DirectionXZ;
 
@@ -73,10 +73,10 @@ fn handle_game_map_level_provided_for_testing(
                 let mut initial_buildings = vec![];
                 for ((x, z), track_type) in test_track {
                     let building_info = BuildingInfo {
-                        owner_id:             player_id,
-                        building_id:          BuildingId::random(),
-                        north_west_vertex_xz: VertexCoordsXZ::from_usizes(x, z),
-                        building_type:        BuildingType::Track(track_type),
+                        owner_id:      player_id,
+                        building_id:   BuildingId::random(),
+                        covers_tiles:  TileCoverage::Single(TileCoordsXZ::from_usizes(x, z)),
+                        building_type: BuildingType::Track(track_type),
                     };
                     initial_buildings.push(building_info);
                 }
@@ -149,15 +149,19 @@ fn create_building(
         Some(player_info) => {
             match &building_info.building_type {
                 BuildingType::Track(track_type) => {
-                    create_track(
-                        player_info,
-                        commands,
-                        meshes,
-                        materials,
-                        map_level,
-                        building_info.north_west_vertex_xz,
-                        *track_type,
-                    );
+                    if let TileCoverage::Single(tile) = &building_info.covers_tiles {
+                        create_track(
+                            player_info,
+                            commands,
+                            meshes,
+                            materials,
+                            map_level,
+                            *tile,
+                            *track_type,
+                        );
+                    } else {
+                        error!("Multi-tile track not supported");
+                    }
                 },
                 BuildingType::Production(_) => {}, // TODO: Implement
             }

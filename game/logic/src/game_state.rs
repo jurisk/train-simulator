@@ -116,12 +116,13 @@ impl GameState {
                     // TODO: Check that terrain matches building requirements
 
                     // Later: This is an inefficient check, but it will have to do for now
-                    let tiles_are_free = building_info.tiles_used().into_iter().all(|tile| {
-                        !self
-                            .buildings
-                            .iter()
-                            .any(|building| building.tiles_used().contains(&tile))
-                    });
+                    let tiles_are_free =
+                        building_info.covers_tiles.to_set().into_iter().all(|tile| {
+                            !self
+                                .buildings
+                                .iter()
+                                .any(|building| building.covers_tiles.to_set().contains(&tile))
+                        });
 
                     if tiles_are_free {
                         self.buildings.push(building_info.clone());

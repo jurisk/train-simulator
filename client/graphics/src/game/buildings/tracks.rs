@@ -9,7 +9,10 @@ use bevy::prelude::{
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
-use shared_domain::{BuildingId, BuildingInfo, BuildingType, TrackType, VertexCoordsXZ};
+use shared_domain::{
+    BuildingId, BuildingInfo, BuildingType, TileCoordsXZ, TileCoverage, TrackType,
+};
+use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::ClientMessageEvent;
@@ -26,11 +29,13 @@ pub(crate) fn create_track(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
-    north_west_vertex_xz: VertexCoordsXZ,
+    tile: TileCoordsXZ,
     track_type: TrackType,
 ) {
     let terrain = &map_level.terrain;
 
+    let tile_coords: CoordsXZ = tile.into();
+    let north_west_vertex_xz = tile_coords.into();
     let north_east_vertex_xz = north_west_vertex_xz + DirectionXZ::East;
     let south_east_vertex_xz = north_east_vertex_xz + DirectionXZ::South;
     let south_west_vertex_xz = north_west_vertex_xz + DirectionXZ::South;
@@ -143,11 +148,10 @@ pub(crate) fn build_track_when_mouse_released(
             ];
             let tmp_selected_track = tmp_track_types[fastrand::usize(0 .. tmp_track_types.len())];
 
-            let (north_west_vertex_xz, ..) = tile.vertex_coords_nw_ne_se_sw();
             let track = BuildingInfo {
-                owner_id: player_id,
-                building_id: BuildingId::random(),
-                north_west_vertex_xz,
+                owner_id:      player_id,
+                building_id:   BuildingId::random(),
+                covers_tiles:  TileCoverage::Single(*tile),
                 building_type: BuildingType::Track(tmp_selected_track),
             };
 

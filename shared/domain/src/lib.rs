@@ -236,6 +236,7 @@ pub enum BuildingType {
 
 impl BuildingType {
     #[must_use]
+    #[allow(unused)] // TODO: Start using eventually
     fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
         match self {
             BuildingType::Track(track_type) => track_type.relative_tiles_used(),
@@ -245,11 +246,27 @@ impl BuildingType {
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+pub enum TileCoverage {
+    Single(TileCoordsXZ),
+    Multiple(HashSet<TileCoordsXZ>),
+}
+
+impl TileCoverage {
+    #[must_use]
+    pub fn to_set(&self) -> HashSet<TileCoordsXZ> {
+        match self {
+            TileCoverage::Single(tile) => HashSet::from([*tile]),
+            TileCoverage::Multiple(tiles) => tiles.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct BuildingInfo {
-    pub owner_id:             PlayerId,
-    pub building_id:          BuildingId,
-    pub north_west_vertex_xz: VertexCoordsXZ,
-    pub building_type:        BuildingType,
+    pub owner_id:      PlayerId,
+    pub building_id:   BuildingId,
+    pub covers_tiles:  TileCoverage,
+    pub building_type: BuildingType,
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
@@ -277,20 +294,4 @@ pub struct VehicleInfo {
     pub direction:    DirectionXZ,
     pub vehicle_type: VehicleType,
     // TODO: Velocity?
-}
-
-impl BuildingInfo {
-    #[must_use]
-    fn base_tile(&self) -> TileCoordsXZ {
-        self.north_west_vertex_xz.to_tile_coords_xz()
-    }
-
-    #[must_use]
-    pub fn tiles_used(&self) -> HashSet<TileCoordsXZ> {
-        self.building_type
-            .relative_tiles_used()
-            .into_iter()
-            .map(|diff| self.base_tile() + diff)
-            .collect()
-    }
 }
