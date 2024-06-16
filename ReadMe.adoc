@@ -39,6 +39,7 @@ Do not forget to use `--features bevy/dynamic_linking` when running from the IDE
 
 [source,bash]
 ----
+cargo build
 cargo run --features bevy/dynamic_linking --package networking-server --bin server_console
 cargo run --features bevy/dynamic_linking --package networking-client --bin client_graphical
 cargo run --features bevy/dynamic_linking --package client-single-player --bin client_single_player
@@ -178,9 +179,6 @@ gcloud auth configure-docker
 
 [source,bash]
 ----
-git rev-parse HEAD > assets/versions/git.txt
-git show -s --format=%cI HEAD >> assets/versions/git.txt
-
 docker build --tag train-simulator --file game-server.dockerfile .
 docker tag train-simulator gcr.io/train-simulator-gcp/train-simulator
 docker push gcr.io/train-simulator-gcp/train-simulator
