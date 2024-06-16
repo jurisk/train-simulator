@@ -50,7 +50,6 @@ fn handle_timer_just_finished(
     mut client_messages: EventWriter<ClientMessageEvent>,
 ) {
     let PingTimer(timer) = timer.into_inner();
-    info!("{:?}", timer.elapsed());
     if timer.just_finished() {
         client_messages.send(ClientMessageEvent::new(ClientCommand::Network(
             NetworkCommand::Ping {
