@@ -1,6 +1,9 @@
 #![allow(clippy::module_name_repetitions)]
 
+use std::time::Duration;
+
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::{BuildingInfo, ClientId, GameId, PlayerId, PlayerName};
 
@@ -29,7 +32,13 @@ pub enum GameCommand {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub enum NetworkCommand {
+    Ping { id: Uuid, elapsed: Duration },
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum ClientCommand {
+    Network(NetworkCommand),
     Authentication(AuthenticationCommand),
     Lobby(LobbyCommand),
     Game(GameId, GameCommand),

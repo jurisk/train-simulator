@@ -1,6 +1,8 @@
 use std::collections::HashMap;
+use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::map_level::MapLevel;
 use crate::{BuildingId, BuildingInfo, ClientId, GameId, PlayerId, PlayerName};
@@ -69,7 +71,13 @@ pub enum ServerError {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub enum NetworkResponse {
+    Pong { id: Uuid, elapsed: Duration },
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum ServerResponse {
+    Network(NetworkResponse),
     Authentication(AuthenticationResponse),
     Lobby(LobbyResponse),
     Game(GameId, GameResponse),

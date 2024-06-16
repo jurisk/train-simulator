@@ -6,10 +6,12 @@
 
 use std::convert::identity;
 
-use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
+use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId, NetworkCommand};
 use shared_domain::server_response::{
-    AddressEnvelope, ServerResponse, ServerResponseWithAddress, ServerResponseWithClientIds,
+    AddressEnvelope, NetworkResponse, ServerResponse, ServerResponseWithAddress,
+    ServerResponseWithClientIds,
 };
+use shared_domain::ClientId;
 
 use crate::authentication_service::AuthenticationService;
 use crate::games::Games;
@@ -56,12 +58,30 @@ impl ServerState {
         }
     }
 
+    #[allow(clippy::needless_pass_by_value)]
+    fn process_network_command(
+        client_id: ClientId,
+        network_command: NetworkCommand,
+    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+        match network_command {
+            NetworkCommand::Ping { id, elapsed } => {
+                Ok(vec![ServerResponseWithAddress {
+                    address:  AddressEnvelope::ToClient(client_id),
+                    response: ServerResponse::Network(NetworkResponse::Pong { id, elapsed }),
+                }])
+            },
+        }
+    }
+
     fn process_internal(
         &mut self,
         client_command_with_client_id: ClientCommandWithClientId,
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         let client_id = client_command_with_client_id.client_id;
         match client_command_with_client_id.command {
+            ClientCommand::Network(network_command) => {
+                Self::process_network_command(client_id, network_command)
+            },
             ClientCommand::Authentication(authentication_command) => {
                 self.authentication_service
                     .process_authentication_command(client_id, authentication_command)

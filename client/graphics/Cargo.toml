@@ -21,6 +21,7 @@ fastrand.workspace = true
 bevy_mod_raycast.workspace = true
 
 bevy-inspector-egui.workspace = true
+uuid = { version = "1.8.0", features = ["v4"] }
 
 # TODO: Use https://github.com/NiklasEi/bevy_asset_loader ?
 

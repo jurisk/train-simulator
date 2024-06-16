@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::asset::AssetPlugin;
 use bevy::prelude::{info, App, AssetMode, Plugin, PluginGroup};
 use bevy::utils::default;
@@ -11,6 +13,7 @@ use crate::debug::DebugPlugin;
 use crate::game::GamePlugin;
 use crate::lights::LightsPlugin;
 use crate::lobby::LobbyHandlerPlugin;
+use crate::network::client_ping::ClientPingPlugin;
 use crate::selection::SelectionPlugin;
 
 mod cameras;
@@ -20,6 +23,7 @@ mod debug;
 mod game;
 mod lights;
 mod lobby;
+pub mod network;
 mod selection;
 pub mod states;
 
@@ -64,6 +68,9 @@ impl Plugin for ClientGraphicsPlugin {
             CameraPlugin,
             DebugPlugin,
             SelectionPlugin,
+            ClientPingPlugin {
+                interval: Duration::from_secs(10),
+            },
         ));
 
         info!("Arch: {}", std::env::consts::ARCH);
