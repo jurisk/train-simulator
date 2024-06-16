@@ -7,7 +7,10 @@ use std::time::Duration;
 use axum::body::Body;
 use axum::Router;
 use bevy::log::info;
-use bevy::prelude::{default, error, App, FixedUpdate, Plugin, ResMut, Resource};
+use bevy::prelude::{
+    default, error, App, Event, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin,
+    ResMut, Resource,
+};
 use bevy_simplenet::{
     AcceptorConfig, Authenticator, RateLimitConfig, Server, ServerConfig, ServerEventFrom,
     ServerFactory, ServerReport,
@@ -15,7 +18,6 @@ use bevy_simplenet::{
 use game_logic::server_state::ServerState;
 use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
-use shared_domain::server_response::ServerResponseWithClientIds;
 use shared_domain::ClientId;
 
 pub type GameServerEvent = ServerEventFrom<GameChannel>;
@@ -32,6 +34,11 @@ impl Plugin for MultiplayerSimpleNetServerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ServerStateResource(ServerState::new()));
         app.add_systems(FixedUpdate, read_on_server);
+        app.add_systems(
+            FixedUpdate,
+            process_client_command_with_client_id_events.after(read_on_server),
+        );
+        app.add_event::<ClientCommandWithClientIdEvent>();
 
         let router = self.router.clone();
 
@@ -60,12 +67,13 @@ impl Plugin for MultiplayerSimpleNetServerPlugin {
     }
 }
 
+#[derive(Event)]
+struct ClientCommandWithClientIdEvent(ClientCommandWithClientId);
+
 fn read_on_server(
     mut server: ResMut<Server<GameChannel>>,
-    mut server_state_resource: ResMut<ServerStateResource>,
+    mut client_command_with_client_id_events: EventWriter<ClientCommandWithClientIdEvent>,
 ) {
-    let ServerStateResource(ref mut server_state) = server_state_resource.as_mut();
-
     while let Some((session_id, server_event)) = server.next() {
         match server_event {
             GameServerEvent::Report(connection_report) => {
@@ -80,12 +88,13 @@ fn read_on_server(
                 match bincode::deserialize::<ClientCommand>(&message) {
                     Ok(command) => {
                         info!("Received {command:?}");
-                        // TODO: Only returning responses when processing a command will not allow timer-based updates. We may need to introduce an intermediate event queue for `ClientCommandWithClientId`-s where `ServerState` can publish updates.
-                        let responses = server_state.process(ClientCommandWithClientId {
-                            client_id: ClientId::from_u128(session_id),
-                            command,
-                        });
-                        process_responses(server.as_mut(), responses);
+                        let client_command_with_client_id_event =
+                            ClientCommandWithClientIdEvent(ClientCommandWithClientId {
+                                client_id: ClientId::from_u128(session_id),
+                                command,
+                            });
+                        client_command_with_client_id_events
+                            .send(client_command_with_client_id_event);
                     },
                     Err(error) => {
                         error!("Failed to deserialize {message:?}: {error}");
@@ -99,20 +108,33 @@ fn read_on_server(
     }
 }
 
-fn process_responses(
-    server: &mut Server<GameChannel>,
-    responses: Vec<ServerResponseWithClientIds>,
+// TODO: Only returning responses when processing a command will not allow timer-based updates. We may need to introduce an intermediate event queue for `ClientCommandWithClientId`-s where `ServerState` can publish updates.
+#[allow(clippy::needless_pass_by_value)]
+fn process_client_command_with_client_id_events(
+    mut server_state_resource: ResMut<ServerStateResource>,
+    server: ResMut<Server<GameChannel>>,
+    mut client_command_with_client_id_events: EventReader<ClientCommandWithClientIdEvent>,
 ) {
-    for response in responses {
-        info!("Sending {response:?}...");
-        for client_id in response.client_ids {
-            match bincode::serialize(&response.response) {
-                Ok(encoded) => {
-                    server.send(client_id.as_u128(), EncodedServerMsg(encoded));
-                },
-                Err(error) => {
-                    error!("Failed to deserialize {:?}: {error}", response.response);
-                },
+    let ServerStateResource(ref mut server_state) = server_state_resource.as_mut();
+
+    for ClientCommandWithClientIdEvent(client_command_with_client_id) in
+        client_command_with_client_id_events.read()
+    {
+        info!("Picked up {client_command_with_client_id:?}...");
+        let responses = server_state.process(client_command_with_client_id.clone());
+        info!("Got {responses:?} from server state...");
+
+        for response in responses {
+            for client_id in &*response.client_ids {
+                match bincode::serialize(&response.response) {
+                    Ok(encoded) => {
+                        info!("Sending {response:?} to {client_id:?}...");
+                        server.send(client_id.as_u128(), EncodedServerMsg(encoded));
+                    },
+                    Err(error) => {
+                        error!("Failed to deserialize {:?}: {error}", response.response);
+                    },
+                }
             }
         }
     }

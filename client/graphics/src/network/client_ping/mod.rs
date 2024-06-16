@@ -3,7 +3,9 @@
 use std::time::Duration;
 
 use bevy::app::{App, FixedUpdate};
-use bevy::prelude::{info, EventReader, EventWriter, Plugin, Res, ResMut, Resource, Time, Timer, IntoSystemConfigs};
+use bevy::prelude::{
+    info, EventReader, EventWriter, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time, Timer,
+};
 use bevy::time::TimerMode;
 use shared_domain::client_command::{ClientCommand, NetworkCommand};
 use shared_domain::server_response::{NetworkResponse, ServerResponse};
