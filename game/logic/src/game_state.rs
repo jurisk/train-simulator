@@ -8,13 +8,14 @@ use shared_domain::server_response::{
     AddressEnvelope, Colour, GameInfo, GameResponse, LobbyResponse, PlayerInfo, ServerError,
     ServerResponse, ServerResponseWithAddress,
 };
-use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName};
+use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName, VehicleInfo};
 
 #[derive(Debug, Clone)]
 pub(crate) struct GameState {
     pub game_id: GameId,
     map_level:   MapLevel,
     buildings:   Vec<BuildingInfo>,
+    vehicles:    Vec<VehicleInfo>,
     players:     HashMap<PlayerId, PlayerInfo>,
 }
 
@@ -22,6 +23,7 @@ impl GameState {
     pub(crate) fn new(
         map_level: MapLevel,
         buildings: Vec<BuildingInfo>,
+        vehicles: Vec<VehicleInfo>,
         players: HashMap<PlayerId, PlayerInfo>,
     ) -> Self {
         let game_id = GameId::random();
@@ -29,6 +31,7 @@ impl GameState {
             game_id,
             map_level,
             buildings,
+            vehicles,
             players,
         }
     }
@@ -39,6 +42,7 @@ impl GameState {
             game_id,
             map_level: prototype.map_level.clone(),
             buildings: prototype.buildings.clone(),
+            vehicles: prototype.vehicles.clone(),
             players: prototype.players.clone(),
         }
     }
@@ -87,10 +91,28 @@ impl GameState {
         requesting_player_id: PlayerId,
         game_command: GameCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+        // TODO: Refactor to split it up
         match game_command {
+            GameCommand::PurchaseVehicle(vehicle_info) => {
+                if requesting_player_id == vehicle_info.owner_id {
+                    // TODO: Check if the track / road / etc. is free and owned by the purchaser
+                    // TODO: Subtract money
+
+                    self.vehicles.push(vehicle_info.clone());
+                    Ok(vec![ServerResponseWithAddress::new(
+                        AddressEnvelope::ToAllPlayersInGame(self.game_id),
+                        ServerResponse::Game(
+                            self.game_id,
+                            GameResponse::VehicleCreated(vehicle_info.clone()),
+                        ),
+                    )])
+                } else {
+                    Err(ServerResponse::Error(ServerError::NotAuthorized))
+                }
+            },
             GameCommand::BuildBuilding(building_info) => {
                 if requesting_player_id == building_info.owner_id {
-                    // TODO: Check that this is a valid building and there is enough money to build it
+                    // TODO: Check that this is a valid building and there is enough money to build it, subtract money
                     // TODO: Check that terrain matches building requirements
 
                     // Later: This is an inefficient check, but it will have to do for now

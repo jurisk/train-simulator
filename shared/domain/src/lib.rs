@@ -34,6 +34,12 @@ impl VertexCoordsXZ {
         let coords: CoordsXZ = self.into();
         coords.into()
     }
+
+    #[must_use]
+    pub fn from_tile_coords_xz(tile_coords_xz: TileCoordsXZ) -> Self {
+        let coords: CoordsXZ = tile_coords_xz.into();
+        coords.into()
+    }
 }
 
 impl From<VertexCoordsXZ> for CoordsXZ {
@@ -68,9 +74,20 @@ impl TileCoordsXZ {
     }
 
     #[must_use]
-    pub fn north_west_vertex(self) -> VertexCoordsXZ {
+    pub fn vertex_coords_nw_ne_se_sw(
+        self,
+    ) -> (
+        VertexCoordsXZ,
+        VertexCoordsXZ,
+        VertexCoordsXZ,
+        VertexCoordsXZ,
+    ) {
         let coords: CoordsXZ = self.into();
-        coords.into()
+        let nw = VertexCoordsXZ::from(coords);
+        let ne = VertexCoordsXZ::from(coords + DirectionXZ::East);
+        let se = VertexCoordsXZ::from(coords + DirectionXZ::South + DirectionXZ::East);
+        let sw = VertexCoordsXZ::from(coords + DirectionXZ::South);
+        (nw, ne, se, sw)
     }
 }
 
@@ -170,6 +187,16 @@ impl BuildingId {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+pub struct VehicleId(pub Uuid);
+
+impl VehicleId {
+    #[must_use]
+    pub fn random() -> Self {
+        Self(Uuid::new_v4())
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum TrackType {
     NorthEast,
@@ -223,6 +250,33 @@ pub struct BuildingInfo {
     pub building_id:          BuildingId,
     pub north_west_vertex_xz: VertexCoordsXZ,
     pub building_type:        BuildingType,
+}
+
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+pub enum VehicleType {
+    TrainEngine,
+    TrainCar,
+}
+
+impl VehicleType {
+    #[must_use]
+    pub fn length_in_tiles(self) -> f32 {
+        match self {
+            VehicleType::TrainEngine => 0.8,
+            VehicleType::TrainCar => 0.6,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+pub struct VehicleInfo {
+    pub vehicle_id:   VehicleId,
+    pub owner_id:     PlayerId,
+    // TODO: Rethink `location`, as vehicles can travel between tiles, and also a `TrainCar` can directly follow a `TrainEngine` or another `TrainCar`
+    pub location:     TileCoordsXZ,
+    pub direction:    DirectionXZ,
+    pub vehicle_type: VehicleType,
+    // TODO: Velocity?
 }
 
 impl BuildingInfo {

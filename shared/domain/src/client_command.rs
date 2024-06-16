@@ -5,7 +5,7 @@ use std::time::Duration;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{BuildingInfo, ClientId, GameId, PlayerId, PlayerName};
+use crate::{BuildingInfo, ClientId, GameId, PlayerId, PlayerName, VehicleInfo};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct AccessToken(pub String);
@@ -29,6 +29,7 @@ pub enum GameCommand {
     QueryBuildings,
     // TODO: Should actually be `BuildBuildings` as a transaction, so we either manage to build all of the track segments or none
     BuildBuilding(BuildingInfo),
+    PurchaseVehicle(VehicleInfo),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

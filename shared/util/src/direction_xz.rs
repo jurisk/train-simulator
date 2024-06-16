@@ -1,7 +1,10 @@
+use serde::{Deserialize, Serialize};
+
 use crate::coords_xz::CoordsXZ;
 
 // SW = X axis, smaller is W, larger is E
 // NS = Z axis, smaller is N, larger is S
+#[derive(Debug, Serialize, Deserialize, Copy, Clone, Eq, PartialEq)]
 pub enum DirectionXZ {
     North,
     East,

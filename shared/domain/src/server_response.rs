@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::map_level::MapLevel;
-use crate::{BuildingId, BuildingInfo, ClientId, GameId, PlayerId, PlayerName};
+use crate::{BuildingId, BuildingInfo, ClientId, GameId, PlayerId, PlayerName, VehicleInfo};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum AuthenticationResponse {
@@ -58,6 +58,7 @@ pub enum GameResponse {
     MapLevelProvided(MapLevel),
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
     BuildingBuilt(BuildingInfo),
+    VehicleCreated(VehicleInfo),
 
     CannotBuild(BuildingId),
 }

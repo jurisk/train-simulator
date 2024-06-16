@@ -11,7 +11,11 @@ use bevy::prelude::{
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
-use shared_domain::{BuildingId, BuildingInfo, BuildingType, PlayerId, TrackType, VertexCoordsXZ};
+use shared_domain::{
+    BuildingId, BuildingInfo, BuildingType, PlayerId, TileCoordsXZ, TrackType, VehicleId,
+    VehicleInfo, VehicleType, VertexCoordsXZ,
+};
+use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::tracks::{build_track_when_mouse_released, create_track};
@@ -76,6 +80,18 @@ fn handle_game_map_level_provided_for_testing(
                     };
                     initial_buildings.push(building_info);
                 }
+
+                // This will be overlapping with other players' purchased vehicles, but this may be good for testing anyway
+                client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
+                    *game_id,
+                    GameCommand::PurchaseVehicle(VehicleInfo {
+                        vehicle_id:   VehicleId::random(),
+                        owner_id:     player_id,
+                        direction:    DirectionXZ::North,
+                        location:     TileCoordsXZ::from_usizes(46, 48),
+                        vehicle_type: VehicleType::TrainEngine,
+                    }),
+                )));
 
                 for building in initial_buildings {
                     client_messages.send(ClientMessageEvent::new(ClientCommand::Game(

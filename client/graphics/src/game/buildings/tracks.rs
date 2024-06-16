@@ -143,11 +143,12 @@ pub(crate) fn build_track_when_mouse_released(
             ];
             let tmp_selected_track = tmp_track_types[fastrand::usize(0 .. tmp_track_types.len())];
 
+            let (north_west_vertex_xz, ..) = tile.vertex_coords_nw_ne_se_sw();
             let track = BuildingInfo {
-                owner_id:             player_id,
-                building_id:          BuildingId::random(),
-                north_west_vertex_xz: tile.north_west_vertex(),
-                building_type:        BuildingType::Track(tmp_selected_track),
+                owner_id: player_id,
+                building_id: BuildingId::random(),
+                north_west_vertex_xz,
+                building_type: BuildingType::Track(tmp_selected_track),
             };
 
             client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
