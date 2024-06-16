@@ -95,7 +95,11 @@ fn create_vehicle(
 // Spawning a vehicle on the tile means that the front of the vehicle is about to exit the tile.
 // This is a key design decision, and may have to be revisited later. But for now, I think it will be better
 // for collision detection.
-#[allow(clippy::similar_names, clippy::too_many_arguments, clippy::items_after_statements)]
+#[allow(
+    clippy::similar_names,
+    clippy::too_many_arguments,
+    clippy::items_after_statements
+)]
 fn create_train_engine(
     player_info: &PlayerInfo,
     length_in_tiles: f32,
