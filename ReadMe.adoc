@@ -107,12 +107,12 @@ cargo modules dependencies --no-externs --no-fns --no-sysroot --no-traits --no-t
 
 === Profiling
 
-Does not work on Windows.
+Does not work on Windows. Set `[profile.release] debug = true` in `Cargo.toml`.
 
 [source,bash]
 ----
 cargo install flamegraph
-cargo flamegraph --bin server_console
+cargo flamegraph --bin server_console --root
 ----
 
 == Deploy locally
@@ -178,6 +178,9 @@ gcloud auth configure-docker
 
 [source,bash]
 ----
+git rev-parse HEAD > assets/versions/git.txt
+git show -s --format=%cI HEAD >> assets/versions/git.txt
+
 docker build --tag train-simulator --file game-server.dockerfile .
 docker tag train-simulator gcr.io/train-simulator-gcp/train-simulator
 docker push gcr.io/train-simulator-gcp/train-simulator
@@ -211,6 +214,8 @@ terraform refresh
 terraform output
 terraform state list
 terraform destroy
+terraform destroy -target module.proxy
+terraform destroy -target module.game-server
 ----
 
 ==== DNS setup

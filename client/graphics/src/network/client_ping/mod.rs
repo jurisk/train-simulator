@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 use bevy::app::{App, FixedUpdate};
-use bevy::prelude::{info, EventReader, EventWriter, Plugin, Res, ResMut, Resource, Time, Timer};
+use bevy::prelude::{info, EventReader, EventWriter, Plugin, Res, ResMut, Resource, Time, Timer, IntoSystemConfigs};
 use bevy::time::TimerMode;
 use shared_domain::client_command::{ClientCommand, NetworkCommand};
 use shared_domain::server_response::{NetworkResponse, ServerResponse};
@@ -22,7 +22,7 @@ impl Plugin for ClientPingPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(PingTimer(Timer::new(self.interval, TimerMode::Repeating)))
             .add_systems(FixedUpdate, update_timer)
-            .add_systems(FixedUpdate, handle_timer_just_finished)
+            .add_systems(FixedUpdate, handle_timer_just_finished.after(update_timer))
             .add_systems(FixedUpdate, handle_server_responses);
     }
 }
@@ -50,6 +50,7 @@ fn handle_timer_just_finished(
     mut client_messages: EventWriter<ClientMessageEvent>,
 ) {
     let PingTimer(timer) = timer.into_inner();
+    info!("{:?}", timer.elapsed());
     if timer.just_finished() {
         client_messages.send(ClientMessageEvent::new(ClientCommand::Network(
             NetworkCommand::Ping {
