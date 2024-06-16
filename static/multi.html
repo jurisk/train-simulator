@@ -7,10 +7,14 @@
 </head>
 <body>
     <script type="module">
-        import { start } from './wasm-build/client_graphical.js'
+        import init, { start } from './wasm-build/client_graphical.js';
+
+        await init();
+
         const currentUrl = window.location;
         const wsProtocol = currentUrl.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${wsProtocol}//${currentUrl.host}/ws`;
+
         start(wsUrl);
     </script>
     <div>
