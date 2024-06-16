@@ -6,10 +6,9 @@ use std::time::Duration;
 
 use axum::body::Body;
 use axum::Router;
-use bevy::log::info;
 use bevy::prelude::{
-    default, error, App, Event, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin,
-    ResMut, Resource,
+    debug, default, error, info, App, Event, EventReader, EventWriter, FixedUpdate,
+    IntoSystemConfigs, Plugin, ResMut, Resource,
 };
 use bevy_simplenet::{
     AcceptorConfig, Authenticator, RateLimitConfig, Server, ServerConfig, ServerEventFrom,
@@ -34,6 +33,8 @@ impl Plugin for MultiplayerSimpleNetServerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ServerStateResource(ServerState::new()));
         app.add_systems(FixedUpdate, read_on_server);
+        // Fair warning - there are interesting race conditions that can happen in `bevy_simplenet`:
+        // - Messages will be silently dropped if there are unconsumed connection reports for that client.
         app.add_systems(
             FixedUpdate,
             process_client_command_with_client_id_events.after(read_on_server),
@@ -120,9 +121,8 @@ fn process_client_command_with_client_id_events(
     for ClientCommandWithClientIdEvent(client_command_with_client_id) in
         client_command_with_client_id_events.read()
     {
-        info!("Picked up {client_command_with_client_id:?}...");
+        debug!("Picked up {client_command_with_client_id:?}...");
         let responses = server_state.process(client_command_with_client_id.clone());
-        info!("Got {responses:?} from server state...");
 
         for response in responses {
             for client_id in &*response.client_ids {

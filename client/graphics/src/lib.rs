@@ -69,7 +69,7 @@ impl Plugin for ClientGraphicsPlugin {
             DebugPlugin,
             SelectionPlugin,
             ClientPingPlugin {
-                interval: Duration::from_secs(10),
+                interval: Duration::from_secs(60),
             },
         ));
 
