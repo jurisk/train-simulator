@@ -201,7 +201,7 @@ docker push gcr.io/train-simulator-gcp/train-simulator-proxy
 gcloud auth application-default login
 cd terraform
 terraform init
-terraform fmt
+terraform fmt -recursive
 terraform validate
 terraform graph
 terraform graph -type=plan

@@ -34,6 +34,13 @@ module "proxy" {
   network_name    = module.network.network_name
   zone            = var.gcp_zone
   instance_name   = "train-simulator-proxy-vm"
+  volumes = {
+    caddy_data = {
+      name       = "caddy_data"
+      host_path  = "/tmp"
+      mount_path = "/data"
+    }
+  }
 }
 
 provider "google" {

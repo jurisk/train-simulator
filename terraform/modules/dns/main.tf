@@ -7,7 +7,7 @@ resource "google_dns_managed_zone" "dns_zone" {
   project    = var.gcp_project
 
   dnssec_config {
-    kind = "dns#managedZoneDnsSecConfig"
+    kind  = "dns#managedZoneDnsSecConfig"
     state = "on"
   }
 

@@ -15,7 +15,7 @@ module "gce-container" {
 
     # Could not launch threads otherwise
     securityContext = {
-      privileged: true
+      privileged : true
     }
 
     env = [
@@ -25,31 +25,24 @@ module "gce-container" {
       }
     ]
 
-    // TODO: This is temporary, we should probably abstract it away as we are reusing this module for the game-server too
     volumeMounts = [
-      {
-        mountPath = "/data"
-        name      = "caddy_data"
+      for volume in var.volumes : {
+        mountPath = volume.mount_path
+        name      = volume.name
         readOnly  = false
-      },
+      }
     ]
   }
 
-  // TODO: This is temporary, we should probably abstract it away as we are reusing this module for the game-server too
   volumes = [
-    {
-      name = "caddy_data"
+    for volume in var.volumes : {
+      name = volume.name
 
-#       emptyDir = {
-#         medium = "Memory"
-#       }
-
-      # I think it should not be under /tmp/ but some other locations I tried were read-only file systems
       hostPath = {
-        path = "/tmp/caddy"
+        path = volume.host_path
         type = "DirectoryOrCreate"
       }
-    },
+    }
   ]
 
   restart_policy = "Never" # Always, OnFailure, UnlessStopped are the other options

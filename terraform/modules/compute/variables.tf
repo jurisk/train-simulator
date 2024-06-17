@@ -5,7 +5,7 @@ variable "container_image" {
 
 variable "project_id" {
   description = "The project ID to deploy resources into"
-  type = string
+  type        = string
 }
 
 variable "network_name" {
@@ -15,7 +15,7 @@ variable "network_name" {
 
 variable "instance_name" {
   description = "The desired name to assign to the deployed instance"
-  type = string
+  type        = string
 }
 
 variable "zone" {
@@ -35,7 +35,17 @@ variable "cos_image_name" {
 }
 
 variable "env_vars" {
-    description = "A map of environment variables to set in the container"
-    type        = map(string)
-    default     = {}
+  description = "A map of environment variables to set in the container"
+  type        = map(string)
+  default     = {}
+}
+
+variable "volumes" {
+  type = map(object({
+    name       = string
+    host_path  = string
+    mount_path = string
+  }))
+
+  default = {}
 }
