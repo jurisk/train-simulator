@@ -6,11 +6,12 @@ use log::warn;
 use shared_domain::client_command::{GameCommand, LobbyCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, LobbyResponse, ServerError, ServerResponse, ServerResponseWithAddress,
+    AddressEnvelope, GameResponse, LobbyResponse, ServerError, ServerResponse,
+    ServerResponseWithAddress,
 };
 use shared_domain::{GameId, PlayerId, PlayerName};
 
-use crate::game_state::GameState;
+use crate::game_state::{GameResponseWithAddress, GameState};
 
 pub(crate) struct Games {
     game_map:       HashMap<GameId, GameState>,
@@ -57,9 +58,32 @@ impl Games {
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         // Later: Don't allow starting a game if is already a part of another game?
         let mut game_state = GameState::from_prototype(&self.game_prototype);
-        let results = game_state.join_game(requesting_player_id, requesting_player_name)?;
-        self.game_map.insert(game_state.game_id, game_state);
-        Ok(results)
+        let game_id = game_state.game_id;
+        let results = game_state
+            .join_game(requesting_player_id, requesting_player_name)
+            .map_err(|err| ServerResponse::Game(game_id, err))?;
+        self.game_map.insert(game_id, game_state);
+        Self::convert_game_response_to_server_response(game_id, Ok(results))
+    }
+
+    fn convert_game_response_to_server_response(
+        game_id: GameId,
+        input: Result<Vec<GameResponseWithAddress>, GameResponse>,
+    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+        match input {
+            Ok(game_responses) => {
+                Ok(game_responses
+                    .into_iter()
+                    .map(|game_response| {
+                        ServerResponseWithAddress::new(
+                            game_response.address,
+                            ServerResponse::Game(game_id, game_response.response),
+                        )
+                    })
+                    .collect())
+            },
+            Err(game_response) => Err(ServerResponse::Game(game_id, game_response)),
+        }
     }
 
     pub(crate) fn process_command(
@@ -69,7 +93,10 @@ impl Games {
         game_command: GameCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         let game_state = self.lookup_game_state_mut(game_id)?;
-        game_state.process_command(player_id, game_command)
+        Self::convert_game_response_to_server_response(
+            game_id,
+            game_state.process_command(player_id, game_command),
+        )
     }
 
     fn lookup_game_state_mut(&mut self, game_id: GameId) -> Result<&mut GameState, ServerResponse> {
@@ -98,12 +125,18 @@ impl Games {
             },
             LobbyCommand::JoinExistingGame(game_id, player_name) => {
                 let game_state = self.lookup_game_state_mut(game_id)?;
-                game_state.join_game(requesting_player_id, player_name)
+                Self::convert_game_response_to_server_response(
+                    game_id,
+                    game_state.join_game(requesting_player_id, player_name),
+                )
             },
             LobbyCommand::LeaveGame(game_id) => {
                 // Later: Not sure how this should even work if the player has buildings and vehicles owned in the game?
                 let game_state = self.lookup_game_state_mut(game_id)?;
-                game_state.remove_player(requesting_player_id)
+                Self::convert_game_response_to_server_response(
+                    game_id,
+                    game_state.remove_player(requesting_player_id),
+                )
             },
         }
     }

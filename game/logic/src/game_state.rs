@@ -4,13 +4,9 @@ use std::collections::HashMap;
 
 use shared_domain::client_command::GameCommand;
 use shared_domain::map_level::MapLevel;
-use shared_domain::server_response::{
-    AddressEnvelope, Colour, GameInfo, GameResponse, PlayerInfo, ServerResponse,
-    ServerResponseWithAddress,
-};
+use shared_domain::server_response::{AddressEnvelope, Colour, GameInfo, GameResponse, PlayerInfo};
 use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName, VehicleInfo};
 
-// TODO: This one should only return `Res<GameResponse, GameError>` to make everything simpler
 #[derive(Debug, Clone)]
 pub(crate) struct GameState {
     pub game_id: GameId,
@@ -53,7 +49,7 @@ impl GameState {
         &mut self,
         requesting_player_id: PlayerId,
         requesting_player_name: PlayerName,
-    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         // Later: Don't allow joining multiple games
 
         let colour = Colour::random();
@@ -67,23 +63,17 @@ impl GameState {
             .insert(requesting_player_id, requesting_player_info);
 
         Ok(vec![
-            ServerResponseWithAddress::new(
+            GameResponseWithAddress::new(
                 AddressEnvelope::ToPlayer(requesting_player_id),
-                ServerResponse::Game(self.game_id, GameResponse::GameJoined),
+                GameResponse::GameJoined,
             ),
-            ServerResponseWithAddress::new(
+            GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id),
-                ServerResponse::Game(
-                    self.game_id,
-                    GameResponse::PlayersUpdated(self.players.clone()),
-                ),
+                GameResponse::PlayersUpdated(self.players.clone()),
             ),
-            ServerResponseWithAddress::new(
+            GameResponseWithAddress::new(
                 AddressEnvelope::ToPlayer(requesting_player_id),
-                ServerResponse::Game(
-                    self.game_id,
-                    GameResponse::MapLevelProvided(self.map_level.clone()),
-                ),
+                GameResponse::MapLevelProvided(self.map_level.clone()),
             ),
         ])
     }
@@ -92,7 +82,7 @@ impl GameState {
         &mut self,
         requesting_player_id: PlayerId,
         game_command: GameCommand,
-    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         match game_command {
             GameCommand::PurchaseVehicle(vehicle_info) => {
                 self.process_purchase_vehicle(requesting_player_id, vehicle_info)
@@ -107,13 +97,10 @@ impl GameState {
     fn process_query_buildings(
         &mut self,
         requesting_player_id: PlayerId,
-    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
-        Ok(vec![ServerResponseWithAddress::new(
+    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
+        Ok(vec![GameResponseWithAddress::new(
             AddressEnvelope::ToPlayer(requesting_player_id),
-            ServerResponse::Game(
-                self.game_id,
-                GameResponse::BuildingsBuilt(self.buildings.clone()),
-            ),
+            GameResponse::BuildingsBuilt(self.buildings.clone()),
         )])
     }
 
@@ -121,7 +108,7 @@ impl GameState {
         &mut self,
         requesting_player_id: PlayerId,
         building_infos: Vec<BuildingInfo>,
-    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         let valid_player_id = building_infos
             .iter()
             .all(|building_info| building_info.owner_id == requesting_player_id);
@@ -146,19 +133,16 @@ impl GameState {
         if valid_player_id && tiles_are_free {
             self.buildings.append(&mut building_infos.clone());
 
-            Ok(vec![ServerResponseWithAddress::new(
+            Ok(vec![GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id),
-                ServerResponse::Game(self.game_id, GameResponse::BuildingsBuilt(building_infos)),
+                GameResponse::BuildingsBuilt(building_infos),
             )])
         } else {
-            Err(ServerResponse::Game(
-                self.game_id,
-                GameResponse::CannotBuild(
-                    building_infos
-                        .into_iter()
-                        .map(|building_info| building_info.building_id)
-                        .collect(),
-                ),
+            Err(GameResponse::CannotBuild(
+                building_infos
+                    .into_iter()
+                    .map(|building_info| building_info.building_id)
+                    .collect(),
             ))
         }
     }
@@ -167,21 +151,18 @@ impl GameState {
         &mut self,
         requesting_player_id: PlayerId,
         vehicle_info: VehicleInfo,
-    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         if requesting_player_id == vehicle_info.owner_id {
             // TODO: Check if the track / road / etc. is free and owned by the purchaser
             // TODO: Subtract money
 
             self.vehicles.push(vehicle_info.clone());
-            Ok(vec![ServerResponseWithAddress::new(
+            Ok(vec![GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id),
-                ServerResponse::Game(self.game_id, GameResponse::VehicleCreated(vehicle_info)),
+                GameResponse::VehicleCreated(vehicle_info),
             )])
         } else {
-            Err(ServerResponse::Game(
-                self.game_id,
-                GameResponse::CannotPurchase(vehicle_info.vehicle_id),
-            ))
+            Err(GameResponse::CannotPurchase(vehicle_info.vehicle_id))
         }
     }
 
@@ -199,11 +180,22 @@ impl GameState {
     pub(crate) fn remove_player(
         &mut self,
         player_id: PlayerId,
-    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         self.players.remove(&player_id);
-        Ok(vec![ServerResponseWithAddress::new(
+        Ok(vec![GameResponseWithAddress::new(
             AddressEnvelope::ToAllPlayersInGame(self.game_id),
-            ServerResponse::Game(self.game_id, GameResponse::GameLeft),
+            GameResponse::GameLeft,
         )])
+    }
+}
+
+pub(crate) struct GameResponseWithAddress {
+    pub address:  AddressEnvelope,
+    pub response: GameResponse,
+}
+
+impl GameResponseWithAddress {
+    fn new(address: AddressEnvelope, response: GameResponse) -> Self {
+        Self { address, response }
     }
 }
