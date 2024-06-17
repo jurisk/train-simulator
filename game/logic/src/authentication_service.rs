@@ -11,7 +11,6 @@ pub(crate) struct AuthenticationService {
     connection_registry: ConnectionRegistry,
 }
 
-// TODO: This one should only return `Res<AuthenticationResponse, AuthenticationError>` to make everything simpler
 impl AuthenticationService {
     pub(crate) fn new() -> Self {
         Self {

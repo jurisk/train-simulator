@@ -13,12 +13,12 @@ use shared_domain::{GameId, PlayerId, PlayerName};
 
 use crate::game_state::{GameResponseWithAddress, GameState};
 
+// This is also, in a way, `Lobby`. Should we rename it? Split into two somehow? Not sure yet...
 pub(crate) struct Games {
     game_map:       HashMap<GameId, GameState>,
     game_prototype: GameState,
 }
 
-// TODO: Extract `Lobby` as a concept separately?
 impl Games {
     #[must_use]
     #[allow(clippy::missing_panics_doc, clippy::new_without_default)]
