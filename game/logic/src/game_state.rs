@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use shared_domain::client_command::GameCommand;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, Colour, GameInfo, GameResponse, PlayerInfo, ServerError, ServerResponse,
+    AddressEnvelope, Colour, GameInfo, GameResponse, PlayerInfo, ServerResponse,
     ServerResponseWithAddress,
 };
 use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName, VehicleInfo};
@@ -178,7 +178,10 @@ impl GameState {
                 ServerResponse::Game(self.game_id, GameResponse::VehicleCreated(vehicle_info)),
             )])
         } else {
-            Err(ServerResponse::Error(ServerError::NotAuthorized))
+            Err(ServerResponse::Game(
+                self.game_id,
+                GameResponse::CannotPurchase(vehicle_info.vehicle_id),
+            ))
         }
     }
 
