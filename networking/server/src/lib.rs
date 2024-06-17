@@ -4,7 +4,6 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use axum::body::Body;
 use axum::Router;
 use bevy::prelude::{
     debug, default, error, info, App, Event, EventReader, EventWriter, FixedUpdate,
@@ -25,8 +24,7 @@ pub type GameServerEvent = ServerEventFrom<GameChannel>;
 struct ServerStateResource(pub ServerState);
 
 pub struct MultiplayerSimpleNetServerPlugin {
-    // TODO: Can we do this simpler?
-    pub router:  Arc<Mutex<Router<(), Body>>>,
+    pub router:  Arc<Mutex<Router>>,
     pub address: SocketAddr,
 }
 
@@ -42,11 +40,9 @@ impl Plugin for MultiplayerSimpleNetServerPlugin {
         );
         app.add_event::<ClientCommandWithClientIdEvent>();
 
-        let router = self.router.clone();
+        let router = self.router.lock().expect("Locking the router failed");
 
         let server = {
-            let mut router = router.lock().expect("Locking the router failed");
-            let router = &mut *router;
             server_factory().new_server_with_router(
                 enfync::builtin::native::TokioHandle::default(),
                 self.address,
