@@ -5,8 +5,8 @@ use std::collections::HashMap;
 use shared_domain::client_command::GameCommand;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, Colour, GameInfo, GameResponse, LobbyResponse, PlayerInfo, ServerError,
-    ServerResponse, ServerResponseWithAddress,
+    AddressEnvelope, Colour, GameInfo, GameResponse, PlayerInfo, ServerError, ServerResponse,
+    ServerResponseWithAddress,
 };
 use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName, VehicleInfo};
 
@@ -69,7 +69,7 @@ impl GameState {
         Ok(vec![
             ServerResponseWithAddress::new(
                 AddressEnvelope::ToPlayer(requesting_player_id),
-                ServerResponse::Lobby(LobbyResponse::GameJoined(self.game_id)),
+                ServerResponse::Game(self.game_id, GameResponse::GameJoined),
             ),
             ServerResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id),
@@ -200,7 +200,7 @@ impl GameState {
         self.players.remove(&player_id);
         Ok(vec![ServerResponseWithAddress::new(
             AddressEnvelope::ToAllPlayersInGame(self.game_id),
-            ServerResponse::Lobby(LobbyResponse::GameLeft(self.game_id)),
+            ServerResponse::Game(self.game_id, GameResponse::GameLeft),
         )])
     }
 }
