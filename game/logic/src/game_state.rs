@@ -10,11 +10,12 @@ use shared_domain::server_response::{
 };
 use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName, VehicleInfo};
 
+// TODO: This one should only return `Res<GameResponse, GameError>` to make everything simpler
 #[derive(Debug, Clone)]
 pub(crate) struct GameState {
     pub game_id: GameId,
     map_level:   MapLevel,
-    // TODO:    Should tracks be separate from buildings? Should some of this be in a `FieldXZ` instead of `Vec`? A set of multiple tracks can exist on a single tile.
+    // TODO:    Should some of this be in a `FieldXZ` instead of `Vec`? A set of multiple tracks can exist on a single tile.
     buildings:   Vec<BuildingInfo>,
     vehicles:    Vec<VehicleInfo>,
     players:     HashMap<PlayerId, PlayerInfo>,
@@ -111,54 +112,58 @@ impl GameState {
                     Err(ServerResponse::Error(ServerError::NotAuthorized))
                 }
             },
-            GameCommand::BuildBuilding(building_info) => {
-                if requesting_player_id == building_info.owner_id {
-                    // TODO: Check that this is a valid building and there is enough money to build it, subtract money
-                    // TODO: Check that terrain matches building requirements
+            GameCommand::BuildBuildings(building_infos) => {
+                let valid_player_id = building_infos
+                    .iter()
+                    .all(|building_info| building_info.owner_id == requesting_player_id);
 
-                    // Later: This is an inefficient check, but it will have to do for now
-                    let tiles_are_free =
-                        building_info.covers_tiles.to_set().into_iter().all(|tile| {
+                // TODO: Check that this is a valid building and there is enough money to build it, subtract money
+                // TODO: Check that terrain matches building requirements
+
+                // Later: This is an inefficient check, but it will have to do for now
+                let tiles_are_free = building_infos.iter().all(|building_infos| {
+                    building_infos
+                        .covers_tiles
+                        .to_set()
+                        .into_iter()
+                        .all(|tile| {
                             !self
                                 .buildings
                                 .iter()
                                 .any(|building| building.covers_tiles.to_set().contains(&tile))
-                        });
+                        })
+                });
 
-                    if tiles_are_free {
-                        self.buildings.push(building_info.clone());
+                if valid_player_id && tiles_are_free {
+                    self.buildings.append(&mut building_infos.clone());
 
-                        Ok(vec![ServerResponseWithAddress::new(
-                            AddressEnvelope::ToAllPlayersInGame(self.game_id),
-                            ServerResponse::Game(
-                                self.game_id,
-                                GameResponse::BuildingBuilt(building_info.clone()),
-                            ),
-                        )])
-                    } else {
-                        Err(ServerResponse::Game(
+                    Ok(vec![ServerResponseWithAddress::new(
+                        AddressEnvelope::ToAllPlayersInGame(self.game_id),
+                        ServerResponse::Game(
                             self.game_id,
-                            GameResponse::CannotBuild(building_info.building_id),
-                        ))
-                    }
+                            GameResponse::BuildingsBuilt(building_infos),
+                        ),
+                    )])
                 } else {
-                    Err(ServerResponse::Error(ServerError::NotAuthorized))
+                    Err(ServerResponse::Game(
+                        self.game_id,
+                        GameResponse::CannotBuild(
+                            building_infos
+                                .into_iter()
+                                .map(|building_info| building_info.building_id)
+                                .collect(),
+                        ),
+                    ))
                 }
             },
             GameCommand::QueryBuildings => {
-                Ok(self
-                    .buildings
-                    .iter()
-                    .map(|building_info| {
-                        ServerResponseWithAddress::new(
-                            AddressEnvelope::ToPlayer(requesting_player_id),
-                            ServerResponse::Game(
-                                self.game_id,
-                                GameResponse::BuildingBuilt(building_info.clone()),
-                            ),
-                        )
-                    })
-                    .collect())
+                Ok(vec![ServerResponseWithAddress::new(
+                    AddressEnvelope::ToPlayer(requesting_player_id),
+                    ServerResponse::Game(
+                        self.game_id,
+                        GameResponse::BuildingsBuilt(self.buildings.clone()),
+                    ),
+                )])
             },
         }
     }

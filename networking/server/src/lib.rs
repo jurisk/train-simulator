@@ -25,6 +25,7 @@ pub type GameServerEvent = ServerEventFrom<GameChannel>;
 struct ServerStateResource(pub ServerState);
 
 pub struct MultiplayerSimpleNetServerPlugin {
+    // TODO: Can we do this simpler?
     pub router:  Arc<Mutex<Router<(), Body>>>,
     pub address: SocketAddr,
 }

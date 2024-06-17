@@ -177,7 +177,7 @@ impl GameId {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Hash)]
 pub struct BuildingId(pub Uuid);
 
 impl BuildingId {
@@ -308,7 +308,8 @@ pub struct VehicleInfo {
     pub vehicle_id:   VehicleId,
     pub owner_id:     PlayerId,
     // TODO: Rethink `location`, as vehicles can travel between tiles, and also a `TrainCar` can directly follow a `TrainEngine` or another `TrainCar`
-    pub location:     TileCoordsXZ,
+    pub location:     TileCoordsXZ, /* TODO: Probably have a sub-location float with `0` meaning "just about to enter the tile" and `1` meaning "just about to leave the tile". */
+    // TODO: I think for trains we may need a whole list of `TileCoordsXZ, TrackType` pairs, as a train can travel through multiple tiles and multiple track types.
     pub direction:    DirectionXZ,
     pub vehicle_type: VehicleType,
     // TODO: Velocity?

@@ -94,12 +94,10 @@ fn handle_game_map_level_provided_for_testing(
                     }),
                 )));
 
-                for building in initial_buildings {
-                    client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
-                        *game_id,
-                        GameCommand::BuildBuilding(building),
-                    )));
-                }
+                client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
+                    *game_id,
+                    GameCommand::BuildBuildings(initial_buildings),
+                )));
             }
         }
     }
@@ -119,15 +117,17 @@ fn handle_building_built(
     if let Some(map_level) = map_level {
         for message in server_messages.read() {
             if let ServerResponse::Game(_game_id, game_response) = &message.response {
-                if let GameResponse::BuildingBuilt(building_info) = game_response {
-                    create_building(
-                        building_info,
-                        &mut commands,
-                        &mut meshes,
-                        &mut materials,
-                        &map_level.map_level,
-                        players_info,
-                    );
+                if let GameResponse::BuildingsBuilt(building_infos) = game_response {
+                    for building_info in building_infos {
+                        create_building(
+                            building_info,
+                            &mut commands,
+                            &mut meshes,
+                            &mut materials,
+                            &map_level.map_level,
+                            players_info,
+                        );
+                    }
                 }
             }
         }

@@ -24,8 +24,8 @@ pub struct GameInfo {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum LobbyResponse {
     AvailableGames(Vec<GameInfo>),
-    GameJoined(GameId),
-    GameLeft(GameId),
+    GameJoined(GameId), // TODO: This could ge in `GameResponse`
+    GameLeft(GameId),   // TODO: This could ge in `GameResponse`
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
@@ -57,10 +57,10 @@ pub struct PlayerInfo {
 pub enum GameResponse {
     MapLevelProvided(MapLevel),
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
-    BuildingBuilt(BuildingInfo),
+    BuildingsBuilt(Vec<BuildingInfo>),
     VehicleCreated(VehicleInfo),
 
-    CannotBuild(BuildingId),
+    CannotBuild(Vec<BuildingId>),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

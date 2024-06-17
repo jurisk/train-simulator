@@ -17,6 +17,7 @@ pub(crate) struct Games {
     game_prototype: GameState,
 }
 
+// TODO: Extract `Lobby` as a concept separately?
 impl Games {
     #[must_use]
     #[allow(clippy::missing_panics_doc, clippy::new_without_default)]

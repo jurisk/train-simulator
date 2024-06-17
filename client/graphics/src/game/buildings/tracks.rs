@@ -135,6 +135,8 @@ pub(crate) fn build_track_when_mouse_released(
         let SelectedTiles {
             ordered: ordered_selected_tiles,
         } = selected_tiles;
+
+        let mut buildings = vec![];
         for tile in ordered_selected_tiles.iter() {
             info!("Building track at {:?}", tile);
             // TODO: Debug only, replace with a proper route planner
@@ -155,11 +157,14 @@ pub(crate) fn build_track_when_mouse_released(
                 building_type: BuildingType::Track(tmp_selected_track),
             };
 
-            client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
-                game_id,
-                GameCommand::BuildBuilding(track),
-            )));
+            buildings.push(track);
         }
+
+        client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
+            game_id,
+            GameCommand::BuildBuildings(buildings),
+        )));
+
         ordered_selected_tiles.clear();
     }
 }
