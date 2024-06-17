@@ -34,7 +34,7 @@ impl Plugin for GamePlugin {
         app.add_systems(OnEnter(ClientState::JoiningGame), initiate_login);
         app.add_systems(FixedUpdate, handle_players_updated);
         app.add_systems(FixedUpdate, handle_login_successful);
-        app.insert_resource(PlayerIdResource(PlayerId::random()));
+        app.insert_resource(PlayerIdResource(PlayerId::random())); // TODO: Improve auto-login so it only kicks in when an environment variable is set
         app.insert_resource(GameIdResource(GameId::random())); // Questionable, but dealing with it being missing may be worse
         app.insert_resource(PlayersInfoResource(HashMap::default()));
     }

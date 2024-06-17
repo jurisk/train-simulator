@@ -14,6 +14,7 @@ use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName, VehicleInfo};
 pub(crate) struct GameState {
     pub game_id: GameId,
     map_level:   MapLevel,
+    // TODO:    Should tracks be separate from buildings? Should some of this be in a `FieldXZ` instead of `Vec`? A set of multiple tracks can exist on a single tile.
     buildings:   Vec<BuildingInfo>,
     vehicles:    Vec<VehicleInfo>,
     players:     HashMap<PlayerId, PlayerInfo>,

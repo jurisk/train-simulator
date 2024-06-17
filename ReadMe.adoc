@@ -126,7 +126,6 @@ cargo flamegraph --bin server_console --root
 ----
 docker network create train-simulator
 docker build --tag train-simulator --file game-server.dockerfile .
-docker image ls train-simulator
 docker run --interactive --tty --rm --name train-simulator --publish 8080:8080/tcp --network=train-simulator train-simulator
 docker stop train-simulator
 ----

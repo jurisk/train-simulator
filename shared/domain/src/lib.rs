@@ -197,6 +197,7 @@ impl VehicleId {
     }
 }
 
+// TODO: Possibly rename to `ConnectionType` or something. And `TrackType` thus has multiple of these `ConnectionType`-s.
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum TrackType {
     NorthEast,
@@ -229,8 +230,23 @@ impl ProductionType {
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+pub enum StationOrientation {
+    NorthSouth,
+    EastWest,
+}
+
+// TODO: Build some test stations in test setup
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+pub struct StationType {
+    orientation:     StationOrientation,
+    platforms:       usize,
+    length_in_tiles: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum BuildingType {
     Track(TrackType),
+    Station(StationType),
     Production(ProductionType),
 }
 
@@ -241,6 +257,7 @@ impl BuildingType {
         match self {
             BuildingType::Track(track_type) => track_type.relative_tiles_used(),
             BuildingType::Production(production_type) => production_type.relative_tiles_used(),
+            BuildingType::Station(_station_type) => todo!(), // TODO: Implement
         }
     }
 }
@@ -269,6 +286,7 @@ pub struct BuildingInfo {
     pub building_type: BuildingType,
 }
 
+// TODO: Reconsider if perhaps `Train` is `Transport` and consists of `TrainEngine`-s and `TrainCar`-s? Improve test setup to immediately test this.
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum VehicleType {
     TrainEngine,

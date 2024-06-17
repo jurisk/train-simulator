@@ -42,7 +42,8 @@ fn handle_game_map_level_provided_for_testing(
     for message in server_messages.read() {
         if let ServerResponse::Game(game_id, game_response) = &message.response {
             if let GameResponse::MapLevelProvided(_map_level) = game_response {
-                // TODO: This is debug-only and to be removed
+                // TODO: Add a wider diversity of tracks, including junctions! See https://wiki.openttd.org/en/Community/Junctionary/Basic%204-Way%20Junction for example.
+                // TODO: This is debug-only and to be removed - move this to actually use the "save game" concept instead
                 let test_track = vec![
                     ((49, 43), TrackType::SouthWest),
                     ((48, 43), TrackType::EastWest),
@@ -81,7 +82,7 @@ fn handle_game_map_level_provided_for_testing(
                     initial_buildings.push(building_info);
                 }
 
-                // This will be overlapping with other players' purchased vehicles, but this may be good for testing anyway
+                // TODO: This will be overlapping with other players' purchased vehicles, but this may be good for testing anyway. Improve the server so that it rejects such overlaps.
                 client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                     *game_id,
                     GameCommand::PurchaseVehicle(VehicleInfo {
@@ -133,7 +134,7 @@ fn handle_building_built(
     }
 }
 
-#[allow(clippy::similar_names)]
+#[allow(clippy::similar_names, clippy::match_same_arms)]
 fn create_building(
     building_info: &BuildingInfo,
     commands: &mut Commands,
@@ -164,6 +165,7 @@ fn create_building(
                     }
                 },
                 BuildingType::Production(_) => {}, // TODO: Implement
+                BuildingType::Station(_) => {},    // TODO: Implement
             }
         },
     }
