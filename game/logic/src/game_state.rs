@@ -93,78 +93,92 @@ impl GameState {
         requesting_player_id: PlayerId,
         game_command: GameCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
-        // TODO: Refactor to split it up
         match game_command {
             GameCommand::PurchaseVehicle(vehicle_info) => {
-                if requesting_player_id == vehicle_info.owner_id {
-                    // TODO: Check if the track / road / etc. is free and owned by the purchaser
-                    // TODO: Subtract money
-
-                    self.vehicles.push(vehicle_info.clone());
-                    Ok(vec![ServerResponseWithAddress::new(
-                        AddressEnvelope::ToAllPlayersInGame(self.game_id),
-                        ServerResponse::Game(
-                            self.game_id,
-                            GameResponse::VehicleCreated(vehicle_info.clone()),
-                        ),
-                    )])
-                } else {
-                    Err(ServerResponse::Error(ServerError::NotAuthorized))
-                }
+                self.process_purchase_vehicle(requesting_player_id, vehicle_info)
             },
             GameCommand::BuildBuildings(building_infos) => {
-                let valid_player_id = building_infos
-                    .iter()
-                    .all(|building_info| building_info.owner_id == requesting_player_id);
+                self.process_build_buildings(requesting_player_id, building_infos)
+            },
+            GameCommand::QueryBuildings => self.process_query_buildings(requesting_player_id),
+        }
+    }
 
-                // TODO: Check that this is a valid building and there is enough money to build it, subtract money
-                // TODO: Check that terrain matches building requirements
+    fn process_query_buildings(
+        &mut self,
+        requesting_player_id: PlayerId,
+    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+        Ok(vec![ServerResponseWithAddress::new(
+            AddressEnvelope::ToPlayer(requesting_player_id),
+            ServerResponse::Game(
+                self.game_id,
+                GameResponse::BuildingsBuilt(self.buildings.clone()),
+            ),
+        )])
+    }
 
-                // Later: This is an inefficient check, but it will have to do for now
-                let tiles_are_free = building_infos.iter().all(|building_infos| {
+    fn process_build_buildings(
+        &mut self,
+        requesting_player_id: PlayerId,
+        building_infos: Vec<BuildingInfo>,
+    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+        let valid_player_id = building_infos
+            .iter()
+            .all(|building_info| building_info.owner_id == requesting_player_id);
+
+        // TODO: Check that this is a valid building and there is enough money to build it, subtract money
+        // TODO: Check that terrain matches building requirements
+
+        // Later: This is an inefficient check, but it will have to do for now
+        let tiles_are_free = building_infos.iter().all(|building_infos| {
+            building_infos
+                .covers_tiles
+                .to_set()
+                .into_iter()
+                .all(|tile| {
+                    !self
+                        .buildings
+                        .iter()
+                        .any(|building| building.covers_tiles.to_set().contains(&tile))
+                })
+        });
+
+        if valid_player_id && tiles_are_free {
+            self.buildings.append(&mut building_infos.clone());
+
+            Ok(vec![ServerResponseWithAddress::new(
+                AddressEnvelope::ToAllPlayersInGame(self.game_id),
+                ServerResponse::Game(self.game_id, GameResponse::BuildingsBuilt(building_infos)),
+            )])
+        } else {
+            Err(ServerResponse::Game(
+                self.game_id,
+                GameResponse::CannotBuild(
                     building_infos
-                        .covers_tiles
-                        .to_set()
                         .into_iter()
-                        .all(|tile| {
-                            !self
-                                .buildings
-                                .iter()
-                                .any(|building| building.covers_tiles.to_set().contains(&tile))
-                        })
-                });
+                        .map(|building_info| building_info.building_id)
+                        .collect(),
+                ),
+            ))
+        }
+    }
 
-                if valid_player_id && tiles_are_free {
-                    self.buildings.append(&mut building_infos.clone());
+    fn process_purchase_vehicle(
+        &mut self,
+        requesting_player_id: PlayerId,
+        vehicle_info: VehicleInfo,
+    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+        if requesting_player_id == vehicle_info.owner_id {
+            // TODO: Check if the track / road / etc. is free and owned by the purchaser
+            // TODO: Subtract money
 
-                    Ok(vec![ServerResponseWithAddress::new(
-                        AddressEnvelope::ToAllPlayersInGame(self.game_id),
-                        ServerResponse::Game(
-                            self.game_id,
-                            GameResponse::BuildingsBuilt(building_infos),
-                        ),
-                    )])
-                } else {
-                    Err(ServerResponse::Game(
-                        self.game_id,
-                        GameResponse::CannotBuild(
-                            building_infos
-                                .into_iter()
-                                .map(|building_info| building_info.building_id)
-                                .collect(),
-                        ),
-                    ))
-                }
-            },
-            GameCommand::QueryBuildings => {
-                Ok(vec![ServerResponseWithAddress::new(
-                    AddressEnvelope::ToPlayer(requesting_player_id),
-                    ServerResponse::Game(
-                        self.game_id,
-                        GameResponse::BuildingsBuilt(self.buildings.clone()),
-                    ),
-                )])
-            },
+            self.vehicles.push(vehicle_info.clone());
+            Ok(vec![ServerResponseWithAddress::new(
+                AddressEnvelope::ToAllPlayersInGame(self.game_id),
+                ServerResponse::Game(self.game_id, GameResponse::VehicleCreated(vehicle_info)),
+            )])
+        } else {
+            Err(ServerResponse::Error(ServerError::NotAuthorized))
         }
     }
 
