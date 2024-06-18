@@ -48,8 +48,6 @@ fn handle_game_map_level_provided_for_testing(
                 let test_track = vec![
                     ((49, 43), TrackType::SouthWest),
                     ((48, 43), TrackType::EastWest),
-                    ((48, 43), TrackType::NorthEast),
-                    ((48, 43), TrackType::NorthWest),
                     ((48, 42), TrackType::NorthSouth),
                     ((48, 41), TrackType::NorthSouth),
                     ((48, 41), TrackType::EastWest),
@@ -77,6 +75,13 @@ fn handle_game_map_level_provided_for_testing(
                     ((49, 44), TrackType::NorthSouth),
                     ((49, 45), TrackType::NorthSouth),
                     ((49, 46), TrackType::NorthSouth),
+                    ((49, 46), TrackType::NorthEast),
+                    ((50, 46), TrackType::SouthWest),
+                    ((50, 47), TrackType::NorthSouth),
+                    ((50, 48), TrackType::NorthSouth),
+                    ((50, 49), TrackType::NorthSouth),
+                    ((50, 50), TrackType::NorthWest),
+                    ((49, 50), TrackType::SouthEast),
                     ((49, 47), TrackType::NorthSouth),
                     ((49, 48), TrackType::NorthSouth),
                     ((49, 49), TrackType::NorthSouth),
@@ -113,7 +118,7 @@ fn handle_game_map_level_provided_for_testing(
                         },
                         transport_type: TransportType::Train(vec![TrainComponentType::Engine, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car]),
                         velocity: TransportVelocity { tiles_per_second: 0.25 },
-                        movement_orders: MovementOrders::PreferTurningRight, // TODO: Implement some movement
+                        movement_orders: MovementOrders::RandomTurns, // TODO: Implement some movement
                     }),
                 )));
 

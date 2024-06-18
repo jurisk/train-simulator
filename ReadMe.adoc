@@ -225,7 +225,7 @@ terraform output
 terraform state list
 terraform destroy
 terraform destroy -target module.proxy
-terraform destroy -target module.game-server
+terraform destroy -target module.game_server
 ----
 
 ==== DNS setup

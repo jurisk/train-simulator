@@ -346,8 +346,7 @@ pub struct TransportVelocity {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum MovementOrders {
     Stop,
-    PreferTurningLeft,
-    PreferTurningRight,
+    RandomTurns,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
