@@ -188,9 +188,9 @@ impl BuildingId {
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
-pub struct VehicleId(pub Uuid);
+pub struct TransportId(pub Uuid);
 
-impl VehicleId {
+impl TransportId {
     #[must_use]
     pub fn random() -> Self {
         Self(Uuid::new_v4())
@@ -286,31 +286,76 @@ pub struct BuildingInfo {
     pub building_type: BuildingType,
 }
 
-// TODO: Reconsider if perhaps `Train` is `Transport` and consists of `TrainEngine`-s and `TrainCar`-s? Improve test setup to immediately test this.
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
-pub enum VehicleType {
-    TrainEngine,
-    TrainCar,
+pub enum TrainComponentType {
+    Engine,
+    Car,
 }
 
-impl VehicleType {
+impl TrainComponentType {
     #[must_use]
     pub fn length_in_tiles(self) -> f32 {
         match self {
-            VehicleType::TrainEngine => 0.75,
-            VehicleType::TrainCar => 0.5,
+            TrainComponentType::Engine => 0.75,
+            TrainComponentType::Car => 0.5,
         }
     }
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
-pub struct VehicleInfo {
-    pub vehicle_id:   VehicleId,
-    pub owner_id:     PlayerId,
-    // TODO: Rethink `location`, as vehicles can travel between tiles, and also a `TrainCar` can directly follow a `TrainEngine` or another `TrainCar`
-    pub location:     TileCoordsXZ, /* TODO: Probably have a sub-location float with `0` meaning "just about to enter the tile" and `1` meaning "just about to leave the tile". */
-    // TODO: I think for trains we may need a whole list of `TileCoordsXZ, TrackType` pairs, as a train can travel through multiple tiles and multiple track types.
-    pub direction:    DirectionXZ,
-    pub vehicle_type: VehicleType,
-    // TODO: Velocity?
+pub enum TransportType {
+    Train(Vec<TrainComponentType>),
+    RoadVehicle,
+    Ship,
+}
+
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+pub struct TileTrack {
+    pub tile_coords_xz: TileCoordsXZ,
+    pub track_type:     TrackType,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
+pub struct ProgressWithinTile(f32);
+
+impl ProgressWithinTile {
+    #[must_use]
+    pub fn just_entering() -> Self {
+        Self(0.0)
+    }
+
+    #[must_use]
+    pub fn about_to_exit() -> Self {
+        Self(1.0)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct TransportLocation {
+    pub pointing_in:          DirectionXZ,
+    pub tile_path:            Vec<TileTrack>, /* Which tile is it on now, and which tiles has it been on - only as much as to cover the vehicle's length */
+    pub progress_within_tile: ProgressWithinTile,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct TransportVelocity {
+    pub tiles_per_second: f32,
+}
+
+// TODO: Later - this needs to be developed into proper path-finding
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub enum MovementOrders {
+    Stop,
+    PreferTurningLeft,
+    PreferTurningRight,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct TransportInfo {
+    pub transport_id:    TransportId,
+    pub owner_id:        PlayerId,
+    pub location:        TransportLocation,
+    pub transport_type:  TransportType,
+    pub velocity:        TransportVelocity,
+    pub movement_orders: MovementOrders,
 }

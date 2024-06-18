@@ -5,15 +5,15 @@ use std::collections::HashMap;
 use shared_domain::client_command::GameCommand;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{AddressEnvelope, Colour, GameInfo, GameResponse, PlayerInfo};
-use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName, VehicleInfo};
+use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName, TransportInfo};
 
 #[derive(Debug, Clone)]
 pub(crate) struct GameState {
     pub game_id: GameId,
     map_level:   MapLevel,
-    // TODO:    Should some of this be in a `FieldXZ` instead of `Vec`? A set of multiple tracks can exist on a single tile.
+    // TODO:    Should some of this be in a `trackLayer` as a `FieldXZ` instead of `Vec`? A set of multiple tracks can exist on a single tile.
     buildings:   Vec<BuildingInfo>,
-    vehicles:    Vec<VehicleInfo>,
+    transports:  Vec<TransportInfo>,
     players:     HashMap<PlayerId, PlayerInfo>,
 }
 
@@ -21,7 +21,7 @@ impl GameState {
     pub(crate) fn new(
         map_level: MapLevel,
         buildings: Vec<BuildingInfo>,
-        vehicles: Vec<VehicleInfo>,
+        transports: Vec<TransportInfo>,
         players: HashMap<PlayerId, PlayerInfo>,
     ) -> Self {
         let game_id = GameId::random();
@@ -29,7 +29,7 @@ impl GameState {
             game_id,
             map_level,
             buildings,
-            vehicles,
+            transports,
             players,
         }
     }
@@ -40,7 +40,7 @@ impl GameState {
             game_id,
             map_level: prototype.map_level.clone(),
             buildings: prototype.buildings.clone(),
-            vehicles: prototype.vehicles.clone(),
+            transports: prototype.transports.clone(),
             players: prototype.players.clone(),
         }
     }
@@ -84,8 +84,8 @@ impl GameState {
         game_command: GameCommand,
     ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         match game_command {
-            GameCommand::PurchaseVehicle(vehicle_info) => {
-                self.process_purchase_vehicle(requesting_player_id, vehicle_info)
+            GameCommand::PurchaseTransport(transport_info) => {
+                self.process_purchase_transport(requesting_player_id, transport_info)
             },
             GameCommand::BuildBuildings(building_infos) => {
                 self.process_build_buildings(requesting_player_id, building_infos)
@@ -147,22 +147,22 @@ impl GameState {
         }
     }
 
-    fn process_purchase_vehicle(
+    fn process_purchase_transport(
         &mut self,
         requesting_player_id: PlayerId,
-        vehicle_info: VehicleInfo,
+        transport_info: TransportInfo,
     ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
-        if requesting_player_id == vehicle_info.owner_id {
+        if requesting_player_id == transport_info.owner_id {
             // TODO: Check if the track / road / etc. is free and owned by the purchaser
             // TODO: Subtract money
 
-            self.vehicles.push(vehicle_info.clone());
+            self.transports.push(transport_info.clone());
             Ok(vec![GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id),
-                GameResponse::VehicleCreated(vehicle_info),
+                GameResponse::TransportCreated(transport_info),
             )])
         } else {
-            Err(GameResponse::CannotPurchase(vehicle_info.vehicle_id))
+            Err(GameResponse::CannotPurchase(transport_info.transport_id))
         }
     }
 

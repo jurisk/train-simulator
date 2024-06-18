@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::map_level::MapLevel;
 use crate::{
-    BuildingId, BuildingInfo, ClientId, GameId, PlayerId, PlayerName, VehicleId, VehicleInfo,
+    BuildingId, BuildingInfo, ClientId, GameId, PlayerId, PlayerName, TransportId, TransportInfo,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -58,12 +58,12 @@ pub enum GameResponse {
     MapLevelProvided(MapLevel),
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
     BuildingsBuilt(Vec<BuildingInfo>),
-    VehicleCreated(VehicleInfo),
+    TransportCreated(TransportInfo),
     GameJoined,
     GameLeft,
 
     CannotBuild(Vec<BuildingId>),
-    CannotPurchase(VehicleId),
+    CannotPurchase(TransportId),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

@@ -16,12 +16,12 @@ use shared_domain::{GameId, PlayerId};
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;
 use crate::game::map_level::MapLevelPlugin;
-use crate::game::vehicles::VehiclesPlugin;
+use crate::game::transport::TransportPlugin;
 use crate::states::ClientState;
 
 mod buildings;
 pub mod map_level;
-mod vehicles;
+mod transport;
 
 #[allow(clippy::module_name_repetitions)]
 pub struct GamePlugin;
@@ -29,7 +29,7 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_plugins(BuildingsPlugin);
-        app.add_plugins(VehiclesPlugin);
+        app.add_plugins(TransportPlugin);
         app.add_plugins(MapLevelPlugin);
         app.add_systems(OnEnter(ClientState::JoiningGame), initiate_login);
         app.add_systems(FixedUpdate, handle_players_updated);

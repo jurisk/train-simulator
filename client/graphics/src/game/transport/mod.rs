@@ -7,12 +7,15 @@ use bevy::log::error;
 use bevy::math::Vec3;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
-    default, Color, Commands, Cylinder, EventReader, FixedUpdate, Mesh, Plugin, Quat, Res, ResMut,
-    Transform,
+    default, Color, Commands, Cuboid, Cylinder, EventReader, FixedUpdate, Mesh, Plugin, Quat, Res,
+    ResMut, Transform,
 };
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
-use shared_domain::{PlayerId, TileCoordsXZ, VehicleInfo, VehicleType};
+use shared_domain::{
+    PlayerId, ProgressWithinTile, TileTrack, TrainComponentType, TransportInfo, TransportLocation,
+    TransportType,
+};
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::ServerMessageEvent;
@@ -20,9 +23,9 @@ use crate::game::map_level::terrain::land::logical_to_world;
 use crate::game::map_level::MapLevelResource;
 use crate::game::PlayersInfoResource;
 
-pub struct VehiclesPlugin;
+pub struct TransportPlugin;
 
-impl Plugin for VehiclesPlugin {
+impl Plugin for TransportPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(FixedUpdate, handle_vehicle_created);
     }
@@ -42,9 +45,9 @@ fn handle_vehicle_created(
     if let Some(map_level) = map_level {
         for message in server_messages.read() {
             if let ServerResponse::Game(_game_id, game_response) = &message.response {
-                if let GameResponse::VehicleCreated(vehicle_info) = game_response {
-                    create_vehicle(
-                        vehicle_info,
+                if let GameResponse::TransportCreated(transport_info) = game_response {
+                    create_transport(
+                        transport_info,
                         &mut commands,
                         &mut meshes,
                         &mut materials,
@@ -58,59 +61,93 @@ fn handle_vehicle_created(
 }
 
 #[allow(clippy::similar_names)]
-fn create_vehicle(
-    vehicle_info: &VehicleInfo,
+fn create_transport(
+    transport_info: &TransportInfo,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
     players_info: &HashMap<PlayerId, PlayerInfo>,
 ) {
-    match players_info.get(&vehicle_info.owner_id) {
+    match players_info.get(&transport_info.owner_id) {
         None => {
-            error!("Player with ID {:?} not found", vehicle_info.owner_id);
+            error!("Player with ID {:?} not found", transport_info.owner_id);
         },
         Some(player_info) => {
-            match &vehicle_info.vehicle_type {
-                VehicleType::TrainEngine => {
-                    create_train_engine(
+            match &transport_info.transport_type {
+                TransportType::Train(train_components) => {
+                    create_train(
                         player_info,
-                        vehicle_info.vehicle_type.length_in_tiles(),
-                        vehicle_info.location,
-                        vehicle_info.direction,
+                        &transport_info.location,
+                        train_components,
                         commands,
                         meshes,
                         materials,
                         map_level,
                     );
                 },
-                VehicleType::TrainCar => {
-                    // TODO: Implement train cars! But for that we have to sort out how they follow each other and the train engines!
+                TransportType::RoadVehicle => {
+                    todo!() // TODO: Implement
+                },
+                TransportType::Ship => {
+                    todo!() // TODO: Implement
                 },
             }
         },
     }
 }
 
-// Spawning a vehicle on the tile means that the front of the vehicle is about to exit the tile.
-// This is a key design decision, and may have to be revisited later. But for now, I think it will be better
-// for collision detection.
-#[allow(
-    clippy::similar_names,
-    clippy::too_many_arguments,
-    clippy::items_after_statements
-)]
-fn create_train_engine(
+#[allow(clippy::similar_names)]
+fn create_train(
     player_info: &PlayerInfo,
-    length_in_tiles: f32,
-    location: TileCoordsXZ,
-    direction: DirectionXZ,
+    transport_location: &TransportLocation,
+    train_components: &[TrainComponentType],
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    map_level: &MapLevel,
+) {
+    let colour = player_info.colour;
+    let color = Color::rgb_u8(colour.r, colour.g, colour.b);
+
+    // TODO: Process all the `train_components`, not just the first one!
+    let train_component_type = train_components[0];
+    let tile_track = transport_location.tile_path[0];
+    let pointing_in = transport_location.pointing_in;
+    let progress_within_tile = transport_location.progress_within_tile;
+
+    create_train_component(
+        color,
+        train_component_type,
+        tile_track,
+        pointing_in,
+        progress_within_tile,
+        commands,
+        meshes,
+        materials,
+        map_level,
+    );
+}
+
+#[allow(clippy::too_many_arguments, clippy::items_after_statements)]
+fn create_train_component(
+    color: Color,
+    train_component_type: TrainComponentType,
+    tile_track: TileTrack,
+    pointing_in: DirectionXZ,
+    progress_within_tile: ProgressWithinTile,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
 ) {
     let terrain = &map_level.terrain;
+    let location = tile_track.tile_coords_xz;
+    let track_type = tile_track.track_type;
+    let length_in_tiles = train_component_type.length_in_tiles();
+
+    // TODO: Use `track_type` and `progress_within_tile` too!
+    println!("{track_type:?} {progress_within_tile:?}");
 
     let (nw, ne, se, sw) = location.vertex_coords_nw_ne_se_sw();
     let nw = logical_to_world(nw, terrain);
@@ -124,7 +161,7 @@ fn create_train_engine(
     let s = (se + sw) / 2.0;
     let w = (sw + nw) / 2.0;
 
-    let (entry, exit) = match direction {
+    let (entry, exit) = match pointing_in {
         DirectionXZ::North => (s, n),
         DirectionXZ::East => (w, e),
         DirectionXZ::South => (n, s),
@@ -134,13 +171,25 @@ fn create_train_engine(
     let direction = exit - entry;
     let midpoint = exit - direction * length_in_tiles / 2.0;
 
-    let colour = player_info.colour;
-    let color = Color::rgb_u8(colour.r, colour.g, colour.b);
-
     // TODO: Add also a cuboid for the cab
     const DIAMETER: f32 = 0.125;
     const RADIUS: f32 = DIAMETER / 2.0;
     const EXTRA_HEIGHT: f32 = 0.1;
+
+    let mesh = match train_component_type {
+        TrainComponentType::Engine => {
+            Mesh::from(Cylinder {
+                radius:      RADIUS,
+                half_height: length_in_tiles / 2.0,
+            })
+        },
+        TrainComponentType::Car => {
+            // TODO: Implement - as a cuboid
+            Mesh::from(Cuboid { ..default() })
+        },
+    };
+
+    let mesh = meshes.add(mesh);
 
     commands.spawn((
         PbrBundle {
@@ -150,12 +199,9 @@ fn create_train_engine(
                 ..default()
             },
             material: materials.add(color),
-            mesh: meshes.add(Mesh::from(Cylinder {
-                radius:      RADIUS,
-                half_height: length_in_tiles / 2.0,
-            })),
+            mesh,
             ..default()
         },
-        Name::new("Train engine"),
+        Name::new(format!("{train_component_type:?}")),
     ));
 }

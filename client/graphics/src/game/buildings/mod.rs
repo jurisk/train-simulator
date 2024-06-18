@@ -12,8 +12,9 @@ use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::{
-    BuildingId, BuildingInfo, BuildingType, PlayerId, TileCoordsXZ, TileCoverage, TrackType,
-    VehicleId, VehicleInfo, VehicleType,
+    BuildingId, BuildingInfo, BuildingType, MovementOrders, PlayerId, ProgressWithinTile,
+    TileCoordsXZ, TileCoverage, TileTrack, TrackType, TrainComponentType, TransportId,
+    TransportInfo, TransportLocation, TransportType, TransportVelocity,
 };
 use shared_util::direction_xz::DirectionXZ;
 
@@ -94,15 +95,25 @@ fn handle_game_map_level_provided_for_testing(
                     initial_buildings.push(building_info);
                 }
 
-                // TODO: This will be overlapping with other players' purchased vehicles, but this may be good for testing anyway. Improve the server so that it rejects such overlaps.
+                // TODO: This will be overlapping with other players' purchased transport, but this may be good for testing anyway. Improve the server so that it rejects such overlaps.
                 client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                     *game_id,
-                    GameCommand::PurchaseVehicle(VehicleInfo {
-                        vehicle_id:   VehicleId::random(),
+                    GameCommand::PurchaseTransport(TransportInfo {
+                        transport_id:   TransportId::random(),
                         owner_id:     player_id,
-                        direction:    DirectionXZ::North,
-                        location:     TileCoordsXZ::from_usizes(46, 48),
-                        vehicle_type: VehicleType::TrainEngine,
+                        location: TransportLocation {
+                            pointing_in: DirectionXZ::North,
+                            tile_path: vec![
+                                TileTrack {
+                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 48),
+                                    track_type: TrackType::NorthSouth,
+                                }
+                            ],
+                            progress_within_tile: ProgressWithinTile::about_to_exit(), // TODO: Adjust this for a better test case,
+                        },
+                        transport_type: TransportType::Train(vec![TrainComponentType::Engine, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car]),
+                        velocity: TransportVelocity { tiles_per_second: 0.25 },
+                        movement_orders: MovementOrders::PreferTurningRight, // TODO: Implement some movement
                     }),
                 )));
 

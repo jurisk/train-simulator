@@ -131,7 +131,7 @@ impl Games {
                 )
             },
             LobbyCommand::LeaveGame(game_id) => {
-                // Later: Not sure how this should even work if the player has buildings and vehicles owned in the game?
+                // Later: Not sure how this should even work if the player has buildings and transport owned in the game?
                 let game_state = self.lookup_game_state_mut(game_id)?;
                 Self::convert_game_response_to_server_response(
                     game_id,
