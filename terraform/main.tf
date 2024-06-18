@@ -3,7 +3,7 @@ module "dns" {
   gcp_project = var.gcp_project
   # Later: For not using a static IP address, but updating DNS A records to the instance IP address
   #   proxy_server_ip_address  = module.network.static_ip_address
-  game_server_ip_address  = module.game-server.public_ip_address
+  game_server_ip_address  = module.game_server.public_ip_address
   proxy_server_ip_address = module.proxy.public_ip_address
 }
 
@@ -14,9 +14,9 @@ module "network" {
   service_port = var.service_port
 }
 
-module "game-server" {
-  container_image = "gcr.io/train-simulator-gcp/train-simulator:latest"
+module "game_server" {
   source          = "./modules/compute"
+  container_image = "gcr.io/train-simulator-gcp/train-simulator:latest"
   project_id      = var.gcp_project
   network_name    = module.network.network_name
   zone            = var.gcp_zone
@@ -28,8 +28,8 @@ module "game-server" {
 }
 
 module "proxy" {
-  container_image = "gcr.io/train-simulator-gcp/train-simulator-proxy:latest"
   source          = "./modules/compute"
+  container_image = "gcr.io/train-simulator-gcp/train-simulator-proxy:latest"
   project_id      = var.gcp_project
   network_name    = module.network.network_name
   zone            = var.gcp_zone
@@ -41,6 +41,10 @@ module "proxy" {
       mount_path = "/data"
     }
   }
+}
+
+module "static_assets" {
+  source = "./modules/static_assets"
 }
 
 provider "google" {

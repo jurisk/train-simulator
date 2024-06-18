@@ -43,3 +43,12 @@ resource "google_dns_record_set" "caa_letsencrypt" {
   rrdatas      = ["0 issue \"letsencrypt.org\""]
   project      = var.gcp_project
 }
+
+resource "google_dns_record_set" "google_verification" {
+  name         = "ts.krikis.online."
+  managed_zone = google_dns_managed_zone.dns_zone.name
+  type         = "TXT"
+  ttl          = 3600
+  rrdatas      = ["google-site-verification=jqr1uhocWMeX5YQnjAyeTDgoxgnTqC5HtPVWejD6V-M"]
+  project      = var.gcp_project
+}
