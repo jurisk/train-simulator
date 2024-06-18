@@ -297,8 +297,8 @@ impl VehicleType {
     #[must_use]
     pub fn length_in_tiles(self) -> f32 {
         match self {
-            VehicleType::TrainEngine => 0.8,
-            VehicleType::TrainCar => 0.6,
+            VehicleType::TrainEngine => 0.75,
+            VehicleType::TrainCar => 0.5,
         }
     }
 }

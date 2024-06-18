@@ -42,11 +42,23 @@ fn handle_game_map_level_provided_for_testing(
     for message in server_messages.read() {
         if let ServerResponse::Game(game_id, game_response) = &message.response {
             if let GameResponse::MapLevelProvided(_map_level) = game_response {
-                // TODO: Add a wider diversity of tracks, including junctions! See https://wiki.openttd.org/en/Community/Junctionary/Basic%204-Way%20Junction for example.
+                // Later: Could add nicer junctions. See https://wiki.openttd.org/en/Community/Junctionary/Basic%204-Way%20Junction for example.
                 // TODO: This is debug-only and to be removed - move this to actually use the "save game" concept instead
                 let test_track = vec![
                     ((49, 43), TrackType::SouthWest),
                     ((48, 43), TrackType::EastWest),
+                    ((48, 43), TrackType::NorthEast),
+                    ((48, 43), TrackType::NorthWest),
+                    ((48, 42), TrackType::NorthSouth),
+                    ((48, 41), TrackType::NorthSouth),
+                    ((48, 41), TrackType::EastWest),
+                    ((48, 41), TrackType::NorthEast),
+                    ((48, 41), TrackType::NorthWest),
+                    ((48, 41), TrackType::SouthEast),
+                    ((48, 41), TrackType::SouthWest),
+                    ((47, 41), TrackType::EastWest),
+                    ((48, 40), TrackType::NorthSouth),
+                    ((49, 41), TrackType::EastWest),
                     ((47, 43), TrackType::EastWest),
                     ((46, 43), TrackType::SouthEast),
                     ((46, 44), TrackType::NorthSouth),

@@ -7,8 +7,8 @@ use bevy::log::error;
 use bevy::math::Vec3;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
-    default, Color, Commands, Cuboid, EventReader, FixedUpdate, Mesh, Plugin, Quat, Res, ResMut,
-    Sphere, Transform,
+    default, Color, Commands, Cylinder, EventReader, FixedUpdate, Mesh, Plugin, Quat, Res, ResMut,
+    Transform,
 };
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
@@ -132,39 +132,34 @@ fn create_train_engine(
     };
 
     let direction = exit - entry;
+
+    // TODO: We are not really positioning it right...
     let head = exit;
-    let tail = head - direction * length_in_tiles;
+    let midpoint = head - direction * length_in_tiles / 2.0;
 
     let colour = player_info.colour;
     let color = Color::rgb_u8(colour.r, colour.g, colour.b);
 
-    // TODO: For now we just use a sphere and a cuboid, but eventually we need a cylinder for the boiler/firebox and a cuboid for the cab.
-    const HEIGHT: f32 = 0.25;
-    commands.spawn((
-        PbrBundle {
-            transform: Transform {
-                translation: head + Vec3::new(0.0, HEIGHT, 0.0),
-                rotation:    Quat::IDENTITY,
-                scale:       Vec3::splat(0.2f32),
-            },
-            material: materials.add(color),
-            mesh: meshes.add(Mesh::from(Sphere::default())),
-            ..default()
-        },
-        Name::new("Boiler/firebox"),
-    ));
+    // TODO: Add also a cuboid for the cab
+    const LENGTH: f32 = 0.5;
+    const DIAMETER: f32 = 0.125;
+    const RADIUS: f32 = DIAMETER / 2.0;
+    const EXTRA_HEIGHT: f32 = 0.025;
 
     commands.spawn((
         PbrBundle {
             transform: Transform {
-                translation: tail + Vec3::new(0.0, HEIGHT, 0.0),
-                rotation:    Quat::IDENTITY,
-                scale:       Vec3::splat(0.2f32),
+                rotation: Quat::from_rotation_arc(Vec3::Y, direction),
+                translation: midpoint + Vec3::new(0.0, RADIUS + EXTRA_HEIGHT, 0.0),
+                ..default()
             },
             material: materials.add(color),
-            mesh: meshes.add(Mesh::from(Cuboid::default())),
+            mesh: meshes.add(Mesh::from(Cylinder {
+                radius:      RADIUS,
+                half_height: LENGTH / 2.0,
+            })),
             ..default()
         },
-        Name::new("Cab"),
+        Name::new("Train engine"),
     ));
 }
