@@ -118,6 +118,8 @@ cargo flamegraph --bin server_console --root
 
 === Code size profiling
 
+https://rustwasm.github.io/book/reference/code-size.html[Code size profiling]:
+
 [source,bash]
 ----
 cargo install twiggy

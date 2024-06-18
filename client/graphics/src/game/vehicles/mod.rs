@@ -132,19 +132,15 @@ fn create_train_engine(
     };
 
     let direction = exit - entry;
-
-    // TODO: We are not really positioning it right...
-    let head = exit;
-    let midpoint = head - direction * length_in_tiles / 2.0;
+    let midpoint = exit - direction * length_in_tiles / 2.0;
 
     let colour = player_info.colour;
     let color = Color::rgb_u8(colour.r, colour.g, colour.b);
 
     // TODO: Add also a cuboid for the cab
-    const LENGTH: f32 = 0.5;
     const DIAMETER: f32 = 0.125;
     const RADIUS: f32 = DIAMETER / 2.0;
-    const EXTRA_HEIGHT: f32 = 0.025;
+    const EXTRA_HEIGHT: f32 = 0.1;
 
     commands.spawn((
         PbrBundle {
@@ -156,7 +152,7 @@ fn create_train_engine(
             material: materials.add(color),
             mesh: meshes.add(Mesh::from(Cylinder {
                 radius:      RADIUS,
-                half_height: LENGTH / 2.0,
+                half_height: length_in_tiles / 2.0,
             })),
             ..default()
         },
