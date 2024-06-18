@@ -21,18 +21,16 @@ locals {
 resource "google_storage_bucket" "static_assets" {
   name     = "ts.krikis.online"
   location = "EUROPE-CENTRAL2"
+  uniform_bucket_level_access = true
+  force_destroy = true
 
+  // Later: This is not working, and I'm not quite sure why...
   website {
     main_page_suffix = "index.html"
     not_found_page   = "404.html"
   }
 
-  cors {
-    origin          = ["http://ts.krikis.online"]
-    method          = ["GET", "HEAD", "PUT", "POST", "DELETE"]
-    response_header = ["*"]
-    max_age_seconds = 3600
-  }
+  // Not sure about CORS, do we need it?
 }
 
 resource "google_storage_bucket_iam_member" "public_access" {
