@@ -116,6 +116,17 @@ cargo install flamegraph
 cargo flamegraph --bin server_console --root
 ----
 
+=== Code size profiling
+
+[source,bash]
+----
+cargo install twiggy
+twiggy top -n 20 .\static\wasm-build\client_graphical_bg.wasm
+twiggy paths .\static\wasm-build\client_graphical_bg.wasm
+twiggy dominators .\static\wasm-build\client_graphical_bg.wasm
+twiggy garbage .\static\wasm-build\client_graphical_bg.wasm
+----
+
 == Deploy locally
 
 === Package and run as Docker

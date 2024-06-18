@@ -77,12 +77,11 @@ opt-level = "z"
 
 # Do a second optimization pass removing duplicate or unused code from dependencies.
 # Slows compile times, marginal improvements
-# Commented for now, may reenable later:
+# lto = "thin"
 # lto = "fat"
 
 # When building crates, optimize larger chunks at a time
 # Slows compile times, marginal improvements
-# Commented for now, may reenable later:
 # codegen-units = 1
 
 [workspace.lints.clippy]
