@@ -30,7 +30,11 @@ resource "google_storage_bucket" "static_assets" {
     not_found_page   = "404.html"
   }
 
-  // Not sure about CORS, do we need it?
+  cors {
+    origin = ["*"]
+    method = ["GET"]
+    response_header = ["Content-Type"]
+  }
 }
 
 resource "google_storage_bucket_iam_member" "public_access" {

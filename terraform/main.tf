@@ -22,8 +22,9 @@ module "game_server" {
   zone            = var.gcp_zone
   instance_name   = "train-simulator-game-server-vm"
   env_vars = {
-    "RUST_BACKTRACE" = "full",
-    "RUST_LOG"       = "info",
+    "RUST_BACKTRACE"    = "full",
+    "RUST_LOG"          = "info",
+    "SERVE_STATIC_FROM" = "gcs",
   }
 }
 
