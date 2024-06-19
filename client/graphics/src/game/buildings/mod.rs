@@ -107,14 +107,14 @@ fn handle_game_map_level_provided_for_testing(
                         transport_id:   TransportId::random(),
                         owner_id:     player_id,
                         location: TransportLocation {
-                            pointing_in: DirectionXZ::North,
+                            pointing_in: DirectionXZ::East,
                             tile_path: vec![
                                 TileTrack {
-                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 48),
-                                    track_type: TrackType::NorthSouth,
+                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 43),
+                                    track_type: TrackType::SouthEast,
                                 }
                             ],
-                            progress_within_tile: ProgressWithinTile(0.5),
+                            progress_within_tile: ProgressWithinTile(2.0 / 3.0),
                         },
                         transport_type: TransportType::Train(vec![TrainComponentType::Engine, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car]),
                         velocity: TransportVelocity { tiles_per_second: 0.25 },

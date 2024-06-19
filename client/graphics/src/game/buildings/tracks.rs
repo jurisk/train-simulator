@@ -7,11 +7,12 @@ use bevy::prelude::{
     default, info, Color, Commands, Cuboid, EventWriter, Mesh, MouseButton, Res, ResMut, Transform,
 };
 use shared_domain::client_command::{ClientCommand, GameCommand};
-use shared_domain::map_level::MapLevel;
+use shared_domain::map_level::{MapLevel, Terrain};
 use shared_domain::server_response::PlayerInfo;
 use shared_domain::{
     BuildingId, BuildingInfo, BuildingType, TileCoordsXZ, TileCoverage, TrackType,
 };
+use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::map_level::terrain::land::logical_to_world;
@@ -19,6 +20,15 @@ use crate::game::{GameIdResource, PlayerIdResource};
 use crate::selection::SelectedTiles;
 
 const RAIL_DIAMETER: f32 = 0.025;
+
+pub fn vertex_coordinates_clockwise(
+    direction: DirectionXZ,
+    tile: TileCoordsXZ,
+    terrain: &Terrain,
+) -> (Vec3, Vec3) {
+    let (a, b) = tile.vertex_coords_clockwise(direction);
+    (logical_to_world(a, terrain), logical_to_world(b, terrain))
+}
 
 #[allow(clippy::similar_names)]
 pub(crate) fn create_track(
@@ -32,34 +42,20 @@ pub(crate) fn create_track(
 ) {
     let terrain = &map_level.terrain;
 
-    let (nw, ne, se, sw) = tile.vertex_coords_nw_ne_se_sw();
-    let nw = logical_to_world(nw, terrain);
-    let ne = logical_to_world(ne, terrain);
-    let se = logical_to_world(se, terrain);
-    let sw = logical_to_world(sw, terrain);
+    let (a, b) = track_type.connections_clockwise();
 
-    let n_positions = pick_rail_positions(nw, ne);
-    let e_positions = pick_rail_positions(ne, se);
-    let s_positions = pick_rail_positions(se, sw);
-    let w_positions = pick_rail_positions(sw, nw);
+    let (a1, a2) = vertex_coordinates_clockwise(a, tile, terrain);
+    let (b1, b2) = vertex_coordinates_clockwise(b, tile, terrain);
 
-    // TODO: Make `TrackType` have `connections()` which are `DirectionXZ` pairs and use those here
-    // Note - `b2` and `b1` are reversed on purpose
-    let ((a1, a2), (b2, b1)) = match track_type {
-        TrackType::NorthSouth => (n_positions, s_positions),
-        TrackType::EastWest => (e_positions, w_positions),
-        TrackType::NorthEast => (n_positions, e_positions),
-        TrackType::NorthWest => (w_positions, n_positions),
-        TrackType::SouthEast => (e_positions, s_positions),
-        TrackType::SouthWest => (s_positions, w_positions),
-    };
+    let (a1, a2) = pick_rail_positions(a1, a2);
+    let (b1, b2) = pick_rail_positions(b1, b2);
 
     let colour = player_info.colour;
     let color = Color::rgb_u8(colour.r, colour.g, colour.b);
 
     spawn_rail(
         a1,
-        b1,
+        b2,
         color,
         commands,
         meshes,
@@ -68,7 +64,7 @@ pub(crate) fn create_track(
     );
     spawn_rail(
         a2,
-        b2,
+        b1,
         color,
         commands,
         meshes,

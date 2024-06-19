@@ -6,7 +6,7 @@ use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::log::error;
 use bevy::pbr::StandardMaterial;
-use bevy::prelude::{Commands, EventReader, FixedUpdate, Mesh, Plugin, Res, ResMut};
+use bevy::prelude::{Commands, EventReader, FixedUpdate, Mesh, Plugin, Res, ResMut, Update};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::{PlayerId, TransportInfo, TransportType};
@@ -20,12 +20,17 @@ pub struct TransportPlugin;
 
 impl Plugin for TransportPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, handle_vehicle_created);
+        app.add_systems(FixedUpdate, handle_transport_created);
+        app.add_systems(Update, move_transports);
     }
 }
 
+fn move_transports() {
+    // TODO: Implement - should we spawn each Transport as a parent entity?
+}
+
 #[allow(clippy::collapsible_match, clippy::needless_pass_by_value)]
-fn handle_vehicle_created(
+fn handle_transport_created(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,

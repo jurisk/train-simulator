@@ -74,6 +74,20 @@ impl TileCoordsXZ {
     }
 
     #[must_use]
+    pub fn vertex_coords_clockwise(
+        self,
+        direction_xz: DirectionXZ,
+    ) -> (VertexCoordsXZ, VertexCoordsXZ) {
+        let (nw, ne, se, sw) = self.vertex_coords_nw_ne_se_sw();
+        match direction_xz {
+            DirectionXZ::North => (nw, ne),
+            DirectionXZ::East => (ne, se),
+            DirectionXZ::South => (se, sw),
+            DirectionXZ::West => (sw, nw),
+        }
+    }
+
+    #[must_use]
     pub fn vertex_coords_nw_ne_se_sw(
         self,
     ) -> (
@@ -210,8 +224,20 @@ pub enum TrackType {
 
 impl TrackType {
     #[must_use]
-    fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
+    pub fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
         HashSet::from([TileCoordsXZ::ZERO])
+    }
+
+    #[must_use]
+    pub fn connections_clockwise(self) -> (DirectionXZ, DirectionXZ) {
+        match self {
+            TrackType::NorthEast => (DirectionXZ::North, DirectionXZ::East),
+            TrackType::NorthSouth => (DirectionXZ::North, DirectionXZ::South),
+            TrackType::NorthWest => (DirectionXZ::West, DirectionXZ::North),
+            TrackType::EastWest => (DirectionXZ::East, DirectionXZ::West),
+            TrackType::SouthEast => (DirectionXZ::East, DirectionXZ::South),
+            TrackType::SouthWest => (DirectionXZ::South, DirectionXZ::West),
+        }
     }
 }
 

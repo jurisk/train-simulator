@@ -38,7 +38,6 @@ bevy-inspector-egui = {  version = "0.23.4", features = ["highlight_changes", "b
 bevy_mod_raycast = "0.17.0"
 
 # Should only be imported by `networking` code
-# Later: Sort out TLS and features in general for `bevy_simplenet`, see: https://github.com/UkoeHB/bevy_simplenet/tree/master?tab=readme-ov-file#features
 enfync = "0.1.0"
 url = "2.4.1"
 wasm-bindgen = "0.2.92"
