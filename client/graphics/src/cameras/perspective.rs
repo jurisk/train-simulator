@@ -1,13 +1,13 @@
 use bevy::app::App;
 use bevy::core::Name;
 use bevy::core_pipeline::tonemapping::Tonemapping;
+use bevy::input::mouse::MouseWheel;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, ButtonInput, Camera, Camera3dBundle, Commands, KeyCode, Plugin, Query, Res, Startup,
-    Time, Transform, Update,
+    default, ButtonInput, Camera, Camera3dBundle, Commands, EventReader, KeyCode, Plugin, Query,
+    Res, Startup, Time, Transform, Update,
 };
 use bevy::render::view::ColorGrading;
-use bevy_mod_raycast::deferred::RaycastSource;
 
 use crate::cameras::util::{movement_and_rotation, zoom_value};
 use crate::cameras::{CameraComponent, CameraId};
@@ -27,12 +27,11 @@ fn create_camera(mut commands: Commands) {
     let height = 80.0;
     let from = Transform::from_xyz(-height * ANGLE_COEF, height, -height * ANGLE_COEF);
     let target = Vec3::ZERO;
-    let is_active = CameraId::default() == CameraId::Perspective;
 
-    let mut entity = commands.spawn((
+    commands.spawn((
         Camera3dBundle {
             camera: Camera {
-                is_active,
+                is_active: false,
                 hdr: true,
                 ..default()
             },
@@ -47,25 +46,20 @@ fn create_camera(mut commands: Commands) {
         // RaycastSource::<()>::new_cursor(), // For bevy_mod_raycast
         Name::new("Perspective Camera"),
     ));
-
-    if is_active {
-        entity.insert(
-            RaycastSource::<()>::new_cursor(), // For bevy_mod_raycast
-        );
-    }
 }
 
 #[allow(clippy::needless_pass_by_value)]
 fn move_camera(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut mouse_wheel: EventReader<MouseWheel>,
     mut query: Query<(&mut Transform, &CameraComponent, &Camera)>,
 ) {
     for (mut transform, camera_component, camera) in &mut query {
         if camera_component.id == CameraId::Perspective && camera.is_active {
             movement_and_rotation(time.delta_seconds(), &keyboard_input, &mut transform);
 
-            let zoom_value = zoom_value(&keyboard_input);
+            let zoom_value = zoom_value(&keyboard_input, &mut mouse_wheel);
             if zoom_value != 0.0 {
                 const CAMERA_ZOOM_SPEED: f32 = 80.0;
                 let forward = transform.forward();

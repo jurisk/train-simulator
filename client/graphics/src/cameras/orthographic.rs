@@ -1,13 +1,13 @@
 use bevy::app::App;
 use bevy::core::Name;
 use bevy::core_pipeline::tonemapping::Tonemapping;
+use bevy::input::mouse::MouseWheel;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, ButtonInput, Camera, Camera3dBundle, Commands, KeyCode, OrthographicProjection,
-    Plugin, Projection, Query, Res, Startup, Time, Transform, Update,
+    default, ButtonInput, Camera, Camera3dBundle, Commands, EventReader, KeyCode,
+    OrthographicProjection, Plugin, Projection, Query, Res, Startup, Time, Transform, Update,
 };
 use bevy::render::camera::ScalingMode;
-use bevy_mod_raycast::prelude::RaycastSource;
 
 use crate::cameras::util::{movement_and_rotation, zoom_value};
 use crate::cameras::{CameraComponent, CameraId};
@@ -33,12 +33,10 @@ fn create_camera(mut commands: Commands) {
     let from = Transform::from_xyz(-20.0, 50.0, -20.0);
     let target = Vec3::ZERO;
 
-    let is_active = CameraId::default() == CameraId::Orthographic;
-
-    let mut entity = commands.spawn((
+    commands.spawn((
         Camera3dBundle {
             camera: Camera {
-                is_active,
+                is_active: false,
                 hdr: true,
                 ..default()
             },
@@ -56,12 +54,6 @@ fn create_camera(mut commands: Commands) {
         },
         Name::new("Orthographic Camera"),
     ));
-
-    if is_active {
-        entity.insert(
-            RaycastSource::<()>::new_cursor(), // For bevy_mod_raycast
-        );
-    }
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -81,13 +73,14 @@ fn move_camera(
 fn zoom_orthographic_camera(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut mouse_wheel: EventReader<MouseWheel>,
     mut query: Query<(&mut Projection, &CameraComponent)>,
 ) {
     for (projection, camera) in &mut query {
         if camera.id == CameraId::Orthographic {
             if let Projection::Orthographic(ortho) = projection.into_inner() {
                 const ZOOM_SPEED: f32 = 2.0;
-                let zoom_value = zoom_value(&keyboard_input);
+                let zoom_value = zoom_value(&keyboard_input, &mut mouse_wheel);
                 ortho.scale *= 1.0 + time.delta_seconds() * (zoom_value * -1.0) * ZOOM_SPEED;
             }
         }

@@ -1,6 +1,7 @@
+use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::input::ButtonInput;
 use bevy::math::Vec3;
-use bevy::prelude::{Direction3d, KeyCode, Mat3, Mut, Res, Transform};
+use bevy::prelude::{debug, Direction3d, EventReader, KeyCode, Mat3, Mut, Res, Transform};
 
 fn zx_movement(keyboard_input: &Res<ButtonInput<KeyCode>>, transform: &Transform) -> Vec3 {
     let zx_direction = zx_direction(keyboard_input);
@@ -38,7 +39,10 @@ fn zx_direction(keyboard_input: &Res<ButtonInput<KeyCode>>) -> Vec3 {
     direction
 }
 
-pub(crate) fn zoom_value(keyboard_input: &Res<ButtonInput<KeyCode>>) -> f32 {
+pub(crate) fn zoom_value(
+    keyboard_input: &Res<ButtonInput<KeyCode>>,
+    mouse_wheel: &mut EventReader<MouseWheel>,
+) -> f32 {
     let mut result: f32 = 0.0;
 
     // Zoom out
@@ -48,6 +52,23 @@ pub(crate) fn zoom_value(keyboard_input: &Res<ButtonInput<KeyCode>>) -> f32 {
     // Zoom in
     if keyboard_input.pressed(KeyCode::KeyZ) {
         result -= 1.0;
+    }
+
+    for ev in mouse_wheel.read() {
+        match ev.unit {
+            MouseScrollUnit::Line => {
+                const MOUSE_SCROLL_UNIT_LINE_COEF: f32 = 100.0;
+                // Later: This results in jumping motion. We have to use camera smoothing.
+                result += ev.y * MOUSE_SCROLL_UNIT_LINE_COEF;
+            },
+            MouseScrollUnit::Pixel => {
+                debug!(
+                    "Scroll (pixel units): vertical: {}, horizontal: {}",
+                    ev.y, ev.x
+                );
+                // Later: Learn to handle those
+            },
+        }
     }
 
     result
@@ -74,6 +95,14 @@ fn flatten_in_y_plane(direction: Direction3d) -> Vec3 {
     result.normalize()
 }
 
+// The speed of the camera movement is dependent on the height of the camera, to avoid
+// scrolling too quickly when we are very zoomed in.
+fn camera_movement_speed(transform: &Transform) -> f32 {
+    // Later: This could be improved as it still doesn't feel right.
+    const CAMERA_MOVEMENT_SPEED: f32 = 1000.0;
+    CAMERA_MOVEMENT_SPEED / transform.translation.y
+}
+
 pub(crate) fn movement_and_rotation(
     delta: f32,
     keyboard_input: &Res<ButtonInput<KeyCode>>,
@@ -81,8 +110,7 @@ pub(crate) fn movement_and_rotation(
 ) {
     let zx_movement = zx_movement(keyboard_input, transform);
     if zx_movement != Vec3::ZERO {
-        const CAMERA_MOVEMENT_SPEED: f32 = 40.0;
-        let diff = zx_movement * CAMERA_MOVEMENT_SPEED * delta;
+        let diff = zx_movement * camera_movement_speed(transform) * delta;
         transform.translation += diff;
     }
 

@@ -1,6 +1,7 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{
-    App, Camera, Commands, Component, Entity, KeyCode, Plugin, Query, Res, Update,
+    info, App, Camera, Commands, Component, Entity, KeyCode, Plugin, PostStartup, Query, Res,
+    Update,
 };
 use bevy_mod_raycast::deferred::RaycastSource;
 
@@ -13,11 +14,23 @@ mod util;
 
 pub(crate) struct CameraPlugin;
 
-#[derive(Default, Eq, PartialEq, Copy, Clone)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
 enum CameraId {
-    #[default]
     Orthographic,
     Perspective,
+}
+
+impl CameraId {
+    // This is just for testing purposes, so we keep using both cameras so don't break one of them.
+    // Eventually, we read it from user settings.
+    #[must_use]
+    fn random() -> CameraId {
+        if fastrand::bool() {
+            CameraId::Orthographic
+        } else {
+            CameraId::Perspective
+        }
+    }
 }
 
 impl CameraId {
@@ -35,12 +48,21 @@ impl Plugin for CameraPlugin {
         app.add_plugins(OrthographicCameraPlugin);
         app.add_plugins(PerspectiveCameraPlugin);
         app.add_systems(Update, switch_camera);
+        app.add_systems(PostStartup, enable_random_camera);
     }
 }
 
-#[derive(Component, Default)]
+#[derive(Component)]
 struct CameraComponent {
     id: CameraId,
+}
+
+fn enable_random_camera(
+    mut query: Query<(Entity, &mut Camera, &CameraComponent)>,
+    mut commands: Commands,
+) {
+    let camera_id = CameraId::random();
+    switch_to_camera(&mut query, &mut commands, camera_id);
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -54,18 +76,27 @@ fn switch_camera(
             query.iter().find(|(_, camera, _)| camera.is_active)
         {
             let next_camera = current_camera.next();
-            for (entity, mut camera, camera_type_component) in &mut query {
-                let is_active = camera_type_component.id == next_camera;
-                camera.is_active = is_active;
+            switch_to_camera(&mut query, &mut commands, next_camera);
+        }
+    }
+}
 
-                // For bevy_mod_raycast
-                let mut entity_commands = commands.entity(entity);
-                if is_active {
-                    entity_commands.insert(RaycastSource::<()>::new_cursor());
-                } else {
-                    entity_commands.remove::<RaycastSource<()>>();
-                }
-            }
+fn switch_to_camera(
+    query: &mut Query<(Entity, &mut Camera, &CameraComponent)>,
+    commands: &mut Commands,
+    next_camera: CameraId,
+) {
+    info!("Switching to camera: {next_camera:?}");
+    for (entity, mut camera, camera_type_component) in query {
+        let is_active = camera_type_component.id == next_camera;
+        camera.is_active = is_active;
+
+        // For bevy_mod_raycast
+        let mut entity_commands = commands.entity(entity);
+        if is_active {
+            entity_commands.insert(RaycastSource::<()>::new_cursor());
+        } else {
+            entity_commands.remove::<RaycastSource<()>>();
         }
     }
 }

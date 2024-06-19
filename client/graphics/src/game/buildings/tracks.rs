@@ -20,7 +20,7 @@ use crate::game::map_level::terrain::land::logical_to_world;
 use crate::game::{GameIdResource, PlayerIdResource};
 use crate::selection::SelectedTiles;
 
-const RAIL_DIAMETER: f32 = 0.05;
+const RAIL_DIAMETER: f32 = 0.025;
 
 #[allow(clippy::similar_names)]
 pub(crate) fn create_track(
