@@ -50,6 +50,7 @@ pub(crate) fn create_track(
     let s_positions = pick_rail_positions(se, sw);
     let w_positions = pick_rail_positions(sw, nw);
 
+    // TODO: Make `TrackType` have `connections()` which are `DirectionXZ` pairs and use those here
     // Note - `b2` and `b1` are reversed on purpose
     let ((a1, a2), (b2, b1)) = match track_type {
         TrackType::NorthSouth => (n_positions, s_positions),

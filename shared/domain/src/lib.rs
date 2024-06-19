@@ -316,7 +316,7 @@ pub struct TileTrack {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
-pub struct ProgressWithinTile(f32);
+pub struct ProgressWithinTile(pub f32);
 
 impl ProgressWithinTile {
     #[must_use]

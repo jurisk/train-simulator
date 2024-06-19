@@ -54,6 +54,7 @@ fn create_train_component(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
 ) {
+    // TODO: Unify logic with `create_track` in `tracks.rs`
     let terrain = &map_level.terrain;
     let location = tile_track.tile_coords_xz;
     let track_type = tile_track.track_type;
@@ -84,12 +85,12 @@ fn create_train_component(
     let direction = exit - entry;
     let midpoint = exit - direction * length_in_tiles / 2.0;
 
-    // TODO: Add also a cuboid for the cab
     const DIAMETER: f32 = 0.125;
     const RADIUS: f32 = DIAMETER / 2.0;
     const EXTRA_HEIGHT: f32 = 0.1;
 
     let mesh = match train_component_type {
+        // TODO: Add also a cuboid for the cab
         TrainComponentType::Engine => {
             Mesh::from(Cylinder {
                 radius:      RADIUS,

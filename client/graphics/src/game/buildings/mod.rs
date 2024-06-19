@@ -114,7 +114,7 @@ fn handle_game_map_level_provided_for_testing(
                                     track_type: TrackType::NorthSouth,
                                 }
                             ],
-                            progress_within_tile: ProgressWithinTile::about_to_exit(), // TODO: Adjust this for a better test case,
+                            progress_within_tile: ProgressWithinTile(0.5),
                         },
                         transport_type: TransportType::Train(vec![TrainComponentType::Engine, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car]),
                         velocity: TransportVelocity { tiles_per_second: 0.25 },
