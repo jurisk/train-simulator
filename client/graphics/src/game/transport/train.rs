@@ -1,20 +1,22 @@
 use bevy::asset::Assets;
 use bevy::core::Name;
-use bevy::log::error;
 use bevy::math::{Quat, Vec3};
 use bevy::pbr::{PbrBundle, StandardMaterial};
-use bevy::prelude::{default, Color, Commands, Cuboid, Cylinder, Mesh, ResMut, Transform};
+use bevy::prelude::{
+    default, BuildChildren, Color, Commands, Cuboid, Cylinder, Entity, Mesh, ResMut, Transform,
+};
 use shared_domain::map_level::{MapLevel, Terrain};
 use shared_domain::server_response::PlayerInfo;
 use shared_domain::{
-    ProgressWithinTile, TileCoordsXZ, TileTrack, TrainComponentType, TransportLocation,
+    ProgressWithinTile, TileCoordsXZ, TileTrack, TrainComponentType, TransportId, TransportLocation,
 };
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::game::buildings::tracks::vertex_coordinates_clockwise;
 
-#[allow(clippy::similar_names)]
+#[allow(clippy::similar_names, clippy::too_many_arguments)]
 pub(crate) fn create_train(
+    transport_id: TransportId,
     player_info: &PlayerInfo,
     transport_location: &TransportLocation,
     train_components: &[TrainComponentType],
@@ -22,7 +24,7 @@ pub(crate) fn create_train(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
-) {
+) -> Entity {
     let colour = player_info.colour;
     let color = Color::rgb_u8(colour.r, colour.g, colour.b);
 
@@ -32,7 +34,7 @@ pub(crate) fn create_train(
     let pointing_in = transport_location.pointing_in;
     let progress_within_tile = transport_location.progress_within_tile;
 
-    create_train_component(
+    let component = create_train_component(
         color,
         train_component_type,
         tile_path,
@@ -43,6 +45,12 @@ pub(crate) fn create_train(
         materials,
         map_level,
     );
+
+    let parent = commands
+        .spawn(Name::new(format!("Train {transport_id:?}")))
+        .id();
+    commands.entity(parent).push_children(&[component]);
+    parent
 }
 
 fn center_coordinate(direction: DirectionXZ, tile: TileCoordsXZ, terrain: &Terrain) -> Vec3 {
@@ -61,7 +69,7 @@ fn create_train_component(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
-) {
+) -> Entity {
     let terrain = &map_level.terrain;
     let tile_track = tile_path[0];
     let tile = tile_track.tile_coords_xz;
@@ -72,8 +80,7 @@ fn create_train_component(
     } else if pointing_in == direction_b {
         (direction_a, direction_b)
     } else {
-        error!("Invalid pointing_in: {pointing_in:?} for track_type {track_type:?}");
-        return;
+        panic!("Invalid pointing_in: {pointing_in:?} for track_type {track_type:?}");
     };
     let length_in_tiles = train_component_type.length_in_tiles();
     let ProgressWithinTile(progress_within_tile) = progress_within_tile;
@@ -108,7 +115,7 @@ fn create_train_component(
 
     let mesh = meshes.add(mesh);
 
-    commands.spawn((
+    let entity_commands = commands.spawn((
         PbrBundle {
             transform: Transform {
                 rotation: Quat::from_rotation_arc(Vec3::Y, direction.normalize()),
@@ -121,4 +128,6 @@ fn create_train_component(
         },
         Name::new(format!("{train_component_type:?}")),
     ));
+
+    entity_commands.id()
 }

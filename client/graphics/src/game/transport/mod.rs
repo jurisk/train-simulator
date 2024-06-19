@@ -6,7 +6,10 @@ use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::log::error;
 use bevy::pbr::StandardMaterial;
-use bevy::prelude::{Commands, EventReader, FixedUpdate, Mesh, Plugin, Res, ResMut, Update};
+use bevy::prelude::{
+    Commands, Component, Entity, EventReader, FixedUpdate, Mesh, Plugin, Res, ResMut,
+    SpatialBundle, Update,
+};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::{PlayerId, TransportInfo, TransportType};
@@ -15,6 +18,9 @@ use crate::communication::domain::ServerMessageEvent;
 use crate::game::map_level::MapLevelResource;
 use crate::game::transport::train::create_train;
 use crate::game::PlayersInfoResource;
+
+#[derive(Component)]
+pub struct TransportInfoComponent(pub TransportInfo);
 
 pub struct TransportPlugin;
 
@@ -44,7 +50,7 @@ fn handle_transport_created(
         for message in server_messages.read() {
             if let ServerResponse::Game(_game_id, game_response) = &message.response {
                 if let GameResponse::TransportCreated(transport_info) = game_response {
-                    create_transport(
+                    let entity = create_transport(
                         transport_info,
                         &mut commands,
                         &mut meshes,
@@ -52,6 +58,13 @@ fn handle_transport_created(
                         &map_level.map_level,
                         players_info,
                     );
+
+                    if let Some(entity) = entity {
+                        commands
+                            .entity(entity)
+                            .insert(SpatialBundle::default()) // For https://bevyengine.org/learn/errors/b0004/
+                            .insert(TransportInfoComponent(transport_info.clone()));
+                    }
                 }
             }
         }
@@ -59,6 +72,7 @@ fn handle_transport_created(
 }
 
 #[allow(clippy::similar_names)]
+#[must_use]
 fn create_transport(
     transport_info: &TransportInfo,
     commands: &mut Commands,
@@ -66,15 +80,17 @@ fn create_transport(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
     players_info: &HashMap<PlayerId, PlayerInfo>,
-) {
+) -> Option<Entity> {
     match players_info.get(&transport_info.owner_id) {
         None => {
             error!("Player with ID {:?} not found", transport_info.owner_id);
+            None
         },
         Some(player_info) => {
             match &transport_info.transport_type {
                 TransportType::Train(train_components) => {
-                    create_train(
+                    Some(create_train(
+                        transport_info.transport_id,
                         player_info,
                         &transport_info.location,
                         train_components,
@@ -82,13 +98,10 @@ fn create_transport(
                         meshes,
                         materials,
                         map_level,
-                    );
+                    ))
                 },
-                TransportType::RoadVehicle => {
-                    todo!() // TODO: Implement
-                },
-                TransportType::Ship => {
-                    todo!() // TODO: Implement
+                TransportType::RoadVehicle | TransportType::Ship => {
+                    None // TODO: Implement
                 },
             }
         },

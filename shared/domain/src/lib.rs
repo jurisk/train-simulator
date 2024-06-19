@@ -201,7 +201,7 @@ impl BuildingId {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub struct TransportId(pub Uuid);
 
 impl TransportId {
