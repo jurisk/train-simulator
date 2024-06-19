@@ -7,8 +7,8 @@ use bevy::asset::Assets;
 use bevy::log::error;
 use bevy::pbr::StandardMaterial;
 use bevy::prelude::{
-    Commands, Component, Entity, EventReader, FixedUpdate, Mesh, Plugin, Res, ResMut,
-    SpatialBundle, Update,
+    Children, Commands, Component, Entity, EventReader, FixedUpdate, Mesh, Plugin, Query, Res,
+    ResMut, SpatialBundle, Time, Transform, Update,
 };
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
@@ -16,11 +16,14 @@ use shared_domain::{PlayerId, TransportInfo, TransportType};
 
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::map_level::MapLevelResource;
-use crate::game::transport::train::create_train;
+use crate::game::transport::train::{calculate_train_transforms, create_train};
 use crate::game::PlayersInfoResource;
 
 #[derive(Component)]
 pub struct TransportInfoComponent(pub TransportInfo);
+
+#[derive(Component)]
+pub struct TransportIndexComponent(pub usize);
 
 pub struct TransportPlugin;
 
@@ -31,8 +34,41 @@ impl Plugin for TransportPlugin {
     }
 }
 
-fn move_transports() {
-    // TODO: Implement - should we spawn each Transport as a parent entity?
+#[allow(clippy::needless_pass_by_value)]
+fn move_transports(
+    time: Res<Time>,
+    mut query: Query<(&mut TransportInfoComponent, &Children)>,
+    mut child_query: Query<(&mut Transform, &TransportIndexComponent)>,
+    map_level: Option<Res<MapLevelResource>>,
+) {
+    if let Some(map_level) = map_level {
+        for (mut transport_info_component, children) in &mut query {
+            let TransportInfoComponent(ref mut transport_info) = transport_info_component.as_mut();
+            transport_info.advance(time.delta_seconds());
+
+            let transforms = match &transport_info.transport_type {
+                TransportType::Train(components) => {
+                    calculate_train_transforms(
+                        components,
+                        &transport_info.location,
+                        &map_level.map_level,
+                    )
+                },
+                TransportType::RoadVehicle | TransportType::Ship => todo!(), /* TODO: Also handle others! */
+            };
+
+            for &child in children {
+                if let Ok((mut child_transform, transport_index_component)) =
+                    child_query.get_mut(child)
+                {
+                    let TransportIndexComponent(transport_index) = transport_index_component;
+                    let new_transform: Transform = transforms[*transport_index];
+                    child_transform.translation = new_transform.translation;
+                    child_transform.rotation = new_transform.rotation;
+                }
+            }
+        }
+    }
 }
 
 #[allow(clippy::collapsible_match, clippy::needless_pass_by_value)]

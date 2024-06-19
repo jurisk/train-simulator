@@ -384,3 +384,18 @@ pub struct TransportInfo {
     pub velocity:        TransportVelocity,
     pub movement_orders: MovementOrders,
 }
+
+impl TransportInfo {
+    pub fn advance(&mut self, seconds: f32) {
+        // TODO: Actually move on tiles too according to the tracks if they exist, and the movement orders!
+        let TransportVelocity { tiles_per_second } = self.velocity;
+        let ProgressWithinTile(progress_within_tile) = self.location.progress_within_tile;
+        // TODO: This is actually wrong because diagonal tracks don't have length of 1.0 !!!
+        let mut new_progress = progress_within_tile + tiles_per_second * seconds;
+        while new_progress > 1.0 {
+            new_progress -= 1.0;
+        }
+        let new_progress = ProgressWithinTile(new_progress);
+        self.location.progress_within_tile = new_progress;
+    }
+}
