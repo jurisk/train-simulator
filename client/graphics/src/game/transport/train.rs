@@ -3,7 +3,7 @@ use bevy::core::Name;
 use bevy::math::{Quat, Vec3};
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
-    default, BuildChildren, Color, Commands, Cuboid, Cylinder, Entity, Mesh, ResMut, Transform,
+    default, BuildChildren, Color, Commands, Cuboid, Entity, Mesh, ResMut, Transform,
 };
 use shared_domain::map_level::{MapLevel, Terrain};
 use shared_domain::server_response::PlayerInfo;
@@ -15,8 +15,7 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::game::buildings::tracks::vertex_coordinates_clockwise;
 use crate::game::transport::TransportIndexComponent;
 
-const TRAIN_DIAMETER: f32 = 0.125;
-const TRAIN_RADIUS: f32 = TRAIN_DIAMETER / 2.0;
+const TRAIN_WIDTH: f32 = 0.125;
 const TRAIN_EXTRA_HEIGHT: f32 = 0.1;
 
 fn calculate_train_component_transform(
@@ -30,6 +29,7 @@ fn calculate_train_component_transform(
     let tile_track = tile_path[0];
     let tile = tile_track.tile_coords_xz;
     let track_type = tile_track.track_type;
+    let track_length = track_type.length_in_tiles();
     let (direction_a, direction_b) = track_type.connections_clockwise();
     let (entry_direction, exit_direction) = if pointing_in == direction_a {
         (direction_b, direction_a)
@@ -38,6 +38,7 @@ fn calculate_train_component_transform(
     } else {
         panic!("Invalid pointing_in: {pointing_in:?} for track_type {track_type:?}"); // TODO: I dislike this panic...
     };
+
     let length_in_tiles = train_component_type.length_in_tiles();
     let ProgressWithinTile(progress_within_tile) = transport_location.progress_within_tile;
 
@@ -45,15 +46,22 @@ fn calculate_train_component_transform(
     let exit = center_coordinate(exit_direction, tile, terrain);
 
     let direction = exit - entry;
-    let head = exit - direction * progress_within_tile;
+    let head = exit - direction.normalize() * (1.0 - progress_within_tile) * track_length;
     // TODO: Actually, the tail should consider the rest of the `tile_path` components as well...
-    let tail = exit - direction.normalize() * length_in_tiles;
+    let tail = head - direction.normalize() * length_in_tiles;
 
     let midpoint = (head + tail) / 2.0;
 
+    // TODO: Avoid this weird hard-coding by having better models
+    let height_boost = TRAIN_EXTRA_HEIGHT
+        + (match train_component_type {
+            TrainComponentType::Engine => TRAIN_WIDTH,
+            TrainComponentType::Car => TRAIN_WIDTH * 0.25,
+        });
+
     Transform {
-        rotation: Quat::from_rotation_arc(Vec3::Y, direction.normalize()),
-        translation: midpoint + Vec3::new(0.0, TRAIN_RADIUS + TRAIN_EXTRA_HEIGHT, 0.0),
+        rotation: Quat::from_rotation_arc(Vec3::Z, direction.normalize()),
+        translation: midpoint + Vec3::new(0.0, height_boost, 0.0),
         ..default()
     }
 }
@@ -69,7 +77,7 @@ pub(crate) fn calculate_train_transforms(
         // TODO: Calculate this properly...
         let mut transform =
             calculate_train_component_transform(*train_component, transport_location, map_level);
-        transform.translation.y += idx as f32;
+        transform.translation.y += (idx as f32) / 2.0;
         results.push(transform);
     }
     results
@@ -129,18 +137,18 @@ fn create_train_component(
     transform: Transform,
 ) -> Entity {
     let mesh = match train_component_type {
-        // TODO: Add also a cuboid for the cab
+        // TODO: Add also a cylinder
         TrainComponentType::Engine => {
-            Mesh::from(Cylinder {
-                radius:      TRAIN_RADIUS,
-                half_height: train_component_type.length_in_tiles() / 2.0,
-            })
+            Mesh::from(Cuboid::new(
+                TRAIN_WIDTH,
+                TRAIN_WIDTH * 2.0, // Train engine is higher
+                train_component_type.length_in_tiles(),
+            ))
         },
-        // TODO: Fix this
         TrainComponentType::Car => {
             Mesh::from(Cuboid::new(
-                TRAIN_DIAMETER,
-                TRAIN_DIAMETER,
+                TRAIN_WIDTH,
+                TRAIN_WIDTH * 0.5, // Train cars are lower
                 train_component_type.length_in_tiles(),
             ))
         },

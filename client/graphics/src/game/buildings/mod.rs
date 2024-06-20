@@ -87,6 +87,8 @@ fn handle_game_map_level_provided_for_testing(
                     ((49, 49), TrackType::NorthSouth),
                     ((49, 50), TrackType::NorthSouth),
                     ((49, 51), TrackType::NorthSouth),
+                    // A simplified compass, pointing North!
+                    ((48, 39), TrackType::NorthSouth),
                 ];
 
                 let mut initial_buildings = vec![];
@@ -104,21 +106,28 @@ fn handle_game_map_level_provided_for_testing(
                 client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                     *game_id,
                     GameCommand::PurchaseTransport(TransportInfo {
-                        transport_id:   TransportId::random(),
-                        owner_id:     player_id,
-                        location: TransportLocation {
-                            pointing_in: DirectionXZ::East,
-                            tile_path: vec![
-                                TileTrack {
-                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 43),
-                                    track_type: TrackType::SouthEast,
-                                }
-                            ],
+                        transport_id:    TransportId::random(),
+                        owner_id:        player_id,
+                        location:        TransportLocation {
+                            pointing_in:          DirectionXZ::East,
+                            tile_path:            vec![TileTrack {
+                                tile_coords_xz: TileCoordsXZ::from_usizes(46, 43),
+                                track_type:     TrackType::SouthEast,
+                            }],
                             progress_within_tile: ProgressWithinTile(2.0 / 3.0),
                         },
-                        transport_type: TransportType::Train(vec![TrainComponentType::Engine, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car, TrainComponentType::Car]),
-                        velocity: TransportVelocity { tiles_per_second: 0.25 },
-                        movement_orders: MovementOrders::RandomTurns, // TODO: Implement some movement
+                        transport_type:  TransportType::Train(vec![
+                            TrainComponentType::Engine,
+                            TrainComponentType::Car,
+                            TrainComponentType::Car,
+                            TrainComponentType::Car,
+                            TrainComponentType::Car,
+                            TrainComponentType::Car,
+                        ]),
+                        velocity:        TransportVelocity {
+                            tiles_per_second: 0.25,
+                        },
+                        movement_orders: MovementOrders::RandomTurns,
                     }),
                 )));
 

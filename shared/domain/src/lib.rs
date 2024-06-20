@@ -1,6 +1,7 @@
 #![allow(clippy::unused_self)]
 
 use std::collections::HashSet;
+use std::f32::consts::SQRT_2;
 use std::fmt::{Debug, Formatter};
 use std::ops::Add;
 
@@ -237,6 +238,17 @@ impl TrackType {
             TrackType::EastWest => (DirectionXZ::East, DirectionXZ::West),
             TrackType::SouthEast => (DirectionXZ::East, DirectionXZ::South),
             TrackType::SouthWest => (DirectionXZ::South, DirectionXZ::West),
+        }
+    }
+
+    #[must_use]
+    pub fn length_in_tiles(self) -> f32 {
+        match self {
+            TrackType::NorthSouth | TrackType::EastWest => 1.0,
+            TrackType::NorthEast
+            | TrackType::NorthWest
+            | TrackType::SouthEast
+            | TrackType::SouthWest => SQRT_2 / 2.0,
         }
     }
 }
