@@ -7,9 +7,7 @@ use bevy::prelude::{
 };
 use shared_domain::map_level::{MapLevel, Terrain};
 use shared_domain::server_response::PlayerInfo;
-use shared_domain::{
-    ProgressWithinTile, TileCoordsXZ, TrainComponentType, TransportId, TransportLocation,
-};
+use shared_domain::{TileCoordsXZ, TrainComponentType, TransportId, TransportLocation};
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::game::buildings::tracks::vertex_coordinates_clockwise;
@@ -24,30 +22,23 @@ fn calculate_train_component_transform(
     map_level: &MapLevel,
 ) -> Transform {
     let tile_path = &transport_location.tile_path;
-    let pointing_in = transport_location.pointing_in;
     let terrain = &map_level.terrain;
     let tile_track = tile_path[0];
     let tile = tile_track.tile_coords_xz;
     let track_type = tile_track.track_type;
     let track_length = track_type.length_in_tiles();
-    let (direction_a, direction_b) = track_type.connections_clockwise();
-    let (entry_direction, exit_direction) = if pointing_in == direction_a {
-        (direction_b, direction_a)
-    } else if pointing_in == direction_b {
-        (direction_a, direction_b)
-    } else {
-        panic!("Invalid pointing_in: {pointing_in:?} for track_type {track_type:?}"); // TODO: I dislike this panic...
-    };
+    let exit_direction = transport_location.pointing_in;
+    let entry_direction = track_type.other_end(exit_direction);
 
     let length_in_tiles = train_component_type.length_in_tiles();
-    let ProgressWithinTile(progress_within_tile) = transport_location.progress_within_tile;
+    let progress_within_tile = transport_location.progress_within_tile.progress();
 
     let entry = center_coordinate(entry_direction, tile, terrain);
     let exit = center_coordinate(exit_direction, tile, terrain);
 
     let direction = exit - entry;
     let head = exit - direction.normalize() * (1.0 - progress_within_tile) * track_length;
-    // TODO: Actually, the tail should consider the rest of the `tile_path` components as well...
+    // TODO: Actually, the tail should consider the rest of the `tile_path` components as well to render turns correctly...
     let tail = head - direction.normalize() * length_in_tiles;
 
     let midpoint = (head + tail) / 2.0;
@@ -74,7 +65,7 @@ pub(crate) fn calculate_train_transforms(
 ) -> Vec<Transform> {
     let mut results = vec![];
     for (idx, train_component) in train_components.iter().enumerate() {
-        // TODO: Calculate this properly...
+        // TODO: Calculate the transforms properly for the whole train...
         let mut transform =
             calculate_train_component_transform(*train_component, transport_location, map_level);
         transform.translation.y += (idx as f32) / 2.0;

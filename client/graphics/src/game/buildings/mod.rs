@@ -6,8 +6,9 @@ use std::collections::HashMap;
 
 use bevy::prelude::{
     error, Assets, Commands, EventReader, EventWriter, FixedUpdate, Mesh, Plugin, Res, ResMut,
-    StandardMaterial, Update,
+    Resource, StandardMaterial, Update,
 };
+use shared_domain::building_state::BuildingState;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
@@ -25,11 +26,15 @@ use crate::game::{PlayerIdResource, PlayersInfoResource};
 
 pub(crate) struct BuildingsPlugin;
 
+#[derive(Resource)]
+pub struct BuildingStateResource(pub BuildingState);
+
 impl Plugin for BuildingsPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_systems(FixedUpdate, handle_building_built);
         app.add_systems(FixedUpdate, handle_game_map_level_provided_for_testing);
         app.add_systems(Update, build_track_when_mouse_released);
+        app.insert_resource(BuildingStateResource(BuildingState::empty()));
     }
 }
 
@@ -114,7 +119,7 @@ fn handle_game_map_level_provided_for_testing(
                                 tile_coords_xz: TileCoordsXZ::from_usizes(46, 43),
                                 track_type:     TrackType::SouthEast,
                             }],
-                            progress_within_tile: ProgressWithinTile(2.0 / 3.0),
+                            progress_within_tile: ProgressWithinTile::just_entering(),
                         },
                         transport_type:  TransportType::Train(vec![
                             TrainComponentType::Engine,
@@ -125,7 +130,7 @@ fn handle_game_map_level_provided_for_testing(
                             TrainComponentType::Car,
                         ]),
                         velocity:        TransportVelocity {
-                            tiles_per_second: 0.25,
+                            tiles_per_second: 1.0,
                         },
                         movement_orders: MovementOrders::RandomTurns,
                     }),
@@ -148,13 +153,17 @@ fn handle_building_built(
     mut materials: ResMut<Assets<StandardMaterial>>,
     map_level: Option<Res<MapLevelResource>>,
     players_info_resource: Res<PlayersInfoResource>,
+    mut building_state_resource: ResMut<BuildingStateResource>,
 ) {
     let PlayersInfoResource(players_info) = players_info_resource.as_ref();
+    let BuildingStateResource(ref mut building_state) = building_state_resource.as_mut();
 
     if let Some(map_level) = map_level {
         for message in server_messages.read() {
             if let ServerResponse::Game(_game_id, game_response) = &message.response {
                 if let GameResponse::BuildingsBuilt(building_infos) = game_response {
+                    building_state.append(building_infos.clone());
+
                     for building_info in building_infos {
                         create_building(
                             building_info,

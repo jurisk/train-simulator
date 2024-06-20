@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use shared_domain::building_state::BuildingState;
 use shared_domain::client_command::GameCommand;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{AddressEnvelope, Colour, GameInfo, GameResponse, PlayerInfo};
@@ -11,8 +12,7 @@ use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName, TransportInfo};
 pub(crate) struct GameState {
     pub game_id: GameId,
     map_level:   MapLevel,
-    // TODO:    Should some of this be in a `trackLayer` as a `FieldXZ` instead of `Vec`? A set of multiple tracks can exist on a single tile.
-    buildings:   Vec<BuildingInfo>,
+    buildings:   BuildingState,
     transports:  Vec<TransportInfo>,
     players:     HashMap<PlayerId, PlayerInfo>,
 }
@@ -28,7 +28,7 @@ impl GameState {
         Self {
             game_id,
             map_level,
-            buildings,
+            buildings: BuildingState::from_vec(buildings),
             transports,
             players,
         }
@@ -100,7 +100,7 @@ impl GameState {
     ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         Ok(vec![GameResponseWithAddress::new(
             AddressEnvelope::ToPlayer(requesting_player_id),
-            GameResponse::BuildingsBuilt(self.buildings.clone()),
+            GameResponse::BuildingsBuilt(self.buildings.to_vec()),
         )])
     }
 
@@ -114,24 +114,21 @@ impl GameState {
             .all(|building_info| building_info.owner_id == requesting_player_id);
 
         // TODO: Check that this is a valid building and there is enough money to build it, subtract money
-        // TODO: Check that terrain matches building requirements
+        // TODO: Check that terrain matches building requirements - e.g. no building on water, tracks that go out of bounds, tracks that go into water, etc.
 
-        // Later: This is an inefficient check, but it will have to do for now
         let tiles_are_free = building_infos.iter().all(|building_infos| {
             building_infos
                 .covers_tiles
                 .to_set()
                 .into_iter()
                 .all(|tile| {
-                    !self
-                        .buildings
-                        .iter()
-                        .any(|building| building.covers_tiles.to_set().contains(&tile))
+                    // Later: Actually, we should allow adding a track to tracks if such a track type are not already present!
+                    self.buildings.buildings_at(tile).is_empty()
                 })
         });
 
         if valid_player_id && tiles_are_free {
-            self.buildings.append(&mut building_infos.clone());
+            self.buildings.append(building_infos.clone());
 
             Ok(vec![GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id),

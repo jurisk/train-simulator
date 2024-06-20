@@ -4,12 +4,24 @@ use crate::coords_xz::CoordsXZ;
 
 // SW = X axis, smaller is W, larger is E
 // NS = Z axis, smaller is N, larger is S
-#[derive(Debug, Serialize, Deserialize, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum DirectionXZ {
     North,
     East,
     South,
     West,
+}
+
+impl DirectionXZ {
+    #[must_use]
+    pub fn reverse(self) -> Self {
+        match self {
+            DirectionXZ::North => DirectionXZ::South,
+            DirectionXZ::East => DirectionXZ::West,
+            DirectionXZ::South => DirectionXZ::North,
+            DirectionXZ::West => DirectionXZ::East,
+        }
+    }
 }
 
 impl From<DirectionXZ> for CoordsXZ {

@@ -15,6 +15,7 @@ use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::{PlayerId, TransportInfo, TransportType};
 
 use crate::communication::domain::ServerMessageEvent;
+use crate::game::buildings::BuildingStateResource;
 use crate::game::map_level::MapLevelResource;
 use crate::game::transport::train::{calculate_train_transforms, create_train};
 use crate::game::PlayersInfoResource;
@@ -40,11 +41,13 @@ fn move_transports(
     mut query: Query<(&mut TransportInfoComponent, &Children)>,
     mut child_query: Query<(&mut Transform, &TransportIndexComponent)>,
     map_level: Option<Res<MapLevelResource>>,
+    building_state_resource: Res<BuildingStateResource>,
 ) {
+    let BuildingStateResource(building_state) = building_state_resource.as_ref();
     if let Some(map_level) = map_level {
         for (mut transport_info_component, children) in &mut query {
             let TransportInfoComponent(ref mut transport_info) = transport_info_component.as_mut();
-            transport_info.advance(time.delta_seconds());
+            transport_info.advance(time.delta_seconds(), building_state);
 
             let transforms = match &transport_info.transport_type {
                 TransportType::Train(components) => {

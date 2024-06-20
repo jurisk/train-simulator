@@ -11,6 +11,9 @@ use shared_util::direction_xz::DirectionXZ;
 use shared_util::random::generate_random_string;
 use uuid::Uuid;
 
+use crate::building_state::BuildingState;
+
+pub mod building_state;
 pub mod client_command;
 pub mod map_level;
 pub mod server_response;
@@ -224,9 +227,37 @@ pub enum TrackType {
 }
 
 impl TrackType {
+    #[allow(clippy::match_same_arms, clippy::missing_panics_doc)]
+    #[must_use]
+    pub fn other_end(self, direction: DirectionXZ) -> DirectionXZ {
+        match (self, direction) {
+            (TrackType::NorthEast, DirectionXZ::North) => DirectionXZ::East,
+            (TrackType::NorthEast, DirectionXZ::East) => DirectionXZ::North,
+            (TrackType::NorthSouth, DirectionXZ::North) => DirectionXZ::South,
+            (TrackType::NorthSouth, DirectionXZ::South) => DirectionXZ::North,
+            (TrackType::NorthWest, DirectionXZ::North) => DirectionXZ::West,
+            (TrackType::NorthWest, DirectionXZ::West) => DirectionXZ::North,
+            (TrackType::EastWest, DirectionXZ::East) => DirectionXZ::West,
+            (TrackType::EastWest, DirectionXZ::West) => DirectionXZ::East,
+            (TrackType::SouthEast, DirectionXZ::South) => DirectionXZ::East,
+            (TrackType::SouthEast, DirectionXZ::East) => DirectionXZ::South,
+            (TrackType::SouthWest, DirectionXZ::South) => DirectionXZ::West,
+            (TrackType::SouthWest, DirectionXZ::West) => DirectionXZ::South,
+            _ => {
+                panic!("Invalid track type {self:?} and direction {direction:?} combination",)
+            },
+        }
+    }
+
     #[must_use]
     pub fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
         HashSet::from([TileCoordsXZ::ZERO])
+    }
+
+    #[must_use]
+    pub fn connections(self) -> HashSet<DirectionXZ> {
+        let (a, b) = self.connections_clockwise();
+        HashSet::from([a, b])
     }
 
     #[must_use]
@@ -314,6 +345,14 @@ impl TileCoverage {
             TileCoverage::Multiple(tiles) => tiles.clone(),
         }
     }
+
+    #[must_use]
+    pub fn contains(&self, tile: TileCoordsXZ) -> bool {
+        match self {
+            TileCoverage::Single(single_tile) => *single_tile == tile,
+            TileCoverage::Multiple(tiles) => tiles.contains(&tile),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
@@ -354,7 +393,7 @@ pub struct TileTrack {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
-pub struct ProgressWithinTile(pub f32);
+pub struct ProgressWithinTile(f32);
 
 impl ProgressWithinTile {
     #[must_use]
@@ -366,6 +405,16 @@ impl ProgressWithinTile {
     pub fn about_to_exit() -> Self {
         Self(1.0)
     }
+
+    #[must_use]
+    pub fn out_of_bounds(self) -> bool {
+        self.progress() >= 1.0
+    }
+
+    #[must_use]
+    pub fn progress(self) -> f32 {
+        self.0
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -373,6 +422,14 @@ pub struct TransportLocation {
     pub pointing_in:          DirectionXZ,
     pub tile_path:            Vec<TileTrack>, /* Which tile is it on now, and which tiles has it been on - only as much as to cover the vehicle's length */
     pub progress_within_tile: ProgressWithinTile,
+}
+
+impl TransportLocation {
+    #[must_use]
+    pub fn entering_from(&self) -> DirectionXZ {
+        let track_type = self.tile_path[0].track_type;
+        track_type.other_end(self.pointing_in)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -398,16 +455,44 @@ pub struct TransportInfo {
 }
 
 impl TransportInfo {
-    pub fn advance(&mut self, seconds: f32) {
-        // TODO: Actually move on tiles too according to the tracks if they exist, and the movement orders!
+    fn jump_tile(&mut self, building_state: &BuildingState) {
+        let current_tile_track = self.location.tile_path[0];
+        let next_tile_coords = current_tile_track.tile_coords_xz + self.location.pointing_in;
+        let tracks_at_next_tile: Vec<TrackType> = building_state.track_types_at(next_tile_coords);
+        let reversed = self.location.pointing_in.reverse();
+        let valid_tracks_at_next_tile: Vec<TrackType> = tracks_at_next_tile
+            .into_iter()
+            .filter(|track_type| track_type.connections().contains(&reversed))
+            .collect();
+        assert_eq!(self.movement_orders, MovementOrders::RandomTurns); // TODO: Support other strategies
+        // TODO: Reuse the "random_element_from_list" you have somewhere
+        let next_track_type =
+            valid_tracks_at_next_tile[fastrand::usize(0 .. valid_tracks_at_next_tile.len())];
+        let next_tile_track = TileTrack {
+            tile_coords_xz: next_tile_coords,
+            track_type:     next_track_type,
+        };
+        self.location.tile_path.insert(0, next_tile_track);
+        self.location.progress_within_tile.0 -= 1.0;
+        self.location.pointing_in = next_track_type.other_end(reversed);
+    }
+
+    fn normalise_progress_jumping_tiles(&mut self, building_state: &BuildingState) {
+        while self.location.progress_within_tile.out_of_bounds() {
+            self.jump_tile(building_state);
+        }
+    }
+
+    // TODO: Also invoke on the server-side, authoritative!
+    pub fn advance(&mut self, seconds: f32, building_state: &BuildingState) {
+        let track_type = self.location.tile_path[0].track_type;
+        let track_length = track_type.length_in_tiles();
         let TransportVelocity { tiles_per_second } = self.velocity;
         let ProgressWithinTile(progress_within_tile) = self.location.progress_within_tile;
-        // TODO: This is actually wrong because diagonal tracks don't have length of 1.0 !!!
-        let mut new_progress = progress_within_tile + tiles_per_second * seconds;
-        while new_progress > 1.0 {
-            new_progress -= 1.0;
-        }
+        let effective_speed = tiles_per_second / track_length;
+        let new_progress = progress_within_tile + effective_speed * seconds;
         let new_progress = ProgressWithinTile(new_progress);
         self.location.progress_within_tile = new_progress;
+        self.normalise_progress_jumping_tiles(building_state);
     }
 }
