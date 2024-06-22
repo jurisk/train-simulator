@@ -13,6 +13,7 @@ use shared_domain::{
     BuildingId, BuildingInfo, BuildingType, TileCoordsXZ, TileCoverage, TrackType,
 };
 use shared_util::direction_xz::DirectionXZ;
+use shared_util::random::choose_unsafe;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::map_level::terrain::land::logical_to_world;
@@ -140,13 +141,13 @@ pub(crate) fn build_track_when_mouse_released(
                 TrackType::SouthEast,
                 TrackType::SouthWest,
             ];
-            let tmp_selected_track = tmp_track_types[fastrand::usize(0 .. tmp_track_types.len())];
+            let tmp_selected_track = choose_unsafe(&tmp_track_types);
 
             let track = BuildingInfo {
                 owner_id:      player_id,
                 building_id:   BuildingId::random(),
                 covers_tiles:  TileCoverage::Single(*tile),
-                building_type: BuildingType::Track(tmp_selected_track),
+                building_type: BuildingType::Track(*tmp_selected_track),
             };
 
             buildings.push(track);

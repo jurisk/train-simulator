@@ -24,3 +24,8 @@ pub fn choose<T: Copy>(rng: &mut Rng, items: &[T]) -> Option<T> {
         Some(items[i])
     }
 }
+
+pub fn choose_unsafe<T>(items: &[T]) -> &T {
+    let i = fastrand::usize(.. items.len());
+    &items[i]
+}

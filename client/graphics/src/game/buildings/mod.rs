@@ -39,6 +39,7 @@ impl Plugin for BuildingsPlugin {
 }
 
 // Later: Remove this, this is only for testing
+#[allow(clippy::too_many_lines)]
 fn handle_game_map_level_provided_for_testing(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut client_messages: EventWriter<ClientMessageEvent>,

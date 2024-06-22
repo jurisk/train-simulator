@@ -8,6 +8,7 @@ use std::ops::Add;
 use serde::{Deserialize, Serialize};
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
+use shared_util::random::choose_unsafe;
 use shared_util::random::generate_random_string;
 use uuid::Uuid;
 
@@ -465,14 +466,13 @@ impl TransportInfo {
             .filter(|track_type| track_type.connections().contains(&reversed))
             .collect();
         assert_eq!(self.movement_orders, MovementOrders::RandomTurns); // TODO: Support other strategies
-        // TODO: Reuse the "random_element_from_list" you have somewhere
-        let next_track_type =
-            valid_tracks_at_next_tile[fastrand::usize(0 .. valid_tracks_at_next_tile.len())];
+        let next_track_type = choose_unsafe(&valid_tracks_at_next_tile);
         let next_tile_track = TileTrack {
             tile_coords_xz: next_tile_coords,
-            track_type:     next_track_type,
+            track_type:     *next_track_type,
         };
         self.location.tile_path.insert(0, next_tile_track);
+        // TODO: This is an unmitigated memory leak now. Should you just remove the last element to avoid this? Or do some more advanced calculations?
         self.location.progress_within_tile.0 -= 1.0;
         self.location.pointing_in = next_track_type.other_end(reversed);
     }

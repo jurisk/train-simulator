@@ -7,7 +7,9 @@ use bevy::prelude::{
 };
 use shared_domain::map_level::{MapLevel, Terrain};
 use shared_domain::server_response::PlayerInfo;
-use shared_domain::{ProgressWithinTile, TileCoordsXZ, TileTrack, TrainComponentType, TransportId, TransportLocation};
+use shared_domain::{
+    ProgressWithinTile, TileCoordsXZ, TileTrack, TrainComponentType, TransportId, TransportLocation,
+};
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::game::buildings::tracks::vertex_coordinates_clockwise;
@@ -18,9 +20,15 @@ const TRAIN_WIDTH: f32 = 0.125;
 const TRAIN_EXTRA_HEIGHT: f32 = 0.1;
 
 struct State {
-    tile_path_offset: usize,
-    pointing_in: DirectionXZ,
+    tile_path_offset:     usize,
+    pointing_in:          DirectionXZ,
     progress_within_tile: ProgressWithinTile,
+}
+
+fn calculate_rotation_quat(direction: Vec3) -> Quat {
+    let quat = Quat::from_rotation_arc(Vec3::Z, direction.normalize());
+    // TODO: Roll it so that up is Vec3::Y
+    quat
 }
 
 fn calculate_train_component_transform(
@@ -51,16 +59,20 @@ fn calculate_train_component_transform(
     let midpoint = (head + tail) / 2.0;
 
     let transform = Transform {
-        rotation: Quat::from_rotation_arc(Vec3::Z, direction.normalize()),
+        rotation: calculate_rotation_quat(direction),
         translation: midpoint,
         ..default()
     };
 
-    (transform, State {
-        tile_path_offset: state.tile_path_offset + 1,
-        pointing_in: entry_direction.reverse(),
-        progress_within_tile: state.progress_within_tile,
-    })
+    // TODO: This is rather simplistic, it has to be properly calculated
+    (
+        transform,
+        State {
+            tile_path_offset:     state.tile_path_offset + 1,
+            pointing_in:          entry_direction.reverse(),
+            progress_within_tile: state.progress_within_tile,
+        },
+    )
 }
 
 #[allow(clippy::cast_precision_loss)]
@@ -71,14 +83,17 @@ pub(crate) fn calculate_train_transforms(
 ) -> Vec<Transform> {
     let mut results = vec![];
     let mut state = State {
-        tile_path_offset: 0,
-        pointing_in: transport_location.pointing_in,
+        tile_path_offset:     0,
+        pointing_in:          transport_location.pointing_in,
         progress_within_tile: transport_location.progress_within_tile,
     };
     for train_component in train_components {
-        // TODO: Calculate the transforms properly for the whole train...
-        let (transform, new_state) =
-            calculate_train_component_transform(&state, *train_component, &transport_location.tile_path, map_level);
+        let (transform, new_state) = calculate_train_component_transform(
+            &state,
+            *train_component,
+            &transport_location.tile_path,
+            map_level,
+        );
         state = new_state;
         results.push(transform);
     }
