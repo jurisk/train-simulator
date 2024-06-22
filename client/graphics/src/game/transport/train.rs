@@ -26,9 +26,22 @@ struct State {
 }
 
 fn calculate_rotation_quat(direction: Vec3) -> Quat {
-    let quat = Quat::from_rotation_arc(Vec3::Z, direction.normalize());
-    // TODO: Roll it so that up is Vec3::Y
-    quat
+    let direction = direction.normalize();
+    let alignment_rotation = Quat::from_rotation_arc(Vec3::Z, direction);
+
+    let up_after_rotation = alignment_rotation * Vec3::Y;
+
+    // Compute the target up vector: perpendicular to direction and closest to Vec3::Y
+    let target_up = (Vec3::Y - direction * Vec3::Y.dot(direction)).normalize();
+
+    let roll_axis = direction;
+    let roll_angle = up_after_rotation.angle_between(target_up);
+
+    // Calculate the quaternion for the roll rotation
+    let roll_quat = Quat::from_axis_angle(roll_axis, roll_angle);
+
+    // Combine the initial rotation quaternion with the roll quaternion
+    roll_quat * alignment_rotation
 }
 
 fn calculate_train_component_transform(
