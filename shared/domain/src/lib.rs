@@ -216,7 +216,7 @@ impl TransportId {
     }
 }
 
-// TODO: Possibly rename to `ConnectionType` or something. And `TrackType` thus has multiple of these `ConnectionType`-s.
+// Later: Possibly rename to `ConnectionType` or something. And `TrackType` thus has multiple of these `ConnectionType`-s.
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum TrackType {
     NorthEast,
@@ -394,7 +394,7 @@ pub struct TileTrack {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
-pub struct ProgressWithinTile(f32);
+pub struct ProgressWithinTile(pub f32); // Later: Refactor to remove `pub`
 
 impl ProgressWithinTile {
     #[must_use]

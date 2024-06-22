@@ -26,7 +26,7 @@ struct State {
 }
 
 fn calculate_rotation_quat(direction: Vec3) -> Quat {
-    let direction = direction.normalize();
+    debug_assert!(direction.is_normalized());
     let alignment_rotation = Quat::from_rotation_arc(Vec3::Z, direction);
 
     let up_after_rotation = alignment_rotation * Vec3::Y;
@@ -64,26 +64,50 @@ fn calculate_train_component_transform(
     let entry = center_coordinate(entry_direction, tile, terrain);
     let exit = center_coordinate(exit_direction, tile, terrain);
 
-    let direction = exit - entry;
-    let head = exit - direction.normalize() * (1.0 - progress_within_tile) * track_length;
-    // TODO: Actually, the tail should consider the rest of the `tile_path` components as well to render turns correctly...
-    let tail = head - direction.normalize() * length_in_tiles;
+    let direction = (exit - entry).normalize();
+    let progress = progress_within_tile * track_length;
+
+    let head = entry + direction * progress;
+
+    let stays_in_this_tile = progress < length_in_tiles;
+    let (tail, new_progress_within_tile) = if stays_in_this_tile {
+        let tail = head - direction * length_in_tiles;
+        let new_progress_within_tile = ProgressWithinTile(progress_within_tile - length_in_tiles);
+        // TODO:    This has no gaps between the train components - we should have gaps! But perhaps it is solved by
+        //          having the model not take up all the space?
+        (tail, new_progress_within_tile)
+    } else {
+        if state.tile_path_offset >= tile_path.len() {
+            panic!("Ran out of tile path!"); // Later: Think of better error handling
+        }
+        let TileTrack {
+            tile_coords_xz: previous_tile,
+            track_type: previous_track_type,
+        } = tile_path[state.tile_path_offset + 1];
+        let previous_exit_direction = entry_direction.reverse();
+        todo!(); // TODO: Consider next tile!
+    };
 
     let midpoint = (head + tail) / 2.0;
-
     let transform = Transform {
         rotation: calculate_rotation_quat(direction),
         translation: midpoint,
         ..default()
     };
 
-    // TODO: This is rather simplistic, it has to be properly calculated
+    let new_tile_path_offset = state.tile_path_offset + if stays_in_this_tile { 0 } else { 1 };
+    let new_pointing_in = if stays_in_this_tile {
+        exit_direction
+    } else {
+        entry_direction.reverse()
+    };
+
     (
         transform,
         State {
-            tile_path_offset:     state.tile_path_offset + 1,
-            pointing_in:          entry_direction.reverse(),
-            progress_within_tile: state.progress_within_tile,
+            tile_path_offset:     new_tile_path_offset,
+            pointing_in:          new_pointing_in,
+            progress_within_tile: new_progress_within_tile,
         },
     )
 }
