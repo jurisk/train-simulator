@@ -14,11 +14,13 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::game::buildings::tracks::vertex_coordinates_clockwise;
 use crate::game::transport::TransportIndexComponent;
+use crate::util::geometry::line_segment_intersection_with_sphere;
 use crate::util::shift_mesh;
 
 const TRAIN_WIDTH: f32 = 0.125;
 const TRAIN_EXTRA_HEIGHT: f32 = 0.1;
 
+#[derive(Debug)]
 struct State {
     tile_path_offset:     usize,
     pointing_in:          DirectionXZ,
@@ -44,6 +46,7 @@ fn calculate_rotation_quat(direction: Vec3) -> Quat {
     roll_quat * alignment_rotation
 }
 
+#[allow(clippy::bool_to_int_with_if, clippy::unwrap_used)]
 fn calculate_train_component_transform(
     state: &State,
     train_component_type: TrainComponentType,
@@ -54,11 +57,11 @@ fn calculate_train_component_transform(
     let tile_track = tile_path[state.tile_path_offset];
     let tile = tile_track.tile_coords_xz;
     let track_type = tile_track.track_type;
-    let track_length = track_type.length_in_tiles();
+    let track_length = track_type.length_in_tiles(); // TODO: Or calculate based on entry / exit vectors?!
     let exit_direction = state.pointing_in;
     let entry_direction = track_type.other_end(exit_direction);
 
-    let length_in_tiles = train_component_type.length_in_tiles();
+    let train_length_in_tiles = train_component_type.length_in_tiles();
     let progress_within_tile = state.progress_within_tile.progress();
 
     let entry = center_coordinate(entry_direction, tile, terrain);
@@ -69,24 +72,48 @@ fn calculate_train_component_transform(
 
     let head = entry + direction * progress;
 
-    let stays_in_this_tile = progress < length_in_tiles;
+    let stays_in_this_tile = progress > train_length_in_tiles;
     let (tail, new_progress_within_tile) = if stays_in_this_tile {
-        let tail = head - direction * length_in_tiles;
-        let new_progress_within_tile = ProgressWithinTile(progress_within_tile - length_in_tiles);
+        let tail = head - direction * train_length_in_tiles;
+        let new_progress_within_tile =
+            ProgressWithinTile::new(progress_within_tile - train_length_in_tiles / track_length);
         // TODO:    This has no gaps between the train components - we should have gaps! But perhaps it is solved by
         //          having the model not take up all the space?
         (tail, new_progress_within_tile)
     } else {
-        if state.tile_path_offset >= tile_path.len() {
-            panic!("Ran out of tile path!"); // Later: Think of better error handling
-        }
+        // TODO: Handle longer train components that even span more than two tiles (e.g. diagonally!)
+        assert!(
+            state.tile_path_offset < tile_path.len(),
+            "Ran out of tile path!"
+        ); // Later: Think of better error handling
         let TileTrack {
             tile_coords_xz: previous_tile,
             track_type: previous_track_type,
         } = tile_path[state.tile_path_offset + 1];
         let previous_exit_direction = entry_direction.reverse();
-        todo!(); // TODO: Consider next tile!
+        let previous_entry_direction = previous_track_type.other_end(previous_exit_direction);
+        let previous_entry = center_coordinate(previous_entry_direction, previous_tile, terrain);
+        let previous_exit = center_coordinate(previous_exit_direction, previous_tile, terrain);
+        let previous_track_length = (previous_exit - previous_entry).length();
+        let intersections = line_segment_intersection_with_sphere(
+            (previous_entry, previous_exit),
+            (head, train_length_in_tiles),
+        );
+        println!(
+            "Previous_entry: {previous_entry:?}, Previous_exit: {previous_exit:?}, Intersections: {intersections:?}, {previous_tile:?}, {previous_track_type:?}"
+        );
+        assert!(!intersections.is_empty(), "No intersection found!"); // Later: Think of better error handling
+        let closest_intersection = intersections
+            .into_iter()
+            .min_by(|a, b| a.distance(head).partial_cmp(&b.distance(head)).unwrap())
+            .unwrap();
+        let new_progress_within_tile = ProgressWithinTile::new(
+            (closest_intersection - previous_entry).length() / previous_track_length,
+        );
+        (closest_intersection, new_progress_within_tile)
     };
+
+    let direction = (head - tail).normalize(); // Recalculating with new tail
 
     let midpoint = (head + tail) / 2.0;
     let transform = Transform {
@@ -131,6 +158,7 @@ pub(crate) fn calculate_train_transforms(
             &transport_location.tile_path,
             map_level,
         );
+        println!("Processing {train_component:?} got {new_state:?} and {transform:?}");
         state = new_state;
         results.push(transform);
     }

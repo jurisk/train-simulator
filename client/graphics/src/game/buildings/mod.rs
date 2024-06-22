@@ -153,7 +153,7 @@ fn handle_game_map_level_provided_for_testing(
                             TrainComponentType::Car,
                         ]),
                         velocity:        TransportVelocity {
-                            tiles_per_second: 1.0,
+                            tiles_per_second: 2.0,
                         },
                         movement_orders: MovementOrders::RandomTurns,
                     }),

@@ -374,7 +374,7 @@ impl TrainComponentType {
     #[must_use]
     pub fn length_in_tiles(self) -> f32 {
         match self {
-            TrainComponentType::Engine => 0.75,
+            TrainComponentType::Engine => 0.6, /* TODO: Return to 0.75 when you can handle such lengths! */
             TrainComponentType::Car => 0.5,
         }
     }
@@ -394,9 +394,19 @@ pub struct TileTrack {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
-pub struct ProgressWithinTile(pub f32); // Later: Refactor to remove `pub`
+pub struct ProgressWithinTile(f32);
 
 impl ProgressWithinTile {
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)]
+    pub fn new(progress: f32) -> Self {
+        assert!(
+            (0.0 ..= 1.0).contains(&progress),
+            "Progress must be between 0.0 and 1.0, but was {progress}"
+        );
+        Self(progress)
+    }
+
     #[must_use]
     pub fn just_entering() -> Self {
         Self(0.0)
