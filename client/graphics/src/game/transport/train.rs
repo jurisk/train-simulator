@@ -17,6 +17,7 @@ use crate::game::transport::TransportIndexComponent;
 use crate::util::geometry::line_segment_intersection_with_sphere;
 use crate::util::shift_mesh;
 
+const GAP_BETWEEN_TRAIN_COMPONENTS: f32 = 0.05;
 const TRAIN_WIDTH: f32 = 0.125;
 const TRAIN_EXTRA_HEIGHT: f32 = 0.1;
 
@@ -208,8 +209,14 @@ fn center_coordinate(direction: DirectionXZ, tile: TileCoordsXZ, terrain: &Terra
     (a + b) / 2.0
 }
 
-fn adjusted_cuboid(x_length: f32, y_length: f32, z_length: f32, height_from_ground: f32) -> Mesh {
-    let mut mesh = Mesh::from(Cuboid::new(x_length, y_length, z_length));
+fn adjusted_cuboid(
+    z_gap: f32,
+    x_length: f32,
+    y_length: f32,
+    z_length: f32,
+    height_from_ground: f32,
+) -> Mesh {
+    let mut mesh = Mesh::from(Cuboid::new(x_length, y_length, z_length - z_gap * 2.0));
 
     shift_mesh(
         &mut mesh,
@@ -233,6 +240,7 @@ fn create_train_component(
         TrainComponentType::Engine => {
             // TODO: Add also a cylinder
             adjusted_cuboid(
+                GAP_BETWEEN_TRAIN_COMPONENTS,
                 TRAIN_WIDTH,
                 TRAIN_WIDTH * 2.0, // Train engine is higher
                 train_component_type.length_in_tiles(),
@@ -241,6 +249,7 @@ fn create_train_component(
         },
         TrainComponentType::Car => {
             adjusted_cuboid(
+                GAP_BETWEEN_TRAIN_COMPONENTS,
                 TRAIN_WIDTH,
                 TRAIN_WIDTH * 0.5, // Train cars are lower
                 train_component_type.length_in_tiles(),
