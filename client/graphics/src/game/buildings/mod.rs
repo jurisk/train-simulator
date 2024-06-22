@@ -115,10 +115,32 @@ fn handle_game_map_level_provided_for_testing(
                         owner_id:        player_id,
                         location:        TransportLocation {
                             pointing_in:          DirectionXZ::East,
-                            tile_path:            vec![TileTrack {
-                                tile_coords_xz: TileCoordsXZ::from_usizes(46, 43),
-                                track_type:     TrackType::SouthEast,
-                            }],
+                            tile_path:            vec![
+                                TileTrack {
+                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 43),
+                                    track_type:     TrackType::SouthEast,
+                                },
+                                TileTrack {
+                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 44),
+                                    track_type:     TrackType::NorthSouth,
+                                },
+                                TileTrack {
+                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 45),
+                                    track_type:     TrackType::NorthSouth,
+                                },
+                                TileTrack {
+                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 46),
+                                    track_type:     TrackType::NorthSouth,
+                                },
+                                TileTrack {
+                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 47),
+                                    track_type:     TrackType::NorthSouth,
+                                },
+                                TileTrack {
+                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 48),
+                                    track_type:     TrackType::NorthSouth,
+                                },
+                            ],
                             progress_within_tile: ProgressWithinTile::just_entering(),
                         },
                         transport_type:  TransportType::Train(vec![

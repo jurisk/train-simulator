@@ -7,7 +7,7 @@ use bevy::prelude::{
 };
 use shared_domain::map_level::{MapLevel, Terrain};
 use shared_domain::server_response::PlayerInfo;
-use shared_domain::{TileCoordsXZ, TrainComponentType, TransportId, TransportLocation};
+use shared_domain::{ProgressWithinTile, TileCoordsXZ, TileTrack, TrainComponentType, TransportId, TransportLocation};
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::game::buildings::tracks::vertex_coordinates_clockwise;
@@ -17,22 +17,28 @@ use crate::util::shift_mesh;
 const TRAIN_WIDTH: f32 = 0.125;
 const TRAIN_EXTRA_HEIGHT: f32 = 0.1;
 
+struct State {
+    tile_path_offset: usize,
+    pointing_in: DirectionXZ,
+    progress_within_tile: ProgressWithinTile,
+}
+
 fn calculate_train_component_transform(
+    state: &State,
     train_component_type: TrainComponentType,
-    transport_location: &TransportLocation,
+    tile_path: &[TileTrack],
     map_level: &MapLevel,
-) -> Transform {
-    let tile_path = &transport_location.tile_path;
+) -> (Transform, State) {
     let terrain = &map_level.terrain;
-    let tile_track = tile_path[0];
+    let tile_track = tile_path[state.tile_path_offset];
     let tile = tile_track.tile_coords_xz;
     let track_type = tile_track.track_type;
     let track_length = track_type.length_in_tiles();
-    let exit_direction = transport_location.pointing_in;
+    let exit_direction = state.pointing_in;
     let entry_direction = track_type.other_end(exit_direction);
 
     let length_in_tiles = train_component_type.length_in_tiles();
-    let progress_within_tile = transport_location.progress_within_tile.progress();
+    let progress_within_tile = state.progress_within_tile.progress();
 
     let entry = center_coordinate(entry_direction, tile, terrain);
     let exit = center_coordinate(exit_direction, tile, terrain);
@@ -44,11 +50,17 @@ fn calculate_train_component_transform(
 
     let midpoint = (head + tail) / 2.0;
 
-    Transform {
+    let transform = Transform {
         rotation: Quat::from_rotation_arc(Vec3::Z, direction.normalize()),
         translation: midpoint,
         ..default()
-    }
+    };
+
+    (transform, State {
+        tile_path_offset: state.tile_path_offset + 1,
+        pointing_in: entry_direction.reverse(),
+        progress_within_tile: state.progress_within_tile,
+    })
 }
 
 #[allow(clippy::cast_precision_loss)]
@@ -58,11 +70,16 @@ pub(crate) fn calculate_train_transforms(
     map_level: &MapLevel,
 ) -> Vec<Transform> {
     let mut results = vec![];
-    for (idx, train_component) in train_components.iter().enumerate() {
+    let mut state = State {
+        tile_path_offset: 0,
+        pointing_in: transport_location.pointing_in,
+        progress_within_tile: transport_location.progress_within_tile,
+    };
+    for train_component in train_components {
         // TODO: Calculate the transforms properly for the whole train...
-        let mut transform =
-            calculate_train_component_transform(*train_component, transport_location, map_level);
-        transform.translation.y += (idx as f32) / 2.0;
+        let (transform, new_state) =
+            calculate_train_component_transform(&state, *train_component, &transport_location.tile_path, map_level);
+        state = new_state;
         results.push(transform);
     }
     results
