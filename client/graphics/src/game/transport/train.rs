@@ -12,6 +12,7 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::game::buildings::tracks::vertex_coordinates_clockwise;
 use crate::game::transport::TransportIndexComponent;
+use crate::util::shift_mesh;
 
 const TRAIN_WIDTH: f32 = 0.125;
 const TRAIN_EXTRA_HEIGHT: f32 = 0.1;
@@ -43,16 +44,9 @@ fn calculate_train_component_transform(
 
     let midpoint = (head + tail) / 2.0;
 
-    // TODO: Avoid this weird hard-coding by having better models
-    let height_boost = TRAIN_EXTRA_HEIGHT
-        + (match train_component_type {
-            TrainComponentType::Engine => TRAIN_WIDTH,
-            TrainComponentType::Car => TRAIN_WIDTH * 0.25,
-        });
-
     Transform {
         rotation: Quat::from_rotation_arc(Vec3::Z, direction.normalize()),
-        translation: midpoint + Vec3::new(0.0, height_boost, 0.0),
+        translation: midpoint,
         ..default()
     }
 }
@@ -117,6 +111,17 @@ fn center_coordinate(direction: DirectionXZ, tile: TileCoordsXZ, terrain: &Terra
     (a + b) / 2.0
 }
 
+fn adjusted_cuboid(x_length: f32, y_length: f32, z_length: f32, height_from_ground: f32) -> Mesh {
+    let mut mesh = Mesh::from(Cuboid::new(x_length, y_length, z_length));
+
+    shift_mesh(
+        &mut mesh,
+        Vec3::new(0.0, height_from_ground + y_length / 2.0, 0.0),
+    );
+
+    mesh
+}
+
 #[allow(clippy::too_many_arguments, clippy::items_after_statements)]
 fn create_train_component(
     index: usize,
@@ -128,20 +133,22 @@ fn create_train_component(
     transform: Transform,
 ) -> Entity {
     let mesh = match train_component_type {
-        // TODO: Add also a cylinder
         TrainComponentType::Engine => {
-            Mesh::from(Cuboid::new(
+            // TODO: Add also a cylinder
+            adjusted_cuboid(
                 TRAIN_WIDTH,
                 TRAIN_WIDTH * 2.0, // Train engine is higher
                 train_component_type.length_in_tiles(),
-            ))
+                TRAIN_EXTRA_HEIGHT,
+            )
         },
         TrainComponentType::Car => {
-            Mesh::from(Cuboid::new(
+            adjusted_cuboid(
                 TRAIN_WIDTH,
                 TRAIN_WIDTH * 0.5, // Train cars are lower
                 train_component_type.length_in_tiles(),
-            ))
+                TRAIN_EXTRA_HEIGHT,
+            )
         },
     };
 

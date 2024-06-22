@@ -26,6 +26,7 @@ mod lobby;
 pub mod network;
 mod selection;
 pub mod states;
+pub mod util;
 
 pub struct ClientGraphicsPlugin;
 
