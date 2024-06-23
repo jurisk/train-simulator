@@ -41,6 +41,49 @@ fn transform_from_head_and_tail(head: Vec3, tail: Vec3) -> Transform {
     }
 }
 
+fn maybe_find_tail(
+    head: Vec3,
+    component_length: f32,
+    pointing_in: DirectionXZ,
+    tile_path_offset: usize,
+    tile_path: &[TileTrack],
+    terrain: &Terrain,
+) -> Option<(Vec3, State)> {
+    // Later: Think of better error handling
+    assert!(tile_path_offset < tile_path.len(), "Ran out of tile path!");
+    let tile_track = tile_path[tile_path_offset];
+
+    let tile = tile_track.tile_coords_xz;
+    let track_type = tile_track.track_type;
+    let exit_direction = pointing_in;
+    let entry_direction = track_type.other_end(exit_direction);
+    let entry = center_coordinate(entry_direction, tile, terrain);
+    let exit = center_coordinate(exit_direction, tile, terrain);
+    let track_length = (exit - entry).length();
+
+    let intersections =
+        line_segment_intersection_with_sphere((entry, exit), (head, component_length));
+
+    intersections
+        .into_iter()
+        .map(|intersection| {
+            (
+                intersection,
+                ProgressWithinTile::new((intersection - entry).length() / track_length),
+            )
+        })
+        .max_by_key(|(_, progress)| *progress)
+        .map(|(intersection, progress)| {
+            let state = State {
+                tile_path_offset,
+                pointing_in: exit_direction,
+                progress_within_tile: progress,
+            };
+
+            (intersection, state)
+        })
+}
+
 #[allow(clippy::bool_to_int_with_if, clippy::unwrap_used)]
 fn calculate_train_component_transform(
     state: &State,
@@ -69,61 +112,27 @@ fn calculate_train_component_transform(
 
     let stays_in_this_tile = progress > train_length_in_tiles;
     let (tail, state) = if stays_in_this_tile {
+        // TODO: Use maybe_find_tail also here, just have to have a threshold for not jumping ahead of head
         let tail = head - direction * train_length_in_tiles;
         let new_progress_within_tile =
             ProgressWithinTile::new(progress_within_tile - train_length_in_tiles / track_length);
-        let state = State {
+        let next_state = State {
             tile_path_offset:     state.tile_path_offset,
             pointing_in:          exit_direction,
             progress_within_tile: new_progress_within_tile,
         };
-        (tail, state)
+        (tail, next_state)
     } else {
         // TODO: Handle longer train components that even span more than two tiles (e.g. diagonally!)
-        assert!(
-            state.tile_path_offset < tile_path.len(),
-            "Ran out of tile path!"
-        ); // Later: Think of better error handling
-        let tile_track = tile_path[state.tile_path_offset + 1];
-
-        let tile = tile_track.tile_coords_xz;
-        let track_type = tile_track.track_type;
-        let previous_exit_direction = entry_direction.reverse();
-        let previous_entry_direction = track_type.other_end(previous_exit_direction);
-        let previous_entry = center_coordinate(previous_entry_direction, tile, terrain);
-        let previous_exit = center_coordinate(previous_exit_direction, tile, terrain);
-        let previous_track_length = (previous_exit - previous_entry).length();
-
-        let results: Vec<_> = {
-            let intersections = line_segment_intersection_with_sphere(
-                (previous_entry, previous_exit),
-                (head, train_length_in_tiles),
-            );
-
-            intersections
-                .into_iter()
-                .map(|intersection| {
-                    (
-                        intersection,
-                        ProgressWithinTile::new(
-                            (intersection - previous_entry).length() / previous_track_length,
-                        ),
-                    )
-                })
-                .collect()
-        };
-
-        // TODO: Instead of 'unwrap', go to next tile if this one doesn't work!
-        let (chosen_intersection, new_progress_within_tile) = results
-            .into_iter()
-            .max_by_key(|(_, progress)| *progress)
-            .unwrap();
-        let state = State {
-            tile_path_offset:     state.tile_path_offset + 1,
-            pointing_in:          previous_exit_direction,
-            progress_within_tile: new_progress_within_tile,
-        };
-        (chosen_intersection, state)
+        maybe_find_tail(
+            head,
+            train_component_type.length_in_tiles(),
+            entry_direction.reverse(),
+            state.tile_path_offset + 1,
+            tile_path,
+            terrain,
+        )
+        .unwrap()
     };
 
     (transform_from_head_and_tail(head, tail), state)
@@ -135,6 +144,8 @@ pub(crate) fn calculate_train_transforms(
     transport_location: &TransportLocation,
     map_level: &MapLevel,
 ) -> Vec<Transform> {
+    // TODO:    I think do the train component progresses within tile & what tile they are at in one go
+    //          and then Transform-s in another go. That way you can just operate with progresses on the server, without transforms.
     let mut results = vec![];
     let mut state = State {
         tile_path_offset:     0,
