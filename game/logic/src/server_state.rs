@@ -14,6 +14,7 @@ use shared_domain::server_response::{
 use shared_domain::ClientId;
 
 use crate::authentication_service::AuthenticationService;
+use crate::game_state::GameTime;
 use crate::games::Games;
 
 pub struct ServerState {
@@ -29,6 +30,10 @@ impl ServerState {
             authentication_service: AuthenticationService::new(),
             games:                  Games::new(),
         }
+    }
+
+    pub fn advance_times(&mut self, time: GameTime) {
+        self.games.advance_times(time);
     }
 
     #[allow(clippy::single_match_else)]

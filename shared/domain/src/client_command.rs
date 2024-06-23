@@ -26,7 +26,10 @@ pub enum LobbyCommand {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameCommand {
+    // These queries are separate due to some race conditions on the client, where the map level
+    // was not available yet, so received buildings / transports got ignored.
     QueryBuildings,
+    QueryTransports,
     BuildBuildings(Vec<BuildingInfo>),
     PurchaseTransport(TransportInfo),
 }

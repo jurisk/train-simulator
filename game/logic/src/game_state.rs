@@ -8,6 +8,16 @@ use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{AddressEnvelope, Colour, GameInfo, GameResponse, PlayerInfo};
 use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName, TransportInfo};
 
+#[derive(Debug, Copy, Clone, Default)]
+pub struct GameTime(pub f32);
+
+impl GameTime {
+    #[must_use]
+    pub fn new() -> Self {
+        Self(0.0)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct GameState {
     pub game_id: GameId,
@@ -15,6 +25,7 @@ pub(crate) struct GameState {
     buildings:   BuildingState,
     transports:  Vec<TransportInfo>,
     players:     HashMap<PlayerId, PlayerInfo>,
+    time:        GameTime,
 }
 
 impl GameState {
@@ -31,6 +42,7 @@ impl GameState {
             buildings: BuildingState::from_vec(buildings),
             transports,
             players,
+            time: GameTime::new(),
         }
     }
 
@@ -42,7 +54,17 @@ impl GameState {
             buildings: prototype.buildings.clone(),
             transports: prototype.transports.clone(),
             players: prototype.players.clone(),
+            time: prototype.time,
         }
+    }
+
+    pub(crate) fn advance_time(&mut self, time: GameTime) {
+        let diff = time.0 - self.time.0;
+        for transport in &mut self.transports {
+            // Later: If game is paused then no need to advance transports
+            transport.advance(diff, &self.buildings);
+        }
+        self.time = time;
     }
 
     pub(crate) fn join_game(
@@ -91,7 +113,24 @@ impl GameState {
                 self.process_build_buildings(requesting_player_id, building_infos)
             },
             GameCommand::QueryBuildings => self.process_query_buildings(requesting_player_id),
+            GameCommand::QueryTransports => self.process_query_transports(requesting_player_id),
         }
+    }
+
+    fn process_query_transports(
+        &mut self,
+        requesting_player_id: PlayerId,
+    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
+        Ok(self
+            .transports
+            .iter()
+            .map(|transport_info| {
+                GameResponseWithAddress::new(
+                    AddressEnvelope::ToPlayer(requesting_player_id),
+                    GameResponse::TransportCreated(transport_info.clone()),
+                )
+            })
+            .collect())
     }
 
     fn process_query_buildings(
@@ -186,6 +225,7 @@ impl GameState {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct GameResponseWithAddress {
     pub address:  AddressEnvelope,
     pub response: GameResponse,

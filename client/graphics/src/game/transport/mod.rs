@@ -8,8 +8,8 @@ use bevy::asset::Assets;
 use bevy::log::error;
 use bevy::pbr::StandardMaterial;
 use bevy::prelude::{
-    Children, Commands, Component, Entity, EventReader, FixedUpdate, Mesh, Plugin, Query, Res,
-    ResMut, SpatialBundle, Time, Transform, Update,
+    info, Children, Commands, Component, Entity, EventReader, FixedUpdate, Mesh, Plugin, Query,
+    Res, ResMut, SpatialBundle, Time, Transform, Update,
 };
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
@@ -100,6 +100,7 @@ fn handle_transport_created(
                     );
 
                     if let Some(entity) = entity {
+                        info!("Created transport {transport_info:?} as entity {entity:?}");
                         commands
                             .entity(entity)
                             .insert(SpatialBundle::default()) // For https://bevyengine.org/learn/errors/b0004/

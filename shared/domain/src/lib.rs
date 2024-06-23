@@ -10,7 +10,6 @@ use bevy_math::Vec3;
 use serde::{Deserialize, Serialize};
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
-use shared_util::random::choose_unsafe;
 use shared_util::random::generate_random_string;
 use uuid::Uuid;
 
@@ -510,7 +509,7 @@ pub struct TransportVelocity {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum MovementOrders {
     Stop,
-    RandomTurns,
+    TemporaryPickFirst,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -538,12 +537,12 @@ impl TransportInfo {
             .into_iter()
             .filter(|track_type| track_type.connections().contains(&reversed))
             .collect();
-        assert_eq!(self.movement_orders, MovementOrders::RandomTurns); // TODO: Support other strategies
-        // TODO: All such random choices should probably be on server-side to avoid each client deciding to route the trains differently
-        let next_track_type = choose_unsafe(&valid_tracks_at_next_tile);
+        // TODO: Support other strategies
+        assert_eq!(self.movement_orders, MovementOrders::TemporaryPickFirst);
+        let next_track_type = valid_tracks_at_next_tile[0];
         let next_tile_track = TileTrack {
             tile_coords_xz: next_tile_coords,
-            track_type:     *next_track_type,
+            track_type:     next_track_type,
         };
 
         self.location.tile_path.insert(0, next_tile_track);

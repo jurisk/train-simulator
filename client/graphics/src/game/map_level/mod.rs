@@ -2,7 +2,7 @@ use bevy::prelude::{
     App, Commands, EventReader, EventWriter, FixedUpdate, NextState, Plugin, ResMut, Resource,
 };
 use shared_domain::client_command::ClientCommand;
-use shared_domain::client_command::GameCommand::QueryBuildings;
+use shared_domain::client_command::GameCommand::{QueryBuildings, QueryTransports};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, ServerResponse};
 
@@ -23,14 +23,13 @@ pub(crate) struct MapLevelPlugin;
 impl Plugin for MapLevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TerrainPlugin);
-        app.add_systems(FixedUpdate, handle_map_level_updated);
+        app.add_systems(FixedUpdate, handle_map_level_provided);
     }
 }
 
 // TODO: How does `terrain` differ from `map_level`? What about trees? Is it `MapLevel`? Is it `Buildings`?
-
 #[allow(clippy::collapsible_match)]
-fn handle_map_level_updated(
+fn handle_map_level_provided(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut client_messages: EventWriter<ClientMessageEvent>,
     mut client_state: ResMut<NextState<ClientState>>,
@@ -47,6 +46,10 @@ fn handle_map_level_updated(
                 // We do it like this, because we need the `MapLevelResource` to be set before we can render buildings, so we don't want to receive them too early
                 client_messages.send(ClientMessageEvent {
                     command: ClientCommand::Game(*game_id, QueryBuildings),
+                });
+
+                client_messages.send(ClientMessageEvent {
+                    command: ClientCommand::Game(*game_id, QueryTransports),
                 });
             }
         }

@@ -11,7 +11,7 @@ use shared_domain::server_response::{
 };
 use shared_domain::{GameId, PlayerId, PlayerName};
 
-use crate::game_state::{GameResponseWithAddress, GameState};
+use crate::game_state::{GameResponseWithAddress, GameState, GameTime};
 
 // This is also, in a way, `Lobby`. Should we rename it? Split into two somehow? Not sure yet...
 pub(crate) struct Games {
@@ -33,6 +33,12 @@ impl Games {
         Self {
             game_map: HashMap::new(),
             game_prototype,
+        }
+    }
+
+    pub(crate) fn advance_times(&mut self, time: GameTime) {
+        for game_state in self.game_map.values_mut() {
+            game_state.advance_time(time);
         }
     }
 

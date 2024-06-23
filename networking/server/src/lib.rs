@@ -7,12 +7,13 @@ use std::time::Duration;
 use axum::Router;
 use bevy::prelude::{
     debug, default, error, info, App, Event, EventReader, EventWriter, FixedUpdate,
-    IntoSystemConfigs, Plugin, ResMut, Resource,
+    IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time,
 };
 use bevy_simplenet::{
     AcceptorConfig, Authenticator, RateLimitConfig, Server, ServerConfig, ServerEventFrom,
     ServerFactory, ServerReport,
 };
+use game_logic::game_state::GameTime;
 use game_logic::server_state::ServerState;
 use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
@@ -106,12 +107,13 @@ fn read_on_server(
     }
 }
 
-// TODO: Only returning responses when processing a command will not allow timer-based updates. We may need to introduce an intermediate event queue for `ClientCommandWithClientId`-s where `ServerState` can publish updates.
+// TODO: Server should publish updates so that discrepancies in movement between server and client can be reconciled by the clients
 #[allow(clippy::needless_pass_by_value)]
 fn process_client_command_with_client_id_events(
     mut server_state_resource: ResMut<ServerStateResource>,
     server: ResMut<Server<GameChannel>>,
     mut client_command_with_client_id_events: EventReader<ClientCommandWithClientIdEvent>,
+    time: Res<Time>,
 ) {
     let ServerStateResource(ref mut server_state) = server_state_resource.as_mut();
 
@@ -135,6 +137,8 @@ fn process_client_command_with_client_id_events(
             }
         }
     }
+
+    server_state.advance_times(GameTime(time.elapsed_seconds()));
 }
 
 fn server_factory() -> ServerFactory<GameChannel> {

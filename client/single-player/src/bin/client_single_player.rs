@@ -1,7 +1,10 @@
-use bevy::prelude::{info, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource};
+use bevy::prelude::{
+    info, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time,
+};
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
+use game_logic::game_state::GameTime;
 use game_logic::server_state::ServerState;
 use shared_domain::client_command::ClientCommandWithClientId;
 use shared_domain::ClientId;
@@ -29,9 +32,11 @@ fn process_messages_locally(
     mut server_state_resource: ResMut<ServerStateResource>,
     mut client_messages: EventReader<ClientMessageEvent>,
     mut server_messages: EventWriter<ServerMessageEvent>,
+    time: Res<Time>,
 ) {
     let ClientIdResource(client_id) = *client_id_resource;
     let ServerStateResource(ref mut server_state) = server_state_resource.as_mut();
+
     for message in client_messages.read() {
         let client_command_with_client_id =
             ClientCommandWithClientId::new(client_id, message.command.clone());
@@ -45,4 +50,6 @@ fn process_messages_locally(
             }
         }
     }
+
+    server_state.advance_times(GameTime(time.elapsed_seconds()));
 }

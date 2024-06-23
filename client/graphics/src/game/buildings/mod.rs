@@ -164,7 +164,7 @@ fn handle_game_map_level_provided_for_testing(
                         velocity:        TransportVelocity {
                             tiles_per_second: 2.0,
                         },
-                        movement_orders: MovementOrders::RandomTurns,
+                        movement_orders: MovementOrders::TemporaryPickFirst,
                     }),
                 )));
 
