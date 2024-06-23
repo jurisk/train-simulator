@@ -8,10 +8,10 @@ use bevy::prelude::{
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
 use shared_domain::{TrainComponentType, TransportId, TransportLocation};
+use shared_util::geometry::rotation_aligned_with_direction;
 
 use crate::game::transport::train_layout::calculate_train_component_head_tails;
 use crate::game::transport::TransportIndexComponent;
-use shared_util::geometry::rotation_aligned_with_direction;
 use crate::util::shift_mesh;
 
 const GAP_BETWEEN_TRAIN_COMPONENTS: f32 = 0.05;
