@@ -116,7 +116,8 @@ impl TileCoordsXZ {
 
 impl Debug for TileCoordsXZ {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "T{:?}", <TileCoordsXZ as Into<CoordsXZ>>::into(*self))
+        let coords = <TileCoordsXZ as Into<CoordsXZ>>::into(*self);
+        write!(f, "T-{}-{}", coords.x, coords.z)
     }
 }
 
@@ -149,8 +150,16 @@ impl Add<TileCoordsXZ> for TileCoordsXZ {
 }
 
 // Later: We initially wanted it to be Uuid, but bevy_simplenet uses u128, so we can stick with that for now for easier compatibility
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub struct ClientId(u128);
+
+impl Debug for ClientId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let uuid_str = self.0.to_string();
+        let truncated_uuid = &uuid_str[.. 8];
+        write!(f, "C-{}", truncated_uuid)
+    }
+}
 
 #[allow(clippy::cast_possible_truncation)]
 impl ClientId {
@@ -180,8 +189,16 @@ impl PlayerName {
     }
 }
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub struct PlayerId(pub Uuid);
+
+impl Debug for PlayerId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let uuid_str = self.0.to_string();
+        let truncated_uuid = &uuid_str[.. 8];
+        write!(f, "P-{}", truncated_uuid)
+    }
+}
 
 impl PlayerId {
     #[must_use]
@@ -210,8 +227,16 @@ impl Display for PlayerId {
     }
 }
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
+#[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub struct GameId(pub Uuid);
+
+impl Debug for GameId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let uuid_str = self.0.to_string();
+        let truncated_uuid = &uuid_str[.. 8];
+        write!(f, "G-{}", truncated_uuid)
+    }
+}
 
 impl GameId {
     #[must_use]
@@ -230,8 +255,16 @@ impl BuildingId {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub struct TransportId(pub Uuid);
+
+impl Debug for TransportId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let uuid_str = self.0.to_string();
+        let truncated_uuid = &uuid_str[.. 8];
+        write!(f, "T-{}", truncated_uuid)
+    }
+}
 
 impl TransportId {
     #[must_use]
@@ -241,7 +274,7 @@ impl TransportId {
 }
 
 // Later: Possibly rename to `ConnectionType` or something. And `TrackType` thus has multiple of these `ConnectionType`-s.
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum TrackType {
     NorthEast,
     NorthSouth,
@@ -249,6 +282,19 @@ pub enum TrackType {
     EastWest,
     SouthEast,
     SouthWest,
+}
+
+impl Debug for TrackType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TrackType::NorthEast => write!(f, "NE"),
+            TrackType::NorthSouth => write!(f, "NS"),
+            TrackType::NorthWest => write!(f, "NW"),
+            TrackType::EastWest => write!(f, "EW"),
+            TrackType::SouthEast => write!(f, "SE"),
+            TrackType::SouthWest => write!(f, "SW"),
+        }
+    }
 }
 
 impl TrackType {
@@ -427,10 +473,16 @@ impl TransportType {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub struct TileTrack {
     pub tile_coords_xz: TileCoordsXZ,
     pub track_type:     TrackType,
+}
+
+impl Debug for TileTrack {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}-{:?}", self.tile_coords_xz, self.track_type)
+    }
 }
 
 impl TileTrack {
@@ -448,8 +500,14 @@ impl TileTrack {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct ProgressWithinTile(f32);
+
+impl Debug for ProgressWithinTile {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.2}", self.0)
+    }
+}
 
 impl Eq for ProgressWithinTile {}
 

@@ -1,5 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 
+use std::fmt::{Debug, Formatter};
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
@@ -24,7 +25,7 @@ pub enum LobbyCommand {
     LeaveGame(GameId),
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameCommand {
     // These queries are separate due to some race conditions on the client, where the map level
     // was not available yet, so received buildings / transports got ignored.
@@ -32,6 +33,21 @@ pub enum GameCommand {
     QueryTransports,
     BuildBuildings(Vec<BuildingInfo>),
     PurchaseTransport(TransportInfo),
+}
+
+impl Debug for GameCommand {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GameCommand::QueryBuildings => write!(f, "QueryBuildings"),
+            GameCommand::QueryTransports => write!(f, "QueryTransports"),
+            GameCommand::BuildBuildings(buildings) => {
+                write!(f, "BuildBuildings({} buildings)", buildings.len())
+            },
+            GameCommand::PurchaseTransport(transport) => {
+                write!(f, "PurchaseTransport({:?})", transport)
+            },
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

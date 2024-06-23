@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::time::Duration;
 
 use fastrand::Rng;
@@ -60,7 +61,7 @@ pub struct PlayerInfo {
     pub colour: Colour,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
     MapLevelProvided(MapLevel),
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
@@ -71,6 +72,33 @@ pub enum GameResponse {
 
     CannotBuild(Vec<BuildingId>),
     CannotPurchase(TransportId),
+}
+
+impl Debug for GameResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GameResponse::MapLevelProvided(_map_level) => {
+                write!(f, "MapLevelProvided")
+            },
+            GameResponse::PlayersUpdated(players) => {
+                write!(f, "PlayersUpdated({} players)", players.len())
+            },
+            GameResponse::BuildingsBuilt(buildings) => {
+                write!(f, "BuildingsBuilt({} buildings)", buildings.len())
+            },
+            GameResponse::TransportsExist(transports) => {
+                write!(f, "TransportsExist({} transports)", transports.len())
+            },
+            GameResponse::GameJoined => write!(f, "GameJoined"),
+            GameResponse::GameLeft => write!(f, "GameLeft"),
+            GameResponse::CannotBuild(building_ids) => {
+                write!(f, "CannotBuild({} buildings)", building_ids.len())
+            },
+            GameResponse::CannotPurchase(transport_id) => {
+                write!(f, "CannotPurchase({:?})", transport_id)
+            },
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
