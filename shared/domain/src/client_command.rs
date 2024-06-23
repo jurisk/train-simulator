@@ -44,7 +44,7 @@ impl Debug for GameCommand {
                 write!(f, "BuildBuildings({} buildings)", buildings.len())
             },
             GameCommand::PurchaseTransport(transport) => {
-                write!(f, "PurchaseTransport({:?})", transport)
+                write!(f, "PurchaseTransport({transport:?})")
             },
         }
     }

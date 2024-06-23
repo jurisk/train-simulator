@@ -95,7 +95,7 @@ impl Debug for GameResponse {
                 write!(f, "CannotBuild({} buildings)", building_ids.len())
             },
             GameResponse::CannotPurchase(transport_id) => {
-                write!(f, "CannotPurchase({:?})", transport_id)
+                write!(f, "CannotPurchase({transport_id:?})")
             },
         }
     }

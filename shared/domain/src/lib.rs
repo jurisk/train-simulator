@@ -157,7 +157,7 @@ impl Debug for ClientId {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let uuid_str = self.0.to_string();
         let truncated_uuid = &uuid_str[.. 8];
-        write!(f, "C-{}", truncated_uuid)
+        write!(f, "C-{truncated_uuid}")
     }
 }
 
@@ -196,7 +196,7 @@ impl Debug for PlayerId {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let uuid_str = self.0.to_string();
         let truncated_uuid = &uuid_str[.. 8];
-        write!(f, "P-{}", truncated_uuid)
+        write!(f, "P-{truncated_uuid}")
     }
 }
 
@@ -234,7 +234,7 @@ impl Debug for GameId {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let uuid_str = self.0.to_string();
         let truncated_uuid = &uuid_str[.. 8];
-        write!(f, "G-{}", truncated_uuid)
+        write!(f, "G-{truncated_uuid}")
     }
 }
 
@@ -262,7 +262,7 @@ impl Debug for TransportId {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let uuid_str = self.0.to_string();
         let truncated_uuid = &uuid_str[.. 8];
-        write!(f, "T-{}", truncated_uuid)
+        write!(f, "T-{truncated_uuid}")
     }
 }
 
