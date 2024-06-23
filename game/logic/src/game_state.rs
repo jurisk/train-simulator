@@ -70,14 +70,14 @@ impl GameState {
     pub(crate) fn join_game(
         &mut self,
         requesting_player_id: PlayerId,
-        requesting_player_name: PlayerName,
     ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         // Later: Don't allow joining multiple games
 
         let colour = Colour::random();
         let requesting_player_info = PlayerInfo {
             id: requesting_player_id,
-            name: requesting_player_name,
+            // TODO: Look up PlayerName somewhere in `Players` instead of using a random one!
+            name: PlayerName::random(),
             colour,
         };
 
@@ -121,16 +121,10 @@ impl GameState {
         &mut self,
         requesting_player_id: PlayerId,
     ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
-        Ok(self
-            .transports
-            .iter()
-            .map(|transport_info| {
-                GameResponseWithAddress::new(
-                    AddressEnvelope::ToPlayer(requesting_player_id),
-                    GameResponse::TransportCreated(transport_info.clone()),
-                )
-            })
-            .collect())
+        Ok(vec![GameResponseWithAddress::new(
+            AddressEnvelope::ToPlayer(requesting_player_id),
+            GameResponse::TransportsExist(self.transports.clone()),
+        )])
     }
 
     fn process_query_buildings(
@@ -195,7 +189,7 @@ impl GameState {
             self.transports.push(transport_info.clone());
             Ok(vec![GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id),
-                GameResponse::TransportCreated(transport_info),
+                GameResponse::TransportsExist(vec![transport_info]),
             )])
         } else {
             Err(GameResponse::CannotPurchase(transport_info.transport_id))

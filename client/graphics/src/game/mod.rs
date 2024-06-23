@@ -3,7 +3,8 @@
 use std::collections::HashMap;
 
 use bevy::prelude::{
-    EventReader, EventWriter, FixedUpdate, OnEnter, Plugin, Res, ResMut, Resource,
+    in_state, info, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, OnEnter,
+    Plugin, Res, ResMut, Resource,
 };
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
@@ -24,18 +25,29 @@ pub mod map_level;
 mod transport;
 
 #[allow(clippy::module_name_repetitions)]
-pub struct GamePlugin;
+pub struct GamePlugin {
+    pub game_launch_params: GameLaunchParams,
+}
+
+#[derive(Resource, Clone)]
+pub struct GameLaunchParams {
+    pub player_id:    PlayerId,
+    pub access_token: AccessToken,
+    pub game_id:      Option<GameId>,
+}
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut bevy::app::App) {
+        app.insert_resource(self.game_launch_params.clone());
         app.add_plugins(BuildingsPlugin);
         app.add_plugins(TransportPlugin);
         app.add_plugins(MapLevelPlugin);
-        app.add_systems(OnEnter(ClientState::JoiningGame), initiate_login);
+        app.add_systems(OnEnter(ClientState::LoggingIn), initiate_login);
         app.add_systems(FixedUpdate, handle_players_updated);
-        app.add_systems(FixedUpdate, handle_login_successful);
-        app.insert_resource(PlayerIdResource(PlayerId::random())); // TODO: Improve auto-login so it only kicks in when an environment variable is set
-        app.insert_resource(GameIdResource(GameId::random())); // Questionable, but dealing with it being missing may be worse
+        app.add_systems(
+            FixedUpdate,
+            handle_login_successful.run_if(in_state(ClientState::LoggingIn)),
+        );
         app.insert_resource(PlayersInfoResource(HashMap::default()));
     }
 }
@@ -52,22 +64,28 @@ pub struct GameIdResource(pub GameId);
 #[allow(clippy::needless_pass_by_value)]
 fn initiate_login(
     mut client_messages: EventWriter<ClientMessageEvent>,
-    player_id_resource: Res<PlayerIdResource>,
+    game_launch_params: Res<GameLaunchParams>,
 ) {
-    let PlayerIdResource(player_id) = *player_id_resource;
     client_messages.send(ClientMessageEvent::new(ClientCommand::Authentication(
-        AuthenticationCommand::Login(player_id, AccessToken("valid-token".to_string())),
+        AuthenticationCommand::Login(
+            game_launch_params.player_id,
+            game_launch_params.access_token.clone(),
+        ),
     )));
 }
 
 fn handle_login_successful(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut client_messages: EventWriter<ClientMessageEvent>,
+    mut commands: Commands,
 ) {
     for message in server_messages.read() {
-        if let ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(_player_id)) =
+        if let ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(player_id)) =
             &message.response
         {
+            info!("Login successful, player_id: {player_id:?}");
+            commands.insert_resource(PlayerIdResource(*player_id));
+
             client_messages.send(ClientMessageEvent::new(ClientCommand::Lobby(
                 LobbyCommand::ListGames,
             )));
@@ -78,18 +96,13 @@ fn handle_login_successful(
 fn handle_players_updated(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut players_info: ResMut<PlayersInfoResource>,
-    mut game_id_resource: ResMut<GameIdResource>,
 ) {
     for message in server_messages.read() {
-        if let ServerResponse::Game(game_id, GameResponse::PlayersUpdated(new_player_infos)) =
+        if let ServerResponse::Game(_game_id, GameResponse::PlayersUpdated(new_player_infos)) =
             &message.response
         {
             let PlayersInfoResource(player_infos) = players_info.as_mut();
             player_infos.clone_from(new_player_infos);
-
-            // Questionable we do it every time the players change, but this will have to do for now
-            let GameIdResource(game_id_resource) = game_id_resource.as_mut();
-            game_id_resource.clone_from(game_id);
         }
     }
 }

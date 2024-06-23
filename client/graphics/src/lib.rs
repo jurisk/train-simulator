@@ -10,7 +10,7 @@ use crate::cameras::CameraPlugin;
 use crate::communication::CommunicationPlugin;
 use crate::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use crate::debug::DebugPlugin;
-use crate::game::GamePlugin;
+use crate::game::{GameLaunchParams, GamePlugin};
 use crate::lights::LightsPlugin;
 use crate::lobby::LobbyHandlerPlugin;
 use crate::network::client_ping::ClientPingPlugin;
@@ -20,7 +20,7 @@ mod cameras;
 pub mod communication;
 mod constants;
 mod debug;
-mod game;
+pub mod game;
 mod lights;
 mod lobby;
 pub mod network;
@@ -28,7 +28,9 @@ mod selection;
 pub mod states;
 pub mod util;
 
-pub struct ClientGraphicsPlugin;
+pub struct ClientGraphicsPlugin {
+    pub game_launch_params: GameLaunchParams,
+}
 
 impl Plugin for ClientGraphicsPlugin {
     fn build(&self, app: &mut App) {
@@ -65,7 +67,9 @@ impl Plugin for ClientGraphicsPlugin {
             CommunicationPlugin,
             LightsPlugin,
             LobbyHandlerPlugin,
-            GamePlugin,
+            GamePlugin {
+                game_launch_params: self.game_launch_params.clone(),
+            },
             CameraPlugin,
             DebugPlugin,
             SelectionPlugin,

@@ -8,6 +8,7 @@ use shared_domain::server_response::{GameResponse, ServerResponse};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::map_level::terrain::TerrainPlugin;
+use crate::game::GameIdResource;
 use crate::states::ClientState;
 
 pub mod terrain;
@@ -41,6 +42,7 @@ fn handle_map_level_provided(
                 commands.insert_resource(MapLevelResource {
                     map_level: map_level.clone(),
                 });
+                commands.insert_resource(GameIdResource(*game_id));
                 client_state.set(ClientState::Playing);
 
                 // We do it like this, because we need the `MapLevelResource` to be set before we can render buildings, so we don't want to receive them too early

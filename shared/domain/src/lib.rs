@@ -3,8 +3,9 @@
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::f32::consts::SQRT_2;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::ops::Add;
+use std::str::FromStr;
 
 use bevy_math::Vec3;
 use serde::{Deserialize, Serialize};
@@ -186,6 +187,20 @@ impl PlayerId {
     #[must_use]
     pub fn random() -> Self {
         Self(Uuid::new_v4())
+    }
+}
+
+impl FromStr for PlayerId {
+    type Err = uuid::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Uuid::from_str(s).map(Self)
+    }
+}
+
+impl Display for PlayerId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

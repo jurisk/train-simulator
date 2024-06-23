@@ -1,21 +1,38 @@
+use std::env::args;
+use std::str::FromStr;
+
 use bevy::prelude::{
     info, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time,
 };
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
+use client_graphics::game::GameLaunchParams;
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
 use game_logic::game_state::GameTime;
 use game_logic::server_state::ServerState;
-use shared_domain::client_command::ClientCommandWithClientId;
-use shared_domain::ClientId;
+use shared_domain::client_command::{AccessToken, ClientCommandWithClientId};
+use shared_domain::{ClientId, PlayerId};
 
+#[allow(clippy::expect_used)]
 fn main() {
+    let args: Vec<_> = args().collect();
+    let player_id = match args.get(1).cloned() {
+        None => PlayerId::random(),
+        Some(player_id) => PlayerId::from_str(player_id.as_str()).expect("Failed to parse UUID"),
+    };
+
     let mut app = App::new();
     let client_id = ClientId::random();
     app.insert_resource(ClientIdResource(client_id));
     app.insert_resource(ServerStateResource(ServerState::new()));
-    app.add_plugins(ClientGraphicsPlugin);
-    app.insert_state(ClientState::JoiningGame);
+    app.add_plugins(ClientGraphicsPlugin {
+        game_launch_params: GameLaunchParams {
+            player_id,
+            access_token: AccessToken("valid-token".to_string()),
+            game_id: None,
+        },
+    });
+    app.insert_state(ClientState::LoggingIn);
     app.add_systems(FixedUpdate, process_messages_locally);
     app.run();
 }

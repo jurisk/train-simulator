@@ -67,7 +67,7 @@ fn read_on_client(
                 info!("Connection report: {connection_report:?}");
 
                 match connection_report {
-                    ClientReport::Connected => client_state.set(ClientState::JoiningGame),
+                    ClientReport::Connected => client_state.set(ClientState::LoggingIn),
                     ClientReport::ClosedByServer(_)
                     | ClientReport::ClosedBySelf
                     | ClientReport::Disconnected => {

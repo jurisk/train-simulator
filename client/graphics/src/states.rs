@@ -4,6 +4,7 @@ use bevy::prelude::States;
 #[derive(States, Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum ClientState {
     ConnectingToServer,
+    LoggingIn,
     JoiningGame,
     Playing,
 }

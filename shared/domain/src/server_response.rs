@@ -58,7 +58,7 @@ pub enum GameResponse {
     MapLevelProvided(MapLevel),
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
     BuildingsBuilt(Vec<BuildingInfo>),
-    TransportCreated(TransportInfo),
+    TransportsExist(Vec<TransportInfo>),
     GameJoined,
     GameLeft,
 

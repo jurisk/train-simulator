@@ -14,9 +14,10 @@
         const currentUrl = window.location;
         const wsProtocol = currentUrl.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${wsProtocol}//${currentUrl.host}/ws`;
+        const playerId = currentUrl.searchParams.get('playerId');
 
         console.log(`Starting client with WebSocket URL: ${wsUrl}`);
-        start(wsUrl);
+        start(wsUrl, playerId);
     </script>
     <div>
         ESDF to move

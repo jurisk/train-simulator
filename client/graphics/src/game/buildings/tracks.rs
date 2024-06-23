@@ -20,6 +20,9 @@ use crate::selection::SelectedTiles;
 
 const RAIL_DIAMETER: f32 = 0.025;
 
+// Later: Make the rails round, they will look nicer. Look at Rise of Industry, for example.
+// Later: Consider what to do with the rails that right now go through the terrain.
+// Either prohibit such, or make them render better.
 #[allow(clippy::similar_names)]
 pub(crate) fn create_track(
     player_info: &PlayerInfo,

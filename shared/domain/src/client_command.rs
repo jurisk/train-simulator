@@ -5,7 +5,7 @@ use std::time::Duration;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{BuildingInfo, ClientId, GameId, PlayerId, PlayerName, TransportInfo};
+use crate::{BuildingInfo, ClientId, GameId, PlayerId, TransportInfo};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct AccessToken(pub String);
@@ -19,8 +19,8 @@ pub enum AuthenticationCommand {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum LobbyCommand {
     ListGames,
-    CreateGame(PlayerName),
-    JoinExistingGame(GameId, PlayerName),
+    CreateGame,
+    JoinExistingGame(GameId),
     LeaveGame(GameId),
 }
 

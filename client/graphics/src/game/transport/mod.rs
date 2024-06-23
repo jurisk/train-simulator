@@ -5,10 +5,9 @@ use std::collections::HashMap;
 
 use bevy::app::App;
 use bevy::asset::Assets;
-use bevy::log::error;
 use bevy::pbr::StandardMaterial;
 use bevy::prelude::{
-    info, Children, Commands, Component, Entity, EventReader, FixedUpdate, Mesh, Plugin, Query,
+    error, Children, Commands, Component, Entity, EventReader, FixedUpdate, Mesh, Plugin, Query,
     Res, ResMut, SpatialBundle, Time, Transform, Update,
 };
 use shared_domain::map_level::MapLevel;
@@ -89,22 +88,23 @@ fn handle_transport_created(
     if let Some(map_level) = map_level {
         for message in server_messages.read() {
             if let ServerResponse::Game(_game_id, game_response) = &message.response {
-                if let GameResponse::TransportCreated(transport_info) = game_response {
-                    let entity = create_transport(
-                        transport_info,
-                        &mut commands,
-                        &mut meshes,
-                        &mut materials,
-                        &map_level.map_level,
-                        players_info,
-                    );
+                if let GameResponse::TransportsExist(transport_infos) = game_response {
+                    for transport_info in transport_infos {
+                        let entity = create_transport(
+                            transport_info,
+                            &mut commands,
+                            &mut meshes,
+                            &mut materials,
+                            &map_level.map_level,
+                            players_info,
+                        );
 
-                    if let Some(entity) = entity {
-                        info!("Created transport {transport_info:?} as entity {entity:?}");
-                        commands
-                            .entity(entity)
-                            .insert(SpatialBundle::default()) // For https://bevyengine.org/learn/errors/b0004/
-                            .insert(TransportInfoComponent(transport_info.clone()));
+                        if let Some(entity) = entity {
+                            commands
+                                .entity(entity)
+                                .insert(SpatialBundle::default()) // For https://bevyengine.org/learn/errors/b0004/
+                                .insert(TransportInfoComponent(transport_info.clone()));
+                        }
                     }
                 }
             }
