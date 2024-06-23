@@ -1,5 +1,6 @@
 #![allow(clippy::unused_self)]
 
+use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::f32::consts::SQRT_2;
 use std::fmt::{Debug, Formatter};
@@ -395,6 +396,22 @@ pub struct TileTrack {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct ProgressWithinTile(f32);
+
+impl Eq for ProgressWithinTile {}
+
+impl PartialOrd for ProgressWithinTile {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for ProgressWithinTile {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0
+            .partial_cmp(&other.0)
+            .unwrap_or_else(|| panic!("Failed to compare {self:?} and {other:?}"))
+    }
+}
 
 impl ProgressWithinTile {
     #[must_use]

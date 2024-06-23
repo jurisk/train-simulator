@@ -94,27 +94,36 @@ fn calculate_train_component_transform(
         let previous_exit = center_coordinate(previous_exit_direction, tile, terrain);
         let previous_track_length = (previous_exit - previous_entry).length();
 
-        let closest_intersection = {
+        let results: Vec<_> = {
             let intersections = line_segment_intersection_with_sphere(
                 (previous_entry, previous_exit),
                 (head, train_length_in_tiles),
             );
-            assert!(!intersections.is_empty(), "No intersection found!"); // TODO: Think of better error handling
 
             intersections
                 .into_iter()
-                .min_by(|a, b| a.distance(head).partial_cmp(&b.distance(head)).unwrap())
-                .unwrap()
+                .map(|intersection| {
+                    (
+                        intersection,
+                        ProgressWithinTile::new(
+                            (intersection - previous_entry).length() / previous_track_length,
+                        ),
+                    )
+                })
+                .collect()
         };
-        let new_progress_within_tile = ProgressWithinTile::new(
-            (closest_intersection - previous_entry).length() / previous_track_length,
-        );
+
+        // TODO: Instead of 'unwrap', go to next tile if this one doesn't work!
+        let (chosen_intersection, new_progress_within_tile) = results
+            .into_iter()
+            .max_by_key(|(_, progress)| *progress)
+            .unwrap();
         let state = State {
             tile_path_offset:     state.tile_path_offset + 1,
             pointing_in:          previous_exit_direction,
             progress_within_tile: new_progress_within_tile,
         };
-        (closest_intersection, state)
+        (chosen_intersection, state)
     };
 
     (transform_from_head_and_tail(head, tail), state)
