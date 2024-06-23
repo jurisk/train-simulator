@@ -14,9 +14,9 @@
         const currentUrl = window.location;
         const wsProtocol = currentUrl.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${wsProtocol}//${currentUrl.host}/ws`;
-        const playerId = currentUrl.searchParams.get('playerId');
+        const playerId = new URL(currentUrl).searchParams.get('playerId');
 
-        console.log(`Starting client with WebSocket URL: ${wsUrl}`);
+        console.log(`Starting client with WebSocket URL: ${wsUrl}, and playerId: ${playerId}`);
         start(wsUrl, playerId);
     </script>
     <div>

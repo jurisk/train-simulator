@@ -9,6 +9,15 @@ https://jurisk.github.io/train-simulator-pages/[Online version]
 
 == Useful commands
 
+=== Full Build
+
+On Windows:
+
+[source,bash]
+----
+./bin/full-build.ps1
+----
+
 === Housekeeping
 
 Rare:
