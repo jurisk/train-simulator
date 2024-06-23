@@ -23,25 +23,6 @@ impl State {
     }
 }
 
-fn calculate_train_component_tail(
-    state: &State,
-    train_component_type: TrainComponentType,
-    tile_path: &[TileTrack],
-    map_level: &MapLevel,
-) -> State {
-    let head = state.coordinates(tile_path, &map_level.terrain);
-
-    recursive_calculate_tail(
-        head,
-        train_component_type.length_in_tiles(),
-        state.pointing_in,
-        state.tile_path_offset,
-        tile_path,
-        &map_level.terrain,
-        Some(state.progress_within_tile),
-    )
-}
-
 fn recursive_calculate_tail(
     head: Vec3,
     component_length: f32,
@@ -136,8 +117,15 @@ pub(crate) fn calculate_train_component_head_tails(
     let tile_path = &transport_location.tile_path;
 
     for train_component in train_components {
-        let new_state =
-            calculate_train_component_tail(&state, *train_component, tile_path, map_level);
+        let new_state = recursive_calculate_tail(
+            state.coordinates(tile_path, &map_level.terrain),
+            train_component.length_in_tiles(),
+            state.pointing_in,
+            state.tile_path_offset,
+            tile_path,
+            &map_level.terrain,
+            Some(state.progress_within_tile),
+        );
 
         let head = state.coordinates(tile_path, &map_level.terrain);
         let tail = new_state.coordinates(tile_path, &map_level.terrain);
