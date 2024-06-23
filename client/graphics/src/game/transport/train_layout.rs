@@ -19,12 +19,11 @@ fn calculate_train_component_head_tail(
     map_level: &MapLevel,
 ) -> ((Vec3, Vec3), State) {
     let tile_track = tile_path[state.tile_path_offset];
-    let (entry, exit) = map_level
-        .terrain
-        .entry_and_exit(state.pointing_in, &tile_track);
-    let track_length = (exit - entry).length();
-    let direction = (exit - entry).normalize();
-    let head = entry + direction * state.progress_within_tile.progress() * track_length;
+    let head = tile_track.progress_coordinates(
+        state.pointing_in,
+        state.progress_within_tile,
+        &map_level.terrain,
+    );
 
     recursive_calculate_head_tail(
         head,
@@ -90,7 +89,6 @@ fn maybe_find_tail(
     let tile_track = tile_path[tile_path_offset];
 
     let (entry, exit) = terrain.entry_and_exit(pointing_in, &tile_track);
-    let track_length = (exit - entry).length();
 
     let intersections =
         line_segment_intersection_with_sphere((entry, exit), (head, component_length));
@@ -100,7 +98,7 @@ fn maybe_find_tail(
         .map(|intersection| {
             (
                 intersection,
-                ProgressWithinTile::new((intersection - entry).length() / track_length),
+                ProgressWithinTile::from_point_between_two_points((entry, exit), intersection),
             )
         })
         .collect();

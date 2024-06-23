@@ -6,6 +6,7 @@ use std::f32::consts::SQRT_2;
 use std::fmt::{Debug, Formatter};
 use std::ops::Add;
 
+use bevy_math::Vec3;
 use serde::{Deserialize, Serialize};
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
@@ -14,6 +15,7 @@ use shared_util::random::generate_random_string;
 use uuid::Uuid;
 
 use crate::building_state::BuildingState;
+use crate::terrain::Terrain;
 
 pub mod building_state;
 pub mod client_command;
@@ -395,6 +397,21 @@ pub struct TileTrack {
     pub track_type:     TrackType,
 }
 
+impl TileTrack {
+    #[must_use]
+    pub fn progress_coordinates(
+        &self,
+        pointing_in: DirectionXZ,
+        progress_within_tile: ProgressWithinTile,
+        terrain: &Terrain,
+    ) -> Vec3 {
+        let (entry, exit) = terrain.entry_and_exit(pointing_in, self);
+        let track_length = (exit - entry).length();
+        let direction = (exit - entry).normalize();
+        entry + direction * progress_within_tile.progress() * track_length
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct ProgressWithinTile(f32);
 
@@ -423,6 +440,13 @@ impl ProgressWithinTile {
             "Progress must be between 0.0 and 1.0, but was {progress}"
         );
         Self(progress)
+    }
+
+    #[must_use]
+    pub fn from_point_between_two_points(start_end: (Vec3, Vec3), point: Vec3) -> Self {
+        let (start, end) = start_end;
+        let value = (point - start).length() / (end - start).length();
+        Self::new(value)
     }
 
     #[must_use]

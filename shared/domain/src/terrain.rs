@@ -60,7 +60,7 @@ impl Terrain {
     }
 
     #[must_use]
-    pub fn center_coordinate(&self, direction: DirectionXZ, tile: TileCoordsXZ) -> Vec3 {
+    pub fn edge_center_coordinate(&self, direction: DirectionXZ, tile: TileCoordsXZ) -> Vec3 {
         let (a, b) = self.vertex_coordinates_clockwise(direction, tile);
         (a + b) / 2.0
     }
@@ -92,8 +92,8 @@ impl Terrain {
         let track_type = tile_track.track_type;
         let exit_direction = pointing_in;
         let entry_direction = track_type.other_end(exit_direction);
-        let entry = self.center_coordinate(entry_direction, tile);
-        let exit = self.center_coordinate(exit_direction, tile);
+        let entry = self.edge_center_coordinate(entry_direction, tile);
+        let exit = self.edge_center_coordinate(exit_direction, tile);
         (entry, exit)
     }
 }
