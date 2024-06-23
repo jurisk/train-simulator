@@ -17,7 +17,7 @@ use shared_domain::{PlayerId, TransportInfo, TransportType};
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::buildings::BuildingStateResource;
 use crate::game::map_level::MapLevelResource;
-use crate::game::transport::train::{calculate_train_transforms, create_train};
+use crate::game::transport::train::{calculate_train_component_transforms, create_train};
 use crate::game::PlayersInfoResource;
 
 #[derive(Component)]
@@ -51,7 +51,7 @@ fn move_transports(
 
             let transforms = match &transport_info.transport_type {
                 TransportType::Train(components) => {
-                    calculate_train_transforms(
+                    calculate_train_component_transforms(
                         components,
                         &transport_info.location,
                         &map_level.map_level,

@@ -93,12 +93,12 @@ fn maybe_find_tail(
 }
 
 #[allow(clippy::bool_to_int_with_if, clippy::unwrap_used)]
-fn calculate_train_component_transform(
+fn calculate_train_component_head_tail(
     state: &State,
     train_component_type: TrainComponentType,
     tile_path: &[TileTrack],
     map_level: &MapLevel,
-) -> (Transform, State) {
+) -> ((Vec3, Vec3), State) {
     let terrain = &map_level.terrain;
     let tile_track = tile_path[state.tile_path_offset];
     let tile = tile_track.tile_coords_xz;
@@ -142,15 +142,15 @@ fn calculate_train_component_transform(
         .unwrap()
     };
 
-    (transform_from_head_and_tail(head, tail), state)
+    ((head, tail), state)
 }
 
 #[allow(clippy::cast_precision_loss)]
-pub(crate) fn calculate_train_transforms(
+pub(crate) fn calculate_train_component_head_tails(
     train_components: &[TrainComponentType],
     transport_location: &TransportLocation,
     map_level: &MapLevel,
-) -> Vec<Transform> {
+) -> Vec<(Vec3, Vec3)> {
     // TODO:    I think do the train component progresses within tile & what tile they are at in one go
     //          and then Transform-s in another go. That way you can just operate with progresses on the server, without transforms.
     let mut results = vec![];
@@ -160,16 +160,28 @@ pub(crate) fn calculate_train_transforms(
         progress_within_tile: transport_location.progress_within_tile,
     };
     for train_component in train_components {
-        let (transform, new_state) = calculate_train_component_transform(
+        let ((head, tail), new_state) = calculate_train_component_head_tail(
             &state,
             *train_component,
             &transport_location.tile_path,
             map_level,
         );
         state = new_state;
-        results.push(transform);
+
+        results.push((head, tail));
     }
     results
+}
+
+pub(crate) fn calculate_train_component_transforms(
+    train_components: &[TrainComponentType],
+    transport_location: &TransportLocation,
+    map_level: &MapLevel,
+) -> Vec<Transform> {
+    calculate_train_component_head_tails(train_components, transport_location, map_level)
+        .into_iter()
+        .map(|(head, tail)| transform_from_head_and_tail(head, tail))
+        .collect()
 }
 
 #[allow(clippy::similar_names, clippy::too_many_arguments)]
@@ -186,7 +198,8 @@ pub(crate) fn create_train(
     let colour = player_info.colour;
     let color = Color::rgb_u8(colour.r, colour.g, colour.b);
 
-    let transforms = calculate_train_transforms(train_components, transport_location, map_level);
+    let transforms =
+        calculate_train_component_transforms(train_components, transport_location, map_level);
 
     let mut children = vec![];
     for (idx, train_component_type) in train_components.iter().enumerate() {
