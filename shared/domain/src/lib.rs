@@ -175,8 +175,8 @@ pub struct PlayerName(pub String);
 
 impl PlayerName {
     #[must_use]
-    pub fn random() -> Self {
-        Self(generate_random_string(5))
+    pub fn random(seed: u64) -> Self {
+        Self(generate_random_string(6, seed))
     }
 }
 
@@ -187,6 +187,12 @@ impl PlayerId {
     #[must_use]
     pub fn random() -> Self {
         Self(Uuid::new_v4())
+    }
+
+    #[must_use]
+    pub fn hash_to_u64(self) -> u64 {
+        let (a, b) = self.0.as_u64_pair();
+        a ^ b
     }
 }
 

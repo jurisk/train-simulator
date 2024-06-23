@@ -94,8 +94,11 @@ impl ServerState {
             ClientCommand::Lobby(lobby_command) => {
                 let requesting_player_id =
                     self.authentication_service.lookup_player_id(client_id)?;
-                self.games
-                    .process_lobby_command(requesting_player_id, lobby_command)
+                self.games.process_lobby_command(
+                    &self.authentication_service,
+                    requesting_player_id,
+                    lobby_command,
+                )
             },
             ClientCommand::Game(game_id, game_command) => {
                 let requesting_player_id =

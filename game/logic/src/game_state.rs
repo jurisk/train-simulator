@@ -70,14 +70,14 @@ impl GameState {
     pub(crate) fn join_game(
         &mut self,
         requesting_player_id: PlayerId,
+        requesting_player_name: PlayerName,
     ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         // Later: Don't allow joining multiple games
 
         let colour = Colour::random();
         let requesting_player_info = PlayerInfo {
             id: requesting_player_id,
-            // TODO: Look up PlayerName somewhere in `Players` instead of using a random one!
-            name: PlayerName::random(),
+            name: requesting_player_name,
             colour,
         };
 
