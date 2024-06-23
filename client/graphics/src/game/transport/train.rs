@@ -10,7 +10,7 @@ use shared_domain::server_response::PlayerInfo;
 use shared_domain::{TrainComponentType, TransportId, TransportLocation};
 use shared_util::geometry::rotation_aligned_with_direction;
 
-use crate::game::transport::train_layout::calculate_train_component_head_tails;
+use crate::game::transport::train_layout::calculate_train_component_head_tails_and_final_tail_position;
 use crate::game::transport::TransportIndexComponent;
 use crate::util::shift_mesh;
 
@@ -34,7 +34,13 @@ pub(crate) fn calculate_train_component_transforms(
     transport_location: &TransportLocation,
     map_level: &MapLevel,
 ) -> Vec<Transform> {
-    calculate_train_component_head_tails(train_components, transport_location, map_level)
+    let (head_tails, _) = calculate_train_component_head_tails_and_final_tail_position(
+        train_components,
+        transport_location,
+        map_level,
+    );
+
+    head_tails
         .into_iter()
         .map(|(head, tail)| transform_from_head_and_tail(head, tail))
         .collect()

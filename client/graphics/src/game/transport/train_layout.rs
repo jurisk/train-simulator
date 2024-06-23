@@ -6,13 +6,13 @@ use shared_util::direction_xz::DirectionXZ;
 use shared_util::geometry::line_segment_intersection_with_sphere;
 
 #[derive(Debug)]
-struct State {
-    tile_path_offset:     usize,
-    pointing_in:          DirectionXZ,
-    progress_within_tile: ProgressWithinTile,
+pub struct LogicalPositionOnTilePath {
+    pub tile_path_offset:     usize,
+    pub pointing_in:          DirectionXZ,
+    pub progress_within_tile: ProgressWithinTile,
 }
 
-impl State {
+impl LogicalPositionOnTilePath {
     #[must_use]
     fn coordinates(&self, tile_path: &[TileTrack], terrain: &Terrain) -> Vec3 {
         tile_path[self.tile_path_offset].progress_coordinates(
@@ -31,7 +31,7 @@ fn recursive_calculate_tail(
     tile_path: &[TileTrack],
     terrain: &Terrain,
     max_progress_within_tile: Option<ProgressWithinTile>,
-) -> State {
+) -> LogicalPositionOnTilePath {
     let attempt = maybe_find_tail(
         head,
         component_length,
@@ -70,7 +70,7 @@ fn maybe_find_tail(
     tile_path: &[TileTrack],
     terrain: &Terrain,
     max_progress_within_tile: Option<ProgressWithinTile>,
-) -> Option<State> {
+) -> Option<LogicalPositionOnTilePath> {
     // Later: Think of better error handling, e.g., print a warning and assume a random tile_track
     assert!(tile_path_offset < tile_path.len(), "Ran out of tile path!");
     let tile_track = tile_path[tile_path_offset];
@@ -93,7 +93,7 @@ fn maybe_find_tail(
         // Hopefully it does not matter
         .min_by_key(|progress| *progress)
         .map(|progress| {
-            State {
+            LogicalPositionOnTilePath {
                 tile_path_offset,
                 pointing_in,
                 progress_within_tile: progress,
@@ -101,14 +101,14 @@ fn maybe_find_tail(
         })
 }
 
-// TODO: I think this should be changed to actually return `TileTrack or index, ProgressWithinTile` as well, as that actually determines the Vec3 as well...
-pub(crate) fn calculate_train_component_head_tails(
+// Later: Start using the `final_tail_position` eventually for e.g. collision detection
+pub(crate) fn calculate_train_component_head_tails_and_final_tail_position(
     train_components: &[TrainComponentType],
     transport_location: &TransportLocation,
     map_level: &MapLevel,
-) -> Vec<(Vec3, Vec3)> {
+) -> (Vec<(Vec3, Vec3)>, LogicalPositionOnTilePath) {
     let mut results = vec![];
-    let mut state = State {
+    let mut state = LogicalPositionOnTilePath {
         tile_path_offset:     0,
         pointing_in:          transport_location.pointing_in,
         progress_within_tile: transport_location.progress_within_tile,
@@ -133,5 +133,6 @@ pub(crate) fn calculate_train_component_head_tails(
 
         state = new_state;
     }
-    results
+
+    (results, state)
 }

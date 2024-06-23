@@ -391,6 +391,22 @@ pub enum TransportType {
     Ship,
 }
 
+impl TransportType {
+    #[must_use]
+    pub fn length_in_tiles(&self) -> f32 {
+        match self {
+            TransportType::Train(components) => {
+                components
+                    .iter()
+                    .map(|component| component.length_in_tiles())
+                    .sum()
+            },
+            TransportType::RoadVehicle => todo!(),
+            TransportType::Ship => todo!(),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub struct TileTrack {
     pub tile_coords_xz: TileCoordsXZ,
@@ -508,6 +524,11 @@ pub struct TransportInfo {
 }
 
 impl TransportInfo {
+    #[allow(
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss,
+        clippy::items_after_statements
+    )]
     fn jump_tile(&mut self, building_state: &BuildingState) {
         let current_tile_track = self.location.tile_path[0];
         let next_tile_coords = current_tile_track.tile_coords_xz + self.location.pointing_in;
@@ -524,8 +545,23 @@ impl TransportInfo {
             tile_coords_xz: next_tile_coords,
             track_type:     *next_track_type,
         };
+
         self.location.tile_path.insert(0, next_tile_track);
-        // TODO: This is an unmitigated memory leak now. Should you just remove the last element to avoid this? Or do some more advanced calculations?
+
+        // Later: We are rather crudely sometimes removing the last element when we are inserting an
+        // element.
+        // This means - depending on `HEURISTIC_COEF` - that sometimes we will be carrying around
+        // "too many tiles", or it could lead to running out of tiles if it is too short.
+        // The alternative is to use `calculate_train_component_head_tails_and_final_tail_position`
+        // to calculate the tail position, and then remove the last tiles if they are not needed,
+        // but that introduces more complexity.
+        const HEURISTIC_COEF: f32 = 2.0;
+        if self.location.tile_path.len()
+            > (HEURISTIC_COEF * self.transport_type.length_in_tiles()) as usize
+        {
+            let _ = self.location.tile_path.pop();
+        }
+
         self.location.progress_within_tile.0 -= 1.0;
         self.location.pointing_in = next_track_type.other_end(reversed);
     }
