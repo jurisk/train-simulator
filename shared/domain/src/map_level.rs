@@ -6,7 +6,7 @@ use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
-use crate::{TileCoordsXZ, VertexCoordsXZ};
+use crate::{TileCoordsXZ, TileTrack, VertexCoordsXZ};
 
 #[repr(u32)]
 pub enum TerrainType {
@@ -106,6 +106,17 @@ impl Terrain {
         let x = (coords_xz.x as f32) - (self.tile_count_x() as f32) / 2.0;
         let z = (coords_xz.z as f32) - (self.tile_count_z() as f32) / 2.0;
         Vec3::new(x, y, z)
+    }
+
+    #[must_use]
+    pub fn entry_and_exit(&self, pointing_in: DirectionXZ, tile_track: &TileTrack) -> (Vec3, Vec3) {
+        let tile = tile_track.tile_coords_xz;
+        let track_type = tile_track.track_type;
+        let exit_direction = pointing_in;
+        let entry_direction = track_type.other_end(exit_direction);
+        let entry = self.center_coordinate(entry_direction, tile);
+        let exit = self.center_coordinate(exit_direction, tile);
+        (entry, exit)
     }
 }
 

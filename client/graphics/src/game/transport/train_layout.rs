@@ -18,19 +18,13 @@ fn calculate_train_component_head_tail(
     tile_path: &[TileTrack],
     map_level: &MapLevel,
 ) -> ((Vec3, Vec3), State) {
-    let terrain = &map_level.terrain;
     let tile_track = tile_path[state.tile_path_offset];
-    let tile = tile_track.tile_coords_xz;
-    let track_type = tile_track.track_type;
-    let exit_direction = state.pointing_in;
-    let entry_direction = track_type.other_end(exit_direction);
-    let exit = terrain.center_coordinate(exit_direction, tile);
-    let entry = terrain.center_coordinate(entry_direction, tile);
+    let (entry, exit) = map_level
+        .terrain
+        .entry_and_exit(state.pointing_in, &tile_track);
     let track_length = (exit - entry).length();
     let direction = (exit - entry).normalize();
-    let progress_within_tile = state.progress_within_tile.progress();
-    let progress = progress_within_tile * track_length;
-    let head = entry + direction * progress;
+    let head = entry + direction * state.progress_within_tile.progress() * track_length;
 
     recursive_calculate_head_tail(
         head,
@@ -38,7 +32,7 @@ fn calculate_train_component_head_tail(
         state.pointing_in,
         state.tile_path_offset,
         tile_path,
-        terrain,
+        &map_level.terrain,
         Some(state.progress_within_tile),
     )
 }
@@ -95,12 +89,7 @@ fn maybe_find_tail(
     assert!(tile_path_offset < tile_path.len(), "Ran out of tile path!");
     let tile_track = tile_path[tile_path_offset];
 
-    let tile = tile_track.tile_coords_xz;
-    let track_type = tile_track.track_type;
-    let exit_direction = pointing_in;
-    let entry_direction = track_type.other_end(exit_direction);
-    let entry = terrain.center_coordinate(entry_direction, tile);
-    let exit = terrain.center_coordinate(exit_direction, tile);
+    let (entry, exit) = terrain.entry_and_exit(pointing_in, &tile_track);
     let track_length = (exit - entry).length();
 
     let intersections =
@@ -134,7 +123,7 @@ fn maybe_find_tail(
     selected.map(|(intersection, progress)| {
         let state = State {
             tile_path_offset,
-            pointing_in: exit_direction,
+            pointing_in,
             progress_within_tile: progress,
         };
 
