@@ -132,7 +132,7 @@ pub(crate) fn build_track_when_mouse_released(
         let mut buildings = vec![];
         for tile in ordered_selected_tiles.iter() {
             info!("Building track at {:?}", tile);
-            // TODO: Debug only, replace with a proper route planner
+            // TODO: Debug only, replace with a proper route planner, instead of random
             let tmp_track_types = [
                 TrackType::NorthSouth,
                 TrackType::EastWest,

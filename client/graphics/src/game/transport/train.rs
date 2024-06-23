@@ -68,11 +68,16 @@ fn calculate_train_component_transform(
     let head = entry + direction * progress;
 
     let stays_in_this_tile = progress > train_length_in_tiles;
-    let (tail, new_progress_within_tile) = if stays_in_this_tile {
+    let (tail, state) = if stays_in_this_tile {
         let tail = head - direction * train_length_in_tiles;
         let new_progress_within_tile =
             ProgressWithinTile::new(progress_within_tile - train_length_in_tiles / track_length);
-        (tail, new_progress_within_tile)
+        let state = State {
+            tile_path_offset:     state.tile_path_offset,
+            pointing_in:          exit_direction,
+            progress_within_tile: new_progress_within_tile,
+        };
+        (tail, state)
     } else {
         // TODO: Handle longer train components that even span more than two tiles (e.g. diagonally!)
         assert!(
@@ -100,26 +105,15 @@ fn calculate_train_component_transform(
         let new_progress_within_tile = ProgressWithinTile::new(
             (closest_intersection - previous_entry).length() / previous_track_length,
         );
-        (closest_intersection, new_progress_within_tile)
-    };
-
-    let transform = transform_from_head_and_tail(head, tail);
-
-    let new_tile_path_offset = state.tile_path_offset + if stays_in_this_tile { 0 } else { 1 };
-    let new_pointing_in = if stays_in_this_tile {
-        exit_direction
-    } else {
-        entry_direction.reverse()
-    };
-
-    (
-        transform,
-        State {
-            tile_path_offset:     new_tile_path_offset,
-            pointing_in:          new_pointing_in,
+        let state = State {
+            tile_path_offset:     state.tile_path_offset + 1,
+            pointing_in:          entry_direction.reverse(),
             progress_within_tile: new_progress_within_tile,
-        },
-    )
+        };
+        (closest_intersection, state)
+    };
+
+    (transform_from_head_and_tail(head, tail), state)
 }
 
 #[allow(clippy::cast_precision_loss)]

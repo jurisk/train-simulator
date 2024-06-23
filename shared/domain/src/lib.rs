@@ -476,6 +476,7 @@ impl TransportInfo {
             .filter(|track_type| track_type.connections().contains(&reversed))
             .collect();
         assert_eq!(self.movement_orders, MovementOrders::RandomTurns); // TODO: Support other strategies
+        // TODO: All such random choices should probably be on server-side to avoid each client deciding to route the trains differently
         let next_track_type = choose_unsafe(&valid_tracks_at_next_tile);
         let next_tile_track = TileTrack {
             tile_coords_xz: next_tile_coords,
