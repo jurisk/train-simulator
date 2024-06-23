@@ -7,29 +7,18 @@ use bevy::prelude::{
     default, info, Color, Commands, Cuboid, EventWriter, Mesh, MouseButton, Res, ResMut, Transform,
 };
 use shared_domain::client_command::{ClientCommand, GameCommand};
-use shared_domain::map_level::{MapLevel, Terrain};
+use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
 use shared_domain::{
     BuildingId, BuildingInfo, BuildingType, TileCoordsXZ, TileCoverage, TrackType,
 };
-use shared_util::direction_xz::DirectionXZ;
 use shared_util::random::choose_unsafe;
 
 use crate::communication::domain::ClientMessageEvent;
-use crate::game::map_level::terrain::land::logical_to_world;
 use crate::game::{GameIdResource, PlayerIdResource};
 use crate::selection::SelectedTiles;
 
 const RAIL_DIAMETER: f32 = 0.025;
-
-pub fn vertex_coordinates_clockwise(
-    direction: DirectionXZ,
-    tile: TileCoordsXZ,
-    terrain: &Terrain,
-) -> (Vec3, Vec3) {
-    let (a, b) = tile.vertex_coords_clockwise(direction);
-    (logical_to_world(a, terrain), logical_to_world(b, terrain))
-}
 
 #[allow(clippy::similar_names)]
 pub(crate) fn create_track(
@@ -45,8 +34,8 @@ pub(crate) fn create_track(
 
     let (a, b) = track_type.connections_clockwise();
 
-    let (a1, a2) = vertex_coordinates_clockwise(a, tile, terrain);
-    let (b1, b2) = vertex_coordinates_clockwise(b, tile, terrain);
+    let (a1, a2) = terrain.vertex_coordinates_clockwise(a, tile);
+    let (b1, b2) = terrain.vertex_coordinates_clockwise(b, tile);
 
     let (a1, a2) = pick_rail_positions(a1, a2);
     let (b1, b2) = pick_rail_positions(b1, b2);

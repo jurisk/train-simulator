@@ -1,4 +1,5 @@
 mod train;
+pub mod train_layout;
 
 use std::collections::HashMap;
 

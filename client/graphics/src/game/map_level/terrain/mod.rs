@@ -14,5 +14,3 @@ impl Plugin for TerrainPlugin {
         app.add_plugins(WaterPlugin);
     }
 }
-
-const Y_COEF: f32 = 0.6;

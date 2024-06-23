@@ -1,9 +1,12 @@
 use std::fmt::{Debug, Formatter};
 
+use bevy_math::Vec3;
 use serde::{Deserialize, Serialize};
+use shared_util::coords_xz::CoordsXZ;
+use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
-use crate::VertexCoordsXZ;
+use crate::{TileCoordsXZ, VertexCoordsXZ};
 
 #[repr(u32)]
 pub enum TerrainType {
@@ -28,8 +31,9 @@ impl TerrainType {
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Height(pub u8);
 
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Terrain {
+    pub y_coef:         f32,
     pub vertex_heights: GridXZ<VertexCoordsXZ, Height>,
 }
 
@@ -38,6 +42,7 @@ impl Debug for Terrain {
         f.debug_struct("Terrain")
             .field("size_x", &self.vertex_heights.size_x)
             .field("size_z", &self.vertex_heights.size_z)
+            .field("y_coef", &self.y_coef)
             .finish()
     }
 }
@@ -46,6 +51,7 @@ impl Terrain {
     #[must_use]
     pub fn new(vertex_heights: Vec<Vec<u8>>) -> Self {
         Self {
+            y_coef:         0.5,
             vertex_heights: GridXZ::new(vertex_heights).map(|&height| Height(height)),
         }
     }
@@ -74,6 +80,33 @@ impl Terrain {
     pub fn tile_count_z(&self) -> usize {
         self.vertex_count_z() - 1
     }
+
+    #[must_use]
+    pub fn center_coordinate(&self, direction: DirectionXZ, tile: TileCoordsXZ) -> Vec3 {
+        let (a, b) = self.vertex_coordinates_clockwise(direction, tile);
+        (a + b) / 2.0
+    }
+
+    #[must_use]
+    pub fn vertex_coordinates_clockwise(
+        &self,
+        direction: DirectionXZ,
+        tile: TileCoordsXZ,
+    ) -> (Vec3, Vec3) {
+        let (a, b) = tile.vertex_coords_clockwise(direction);
+        (self.logical_to_world(a), self.logical_to_world(b))
+    }
+
+    #[must_use]
+    #[allow(clippy::cast_precision_loss, clippy::cast_lossless)]
+    pub fn logical_to_world(&self, vertex_coords_xz: VertexCoordsXZ) -> Vec3 {
+        let Height(height) = self.vertex_heights[vertex_coords_xz];
+        let coords_xz: CoordsXZ = vertex_coords_xz.into();
+        let y = (height as f32) * self.y_coef;
+        let x = (coords_xz.x as f32) - (self.tile_count_x() as f32) / 2.0;
+        let z = (coords_xz.z as f32) - (self.tile_count_z() as f32) / 2.0;
+        Vec3::new(x, y, z)
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
@@ -88,7 +121,7 @@ impl Water {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct MapLevel {
     pub terrain: Terrain,
     pub water:   Water,

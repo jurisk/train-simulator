@@ -9,7 +9,6 @@ use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, ServerResponse};
 
 use crate::communication::domain::ServerMessageEvent;
-use crate::game::map_level::terrain::Y_COEF;
 
 pub(crate) struct WaterPlugin;
 
@@ -53,7 +52,7 @@ pub(crate) fn create_water(
     let mesh = meshes.add(rectangle);
 
     let (above, below) = &map_level.water.between;
-    let water_level = ((above.0 as f32 + below.0 as f32) / 2.0) * Y_COEF;
+    let water_level = ((above.0 as f32 + below.0 as f32) / 2.0) * map_level.terrain.y_coef;
     let mut transform = Transform::from_xyz(0.0, water_level, 0.0);
     transform.rotate_x(-FRAC_PI_2);
 

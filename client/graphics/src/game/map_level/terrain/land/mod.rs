@@ -3,15 +3,14 @@ use bevy::core::Name;
 use bevy::pbr::ExtendedMaterial;
 use bevy::prelude::{
     default, App, Color, Commands, EventReader, FixedUpdate, MaterialMeshBundle, Mesh, Plugin, Res,
-    ResMut, StandardMaterial, Transform, Vec3,
+    ResMut, StandardMaterial, Transform,
 };
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
 use bevy_mod_raycast::prelude::RaycastMesh;
-use shared_domain::map_level::{Height, MapLevel, Terrain, TerrainType};
+use shared_domain::map_level::{MapLevel, TerrainType};
 use shared_domain::server_response::{GameResponse, ServerResponse};
 use shared_domain::VertexCoordsXZ;
-use shared_util::coords_xz::CoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::communication::domain::ServerMessageEvent;
@@ -19,7 +18,6 @@ use crate::game::map_level::terrain::land::advanced_land_material::{
     create_advanced_land_material, AdvancedLandMaterialPlugin, LandExtension,
 };
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::tiled_mesh_from_height_map_data;
-use crate::game::map_level::terrain::Y_COEF;
 
 mod advanced_land_material;
 pub mod tiled_mesh_from_height_map_data;
@@ -43,16 +41,6 @@ enum LandMaterialType {
 }
 
 const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
-
-#[allow(clippy::cast_precision_loss, clippy::cast_lossless)]
-pub(crate) fn logical_to_world(vertex_coords_xz: VertexCoordsXZ, terrain: &Terrain) -> Vec3 {
-    let Height(height) = terrain.vertex_heights[vertex_coords_xz];
-    let coords_xz: CoordsXZ = vertex_coords_xz.into();
-    let y = (height as f32) * Y_COEF;
-    let x = (coords_xz.x as f32) - (terrain.tile_count_x() as f32) / 2.0;
-    let z = (coords_xz.z as f32) - (terrain.tile_count_z() as f32) / 2.0;
-    Vec3::new(x, y, z)
-}
 
 #[allow(clippy::needless_pass_by_value, clippy::collapsible_match)]
 fn handle_map_level_updated(
@@ -92,10 +80,9 @@ pub(crate) fn create_land(
     standard_materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
 ) {
-    let data_slice: GridXZ<VertexCoordsXZ, f32> = map_level
-        .terrain
-        .vertex_heights
-        .map(|h| h.0 as f32 * Y_COEF);
+    let terrain = &map_level.terrain;
+    let data_slice: GridXZ<VertexCoordsXZ, f32> =
+        terrain.vertex_heights.map(|h| h.0 as f32 * terrain.y_coef);
 
     let half_x = (map_level.terrain.tile_count_x() as f32) / 2.0;
     let half_z = (map_level.terrain.tile_count_z() as f32) / 2.0;
