@@ -65,7 +65,7 @@ resource "google_compute_instance" "vm" {
     access_config {}
   }
 
-  tags = []
+  tags = var.tags
 
   metadata = {
     gce-container-declaration = module.gce-container.metadata_value

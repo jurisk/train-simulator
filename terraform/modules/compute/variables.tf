@@ -49,3 +49,10 @@ variable "volumes" {
 
   default = {}
 }
+
+variable "tags" {
+  description = "The tags to apply to the instance"
+  type        = list(string)
+
+  default = []
+}

@@ -26,6 +26,7 @@ module "game_server" {
     "RUST_LOG"          = "info",
     "SERVE_STATIC_FROM" = "gcs",
   }
+  tags = ["game-server", "allow-ssh"]
 }
 
 module "proxy" {
@@ -42,6 +43,7 @@ module "proxy" {
       mount_path = "/data"
     }
   }
+  tags = ["proxy", "allow-ssh"]
 }
 
 module "static_assets" {
