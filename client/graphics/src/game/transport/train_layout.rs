@@ -12,20 +12,26 @@ struct State {
     progress_within_tile: ProgressWithinTile,
 }
 
-fn calculate_train_component_head_tail(
+impl State {
+    #[must_use]
+    fn head(&self, tile_path: &[TileTrack], terrain: &Terrain) -> Vec3 {
+        tile_path[self.tile_path_offset].progress_coordinates(
+            self.pointing_in,
+            self.progress_within_tile,
+            terrain,
+        )
+    }
+}
+
+fn calculate_train_component_tail(
     state: &State,
     train_component_type: TrainComponentType,
     tile_path: &[TileTrack],
     map_level: &MapLevel,
-) -> ((Vec3, Vec3), State) {
-    let tile_track = tile_path[state.tile_path_offset];
-    let head = tile_track.progress_coordinates(
-        state.pointing_in,
-        state.progress_within_tile,
-        &map_level.terrain,
-    );
+) -> (Vec3, State) {
+    let head = state.head(tile_path, &map_level.terrain);
 
-    recursive_calculate_head_tail(
+    recursive_calculate_tail(
         head,
         train_component_type.length_in_tiles(),
         state.pointing_in,
@@ -36,7 +42,7 @@ fn calculate_train_component_head_tail(
     )
 }
 
-fn recursive_calculate_head_tail(
+fn recursive_calculate_tail(
     head: Vec3,
     component_length: f32,
     pointing_in: DirectionXZ,
@@ -44,7 +50,7 @@ fn recursive_calculate_head_tail(
     tile_path: &[TileTrack],
     terrain: &Terrain,
     max_progress_within_tile: Option<ProgressWithinTile>,
-) -> ((Vec3, Vec3), State) {
+) -> (Vec3, State) {
     let attempt = maybe_find_tail(
         head,
         component_length,
@@ -61,7 +67,7 @@ fn recursive_calculate_head_tail(
             let next_tile_path_offset = tile_path_offset + 1;
             let next_pointing_in = this_tile_type.other_end(pointing_in).reverse();
 
-            recursive_calculate_head_tail(
+            recursive_calculate_tail(
                 head,
                 component_length,
                 next_pointing_in,
@@ -71,7 +77,7 @@ fn recursive_calculate_head_tail(
                 None,
             )
         },
-        Some((tail, state)) => ((head, tail), state),
+        Some((tail, state)) => (tail, state),
     }
 }
 
@@ -129,7 +135,7 @@ fn maybe_find_tail(
     })
 }
 
-// TODO: I think this should be changed to actually return `TileTrack, ProgressWithinTile` as well, as that actually determines the Vec3 as well...
+// TODO: I think this should be changed to actually return `TileTrack or index, ProgressWithinTile` as well, as that actually determines the Vec3 as well...
 pub(crate) fn calculate_train_component_head_tails(
     train_components: &[TrainComponentType],
     transport_location: &TransportLocation,
@@ -141,16 +147,17 @@ pub(crate) fn calculate_train_component_head_tails(
         pointing_in:          transport_location.pointing_in,
         progress_within_tile: transport_location.progress_within_tile,
     };
+
+    let tile_path = &transport_location.tile_path;
+
     for train_component in train_components {
-        let ((head, tail), new_state) = calculate_train_component_head_tail(
-            &state,
-            *train_component,
-            &transport_location.tile_path,
-            map_level,
-        );
-        state = new_state;
+        let head = state.head(tile_path, &map_level.terrain);
+        let (tail, new_state) =
+            calculate_train_component_tail(&state, *train_component, tile_path, map_level);
 
         results.push((head, tail));
+
+        state = new_state;
     }
     results
 }
