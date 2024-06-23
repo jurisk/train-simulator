@@ -1,6 +1,6 @@
 use bevy::asset::Assets;
 use bevy::core::Name;
-use bevy::math::{Quat, Vec3};
+use bevy::math::Vec3;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
     default, BuildChildren, Color, Commands, Cuboid, Entity, Mesh, ResMut, Transform,
@@ -14,7 +14,9 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::game::buildings::tracks::vertex_coordinates_clockwise;
 use crate::game::transport::TransportIndexComponent;
-use crate::util::geometry::line_segment_intersection_with_sphere;
+use crate::util::geometry::{
+    line_segment_intersection_with_sphere, rotation_aligned_with_direction,
+};
 use crate::util::shift_mesh;
 
 const GAP_BETWEEN_TRAIN_COMPONENTS: f32 = 0.05;
@@ -28,23 +30,15 @@ struct State {
     progress_within_tile: ProgressWithinTile,
 }
 
-fn calculate_rotation_quat(direction: Vec3) -> Quat {
-    debug_assert!(direction.is_normalized());
-    let alignment_rotation = Quat::from_rotation_arc(Vec3::Z, direction);
+fn transform_from_head_and_tail(head: Vec3, tail: Vec3) -> Transform {
+    let direction = (head - tail).normalize(); // Recalculating with new tail
 
-    let up_after_rotation = alignment_rotation * Vec3::Y;
-
-    // Compute the target up vector: perpendicular to direction and closest to Vec3::Y
-    let target_up = (Vec3::Y - direction * Vec3::Y.dot(direction)).normalize();
-
-    let roll_axis = direction;
-    let roll_angle = up_after_rotation.angle_between(target_up);
-
-    // Calculate the quaternion for the roll rotation
-    let roll_quat = Quat::from_axis_angle(roll_axis, roll_angle);
-
-    // Combine the initial rotation quaternion with the roll quaternion
-    roll_quat * alignment_rotation
+    let midpoint = (head + tail) / 2.0;
+    Transform {
+        rotation: rotation_aligned_with_direction(direction),
+        translation: midpoint,
+        ..default()
+    }
 }
 
 #[allow(clippy::bool_to_int_with_if, clippy::unwrap_used)]
@@ -58,7 +52,6 @@ fn calculate_train_component_transform(
     let tile_track = tile_path[state.tile_path_offset];
     let tile = tile_track.tile_coords_xz;
     let track_type = tile_track.track_type;
-    let track_length = track_type.length_in_tiles(); // TODO: Or calculate based on entry / exit vectors?!
     let exit_direction = state.pointing_in;
     let entry_direction = track_type.other_end(exit_direction);
 
@@ -68,6 +61,7 @@ fn calculate_train_component_transform(
     let entry = center_coordinate(entry_direction, tile, terrain);
     let exit = center_coordinate(exit_direction, tile, terrain);
 
+    let track_length = (exit - entry).length();
     let direction = (exit - entry).normalize();
     let progress = progress_within_tile * track_length;
 
@@ -78,8 +72,6 @@ fn calculate_train_component_transform(
         let tail = head - direction * train_length_in_tiles;
         let new_progress_within_tile =
             ProgressWithinTile::new(progress_within_tile - train_length_in_tiles / track_length);
-        // TODO:    This has no gaps between the train components - we should have gaps! But perhaps it is solved by
-        //          having the model not take up all the space?
         (tail, new_progress_within_tile)
     } else {
         // TODO: Handle longer train components that even span more than two tiles (e.g. diagonally!)
@@ -100,9 +92,6 @@ fn calculate_train_component_transform(
             (previous_entry, previous_exit),
             (head, train_length_in_tiles),
         );
-        println!(
-            "Previous_entry: {previous_entry:?}, Previous_exit: {previous_exit:?}, Intersections: {intersections:?}, {previous_tile:?}, {previous_track_type:?}"
-        );
         assert!(!intersections.is_empty(), "No intersection found!"); // Later: Think of better error handling
         let closest_intersection = intersections
             .into_iter()
@@ -114,14 +103,7 @@ fn calculate_train_component_transform(
         (closest_intersection, new_progress_within_tile)
     };
 
-    let direction = (head - tail).normalize(); // Recalculating with new tail
-
-    let midpoint = (head + tail) / 2.0;
-    let transform = Transform {
-        rotation: calculate_rotation_quat(direction),
-        translation: midpoint,
-        ..default()
-    };
+    let transform = transform_from_head_and_tail(head, tail);
 
     let new_tile_path_offset = state.tile_path_offset + if stays_in_this_tile { 0 } else { 1 };
     let new_pointing_in = if stays_in_this_tile {
@@ -159,7 +141,6 @@ pub(crate) fn calculate_train_transforms(
             &transport_location.tile_path,
             map_level,
         );
-        println!("Processing {train_component:?} got {new_state:?} and {transform:?}");
         state = new_state;
         results.push(transform);
     }
@@ -242,7 +223,7 @@ fn create_train_component(
             adjusted_cuboid(
                 GAP_BETWEEN_TRAIN_COMPONENTS,
                 TRAIN_WIDTH,
-                TRAIN_WIDTH * 2.0, // Train engine is higher
+                TRAIN_WIDTH * 1.6, // Train engine is higher
                 train_component_type.length_in_tiles(),
                 TRAIN_EXTRA_HEIGHT,
             )
@@ -251,7 +232,7 @@ fn create_train_component(
             adjusted_cuboid(
                 GAP_BETWEEN_TRAIN_COMPONENTS,
                 TRAIN_WIDTH,
-                TRAIN_WIDTH * 0.5, // Train cars are lower
+                TRAIN_WIDTH * 0.4, // Train cars are lower
                 train_component_type.length_in_tiles(),
                 TRAIN_EXTRA_HEIGHT,
             )

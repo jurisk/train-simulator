@@ -1,4 +1,26 @@
+use bevy::math::Quat;
 use bevy::prelude::Vec3;
+
+// We not only align with a direction, but also preserve the "up" direction.
+#[must_use]
+pub fn rotation_aligned_with_direction(direction: Vec3) -> Quat {
+    debug_assert!(direction.is_normalized());
+    let alignment_rotation = Quat::from_rotation_arc(Vec3::Z, direction);
+
+    let up_after_rotation = alignment_rotation * Vec3::Y;
+
+    // Compute the target up vector: perpendicular to direction and closest to Vec3::Y
+    let target_up = (Vec3::Y - direction * Vec3::Y.dot(direction)).normalize();
+
+    let roll_axis = direction;
+    let roll_angle = up_after_rotation.angle_between(target_up);
+
+    // Calculate the quaternion for the roll rotation
+    let roll_quat = Quat::from_axis_angle(roll_axis, roll_angle);
+
+    // Combine the initial rotation quaternion with the roll quaternion
+    roll_quat * alignment_rotation
+}
 
 // TODO: Move to shared, as you want to use it also on the server - but we need to de-Bevy-ise it
 #[must_use]
