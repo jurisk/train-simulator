@@ -64,7 +64,7 @@ fn maybe_find_tail(
     let intersections =
         line_segment_intersection_with_sphere((entry, exit), (head, component_length));
 
-    intersections
+    let options: Vec<_> = intersections
         .into_iter()
         .map(|intersection| {
             (
@@ -72,16 +72,24 @@ fn maybe_find_tail(
                 ProgressWithinTile::new((intersection - entry).length() / track_length),
             )
         })
-        .max_by_key(|(_, progress)| *progress)
-        .map(|(intersection, progress)| {
-            let state = State {
-                tile_path_offset,
-                pointing_in: exit_direction,
-                progress_within_tile: progress,
-            };
+        .collect();
 
-            (intersection, state)
-        })
+    let selected = options
+        .into_iter()
+        // This 'min_by_key' is somewhat questionable, but it was needed for the first component in
+        // the whole train so that tail does not jump ahead of the head - is it always correct for
+        // the others in case of sharp turns, it is not clear
+        .min_by_key(|(_, progress)| *progress);
+
+    selected.map(|(intersection, progress)| {
+        let state = State {
+            tile_path_offset,
+            pointing_in: exit_direction,
+            progress_within_tile: progress,
+        };
+
+        (intersection, state)
+    })
 }
 
 #[allow(clippy::bool_to_int_with_if, clippy::unwrap_used)]
@@ -112,16 +120,15 @@ fn calculate_train_component_transform(
 
     let stays_in_this_tile = progress > train_length_in_tiles;
     let (tail, state) = if stays_in_this_tile {
-        // TODO: Use maybe_find_tail also here, just have to have a threshold for not jumping ahead of head
-        let tail = head - direction * train_length_in_tiles;
-        let new_progress_within_tile =
-            ProgressWithinTile::new(progress_within_tile - train_length_in_tiles / track_length);
-        let next_state = State {
-            tile_path_offset:     state.tile_path_offset,
-            pointing_in:          exit_direction,
-            progress_within_tile: new_progress_within_tile,
-        };
-        (tail, next_state)
+        maybe_find_tail(
+            head,
+            train_component_type.length_in_tiles(),
+            state.pointing_in,
+            state.tile_path_offset,
+            tile_path,
+            terrain,
+        )
+        .unwrap()
     } else {
         // TODO: Handle longer train components that even span more than two tiles (e.g. diagonally!)
         maybe_find_tail(
