@@ -3,7 +3,7 @@ use shared_domain::map_level::{MapLevel, Terrain};
 use shared_domain::{ProgressWithinTile, TileTrack, TrainComponentType, TransportLocation};
 use shared_util::direction_xz::DirectionXZ;
 
-use crate::util::geometry::line_segment_intersection_with_sphere;
+use shared_util::geometry::line_segment_intersection_with_sphere;
 
 #[derive(Debug)]
 struct State {

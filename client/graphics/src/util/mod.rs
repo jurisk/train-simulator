@@ -1,5 +1,3 @@
-pub mod geometry;
-
 use bevy::prelude::{Mesh, Vec3};
 use bevy::render::mesh::VertexAttributeValues;
 

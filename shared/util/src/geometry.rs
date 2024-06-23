@@ -1,5 +1,4 @@
-use bevy::math::Quat;
-use bevy::prelude::Vec3;
+use bevy_math::{Quat, Vec3};
 
 // We not only align with a direction, but also preserve the "up" direction.
 #[must_use]
@@ -22,7 +21,6 @@ pub fn rotation_aligned_with_direction(direction: Vec3) -> Quat {
     roll_quat * alignment_rotation
 }
 
-// TODO: Move to shared, as you want to use it also on the server - but we need to de-Bevy-ise it
 #[must_use]
 #[allow(clippy::many_single_char_names)]
 pub fn line_segment_intersection_with_sphere(
@@ -66,8 +64,6 @@ pub fn line_segment_intersection_with_sphere(
 
 #[cfg(test)]
 mod tests {
-    use bevy::math::Vec3;
-
     use super::*;
 
     #[test]

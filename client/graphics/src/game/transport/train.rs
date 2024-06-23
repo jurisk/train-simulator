@@ -11,7 +11,7 @@ use shared_domain::{TrainComponentType, TransportId, TransportLocation};
 
 use crate::game::transport::train_layout::calculate_train_component_head_tails;
 use crate::game::transport::TransportIndexComponent;
-use crate::util::geometry::rotation_aligned_with_direction;
+use shared_util::geometry::rotation_aligned_with_direction;
 use crate::util::shift_mesh;
 
 const GAP_BETWEEN_TRAIN_COMPONENTS: f32 = 0.05;
