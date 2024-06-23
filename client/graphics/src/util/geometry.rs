@@ -43,7 +43,7 @@ pub fn line_segment_intersection_with_sphere(
 
     if discriminant < 0.0 {
         // No intersection
-        Vec::new()
+        vec![]
     } else {
         let discriminant_sqrt = discriminant.sqrt();
 
@@ -56,7 +56,7 @@ pub fn line_segment_intersection_with_sphere(
             intersections.push(p0 + t1 * d);
         }
 
-        if (0.0 ..= 1.0).contains(&t2) {
+        if (0.0 ..= 1.0).contains(&t2) && discriminant != 0.0 {
             intersections.push(p0 + t2 * d);
         }
 
@@ -85,8 +85,7 @@ mod tests {
         let sphere = (Vec3::new(0.0, 0.0, 0.0), 1.0);
 
         let intersections = line_segment_intersection_with_sphere(segment, sphere);
-        // Later: We could fix this to return a single intersection point in tangent cases, but it doesn't matter
-        assert_eq!(intersections[0], Vec3::new(1.0, 0.0, 0.0));
+        assert_eq!(intersections, vec![Vec3::new(1.0, 0.0, 0.0)]);
     }
 
     #[test]

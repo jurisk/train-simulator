@@ -84,30 +84,34 @@ fn calculate_train_component_transform(
             state.tile_path_offset < tile_path.len(),
             "Ran out of tile path!"
         ); // Later: Think of better error handling
-        let TileTrack {
-            tile_coords_xz: previous_tile,
-            track_type: previous_track_type,
-        } = tile_path[state.tile_path_offset + 1];
+        let tile_track = tile_path[state.tile_path_offset + 1];
+
+        let tile = tile_track.tile_coords_xz;
+        let track_type = tile_track.track_type;
         let previous_exit_direction = entry_direction.reverse();
-        let previous_entry_direction = previous_track_type.other_end(previous_exit_direction);
-        let previous_entry = center_coordinate(previous_entry_direction, previous_tile, terrain);
-        let previous_exit = center_coordinate(previous_exit_direction, previous_tile, terrain);
+        let previous_entry_direction = track_type.other_end(previous_exit_direction);
+        let previous_entry = center_coordinate(previous_entry_direction, tile, terrain);
+        let previous_exit = center_coordinate(previous_exit_direction, tile, terrain);
         let previous_track_length = (previous_exit - previous_entry).length();
-        let intersections = line_segment_intersection_with_sphere(
-            (previous_entry, previous_exit),
-            (head, train_length_in_tiles),
-        );
-        assert!(!intersections.is_empty(), "No intersection found!"); // Later: Think of better error handling
-        let closest_intersection = intersections
-            .into_iter()
-            .min_by(|a, b| a.distance(head).partial_cmp(&b.distance(head)).unwrap())
-            .unwrap();
+
+        let closest_intersection = {
+            let intersections = line_segment_intersection_with_sphere(
+                (previous_entry, previous_exit),
+                (head, train_length_in_tiles),
+            );
+            assert!(!intersections.is_empty(), "No intersection found!"); // TODO: Think of better error handling
+
+            intersections
+                .into_iter()
+                .min_by(|a, b| a.distance(head).partial_cmp(&b.distance(head)).unwrap())
+                .unwrap()
+        };
         let new_progress_within_tile = ProgressWithinTile::new(
             (closest_intersection - previous_entry).length() / previous_track_length,
         );
         let state = State {
             tile_path_offset:     state.tile_path_offset + 1,
-            pointing_in:          entry_direction.reverse(),
+            pointing_in:          previous_exit_direction,
             progress_within_tile: new_progress_within_tile,
         };
         (closest_intersection, state)
