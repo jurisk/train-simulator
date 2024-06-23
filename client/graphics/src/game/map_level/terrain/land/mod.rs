@@ -145,7 +145,8 @@ pub(crate) fn create_land(
 #[cfg(test)]
 mod tests {
     use bevy::prelude::Vec3;
-    use shared_domain::map_level::{Height, Terrain};
+    use shared_domain::map_level::Height;
+    use shared_domain::terrain::Terrain;
 
     use super::*;
 

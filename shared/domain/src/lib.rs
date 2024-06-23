@@ -19,6 +19,7 @@ pub mod building_state;
 pub mod client_command;
 pub mod map_level;
 pub mod server_response;
+pub mod terrain;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone)]
 pub struct VertexCoordsXZ(pub CoordsXZ);

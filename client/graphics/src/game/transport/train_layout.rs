@@ -1,5 +1,6 @@
 use bevy::math::Vec3;
-use shared_domain::map_level::{MapLevel, Terrain};
+use shared_domain::map_level::MapLevel;
+use shared_domain::terrain::Terrain;
 use shared_domain::{ProgressWithinTile, TileTrack, TrainComponentType, TransportLocation};
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::geometry::line_segment_intersection_with_sphere;
@@ -11,7 +12,6 @@ struct State {
     progress_within_tile: ProgressWithinTile,
 }
 
-#[allow(clippy::bool_to_int_with_if, clippy::unwrap_used)]
 fn calculate_train_component_head_tail(
     state: &State,
     train_component_type: TrainComponentType,
@@ -85,7 +85,7 @@ fn maybe_find_tail(
     terrain: &Terrain,
     max_progress_within_tile: Option<ProgressWithinTile>,
 ) -> Option<(Vec3, State)> {
-    // Later: Think of better error handling
+    // Later: Think of better error handling, e.g., print a warning and assume a random tile_track
     assert!(tile_path_offset < tile_path.len(), "Ran out of tile path!");
     let tile_track = tile_path[tile_path_offset];
 
@@ -130,7 +130,8 @@ fn maybe_find_tail(
         (intersection, state)
     })
 }
-#[allow(clippy::cast_precision_loss)]
+
+// TODO: I think this should be changed to actually return `TileTrack, ProgressWithinTile` as well, as that actually determines the Vec3 as well...
 pub(crate) fn calculate_train_component_head_tails(
     train_components: &[TrainComponentType],
     transport_location: &TransportLocation,
