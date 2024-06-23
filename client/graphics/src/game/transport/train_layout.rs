@@ -14,7 +14,7 @@ struct State {
 
 impl State {
     #[must_use]
-    fn head(&self, tile_path: &[TileTrack], terrain: &Terrain) -> Vec3 {
+    fn coordinates(&self, tile_path: &[TileTrack], terrain: &Terrain) -> Vec3 {
         tile_path[self.tile_path_offset].progress_coordinates(
             self.pointing_in,
             self.progress_within_tile,
@@ -28,8 +28,8 @@ fn calculate_train_component_tail(
     train_component_type: TrainComponentType,
     tile_path: &[TileTrack],
     map_level: &MapLevel,
-) -> (Vec3, State) {
-    let head = state.head(tile_path, &map_level.terrain);
+) -> State {
+    let head = state.coordinates(tile_path, &map_level.terrain);
 
     recursive_calculate_tail(
         head,
@@ -50,7 +50,7 @@ fn recursive_calculate_tail(
     tile_path: &[TileTrack],
     terrain: &Terrain,
     max_progress_within_tile: Option<ProgressWithinTile>,
-) -> (Vec3, State) {
+) -> State {
     let attempt = maybe_find_tail(
         head,
         component_length,
@@ -77,7 +77,7 @@ fn recursive_calculate_tail(
                 None,
             )
         },
-        Some((tail, state)) => (tail, state),
+        Some(state) => state,
     }
 }
 
@@ -89,50 +89,35 @@ fn maybe_find_tail(
     tile_path: &[TileTrack],
     terrain: &Terrain,
     max_progress_within_tile: Option<ProgressWithinTile>,
-) -> Option<(Vec3, State)> {
+) -> Option<State> {
     // Later: Think of better error handling, e.g., print a warning and assume a random tile_track
     assert!(tile_path_offset < tile_path.len(), "Ran out of tile path!");
     let tile_track = tile_path[tile_path_offset];
 
     let (entry, exit) = terrain.entry_and_exit(pointing_in, &tile_track);
 
-    let intersections =
-        line_segment_intersection_with_sphere((entry, exit), (head, component_length));
-
-    let options: Vec<_> = intersections
+    line_segment_intersection_with_sphere((entry, exit), (head, component_length))
         .into_iter()
         .map(|intersection| {
-            (
-                intersection,
-                ProgressWithinTile::from_point_between_two_points((entry, exit), intersection),
-            )
+            ProgressWithinTile::from_point_between_two_points((entry, exit), intersection)
         })
-        .collect();
-
-    let valid_options = options
-        .into_iter()
-        .filter(|(_, progress)| {
+        .filter(|progress| {
+            // Avoid the tail jumping ahead of the head!
             match max_progress_within_tile {
                 Some(max) => progress <= &max,
                 None => true,
             }
         })
-        .collect::<Vec<_>>();
-    let selected = valid_options
-        .into_iter()
         // I'm not sure if this should be `min_by_key` or `max_by_key` or something else...
         // Hopefully it does not matter
-        .min_by_key(|(_, progress)| *progress);
-
-    selected.map(|(intersection, progress)| {
-        let state = State {
-            tile_path_offset,
-            pointing_in,
-            progress_within_tile: progress,
-        };
-
-        (intersection, state)
-    })
+        .min_by_key(|progress| *progress)
+        .map(|progress| {
+            State {
+                tile_path_offset,
+                pointing_in,
+                progress_within_tile: progress,
+            }
+        })
 }
 
 // TODO: I think this should be changed to actually return `TileTrack or index, ProgressWithinTile` as well, as that actually determines the Vec3 as well...
@@ -151,10 +136,11 @@ pub(crate) fn calculate_train_component_head_tails(
     let tile_path = &transport_location.tile_path;
 
     for train_component in train_components {
-        let head = state.head(tile_path, &map_level.terrain);
-        let (tail, new_state) =
+        let new_state =
             calculate_train_component_tail(&state, *train_component, tile_path, map_level);
 
+        let head = state.coordinates(tile_path, &map_level.terrain);
+        let tail = new_state.coordinates(tile_path, &map_level.terrain);
         results.push((head, tail));
 
         state = new_state;
