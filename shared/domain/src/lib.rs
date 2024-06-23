@@ -375,8 +375,8 @@ impl TrainComponentType {
     #[must_use]
     pub fn length_in_tiles(self) -> f32 {
         match self {
-            TrainComponentType::Engine => 0.6, /* TODO: Return to 0.75 when you can handle such lengths! */
-            TrainComponentType::Car => 0.5,
+            TrainComponentType::Engine => 0.8,
+            TrainComponentType::Car => 0.4,
         }
     }
 }

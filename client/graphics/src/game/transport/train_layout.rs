@@ -24,45 +24,64 @@ fn calculate_train_component_head_tail(
     let track_type = tile_track.track_type;
     let exit_direction = state.pointing_in;
     let entry_direction = track_type.other_end(exit_direction);
-
-    let train_length_in_tiles = train_component_type.length_in_tiles();
-    let progress_within_tile = state.progress_within_tile.progress();
-
-    let entry = terrain.center_coordinate(entry_direction, tile);
     let exit = terrain.center_coordinate(exit_direction, tile);
-
+    let entry = terrain.center_coordinate(entry_direction, tile);
     let track_length = (exit - entry).length();
     let direction = (exit - entry).normalize();
+    let progress_within_tile = state.progress_within_tile.progress();
     let progress = progress_within_tile * track_length;
-
     let head = entry + direction * progress;
 
-    let stays_in_this_tile = progress > train_length_in_tiles;
-    let (tail, state) = if stays_in_this_tile {
-        maybe_find_tail(
-            head,
-            train_component_type.length_in_tiles(),
-            state.pointing_in,
-            state.tile_path_offset,
-            tile_path,
-            terrain,
-        )
-        .unwrap()
-    } else {
-        // TODO: Handle longer train components that even span more than two tiles (e.g. diagonally!)
-        maybe_find_tail(
-            head,
-            train_component_type.length_in_tiles(),
-            entry_direction.reverse(),
-            state.tile_path_offset + 1,
-            tile_path,
-            terrain,
-        )
-        .unwrap()
-    };
-
-    ((head, tail), state)
+    recursive_calculate_head_tail(
+        head,
+        train_component_type.length_in_tiles(),
+        state.pointing_in,
+        state.tile_path_offset,
+        tile_path,
+        terrain,
+        Some(state.progress_within_tile),
+    )
 }
+
+fn recursive_calculate_head_tail(
+    head: Vec3,
+    component_length: f32,
+    pointing_in: DirectionXZ,
+    tile_path_offset: usize,
+    tile_path: &[TileTrack],
+    terrain: &Terrain,
+    max_progress_within_tile: Option<ProgressWithinTile>,
+) -> ((Vec3, Vec3), State) {
+    let attempt = maybe_find_tail(
+        head,
+        component_length,
+        pointing_in,
+        tile_path_offset,
+        tile_path,
+        terrain,
+        max_progress_within_tile,
+    );
+
+    match attempt {
+        None => {
+            let this_tile_type = tile_path[tile_path_offset].track_type;
+            let next_tile_path_offset = tile_path_offset + 1;
+            let next_pointing_in = this_tile_type.other_end(pointing_in).reverse();
+
+            recursive_calculate_head_tail(
+                head,
+                component_length,
+                next_pointing_in,
+                next_tile_path_offset,
+                tile_path,
+                terrain,
+                None,
+            )
+        },
+        Some((tail, state)) => ((head, tail), state),
+    }
+}
+
 fn maybe_find_tail(
     head: Vec3,
     component_length: f32,
@@ -70,6 +89,7 @@ fn maybe_find_tail(
     tile_path_offset: usize,
     tile_path: &[TileTrack],
     terrain: &Terrain,
+    max_progress_within_tile: Option<ProgressWithinTile>,
 ) -> Option<(Vec3, State)> {
     // Later: Think of better error handling
     assert!(tile_path_offset < tile_path.len(), "Ran out of tile path!");
@@ -96,11 +116,19 @@ fn maybe_find_tail(
         })
         .collect();
 
-    let selected = options
+    let valid_options = options
         .into_iter()
-        // This 'min_by_key' is somewhat questionable, but it was needed for the first component in
-        // the whole train so that tail does not jump ahead of the head - is it always correct for
-        // the others in case of sharp turns, it is not clear
+        .filter(|(_, progress)| {
+            match max_progress_within_tile {
+                Some(max) => progress <= &max,
+                None => true,
+            }
+        })
+        .collect::<Vec<_>>();
+    let selected = valid_options
+        .into_iter()
+        // I'm not sure if this should be `min_by_key` or `max_by_key` or something else...
+        // Hopefully it does not matter
         .min_by_key(|(_, progress)| *progress);
 
     selected.map(|(intersection, progress)| {

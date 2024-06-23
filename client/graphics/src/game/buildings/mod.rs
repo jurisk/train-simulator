@@ -141,6 +141,14 @@ fn handle_game_map_level_provided_for_testing(
                                     tile_coords_xz: TileCoordsXZ::from_usizes(46, 48),
                                     track_type:     TrackType::NorthSouth,
                                 },
+                                TileTrack {
+                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 49),
+                                    track_type:     TrackType::NorthSouth,
+                                },
+                                TileTrack {
+                                    tile_coords_xz: TileCoordsXZ::from_usizes(46, 50),
+                                    track_type:     TrackType::NorthSouth,
+                                },
                             ],
                             progress_within_tile: ProgressWithinTile::just_entering(),
                         },
@@ -151,6 +159,7 @@ fn handle_game_map_level_provided_for_testing(
                             TrainComponentType::Car,
                             TrainComponentType::Car,
                             TrainComponentType::Car,
+                            TrainComponentType::Engine,
                         ]),
                         velocity:        TransportVelocity {
                             tiles_per_second: 2.0,
