@@ -5,7 +5,7 @@
 
 image::https://github.com/jurisk/train-simulator/actions/workflows/rust.yml/badge.svg[Rust,link=https://github.com/jurisk/train-simulator/actions/workflows/rust.yml]
 
-https://jurisk.github.io/train-simulator-pages/[Online version]
+https://storage.googleapis.com/ts.krikis.online/single.html[Static version]
 
 == Useful commands
 

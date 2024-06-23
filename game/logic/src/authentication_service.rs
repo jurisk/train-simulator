@@ -42,6 +42,11 @@ impl AuthenticationService {
                     PlayerName("Арцём".to_string()),
                     Colour::rgb(0, 153, 0),
                 ),
+                (
+                    PlayerId(uuid!("c11f557b-57d8-4820-a363-615fe024155d")),
+                    PlayerName("Imants".to_string()),
+                    Colour::rgb(255, 255, 0),
+                ),
             ]
             .into_iter()
             .map(|(id, name, colour)| (id, PlayerInfo { id, name, colour }))
