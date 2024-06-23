@@ -5,8 +5,8 @@ use std::collections::HashMap;
 use shared_domain::building_state::BuildingState;
 use shared_domain::client_command::GameCommand;
 use shared_domain::map_level::MapLevel;
-use shared_domain::server_response::{AddressEnvelope, Colour, GameInfo, GameResponse, PlayerInfo};
-use shared_domain::{BuildingInfo, GameId, PlayerId, PlayerName, TransportInfo};
+use shared_domain::server_response::{AddressEnvelope, GameInfo, GameResponse, PlayerInfo};
+use shared_domain::{BuildingInfo, GameId, PlayerId, TransportInfo};
 
 #[derive(Debug, Copy, Clone, Default)]
 pub struct GameTime(pub f32);
@@ -69,24 +69,16 @@ impl GameState {
 
     pub(crate) fn join_game(
         &mut self,
-        requesting_player_id: PlayerId,
-        requesting_player_name: PlayerName,
+        requesting_player_info: PlayerInfo,
     ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         // Later: Don't allow joining multiple games
 
-        let colour = Colour::random();
-        let requesting_player_info = PlayerInfo {
-            id: requesting_player_id,
-            name: requesting_player_name,
-            colour,
-        };
-
-        self.players
-            .insert(requesting_player_id, requesting_player_info);
+        let player_id = requesting_player_info.id;
+        self.players.insert(player_id, requesting_player_info);
 
         Ok(vec![
             GameResponseWithAddress::new(
-                AddressEnvelope::ToPlayer(requesting_player_id),
+                AddressEnvelope::ToPlayer(player_id),
                 GameResponse::GameJoined,
             ),
             GameResponseWithAddress::new(
@@ -94,7 +86,7 @@ impl GameState {
                 GameResponse::PlayersUpdated(self.players.clone()),
             ),
             GameResponseWithAddress::new(
-                AddressEnvelope::ToPlayer(requesting_player_id),
+                AddressEnvelope::ToPlayer(player_id),
                 GameResponse::MapLevelProvided(self.map_level.clone()),
             ),
         ])

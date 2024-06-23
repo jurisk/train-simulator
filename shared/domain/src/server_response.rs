@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
+use fastrand::Rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -37,11 +38,17 @@ pub struct Colour {
 
 impl Colour {
     #[must_use]
-    pub fn random() -> Self {
+    pub fn rgb(r: u8, g: u8, b: u8) -> Self {
+        Self { r, g, b }
+    }
+
+    #[must_use]
+    pub fn random(seed: u64) -> Self {
+        let mut rng = Rng::with_seed(seed);
         Self {
-            r: fastrand::u8(..),
-            g: fastrand::u8(..),
-            b: fastrand::u8(..),
+            r: rng.u8(..),
+            g: rng.u8(..),
+            b: rng.u8(..),
         }
     }
 }

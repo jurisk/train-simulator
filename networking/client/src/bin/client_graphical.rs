@@ -30,7 +30,7 @@ fn main() {
         .cloned()
         .unwrap_or_else(|| format!("ws://127.0.0.1:{}/ws", networking_shared::PORT));
 
-    let player_id = match args.get(1).cloned() {
+    let player_id = match args.get(2).cloned() {
         None => PlayerId::random(),
         Some(player_id) => PlayerId::from_str(player_id.as_str()).expect("Failed to parse UUID"),
     };
