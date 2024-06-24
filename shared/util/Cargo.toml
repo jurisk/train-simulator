@@ -9,6 +9,5 @@ rust-version.workspace = true
 [dependencies]
 # Note - not allowed to have a `bevy` or any networking dependencies!
 serde.workspace = true
-serde_json.workspace = true
 fastrand.workspace = true
 bevy_math.workspace = true

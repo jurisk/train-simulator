@@ -6,6 +6,7 @@ use bevy_simplenet::{
 };
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::states::ClientState;
+use enfync::builtin::Handle;
 use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::server_response::ServerResponse;
 use url::Url;
@@ -21,7 +22,7 @@ impl Plugin for MultiplayerSimpleNetClientPlugin {
         // Note that examples use SystemTime::now(), but it fails on WASM: https://github.com/rust-lang/rust/issues/48564
         let client_id = fastrand::u128(..);
         let client = client_factory().new_client(
-            enfync::builtin::Handle::default(), // automatically selects native/WASM runtime
+            Handle::default(), // automatically selects native/WASM runtime
             self.url.clone(),
             AuthRequest::None { client_id },
             ClientConfig {

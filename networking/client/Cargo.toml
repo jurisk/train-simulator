@@ -10,13 +10,10 @@ rust-version.workspace = true
 networking-shared = { path = "../shared" }
 client-graphics = {  path = "../../client/graphics" }
 shared-domain = { path = "../../shared/domain" }
-
-enfync.workspace = true
 bevy.workspace = true
 url.workspace = true
-
 bincode.workspace = true
-serde.workspace = true
+enfync.workspace = true
 
 [dependencies.bevy_simplenet]
 workspace = true

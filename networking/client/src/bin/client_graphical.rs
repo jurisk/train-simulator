@@ -5,6 +5,7 @@ use bevy::prelude::{info, App};
 use client_graphics::game::GameLaunchParams;
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
+use fastrand as _;
 use networking_client::MultiplayerSimpleNetClientPlugin;
 use shared_domain::client_command::AccessToken;
 use shared_domain::PlayerId;

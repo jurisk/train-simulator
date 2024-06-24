@@ -3046,7 +3046,6 @@ dependencies = [
  "enfync",
  "fastrand",
  "networking-shared",
- "serde",
  "shared-domain",
  "url",
  "wasm-bindgen",
@@ -3063,12 +3062,9 @@ dependencies = [
  "enfync",
  "game-logic",
  "networking-shared",
- "serde",
  "shared-domain",
  "tokio",
- "tower",
  "tower-http",
- "url",
 ]
 
 [[package]]
@@ -3949,7 +3945,6 @@ dependencies = [
  "bevy_math",
  "fastrand",
  "serde",
- "serde_json",
  "shared-util",
  "uuid",
 ]
@@ -3961,7 +3956,6 @@ dependencies = [
  "bevy_math",
  "fastrand",
  "serde",
- "serde_json",
 ]
 
 [[package]]
