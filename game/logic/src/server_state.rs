@@ -76,7 +76,7 @@ impl ServerState {
     fn process_network_command(
         client_id: ClientId,
         network_command: NetworkCommand,
-    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+    ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match network_command {
             NetworkCommand::Ping { id, elapsed } => {
                 Ok(vec![ServerResponseWithAddress {
@@ -90,7 +90,7 @@ impl ServerState {
     fn process_internal(
         &mut self,
         client_command_with_client_id: ClientCommandWithClientId,
-    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+    ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         let client_id = client_command_with_client_id.client_id;
         match client_command_with_client_id.command {
             ClientCommand::Network(network_command) => {
@@ -129,8 +129,8 @@ impl ServerState {
         let flattened = responses
             .map_err(|response| {
                 vec![ServerResponseWithAddress {
-                    address: AddressEnvelope::ToClient(client_id),
-                    response,
+                    address:  AddressEnvelope::ToClient(client_id),
+                    response: *response,
                 }]
             })
             .unwrap_or_else(identity);

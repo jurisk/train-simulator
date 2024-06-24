@@ -83,6 +83,7 @@ pub enum GameResponse {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub enum GameError {
+    GameNotFound,
     CannotBuild(Vec<BuildingId>),
     CannotPurchase(TransportId),
 }

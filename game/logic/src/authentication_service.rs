@@ -82,7 +82,7 @@ impl AuthenticationService {
         &mut self,
         client_id: ClientId,
         authentication_command: AuthenticationCommand,
-    ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
+    ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match authentication_command {
             AuthenticationCommand::Login(player_id, access_token) => {
                 // Later: Check the token for validity.
@@ -96,9 +96,9 @@ impl AuthenticationService {
                         )),
                     )])
                 } else {
-                    Err(ServerResponse::Authentication(
+                    Err(Box::new(ServerResponse::Authentication(
                         AuthenticationResponse::Error(AuthenticationError::LoginFailed),
-                    ))
+                    )))
                 }
             },
             AuthenticationCommand::Logout => {
@@ -112,9 +112,12 @@ impl AuthenticationService {
         }
     }
 
-    pub(crate) fn lookup_player_id(&self, client_id: ClientId) -> Result<PlayerId, ServerResponse> {
+    pub(crate) fn lookup_player_id(
+        &self,
+        client_id: ClientId,
+    ) -> Result<PlayerId, Box<ServerResponse>> {
         match self.connection_registry.get_player_id(&client_id) {
-            None => Err(ServerResponse::Error(ServerError::NotAuthorized)),
+            None => Err(Box::new(ServerResponse::Error(ServerError::NotAuthorized))),
             Some(requesting_player_id) => Ok(*requesting_player_id),
         }
     }
