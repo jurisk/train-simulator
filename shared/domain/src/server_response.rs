@@ -15,8 +15,14 @@ use crate::{
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum AuthenticationResponse {
     LoginSucceeded(PlayerId),
-    LoginFailed,
     LogoutSucceeded,
+
+    Error(AuthenticationError),
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub enum AuthenticationError {
+    LoginFailed,
     LogoutFailed,
 }
 
@@ -72,6 +78,11 @@ pub enum GameResponse {
     GameJoined,
     GameLeft,
 
+    Error(GameError),
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub enum GameError {
     CannotBuild(Vec<BuildingId>),
     CannotPurchase(TransportId),
 }
@@ -104,11 +115,8 @@ impl Debug for GameResponse {
             },
             GameResponse::GameJoined => write!(f, "GameJoined"),
             GameResponse::GameLeft => write!(f, "GameLeft"),
-            GameResponse::CannotBuild(building_ids) => {
-                write!(f, "CannotBuild({} buildings)", building_ids.len())
-            },
-            GameResponse::CannotPurchase(transport_id) => {
-                write!(f, "CannotPurchase({transport_id:?})")
+            GameResponse::Error(error) => {
+                write!(f, "Error({error:?})")
             },
         }
     }

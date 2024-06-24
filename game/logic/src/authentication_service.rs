@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use log::{info, warn};
 use shared_domain::client_command::AuthenticationCommand;
 use shared_domain::server_response::{
-    AddressEnvelope, AuthenticationResponse, Colour, PlayerInfo, ServerError, ServerResponse,
-    ServerResponseWithAddress,
+    AddressEnvelope, AuthenticationError, AuthenticationResponse, Colour, PlayerInfo, ServerError,
+    ServerResponse, ServerResponseWithAddress,
 };
 use shared_domain::{ClientId, PlayerId, PlayerName};
 use uuid::uuid;
@@ -97,7 +97,7 @@ impl AuthenticationService {
                     )])
                 } else {
                     Err(ServerResponse::Authentication(
-                        AuthenticationResponse::LoginFailed,
+                        AuthenticationResponse::Error(AuthenticationError::LoginFailed),
                     ))
                 }
             },

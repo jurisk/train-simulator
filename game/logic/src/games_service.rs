@@ -7,8 +7,8 @@ use shared_domain::client_command::{GameCommand, LobbyCommand};
 use shared_domain::game_state::{GameState, GameTime};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, GameResponse, LobbyResponse, PlayerInfo, ServerError, ServerResponse,
-    ServerResponseWithAddress,
+    AddressEnvelope, GameError, GameResponse, LobbyResponse, PlayerInfo, ServerError,
+    ServerResponse, ServerResponseWithAddress,
 };
 use shared_domain::{GameId, PlayerId};
 
@@ -86,14 +86,14 @@ impl GamesService {
         let game_id = game_service.game_id();
         let results = game_service
             .join_game(requesting_player_info)
-            .map_err(|err| ServerResponse::Game(game_id, err))?;
+            .map_err(|err| ServerResponse::Game(game_id, GameResponse::Error(err)))?;
         self.game_map.insert(game_id, game_service);
         Self::convert_game_response_to_server_response(game_id, Ok(results))
     }
 
     fn convert_game_response_to_server_response(
         game_id: GameId,
-        input: Result<Vec<GameResponseWithAddress>, GameResponse>,
+        input: Result<Vec<GameResponseWithAddress>, GameError>,
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         match input {
             Ok(game_responses) => {
@@ -107,7 +107,12 @@ impl GamesService {
                     })
                     .collect())
             },
-            Err(game_response) => Err(ServerResponse::Game(game_id, game_response)),
+            Err(game_response) => {
+                Err(ServerResponse::Game(
+                    game_id,
+                    GameResponse::Error(game_response),
+                ))
+            },
         }
     }
 

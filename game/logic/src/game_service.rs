@@ -2,7 +2,9 @@
 
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::{GameState, GameTime};
-use shared_domain::server_response::{AddressEnvelope, GameInfo, GameResponse, PlayerInfo};
+use shared_domain::server_response::{
+    AddressEnvelope, GameError, GameInfo, GameResponse, PlayerInfo,
+};
 use shared_domain::{BuildingInfo, GameId, PlayerId, TransportInfo};
 
 #[derive(Clone)]
@@ -40,7 +42,7 @@ impl GameService {
         &mut self,
         requesting_player_id: PlayerId,
         game_command: GameCommand,
-    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         match game_command {
             GameCommand::PurchaseTransport(transport_info) => {
                 self.process_purchase_transport(requesting_player_id, transport_info)
@@ -56,7 +58,7 @@ impl GameService {
     fn process_query_transports(
         &mut self,
         requesting_player_id: PlayerId,
-    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         Ok(vec![GameResponseWithAddress::new(
             AddressEnvelope::ToPlayer(requesting_player_id),
             GameResponse::TransportsAdded(self.state.transport_infos()),
@@ -66,7 +68,7 @@ impl GameService {
     fn process_query_buildings(
         &mut self,
         requesting_player_id: PlayerId,
-    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         Ok(vec![GameResponseWithAddress::new(
             AddressEnvelope::ToPlayer(requesting_player_id),
             GameResponse::BuildingsAdded(self.state.building_infos()),
@@ -77,7 +79,7 @@ impl GameService {
         &mut self,
         requesting_player_id: PlayerId,
         building_infos: Vec<BuildingInfo>,
-    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         match self
             .state
             .build_buildings(requesting_player_id, building_infos.clone())
@@ -89,7 +91,7 @@ impl GameService {
                 )])
             },
             Err(()) => {
-                Err(GameResponse::CannotBuild(
+                Err(GameError::CannotBuild(
                     building_infos
                         .into_iter()
                         .map(|building_info| building_info.building_id)
@@ -103,7 +105,7 @@ impl GameService {
         &mut self,
         requesting_player_id: PlayerId,
         transport_info: TransportInfo,
-    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         if requesting_player_id == transport_info.owner_id() {
             // TODO: Check if the track / road / etc. is free and owned by the purchaser
             // TODO: Subtract money
@@ -114,7 +116,7 @@ impl GameService {
                 GameResponse::TransportsAdded(vec![transport_info]),
             )])
         } else {
-            Err(GameResponse::CannotPurchase(transport_info.transport_id()))
+            Err(GameError::CannotPurchase(transport_info.transport_id()))
         }
     }
 
@@ -133,7 +135,7 @@ impl GameService {
     pub(crate) fn remove_player(
         &mut self,
         player_id: PlayerId,
-    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         self.state.remove_player(player_id);
         Ok(vec![GameResponseWithAddress::new(
             AddressEnvelope::ToAllPlayersInGame(self.game_id()),
@@ -144,7 +146,7 @@ impl GameService {
     pub(crate) fn join_game(
         &mut self,
         requesting_player_info: PlayerInfo,
-    ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         // Later: Don't allow joining multiple games
 
         let player_id = requesting_player_info.id;
