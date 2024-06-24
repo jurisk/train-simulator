@@ -2,12 +2,14 @@
 
 use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
+
 use crate::building_state::BuildingState;
 use crate::map_level::MapLevel;
 use crate::server_response::{GameInfo, PlayerInfo};
 use crate::{BuildingInfo, GameId, PlayerId, TransportInfo};
 
-#[derive(Debug, Copy, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, PartialEq)]
 pub struct GameTime(pub f32);
 
 impl GameTime {
@@ -17,7 +19,7 @@ impl GameTime {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct GameState {
     game_id:    GameId,
     map_level:  MapLevel,
@@ -106,13 +108,13 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn map_level(&self) -> MapLevel {
-        self.map_level.clone()
+    pub fn map_level(&self) -> &MapLevel {
+        &self.map_level
     }
 
     #[must_use]
-    pub fn players(&self) -> HashMap<PlayerId, PlayerInfo> {
-        self.players.clone()
+    pub fn players(&self) -> &HashMap<PlayerId, PlayerInfo> {
+        &self.players
     }
 
     pub fn insert_player(&mut self, player_info: PlayerInfo) {

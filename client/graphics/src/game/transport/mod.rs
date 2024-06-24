@@ -16,9 +16,8 @@ use shared_domain::{PlayerId, TransportInfo, TransportType};
 
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::buildings::BuildingStateResource;
-use crate::game::map_level::MapLevelResource;
 use crate::game::transport::train::{calculate_train_component_transforms, create_train};
-use crate::game::PlayersInfoResource;
+use crate::game::{GameStateResource, PlayersInfoResource};
 
 // TODO HIGH: Consider keeping this in `GameStateResource` sub-component, and only keep the `TransportId` as a component to associate the Bevy entity with a `TransportId`
 #[derive(Component)]
@@ -42,11 +41,13 @@ fn move_transports(
     time: Res<Time>,
     mut query: Query<(&mut TransportInfoComponent, &Children)>,
     mut child_query: Query<(&mut Transform, &TransportIndexComponent)>,
-    map_level: Option<Res<MapLevelResource>>,
+    game_state: Option<Res<GameStateResource>>,
     building_state_resource: Res<BuildingStateResource>,
 ) {
     let BuildingStateResource(building_state) = building_state_resource.as_ref();
-    if let Some(map_level) = map_level {
+    if let Some(game_state) = game_state {
+        let GameStateResource(game_state) = game_state.as_ref();
+        let map_level = game_state.map_level();
         for (mut transport_info_component, children) in &mut query {
             let TransportInfoComponent(ref mut transport_info) = transport_info_component.as_mut();
             // TODO HIGH:   Instead of advancing each transport individually on the client, we should use the same `GameState` `advance_time` and then
@@ -58,7 +59,7 @@ fn move_transports(
                     calculate_train_component_transforms(
                         components,
                         transport_info.location(),
-                        &map_level.map_level,
+                        map_level,
                     )
                 },
                 TransportType::RoadVehicle | TransportType::Ship => todo!(), /* TODO: Also handle others! */
@@ -106,12 +107,14 @@ fn handle_transport_created(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    map_level: Option<Res<MapLevelResource>>,
+    game_state: Option<Res<GameStateResource>>,
     players_info_resource: Res<PlayersInfoResource>,
 ) {
     let PlayersInfoResource(players_info) = players_info_resource.as_ref();
 
-    if let Some(map_level) = map_level {
+    if let Some(game_state) = game_state {
+        let GameStateResource(game_state) = game_state.as_ref();
+        let map_level = game_state.map_level();
         for message in server_messages.read() {
             if let ServerResponse::Game(_game_id, game_response) = &message.response {
                 if let GameResponse::TransportsExist(transport_infos) = game_response {
@@ -121,7 +124,7 @@ fn handle_transport_created(
                             &mut commands,
                             &mut meshes,
                             &mut materials,
-                            &map_level.map_level,
+                            map_level,
                             players_info,
                         );
 

@@ -6,7 +6,7 @@ use fastrand::Rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::map_level::MapLevel;
+use crate::game_state::GameState;
 use crate::{
     BuildingId, BuildingInfo, ClientId, GameId, PlayerId, PlayerName, TransportDynamicInfo,
     TransportId, TransportInfo,
@@ -65,7 +65,7 @@ pub struct PlayerInfo {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
     // TODO HIGH: Merge a lot of these into a single `GameStateProvided(GameState)` response
-    MapLevelProvided(MapLevel),
+    GameStateSnapshot(GameState),
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
     BuildingsBuilt(Vec<BuildingInfo>),
     TransportsExist(Vec<TransportInfo>),
@@ -80,8 +80,8 @@ pub enum GameResponse {
 impl Debug for GameResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GameResponse::MapLevelProvided(_map_level) => {
-                write!(f, "MapLevelProvided")
+            GameResponse::GameStateSnapshot(_map_level) => {
+                write!(f, "GameStateSnapshot")
             },
             GameResponse::PlayersUpdated(players) => {
                 write!(f, "PlayersUpdated({} players)", players.len())

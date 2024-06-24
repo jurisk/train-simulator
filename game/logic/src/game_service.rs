@@ -157,11 +157,11 @@ impl GameService {
             ),
             GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-                GameResponse::PlayersUpdated(self.state.players()),
+                GameResponse::PlayersUpdated(self.state.players().clone()),
             ),
             GameResponseWithAddress::new(
                 AddressEnvelope::ToPlayer(player_id),
-                GameResponse::MapLevelProvided(self.state.map_level()),
+                GameResponse::GameStateSnapshot(self.state.clone()),
             ),
         ])
     }

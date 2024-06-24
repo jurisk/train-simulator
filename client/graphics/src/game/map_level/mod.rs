@@ -1,60 +1,13 @@
-use bevy::prelude::{
-    App, Commands, EventReader, EventWriter, FixedUpdate, NextState, Plugin, ResMut, Resource,
-};
-use shared_domain::client_command::ClientCommand;
-use shared_domain::client_command::GameCommand::{QueryBuildings, QueryTransports};
-use shared_domain::map_level::MapLevel;
-use shared_domain::server_response::{GameResponse, ServerResponse};
+use bevy::prelude::{App, Plugin};
 
-use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::map_level::terrain::TerrainPlugin;
-use crate::game::GameIdResource;
-use crate::states::ClientState;
 
 pub mod terrain;
-
-// TODO HIGH: Replace with `GameStateResource` sub-component
-#[allow(clippy::module_name_repetitions)]
-#[derive(Resource, Debug)]
-pub struct MapLevelResource {
-    pub map_level: MapLevel,
-}
 
 pub(crate) struct MapLevelPlugin;
 
 impl Plugin for MapLevelPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TerrainPlugin);
-        app.add_systems(FixedUpdate, handle_map_level_provided);
-    }
-}
-
-// TODO: How does `terrain` differ from `map_level`? What about trees? Is it `MapLevel`? Is it `Buildings`?
-#[allow(clippy::collapsible_match)]
-fn handle_map_level_provided(
-    mut server_messages: EventReader<ServerMessageEvent>,
-    mut client_messages: EventWriter<ClientMessageEvent>,
-    mut client_state: ResMut<NextState<ClientState>>,
-    mut commands: Commands,
-) {
-    for message in server_messages.read() {
-        if let ServerResponse::Game(game_id, game_response) = &message.response {
-            if let GameResponse::MapLevelProvided(map_level) = game_response {
-                commands.insert_resource(MapLevelResource {
-                    map_level: map_level.clone(),
-                });
-                commands.insert_resource(GameIdResource(*game_id));
-                client_state.set(ClientState::Playing);
-
-                // We do it like this, because we need the `MapLevelResource` to be set before we can render buildings, so we don't want to receive them too early
-                client_messages.send(ClientMessageEvent {
-                    command: ClientCommand::Game(*game_id, QueryBuildings),
-                });
-
-                client_messages.send(ClientMessageEvent {
-                    command: ClientCommand::Game(*game_id, QueryTransports),
-                });
-            }
-        }
     }
 }

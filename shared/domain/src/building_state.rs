@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{BuildingInfo, BuildingType, PlayerId, TileCoordsXZ, TrackType};
 
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct BuildingState {
     buildings: Vec<BuildingInfo>,
 }

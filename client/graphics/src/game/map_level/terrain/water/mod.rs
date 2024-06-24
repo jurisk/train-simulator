@@ -14,12 +14,12 @@ pub(crate) struct WaterPlugin;
 
 impl Plugin for WaterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, handle_game_map_level_provided);
+        app.add_systems(FixedUpdate, handle_game_state_snapshot);
     }
 }
 
 #[allow(clippy::collapsible_match)]
-fn handle_game_map_level_provided(
+fn handle_game_state_snapshot(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -27,8 +27,13 @@ fn handle_game_map_level_provided(
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
-            if let GameResponse::MapLevelProvided(map_level) = game_response {
-                create_water(&mut commands, &mut meshes, &mut materials, map_level);
+            if let GameResponse::GameStateSnapshot(game_state) = game_response {
+                create_water(
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                    game_state.map_level(),
+                );
             }
         }
     }

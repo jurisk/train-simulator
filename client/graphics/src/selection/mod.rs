@@ -11,7 +11,7 @@ use shared_domain::TileCoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::{Tile, Tiles};
-use crate::game::map_level::MapLevelResource;
+use crate::game::GameStateResource;
 
 #[derive(Resource, Default)]
 pub struct HoveredTile(pub Option<TileCoordsXZ>);
@@ -81,7 +81,7 @@ fn debug_draw_tile(
 fn update_selection<T: TypePath + Send + Sync>(
     sources: Query<&RaycastSource<T>>,
     mut gizmos: Gizmos,
-    map_level: Option<Res<MapLevelResource>>,
+    game_state: Option<Res<GameStateResource>>,
     tiles: Option<Res<Tiles>>,
     mut selected_tiles: ResMut<SelectedTiles>,
     mut hovered_tile: ResMut<HoveredTile>,
@@ -101,7 +101,7 @@ fn update_selection<T: TypePath + Send + Sync>(
         gizmos.ray(intersection.position(), intersection.normal(), color);
 
         if is_first {
-            if let Some(_map_level) = &map_level {
+            if let Some(_game_state) = &game_state {
                 if let Some(tiles) = &tiles {
                     let tiles = &tiles.tiles;
                     let intersection = intersection.position();

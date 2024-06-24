@@ -21,8 +21,7 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::tracks::{build_track_when_mouse_released, create_track};
-use crate::game::map_level::MapLevelResource;
-use crate::game::{PlayerIdResource, PlayersInfoResource};
+use crate::game::{GameStateResource, PlayerIdResource, PlayersInfoResource};
 use crate::states::ClientState;
 
 pub(crate) struct BuildingsPlugin;
@@ -195,14 +194,16 @@ fn handle_building_built(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    map_level: Option<Res<MapLevelResource>>,
+    game_state: Option<Res<GameStateResource>>,
     players_info_resource: Res<PlayersInfoResource>,
     mut building_state_resource: ResMut<BuildingStateResource>,
 ) {
     let PlayersInfoResource(players_info) = players_info_resource.as_ref();
     let BuildingStateResource(ref mut building_state) = building_state_resource.as_mut();
 
-    if let Some(map_level) = map_level {
+    if let Some(game_state) = game_state {
+        let GameStateResource(game_state) = game_state.as_ref();
+        let map_level = game_state.map_level();
         for message in server_messages.read() {
             if let ServerResponse::Game(_game_id, game_response) = &message.response {
                 if let GameResponse::BuildingsBuilt(building_infos) = game_response {
@@ -214,7 +215,7 @@ fn handle_building_built(
                             &mut commands,
                             &mut meshes,
                             &mut materials,
-                            &map_level.map_level,
+                            map_level,
                             players_info,
                         );
                     }
