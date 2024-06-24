@@ -255,7 +255,7 @@ impl BuildingId {
     }
 }
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct TransportId(pub Uuid);
 
 impl Debug for TransportId {
@@ -579,7 +579,7 @@ impl TransportLocation {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct TransportVelocity {
     pub tiles_per_second: f32,
 }
@@ -592,39 +592,115 @@ pub enum MovementOrders {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub struct TransportInfo {
-    pub transport_id:    TransportId,
-    pub owner_id:        PlayerId,
+pub struct TransportStaticInfo {
+    pub transport_id:   TransportId,
+    pub owner_id:       PlayerId,
+    pub transport_type: TransportType,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct TransportDynamicInfo {
     pub location:        TransportLocation,
-    pub transport_type:  TransportType,
     pub velocity:        TransportVelocity,
     pub movement_orders: MovementOrders,
 }
 
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct TransportInfo {
+    static_info:  TransportStaticInfo,
+    dynamic_info: TransportDynamicInfo,
+}
+
 impl TransportInfo {
+    #[must_use]
+    pub fn new(
+        transport_id: TransportId,
+        owner_id: PlayerId,
+        transport_type: TransportType,
+        location: TransportLocation,
+        velocity: TransportVelocity,
+        movement_orders: MovementOrders,
+    ) -> Self {
+        Self {
+            static_info:  TransportStaticInfo {
+                transport_id,
+                owner_id,
+                transport_type,
+            },
+            dynamic_info: TransportDynamicInfo {
+                location,
+                velocity,
+                movement_orders,
+            },
+        }
+    }
+
+    #[must_use]
+    pub fn id(&self) -> TransportId {
+        self.static_info.transport_id
+    }
+
+    #[must_use]
+    pub fn dynamic_info(&self) -> TransportDynamicInfo {
+        self.dynamic_info.clone()
+    }
+
+    #[must_use]
+    pub fn owner_id(&self) -> PlayerId {
+        self.static_info.owner_id
+    }
+
+    #[must_use]
+    pub fn transport_id(&self) -> TransportId {
+        self.static_info.transport_id
+    }
+
+    #[must_use]
+    pub fn location(&self) -> &TransportLocation {
+        &self.dynamic_info.location
+    }
+
+    #[must_use]
+    fn velocity(&self) -> TransportVelocity {
+        self.dynamic_info.velocity
+    }
+
+    #[must_use]
+    pub fn transport_type(&self) -> &TransportType {
+        &self.static_info.transport_type
+    }
+
+    #[must_use]
+    fn movement_orders(&self) -> &MovementOrders {
+        &self.dynamic_info.movement_orders
+    }
+
     #[allow(
         clippy::cast_possible_truncation,
         clippy::cast_sign_loss,
         clippy::items_after_statements
     )]
     fn jump_tile(&mut self, building_state: &BuildingState) {
-        let current_tile_track = self.location.tile_path[0];
-        let next_tile_coords = current_tile_track.tile_coords_xz + self.location.pointing_in;
+        let transport_type = self.transport_type().clone();
+        let movement_orders = self.movement_orders().clone();
+        let location = &mut self.dynamic_info.location;
+        let current_tile_track = location.tile_path[0];
+        let next_tile_coords = current_tile_track.tile_coords_xz + location.pointing_in;
         let tracks_at_next_tile: Vec<TrackType> = building_state.track_types_at(next_tile_coords);
-        let reversed = self.location.pointing_in.reverse();
+        let reversed = location.pointing_in.reverse();
         let valid_tracks_at_next_tile: Vec<TrackType> = tracks_at_next_tile
             .into_iter()
             .filter(|track_type| track_type.connections().contains(&reversed))
             .collect();
         // TODO: Support other strategies
-        assert_eq!(self.movement_orders, MovementOrders::TemporaryPickFirst);
+        assert_eq!(movement_orders, MovementOrders::TemporaryPickFirst);
         let next_track_type = valid_tracks_at_next_tile[0];
         let next_tile_track = TileTrack {
             tile_coords_xz: next_tile_coords,
             track_type:     next_track_type,
         };
 
-        self.location.tile_path.insert(0, next_tile_track);
+        location.tile_path.insert(0, next_tile_track);
 
         // Later: We are rather crudely sometimes removing the last element when we are inserting an
         // element.
@@ -634,32 +710,30 @@ impl TransportInfo {
         // to calculate the tail position, and then remove the last tiles if they are not needed,
         // but that introduces more complexity.
         const HEURISTIC_COEF: f32 = 2.0;
-        if self.location.tile_path.len()
-            > (HEURISTIC_COEF * self.transport_type.length_in_tiles()) as usize
-        {
-            let _ = self.location.tile_path.pop();
+        if location.tile_path.len() > (HEURISTIC_COEF * transport_type.length_in_tiles()) as usize {
+            let _ = location.tile_path.pop();
         }
 
-        self.location.progress_within_tile.0 -= 1.0;
-        self.location.pointing_in = next_track_type.other_end(reversed);
+        location.progress_within_tile.0 -= 1.0;
+        location.pointing_in = next_track_type.other_end(reversed);
     }
 
     fn normalise_progress_jumping_tiles(&mut self, building_state: &BuildingState) {
-        while self.location.progress_within_tile.out_of_bounds() {
+        while self.location().progress_within_tile.out_of_bounds() {
             self.jump_tile(building_state);
         }
     }
 
-    // TODO: Also invoke on the server-side, authoritative!
     pub fn advance(&mut self, seconds: f32, building_state: &BuildingState) {
-        let track_type = self.location.tile_path[0].track_type;
+        let TransportVelocity { tiles_per_second } = self.velocity();
+        let track_type = self.location().tile_path[0].track_type;
+        let location = &mut self.dynamic_info.location;
         let track_length = track_type.length_in_tiles();
-        let TransportVelocity { tiles_per_second } = self.velocity;
-        let ProgressWithinTile(progress_within_tile) = self.location.progress_within_tile;
+        let ProgressWithinTile(progress_within_tile) = location.progress_within_tile;
         let effective_speed = tiles_per_second / track_length;
         let new_progress = progress_within_tile + effective_speed * seconds;
         let new_progress = ProgressWithinTile(new_progress);
-        self.location.progress_within_tile = new_progress;
+        location.progress_within_tile = new_progress;
         self.normalise_progress_jumping_tiles(building_state);
     }
 }

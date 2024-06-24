@@ -121,10 +121,19 @@ fn build_sample_objects_for_testing(
                     // TODO: This will be overlapping with other players' purchased transport, but this may be good for testing anyway. Improve the server so that it rejects such overlaps.
                     client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                         *game_id,
-                        GameCommand::PurchaseTransport(TransportInfo {
-                            transport_id:    TransportId::random(),
-                            owner_id:        player_id,
-                            location:        TransportLocation {
+                        GameCommand::PurchaseTransport(TransportInfo::new(
+                            TransportId::random(),
+                            player_id,
+                            TransportType::Train(vec![
+                                TrainComponentType::Engine,
+                                TrainComponentType::Car,
+                                TrainComponentType::Car,
+                                TrainComponentType::Car,
+                                TrainComponentType::Car,
+                                TrainComponentType::Car,
+                                TrainComponentType::Engine,
+                            ]),
+                            TransportLocation {
                                 pointing_in:          DirectionXZ::East,
                                 tile_path:            vec![
                                     TileTrack {
@@ -162,20 +171,11 @@ fn build_sample_objects_for_testing(
                                 ],
                                 progress_within_tile: ProgressWithinTile::just_entering(),
                             },
-                            transport_type:  TransportType::Train(vec![
-                                TrainComponentType::Engine,
-                                TrainComponentType::Car,
-                                TrainComponentType::Car,
-                                TrainComponentType::Car,
-                                TrainComponentType::Car,
-                                TrainComponentType::Car,
-                                TrainComponentType::Engine,
-                            ]),
-                            velocity:        TransportVelocity {
+                            TransportVelocity {
                                 tiles_per_second: 2.0,
                             },
-                            movement_orders: MovementOrders::TemporaryPickFirst,
-                        }),
+                            MovementOrders::TemporaryPickFirst,
+                        )),
                     )));
 
                     client_messages.send(ClientMessageEvent::new(ClientCommand::Game(

@@ -8,7 +8,8 @@ use uuid::Uuid;
 
 use crate::map_level::MapLevel;
 use crate::{
-    BuildingId, BuildingInfo, ClientId, GameId, PlayerId, PlayerName, TransportId, TransportInfo,
+    BuildingId, BuildingInfo, ClientId, GameId, PlayerId, PlayerName, TransportDynamicInfo,
+    TransportId, TransportInfo,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -67,6 +68,7 @@ pub enum GameResponse {
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
     BuildingsBuilt(Vec<BuildingInfo>),
     TransportsExist(Vec<TransportInfo>),
+    TransportsSync(HashMap<TransportId, TransportDynamicInfo>),
     GameJoined,
     GameLeft,
 
@@ -88,6 +90,9 @@ impl Debug for GameResponse {
             },
             GameResponse::TransportsExist(transports) => {
                 write!(f, "TransportsExist({} transports)", transports.len())
+            },
+            GameResponse::TransportsSync(transports) => {
+                write!(f, "TransportsSync({} transports)", transports.len())
             },
             GameResponse::GameJoined => write!(f, "GameJoined"),
             GameResponse::GameLeft => write!(f, "GameLeft"),

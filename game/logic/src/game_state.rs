@@ -18,6 +18,7 @@ impl GameTime {
     }
 }
 
+// TODO: Split into two - one is just a holder of data, and also present on the client-side, and the other includes the update logic, with validation / response generation / etc.
 #[derive(Debug, Clone)]
 pub(crate) struct GameState {
     pub game_id: GameId,
@@ -26,9 +27,13 @@ pub(crate) struct GameState {
     transports:  Vec<TransportInfo>,
     players:     HashMap<PlayerId, PlayerInfo>,
     time:        GameTime,
+    time_steps:  u64,
 }
 
 impl GameState {
+    // Syncs the things that have advanced
+    const SYNC_EVERY_N_TIMESTEPS: u64 = 100;
+
     pub(crate) fn new(
         map_level: MapLevel,
         buildings: Vec<BuildingInfo>,
@@ -43,6 +48,7 @@ impl GameState {
             transports,
             players,
             time: GameTime::new(),
+            time_steps: 0,
         }
     }
 
@@ -55,6 +61,7 @@ impl GameState {
             transports: prototype.transports.clone(),
             players: prototype.players.clone(),
             time: prototype.time,
+            time_steps: prototype.time_steps,
         }
     }
 
@@ -65,6 +72,23 @@ impl GameState {
             transport.advance(diff, &self.buildings);
         }
         self.time = time;
+        self.time_steps += 1;
+    }
+
+    pub(crate) fn sync(&self) -> Vec<GameResponseWithAddress> {
+        if self.time_steps % Self::SYNC_EVERY_N_TIMESTEPS == 0 {
+            vec![GameResponseWithAddress::new(
+                AddressEnvelope::ToAllPlayersInGame(self.game_id),
+                GameResponse::TransportsSync(
+                    self.transports
+                        .iter()
+                        .map(|transport| (transport.id(), transport.dynamic_info()))
+                        .collect(),
+                ),
+            )]
+        } else {
+            vec![]
+        }
     }
 
     pub(crate) fn join_game(
@@ -174,7 +198,7 @@ impl GameState {
         requesting_player_id: PlayerId,
         transport_info: TransportInfo,
     ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
-        if requesting_player_id == transport_info.owner_id {
+        if requesting_player_id == transport_info.owner_id() {
             // TODO: Check if the track / road / etc. is free and owned by the purchaser
             // TODO: Subtract money
 
@@ -184,7 +208,7 @@ impl GameState {
                 GameResponse::TransportsExist(vec![transport_info]),
             )])
         } else {
-            Err(GameResponse::CannotPurchase(transport_info.transport_id))
+            Err(GameResponse::CannotPurchase(transport_info.transport_id()))
         }
     }
 

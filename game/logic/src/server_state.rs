@@ -36,6 +36,15 @@ impl ServerState {
         self.games.advance_times(time);
     }
 
+    #[must_use]
+    pub fn sync(&self) -> Vec<ServerResponseWithClientIds> {
+        self.games
+            .sync()
+            .into_iter()
+            .map(|response| self.translate_response(response))
+            .collect()
+    }
+
     #[allow(clippy::single_match_else)]
     fn translate_response(
         &self,

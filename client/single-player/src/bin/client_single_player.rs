@@ -58,10 +58,13 @@ fn process_messages_locally(
         let client_command_with_client_id =
             ClientCommandWithClientId::new(client_id, message.command.clone());
 
-        info!("Processing message: {:?}", client_command_with_client_id);
+        info!(
+            "Simulating server: processing message: {:?}",
+            client_command_with_client_id
+        );
         let responses = server_state.process(client_command_with_client_id);
         for response in responses {
-            info!("Got response: {:?}", response);
+            info!("Simulating server: Got response: {:?}", response);
             if response.client_ids.contains(&client_id) {
                 server_messages.send(ServerMessageEvent::new(response.response));
             }
@@ -69,4 +72,11 @@ fn process_messages_locally(
     }
 
     server_state.advance_times(GameTime(time.elapsed_seconds()));
+    let sync_responses = server_state.sync();
+    for response in sync_responses {
+        info!("Simulating server: Got sync response: {:?}", response);
+        if response.client_ids.contains(&client_id) {
+            server_messages.send(ServerMessageEvent::new(response.response));
+        }
+    }
 }

@@ -17,6 +17,7 @@ use game_logic::game_state::GameTime;
 use game_logic::server_state::ServerState;
 use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
+use shared_domain::server_response::ServerResponseWithClientIds;
 use shared_domain::ClientId;
 
 pub type GameServerEvent = ServerEventFrom<GameChannel>;
@@ -124,21 +125,28 @@ fn process_client_command_with_client_id_events(
         let responses = server_state.process(client_command_with_client_id.clone());
 
         for response in responses {
-            for client_id in &*response.client_ids {
-                match bincode::serialize(&response.response) {
-                    Ok(encoded) => {
-                        info!("Sending {response:?} to {client_id:?}...");
-                        server.send(client_id.as_u128(), EncodedServerMsg(encoded));
-                    },
-                    Err(error) => {
-                        error!("Failed to deserialize {:?}: {error}", response.response);
-                    },
-                }
-            }
+            send_responses_to_clients(server.as_ref(), &response);
         }
     }
 
     server_state.advance_times(GameTime(time.elapsed_seconds()));
+    for response in server_state.sync() {
+        send_responses_to_clients(server.as_ref(), &response);
+    }
+}
+
+fn send_responses_to_clients(server: &Server<GameChannel>, response: &ServerResponseWithClientIds) {
+    for client_id in &*response.client_ids {
+        match bincode::serialize(&response.response) {
+            Ok(encoded) => {
+                info!("Sending {response:?} to {client_id:?}...");
+                server.send(client_id.as_u128(), EncodedServerMsg(encoded));
+            },
+            Err(error) => {
+                error!("Failed to deserialize {:?}: {error}", response.response);
+            },
+        }
+    }
 }
 
 fn server_factory() -> ServerFactory<GameChannel> {

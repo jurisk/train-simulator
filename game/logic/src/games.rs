@@ -43,6 +43,24 @@ impl Games {
         }
     }
 
+    pub(crate) fn sync(&self) -> Vec<ServerResponseWithAddress> {
+        self.game_map
+            .iter()
+            .flat_map(|(game_id, game_state)| {
+                let results = game_state.sync();
+                results
+                    .into_iter()
+                    .map(|game_response| {
+                        ServerResponseWithAddress::new(
+                            game_response.address,
+                            ServerResponse::Game(*game_id, game_response.response),
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect()
+    }
+
     fn create_game_infos(
         &self,
         requesting_player_id: PlayerId,

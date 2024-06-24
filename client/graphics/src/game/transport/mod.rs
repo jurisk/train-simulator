@@ -47,13 +47,15 @@ fn move_transports(
     if let Some(map_level) = map_level {
         for (mut transport_info_component, children) in &mut query {
             let TransportInfoComponent(ref mut transport_info) = transport_info_component.as_mut();
+            // TODO:    Instead of advancing each transport individually on the client, we should use the same `GameState` `advance_time` and then
+            //          here just update the transforms of the transports.
             transport_info.advance(time.delta_seconds(), building_state);
 
-            let transforms = match &transport_info.transport_type {
+            let transforms = match &transport_info.transport_type() {
                 TransportType::Train(components) => {
                     calculate_train_component_transforms(
                         components,
-                        &transport_info.location,
+                        transport_info.location(),
                         &map_level.map_level,
                     )
                 },
@@ -73,6 +75,8 @@ fn move_transports(
         }
     }
 }
+
+// TODO: Handle Transport Sync
 
 #[allow(clippy::collapsible_match, clippy::needless_pass_by_value)]
 fn handle_transport_created(
@@ -122,18 +126,18 @@ fn create_transport(
     map_level: &MapLevel,
     players_info: &HashMap<PlayerId, PlayerInfo>,
 ) -> Option<Entity> {
-    match players_info.get(&transport_info.owner_id) {
+    match players_info.get(&transport_info.owner_id()) {
         None => {
-            error!("Player with ID {:?} not found", transport_info.owner_id);
+            error!("Player with ID {:?} not found", transport_info.owner_id());
             None
         },
         Some(player_info) => {
-            match &transport_info.transport_type {
+            match &transport_info.transport_type() {
                 TransportType::Train(train_components) => {
                     Some(create_train(
-                        transport_info.transport_id,
+                        transport_info.transport_id(),
                         player_info,
-                        &transport_info.location,
+                        transport_info.location(),
                         train_components,
                         commands,
                         meshes,
