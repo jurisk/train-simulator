@@ -1,7 +1,5 @@
 #![allow(clippy::module_name_repetitions)]
 
-use std::collections::HashMap;
-
 use bevy::prelude::{
     in_state, info, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, NextState,
     OnEnter, Plugin, Res, ResMut, Resource,
@@ -11,9 +9,7 @@ use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
 };
 use shared_domain::game_state::GameState;
-use shared_domain::server_response::{
-    AuthenticationResponse, GameResponse, PlayerInfo, ServerResponse,
-};
+use shared_domain::server_response::{AuthenticationResponse, GameResponse, ServerResponse};
 use shared_domain::{GameId, PlayerId};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
@@ -48,25 +44,20 @@ impl Plugin for GamePlugin {
         app.add_plugins(TransportPlugin);
         app.add_plugins(MapLevelPlugin);
         app.add_systems(OnEnter(ClientState::LoggingIn), initiate_login);
-        app.add_systems(FixedUpdate, handle_players_updated);
+        app.add_systems(
+            FixedUpdate,
+            handle_players_updated.run_if(in_state(ClientState::Playing)),
+        );
         app.add_systems(
             FixedUpdate,
             handle_login_successful.run_if(in_state(ClientState::LoggingIn)),
         );
-        app.insert_resource(PlayersInfoResource(HashMap::default()));
         app.add_systems(FixedUpdate, handle_game_state_snapshot);
     }
 }
 
 #[derive(Resource)]
 pub struct PlayerIdResource(pub PlayerId);
-
-// TODO HIGH: Replace with `GameStateResource` sub-component
-#[derive(Resource)]
-pub struct PlayersInfoResource(pub HashMap<PlayerId, PlayerInfo>);
-
-#[derive(Resource)]
-pub struct GameIdResource(pub GameId);
 
 #[allow(clippy::needless_pass_by_value)]
 fn initiate_login(
@@ -102,14 +93,14 @@ fn handle_login_successful(
 
 fn handle_players_updated(
     mut server_messages: EventReader<ServerMessageEvent>,
-    mut players_info: ResMut<PlayersInfoResource>,
+    mut game_state_resource: ResMut<GameStateResource>,
 ) {
+    let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, GameResponse::PlayersUpdated(new_player_infos)) =
             &message.response
         {
-            let PlayersInfoResource(player_infos) = players_info.as_mut();
-            player_infos.clone_from(new_player_infos);
+            game_state.update_player_infos(new_player_infos);
         }
     }
 }
@@ -126,7 +117,6 @@ fn handle_game_state_snapshot(
         if let ServerResponse::Game(game_id, game_response) = &message.response {
             if let GameResponse::GameStateSnapshot(game_state) = game_response {
                 commands.insert_resource(GameStateResource(game_state.clone()));
-                commands.insert_resource(GameIdResource(*game_id));
                 client_state.set(ClientState::Playing);
 
                 // We do it like this, because we need the `MapLevelResource` to be set before we can render buildings, so we don't want to receive them too early

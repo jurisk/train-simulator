@@ -16,7 +16,7 @@ use shared_domain::{PlayerId, TransportInfo, TransportType};
 
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::transport::train::{calculate_train_component_transforms, create_train};
-use crate::game::{GameStateResource, PlayersInfoResource};
+use crate::game::GameStateResource;
 
 // TODO HIGH: Consider keeping this in `GameStateResource` sub-component, and only keep the `TransportId` as a component to associate the Bevy entity with a `TransportId`
 #[derive(Component)]
@@ -105,10 +105,7 @@ fn handle_transport_created(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     game_state: Option<Res<GameStateResource>>,
-    players_info_resource: Res<PlayersInfoResource>,
 ) {
-    let PlayersInfoResource(players_info) = players_info_resource.as_ref();
-
     if let Some(game_state) = game_state {
         let GameStateResource(game_state) = game_state.as_ref();
         let map_level = game_state.map_level();
@@ -122,7 +119,7 @@ fn handle_transport_created(
                             &mut meshes,
                             &mut materials,
                             map_level,
-                            players_info,
+                            game_state.players(),
                         );
 
                         if let Some(entity) = entity {

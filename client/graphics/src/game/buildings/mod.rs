@@ -20,7 +20,7 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::tracks::{build_track_when_mouse_released, create_track};
-use crate::game::{GameStateResource, PlayerIdResource, PlayersInfoResource};
+use crate::game::{GameStateResource, PlayerIdResource};
 use crate::states::ClientState;
 
 pub(crate) struct BuildingsPlugin;
@@ -188,10 +188,8 @@ fn handle_building_built(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    players_info_resource: Res<PlayersInfoResource>,
     mut game_state_resource: ResMut<GameStateResource>,
 ) {
-    let PlayersInfoResource(players_info) = players_info_resource.as_ref();
     let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
 
     let map_level = game_state.map_level().clone();
@@ -207,7 +205,7 @@ fn handle_building_built(
                         &mut meshes,
                         &mut materials,
                         &map_level,
-                        players_info,
+                        game_state.players(),
                     );
                 }
             }

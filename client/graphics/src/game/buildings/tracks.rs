@@ -15,7 +15,7 @@ use shared_domain::{
 use shared_util::random::choose_unsafe;
 
 use crate::communication::domain::ClientMessageEvent;
-use crate::game::{GameIdResource, PlayerIdResource};
+use crate::game::{GameStateResource, PlayerIdResource};
 use crate::selection::SelectedTiles;
 
 const RAIL_DIAMETER: f32 = 0.025;
@@ -111,11 +111,13 @@ pub(crate) fn build_track_when_mouse_released(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut client_messages: EventWriter<ClientMessageEvent>,
     player_id_resource: Res<PlayerIdResource>,
-    game_id_resource: Res<GameIdResource>,
+    game_state_resource: Res<GameStateResource>,
 ) {
+    let GameStateResource(game_state) = game_state_resource.as_ref();
+    let game_id = game_state.game_id();
+
     if mouse_buttons.just_released(MouseButton::Left) {
         let PlayerIdResource(player_id) = *player_id_resource;
-        let GameIdResource(game_id) = *game_id_resource;
         let selected_tiles = selected_tiles.as_mut();
         let SelectedTiles {
             ordered: ordered_selected_tiles,

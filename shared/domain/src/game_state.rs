@@ -19,6 +19,8 @@ impl GameTime {
     }
 }
 
+// Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
+//          So the API gets quite busy because of this. There may be better ways.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct GameState {
     game_id:    GameId,
@@ -117,6 +119,10 @@ impl GameState {
         &self.players
     }
 
+    pub fn update_player_infos(&mut self, new_player_infos: &HashMap<PlayerId, PlayerInfo>) {
+        self.players.clone_from(new_player_infos);
+    }
+
     pub fn insert_player(&mut self, player_info: PlayerInfo) {
         self.players.insert(player_info.id, player_info);
     }
@@ -141,6 +147,7 @@ impl GameState {
         self.buildings.build(requesting_player_id, buildings)
     }
 
+    #[must_use]
     pub fn building_state(&self) -> &BuildingState {
         &self.buildings
     }
