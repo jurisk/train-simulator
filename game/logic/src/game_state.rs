@@ -18,7 +18,7 @@ impl GameTime {
     }
 }
 
-// TODO: Split into two - one is just a holder of data, and also present on the client-side, and the other includes the update logic, with validation / response generation / etc.
+// TODO HIGH: Split into two - one is just a holder of data, and also present on the client-side, and the other includes the update logic, with validation / response generation / etc.
 #[derive(Debug, Clone)]
 pub(crate) struct GameState {
     pub game_id: GameId,

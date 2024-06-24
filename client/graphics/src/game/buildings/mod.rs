@@ -27,6 +27,7 @@ use crate::states::ClientState;
 
 pub(crate) struct BuildingsPlugin;
 
+// TODO HIGH: Replace with `GameStateResource` sub-component
 #[derive(Resource)]
 pub struct BuildingStateResource(pub BuildingState);
 

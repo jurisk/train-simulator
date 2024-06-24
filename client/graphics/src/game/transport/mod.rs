@@ -20,6 +20,7 @@ use crate::game::map_level::MapLevelResource;
 use crate::game::transport::train::{calculate_train_component_transforms, create_train};
 use crate::game::PlayersInfoResource;
 
+// TODO HIGH: Consider keeping this in `GameStateResource` sub-component, and only keep the `TransportId` as a component to associate the Bevy entity with a `TransportId`
 #[derive(Component)]
 pub struct TransportInfoComponent(pub TransportInfo);
 
@@ -31,6 +32,7 @@ pub struct TransportPlugin;
 impl Plugin for TransportPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(FixedUpdate, handle_transport_created);
+        app.add_systems(FixedUpdate, handle_transports_sync);
         app.add_systems(Update, move_transports);
     }
 }
@@ -47,8 +49,8 @@ fn move_transports(
     if let Some(map_level) = map_level {
         for (mut transport_info_component, children) in &mut query {
             let TransportInfoComponent(ref mut transport_info) = transport_info_component.as_mut();
-            // TODO:    Instead of advancing each transport individually on the client, we should use the same `GameState` `advance_time` and then
-            //          here just update the transforms of the transports.
+            // TODO HIGH:   Instead of advancing each transport individually on the client, we should use the same `GameState` `advance_time` and then
+            //              here just update the transforms of the transports.
             transport_info.advance(time.delta_seconds(), building_state);
 
             let transforms = match &transport_info.transport_type() {
@@ -76,7 +78,27 @@ fn move_transports(
     }
 }
 
-// TODO: Handle Transport Sync
+#[allow(clippy::collapsible_match)]
+fn handle_transports_sync(
+    mut server_messages: EventReader<ServerMessageEvent>,
+    mut query: Query<&mut TransportInfoComponent>,
+) {
+    for message in server_messages.read() {
+        if let ServerResponse::Game(_game_id, game_response) = &message.response {
+            if let GameResponse::TransportsSync(transports_sync) = game_response {
+                for (transport_id, transport_dynamic_info) in transports_sync {
+                    for mut transport_info_component in &mut query {
+                        let TransportInfoComponent(transport_info) =
+                            transport_info_component.as_mut();
+                        if transport_info.transport_id() == *transport_id {
+                            transport_info.update_dynamic_info(transport_dynamic_info);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 #[allow(clippy::collapsible_match, clippy::needless_pass_by_value)]
 fn handle_transport_created(

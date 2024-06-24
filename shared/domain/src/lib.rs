@@ -635,6 +635,10 @@ impl TransportInfo {
         }
     }
 
+    pub fn update_dynamic_info(&mut self, dynamic_info: &TransportDynamicInfo) {
+        self.dynamic_info = dynamic_info.clone();
+    }
+
     #[must_use]
     pub fn id(&self) -> TransportId {
         self.static_info.transport_id

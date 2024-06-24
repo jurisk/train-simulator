@@ -55,6 +55,7 @@ impl Plugin for GamePlugin {
 #[derive(Resource)]
 pub struct PlayerIdResource(pub PlayerId);
 
+// TODO HIGH: Replace with `GameStateResource` sub-component
 #[derive(Resource)]
 pub struct PlayersInfoResource(pub HashMap<PlayerId, PlayerInfo>);
 

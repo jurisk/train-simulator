@@ -13,6 +13,7 @@ use crate::states::ClientState;
 
 pub mod terrain;
 
+// TODO HIGH: Replace with `GameStateResource` sub-component
 #[allow(clippy::module_name_repetitions)]
 #[derive(Resource, Debug)]
 pub struct MapLevelResource {
