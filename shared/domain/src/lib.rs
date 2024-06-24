@@ -19,6 +19,7 @@ use crate::terrain::Terrain;
 
 pub mod building_state;
 pub mod client_command;
+pub mod game_state;
 pub mod map_level;
 pub mod server_response;
 pub mod terrain;

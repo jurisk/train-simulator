@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 use log::warn;
 use shared_domain::client_command::{GameCommand, LobbyCommand};
+use shared_domain::game_state::{GameState, GameTime};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
     AddressEnvelope, GameResponse, LobbyResponse, PlayerInfo, ServerError, ServerResponse,
@@ -13,7 +14,6 @@ use shared_domain::{GameId, PlayerId};
 
 use crate::authentication_service::AuthenticationService;
 use crate::game_service::{GameResponseWithAddress, GameService};
-use crate::game_state::{GameState, GameTime};
 
 // This is also, in a way, `Lobby`. Should we rename it? Split into two somehow? Not sure yet...
 pub(crate) struct GamesService {

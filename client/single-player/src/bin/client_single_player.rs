@@ -8,9 +8,9 @@ use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEv
 use client_graphics::game::GameLaunchParams;
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
-use game_logic::game_state::GameTime;
 use game_logic::server_state::ServerState;
 use shared_domain::client_command::{AccessToken, ClientCommandWithClientId};
+use shared_domain::game_state::GameTime;
 use shared_domain::{ClientId, PlayerId};
 
 #[allow(clippy::expect_used)]

@@ -7,6 +7,7 @@
 use std::convert::identity;
 
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId, NetworkCommand};
+use shared_domain::game_state::GameTime;
 use shared_domain::server_response::{
     AddressEnvelope, NetworkResponse, ServerResponse, ServerResponseWithAddress,
     ServerResponseWithClientIds,
@@ -14,7 +15,6 @@ use shared_domain::server_response::{
 use shared_domain::ClientId;
 
 use crate::authentication_service::AuthenticationService;
-use crate::game_state::GameTime;
 use crate::games_service::GamesService;
 
 pub struct ServerState {

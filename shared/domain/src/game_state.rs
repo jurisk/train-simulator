@@ -1,9 +1,11 @@
+#![allow(clippy::missing_errors_doc, clippy::result_unit_err)]
+
 use std::collections::HashMap;
 
-use shared_domain::building_state::BuildingState;
-use shared_domain::map_level::MapLevel;
-use shared_domain::server_response::{GameInfo, PlayerInfo};
-use shared_domain::{BuildingInfo, GameId, PlayerId, TransportInfo};
+use crate::building_state::BuildingState;
+use crate::map_level::MapLevel;
+use crate::server_response::{GameInfo, PlayerInfo};
+use crate::{BuildingInfo, GameId, PlayerId, TransportInfo};
 
 #[derive(Debug, Copy, Clone, Default)]
 pub struct GameTime(pub f32);
@@ -15,7 +17,6 @@ impl GameTime {
     }
 }
 
-// TODO HIGH: Move to domain
 #[derive(Debug, Clone)]
 pub struct GameState {
     game_id:    GameId,
@@ -28,7 +29,8 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub(crate) fn new(
+    #[must_use]
+    pub fn new(
         map_level: MapLevel,
         buildings: Vec<BuildingInfo>,
         transports: Vec<TransportInfo>,
@@ -46,7 +48,8 @@ impl GameState {
         }
     }
 
-    pub(crate) fn from_prototype(prototype: &GameState) -> Self {
+    #[must_use]
+    pub fn from_prototype(prototype: &GameState) -> Self {
         let game_id = GameId::random();
         Self {
             game_id,
@@ -59,7 +62,7 @@ impl GameState {
         }
     }
 
-    pub(crate) fn advance_time(&mut self, time: GameTime) {
+    pub fn advance_time(&mut self, time: GameTime) {
         let diff = time.0 - self.time.0;
         for transport in &mut self.transports {
             // Later: If game is paused then no need to advance transports
@@ -69,54 +72,62 @@ impl GameState {
         self.time_steps += 1;
     }
 
-    pub(crate) fn player_ids(&self) -> Vec<PlayerId> {
+    #[must_use]
+    pub fn player_ids(&self) -> Vec<PlayerId> {
         self.players.keys().copied().collect()
     }
 
-    pub(crate) fn create_game_info(&self) -> GameInfo {
+    #[must_use]
+    pub fn create_game_info(&self) -> GameInfo {
         GameInfo {
             game_id: self.game_id,
             players: self.players.clone(),
         }
     }
 
-    pub(crate) fn game_id(&self) -> GameId {
+    #[must_use]
+    pub fn game_id(&self) -> GameId {
         self.game_id
     }
 
-    pub(crate) fn time_steps(&self) -> u64 {
+    #[must_use]
+    pub fn time_steps(&self) -> u64 {
         self.time_steps
     }
 
-    pub(crate) fn transport_infos(&self) -> Vec<TransportInfo> {
+    #[must_use]
+    pub fn transport_infos(&self) -> Vec<TransportInfo> {
         self.transports.clone()
     }
 
-    pub(crate) fn building_infos(&self) -> Vec<BuildingInfo> {
+    #[must_use]
+    pub fn building_infos(&self) -> Vec<BuildingInfo> {
         self.buildings.to_vec()
     }
 
-    pub(crate) fn map_level(&self) -> MapLevel {
+    #[must_use]
+    pub fn map_level(&self) -> MapLevel {
         self.map_level.clone()
     }
 
-    pub(crate) fn players(&self) -> HashMap<PlayerId, PlayerInfo> {
+    #[must_use]
+    pub fn players(&self) -> HashMap<PlayerId, PlayerInfo> {
         self.players.clone()
     }
 
-    pub(crate) fn insert_player(&mut self, player_info: PlayerInfo) {
+    pub fn insert_player(&mut self, player_info: PlayerInfo) {
         self.players.insert(player_info.id, player_info);
     }
 
-    pub(crate) fn remove_player(&mut self, player_id: PlayerId) {
+    pub fn remove_player(&mut self, player_id: PlayerId) {
         self.players.remove(&player_id);
     }
 
-    pub(crate) fn insert_transport(&mut self, transport: TransportInfo) {
+    pub fn insert_transport(&mut self, transport: TransportInfo) {
         self.transports.push(transport);
     }
 
-    pub(crate) fn build_buildings(
+    pub fn build_buildings(
         &mut self,
         requesting_player_id: PlayerId,
         buildings: Vec<BuildingInfo>,

@@ -1,10 +1,9 @@
 #![allow(clippy::unnecessary_wraps, clippy::missing_errors_doc)]
 
 use shared_domain::client_command::GameCommand;
+use shared_domain::game_state::{GameState, GameTime};
 use shared_domain::server_response::{AddressEnvelope, GameInfo, GameResponse, PlayerInfo};
 use shared_domain::{BuildingInfo, GameId, PlayerId, TransportInfo};
-
-use crate::game_state::{GameState, GameTime};
 
 #[derive(Clone)]
 pub(crate) struct GameResponseWithAddress {
