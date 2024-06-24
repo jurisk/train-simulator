@@ -7,20 +7,20 @@ use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::pbr::StandardMaterial;
 use bevy::prelude::{
-    error, Children, Commands, Component, Entity, EventReader, FixedUpdate, Mesh, Plugin, Query,
-    Res, ResMut, SpatialBundle, Time, Transform, Update,
+    error, in_state, warn, Children, Commands, Component, Entity, EventReader, FixedUpdate,
+    IntoSystemConfigs, Mesh, Plugin, Query, Res, ResMut, SpatialBundle, Transform, Update,
 };
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
-use shared_domain::{PlayerId, TransportInfo, TransportType};
+use shared_domain::{PlayerId, TransportId, TransportInfo, TransportType};
 
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::transport::train::{calculate_train_component_transforms, create_train};
 use crate::game::GameStateResource;
+use crate::states::ClientState;
 
-// TODO HIGH: Consider keeping this in `GameStateResource` sub-component, and only keep the `TransportId` as a component to associate the Bevy entity with a `TransportId`
 #[derive(Component)]
-pub struct TransportInfoComponent(pub TransportInfo);
+pub struct TransportIdComponent(pub TransportId);
 
 #[derive(Component)]
 pub struct TransportIndexComponent(pub usize);
@@ -29,28 +29,32 @@ pub struct TransportPlugin;
 
 impl Plugin for TransportPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, handle_transport_created);
-        app.add_systems(FixedUpdate, handle_transports_sync);
-        app.add_systems(Update, move_transports);
+        app.add_systems(
+            FixedUpdate,
+            handle_transport_created.run_if(in_state(ClientState::Playing)),
+        );
+        app.add_systems(
+            FixedUpdate,
+            handle_transports_sync.run_if(in_state(ClientState::Playing)),
+        );
+        app.add_systems(
+            Update,
+            move_transports.run_if(in_state(ClientState::Playing)),
+        );
     }
 }
 
 #[allow(clippy::needless_pass_by_value)]
 fn move_transports(
-    time: Res<Time>,
-    mut query: Query<(&mut TransportInfoComponent, &Children)>,
+    mut query: Query<(&TransportIdComponent, &Children)>,
     mut child_query: Query<(&mut Transform, &TransportIndexComponent)>,
-    game_state: Option<Res<GameStateResource>>,
+    game_state_resource: Res<GameStateResource>,
 ) {
-    if let Some(game_state) = game_state {
-        let GameStateResource(game_state) = game_state.as_ref();
-        let map_level = game_state.map_level();
-        for (mut transport_info_component, children) in &mut query {
-            let TransportInfoComponent(ref mut transport_info) = transport_info_component.as_mut();
-            // TODO HIGH:   Instead of advancing each transport individually on the client, we should use the same `GameState` `advance_time` and then
-            //              here just update the transforms of the transports.
-            transport_info.advance(time.delta_seconds(), game_state.building_state());
-
+    let GameStateResource(game_state) = game_state_resource.as_ref();
+    let map_level = game_state.map_level();
+    for (transport_id_component, children) in &mut query {
+        let TransportIdComponent(transport_id) = transport_id_component;
+        if let Some(transport_info) = game_state.get_transport_info(*transport_id) {
             let transforms = match &transport_info.transport_type() {
                 TransportType::Train(components) => {
                     calculate_train_component_transforms(
@@ -72,6 +76,8 @@ fn move_transports(
                     child_transform.rotation = new_transform.rotation;
                 }
             }
+        } else {
+            warn!("Transport {:?} not found", transport_id);
         }
     }
 }
@@ -79,19 +85,14 @@ fn move_transports(
 #[allow(clippy::collapsible_match)]
 fn handle_transports_sync(
     mut server_messages: EventReader<ServerMessageEvent>,
-    mut query: Query<&mut TransportInfoComponent>,
+    mut game_state_resource: ResMut<GameStateResource>,
 ) {
+    let GameStateResource(game_state) = game_state_resource.as_mut();
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
             if let GameResponse::TransportsSync(transports_sync) = game_response {
                 for (transport_id, transport_dynamic_info) in transports_sync {
-                    for mut transport_info_component in &mut query {
-                        let TransportInfoComponent(transport_info) =
-                            transport_info_component.as_mut();
-                        if transport_info.transport_id() == *transport_id {
-                            transport_info.update_dynamic_info(transport_dynamic_info);
-                        }
-                    }
+                    game_state.update_transport_dynamic_info(*transport_id, transport_dynamic_info);
                 }
             }
         }
@@ -104,30 +105,30 @@ fn handle_transport_created(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    game_state: Option<Res<GameStateResource>>,
+    mut game_state_resource: ResMut<GameStateResource>,
 ) {
-    if let Some(game_state) = game_state {
-        let GameStateResource(game_state) = game_state.as_ref();
-        let map_level = game_state.map_level();
-        for message in server_messages.read() {
-            if let ServerResponse::Game(_game_id, game_response) = &message.response {
-                if let GameResponse::TransportsExist(transport_infos) = game_response {
-                    for transport_info in transport_infos {
-                        let entity = create_transport(
-                            transport_info,
-                            &mut commands,
-                            &mut meshes,
-                            &mut materials,
-                            map_level,
-                            game_state.players(),
-                        );
+    let GameStateResource(game_state) = game_state_resource.as_mut();
+    let map_level = game_state.map_level().clone();
+    for message in server_messages.read() {
+        if let ServerResponse::Game(_game_id, game_response) = &message.response {
+            if let GameResponse::TransportsAdded(transport_infos) = game_response {
+                for transport_info in transport_infos {
+                    game_state.upsert_transport(transport_info.clone());
 
-                        if let Some(entity) = entity {
-                            commands
-                                .entity(entity)
-                                .insert(SpatialBundle::default()) // For https://bevyengine.org/learn/errors/b0004/
-                                .insert(TransportInfoComponent(transport_info.clone()));
-                        }
+                    let entity = create_transport(
+                        transport_info,
+                        &mut commands,
+                        &mut meshes,
+                        &mut materials,
+                        &map_level,
+                        game_state.players(),
+                    );
+
+                    if let Some(entity) = entity {
+                        commands
+                            .entity(entity)
+                            .insert(SpatialBundle::default()) // For https://bevyengine.org/learn/errors/b0004/
+                            .insert(TransportIdComponent(transport_info.transport_id()));
                     }
                 }
             }

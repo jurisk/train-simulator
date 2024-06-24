@@ -2,13 +2,13 @@
 
 use bevy::prelude::{
     in_state, info, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, NextState,
-    OnEnter, Plugin, Res, ResMut, Resource,
+    OnEnter, Plugin, Res, ResMut, Resource, Time, Update,
 };
 use shared_domain::client_command::GameCommand::{QueryBuildings, QueryTransports};
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
 };
-use shared_domain::game_state::GameState;
+use shared_domain::game_state::{GameState, GameTime};
 use shared_domain::server_response::{AuthenticationResponse, GameResponse, ServerResponse};
 use shared_domain::{GameId, PlayerId};
 
@@ -53,11 +53,22 @@ impl Plugin for GamePlugin {
             handle_login_successful.run_if(in_state(ClientState::LoggingIn)),
         );
         app.add_systems(FixedUpdate, handle_game_state_snapshot);
+        app.add_systems(
+            Update,
+            client_side_time_advance.run_if(in_state(ClientState::Playing)),
+        );
     }
 }
 
 #[derive(Resource)]
 pub struct PlayerIdResource(pub PlayerId);
+
+// Movement prediction on the client side
+#[allow(clippy::needless_pass_by_value)]
+fn client_side_time_advance(mut game_state_resource: ResMut<GameStateResource>, time: Res<Time>) {
+    let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
+    game_state.advance_time(GameTime(time.elapsed_seconds()));
+}
 
 #[allow(clippy::needless_pass_by_value)]
 fn initiate_login(
@@ -119,7 +130,12 @@ fn handle_game_state_snapshot(
                 commands.insert_resource(GameStateResource(game_state.clone()));
                 client_state.set(ClientState::Playing);
 
-                // We do it like this, because we need the `MapLevelResource` to be set before we can render buildings, so we don't want to receive them too early
+                // Later:   We do it like this, because we need the `GameStateSnapshot` to be set
+                //          before we can render buildings, so we don't want to receive them too
+                //          early. Also, this way we actually create the client-side graphical
+                //          objects using the same update mechanism, instead of immediately, now.
+                //          This should be improved as we basically send buildings & transports
+                //          twice now.
                 client_messages.send(ClientMessageEvent {
                     command: ClientCommand::Game(*game_id, QueryBuildings),
                 });

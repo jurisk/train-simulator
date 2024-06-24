@@ -64,11 +64,10 @@ pub struct PlayerInfo {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
-    // TODO HIGH: Merge a lot of these into a single `GameStateProvided(GameState)` response
     GameStateSnapshot(GameState),
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
-    BuildingsBuilt(Vec<BuildingInfo>),
-    TransportsExist(Vec<TransportInfo>),
+    BuildingsAdded(Vec<BuildingInfo>),
+    TransportsAdded(Vec<TransportInfo>),
     TransportsSync(HashMap<TransportId, TransportDynamicInfo>),
     GameJoined,
     GameLeft,
@@ -86,11 +85,19 @@ impl Debug for GameResponse {
             GameResponse::PlayersUpdated(players) => {
                 write!(f, "PlayersUpdated({} players)", players.len())
             },
-            GameResponse::BuildingsBuilt(buildings) => {
-                write!(f, "BuildingsBuilt({} buildings)", buildings.len())
+            GameResponse::BuildingsAdded(buildings) => {
+                write!(f, "BuildingsAdded({} buildings)", buildings.len())
             },
-            GameResponse::TransportsExist(transports) => {
-                write!(f, "TransportsExist({} transports)", transports.len())
+            GameResponse::TransportsAdded(transports) => {
+                write!(
+                    f,
+                    "TransportsAdded({})",
+                    transports
+                        .iter()
+                        .map(|t| format!("{:?}", t.id()))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
             },
             GameResponse::TransportsSync(transports) => {
                 write!(f, "TransportsSync({} transports)", transports.len())

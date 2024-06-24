@@ -52,7 +52,7 @@ fn build_sample_objects_for_testing(
     let PlayerIdResource(player_id) = *player_id_resource;
     for message in server_messages.read() {
         if let ServerResponse::Game(game_id, game_response) = &message.response {
-            if let GameResponse::BuildingsBuilt(buildings) = game_response {
+            if let GameResponse::BuildingsAdded(buildings) = game_response {
                 if buildings.is_empty() {
                     // TODO: This is debug-only and to be removed - move this to actually use the "save game" concept instead
                     let test_track = vec![
@@ -195,7 +195,7 @@ fn handle_building_built(
     let map_level = game_state.map_level().clone();
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
-            if let GameResponse::BuildingsBuilt(building_infos) = game_response {
+            if let GameResponse::BuildingsAdded(building_infos) = game_response {
                 game_state.append_buildings(building_infos.clone());
 
                 for building_info in building_infos {

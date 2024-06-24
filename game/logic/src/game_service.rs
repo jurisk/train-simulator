@@ -59,7 +59,7 @@ impl GameService {
     ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         Ok(vec![GameResponseWithAddress::new(
             AddressEnvelope::ToPlayer(requesting_player_id),
-            GameResponse::TransportsExist(self.state.transport_infos()),
+            GameResponse::TransportsAdded(self.state.transport_infos()),
         )])
     }
 
@@ -69,7 +69,7 @@ impl GameService {
     ) -> Result<Vec<GameResponseWithAddress>, GameResponse> {
         Ok(vec![GameResponseWithAddress::new(
             AddressEnvelope::ToPlayer(requesting_player_id),
-            GameResponse::BuildingsBuilt(self.state.building_infos()),
+            GameResponse::BuildingsAdded(self.state.building_infos()),
         )])
     }
 
@@ -85,7 +85,7 @@ impl GameService {
             Ok(()) => {
                 Ok(vec![GameResponseWithAddress::new(
                     AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-                    GameResponse::BuildingsBuilt(building_infos),
+                    GameResponse::BuildingsAdded(building_infos),
                 )])
             },
             Err(()) => {
@@ -108,10 +108,10 @@ impl GameService {
             // TODO: Check if the track / road / etc. is free and owned by the purchaser
             // TODO: Subtract money
 
-            self.state.insert_transport(transport_info.clone());
+            self.state.upsert_transport(transport_info.clone());
             Ok(vec![GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-                GameResponse::TransportsExist(vec![transport_info]),
+                GameResponse::TransportsAdded(vec![transport_info]),
             )])
         } else {
             Err(GameResponse::CannotPurchase(transport_info.transport_id()))

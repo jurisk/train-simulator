@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::building_state::BuildingState;
 use crate::map_level::MapLevel;
 use crate::server_response::{GameInfo, PlayerInfo};
-use crate::{BuildingInfo, GameId, PlayerId, TransportInfo};
+use crate::{BuildingInfo, GameId, PlayerId, TransportDynamicInfo, TransportId, TransportInfo};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, PartialEq)]
 pub struct GameTime(pub f32);
@@ -131,8 +131,15 @@ impl GameState {
         self.players.remove(&player_id);
     }
 
-    pub fn insert_transport(&mut self, transport: TransportInfo) {
-        self.transports.push(transport);
+    pub fn upsert_transport(&mut self, transport: TransportInfo) {
+        let transport_id = transport.id();
+        if let Some(existing_transport) =
+            self.transports.iter_mut().find(|t| t.id() == transport_id)
+        {
+            existing_transport.clone_from(&transport);
+        } else {
+            self.transports.push(transport);
+        }
     }
 
     pub fn append_buildings(&mut self, buildings: Vec<BuildingInfo>) {
@@ -150,5 +157,25 @@ impl GameState {
     #[must_use]
     pub fn building_state(&self) -> &BuildingState {
         &self.buildings
+    }
+
+    pub fn update_transport_dynamic_info(
+        &mut self,
+        transport_id: TransportId,
+        transport_dynamic_info: &TransportDynamicInfo,
+    ) {
+        for transport in &mut self.transports {
+            if transport.id() == transport_id {
+                transport.update_dynamic_info(transport_dynamic_info);
+                return;
+            }
+        }
+    }
+
+    #[must_use]
+    pub fn get_transport_info(&self, transport_id: TransportId) -> Option<&TransportInfo> {
+        self.transports
+            .iter()
+            .find(|transport| transport.id() == transport_id)
     }
 }

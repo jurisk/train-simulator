@@ -11,7 +11,6 @@ use shared_domain::TileCoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::{Tile, Tiles};
-use crate::game::GameStateResource;
 
 #[derive(Resource, Default)]
 pub struct HoveredTile(pub Option<TileCoordsXZ>);
@@ -81,7 +80,6 @@ fn debug_draw_tile(
 fn update_selection<T: TypePath + Send + Sync>(
     sources: Query<&RaycastSource<T>>,
     mut gizmos: Gizmos,
-    game_state: Option<Res<GameStateResource>>,
     tiles: Option<Res<Tiles>>,
     mut selected_tiles: ResMut<SelectedTiles>,
     mut hovered_tile: ResMut<HoveredTile>,
@@ -101,35 +99,33 @@ fn update_selection<T: TypePath + Send + Sync>(
         gizmos.ray(intersection.position(), intersection.normal(), color);
 
         if is_first {
-            if let Some(_game_state) = &game_state {
-                if let Some(tiles) = &tiles {
-                    let tiles = &tiles.tiles;
-                    let intersection = intersection.position();
-                    let closest = tiles.coords().min_by_key(|coords| {
-                        let quad = tiles[*coords].quad;
-                        (quad.average_distance_to(intersection) * 1_000_000.0) as i32
-                        // Hack as f32 doesn't implement Ord
-                    });
+            if let Some(tiles) = &tiles {
+                let tiles = &tiles.tiles;
+                let intersection = intersection.position();
+                let closest = tiles.coords().min_by_key(|coords| {
+                    let quad = tiles[*coords].quad;
+                    (quad.average_distance_to(intersection) * 1_000_000.0) as i32
+                    // Hack as f32 doesn't implement Ord
+                });
 
-                    // Later: If selection is too far away, there is no selection. To avoid sides getting selected when the actual mouse is outside the playing field.
+                // Later: If selection is too far away, there is no selection. To avoid sides getting selected when the actual mouse is outside the playing field.
 
-                    let HoveredTile(hovered_tile) = hovered_tile.as_mut();
-                    *hovered_tile = closest;
+                let HoveredTile(hovered_tile) = hovered_tile.as_mut();
+                *hovered_tile = closest;
 
-                    let SelectedTiles {
-                        ordered: ordered_selected_tiles,
-                    } = selected_tiles.as_mut();
+                let SelectedTiles {
+                    ordered: ordered_selected_tiles,
+                } = selected_tiles.as_mut();
 
-                    if mouse_buttons.pressed(MouseButton::Left) {
-                        if let Some(closest) = closest {
-                            if !ordered_selected_tiles.contains(&closest) {
-                                ordered_selected_tiles.push(closest);
-                            }
+                if mouse_buttons.pressed(MouseButton::Left) {
+                    if let Some(closest) = closest {
+                        if !ordered_selected_tiles.contains(&closest) {
+                            ordered_selected_tiles.push(closest);
                         }
                     }
-
-                    // We don't clear the selected tiles here as it will be done by the system that handles the action
                 }
+
+                // We don't clear the selected tiles here as it will be done by the system that handles the action
             }
         }
     }
