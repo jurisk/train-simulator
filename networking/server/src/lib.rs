@@ -130,7 +130,7 @@ fn process_client_command_with_client_id_events(
     }
 
     server_state.advance_times(GameTime(time.elapsed_seconds()));
-    for response in server_state.sync() {
+    for response in server_state.sync_games() {
         send_responses_to_clients(server.as_ref(), &response);
     }
 }

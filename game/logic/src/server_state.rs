@@ -15,11 +15,11 @@ use shared_domain::ClientId;
 
 use crate::authentication_service::AuthenticationService;
 use crate::game_state::GameTime;
-use crate::games::Games;
+use crate::games_service::GamesService;
 
 pub struct ServerState {
     authentication_service: AuthenticationService,
-    games:                  Games,
+    games_service:          GamesService,
 }
 
 impl ServerState {
@@ -28,18 +28,18 @@ impl ServerState {
     pub fn new() -> Self {
         Self {
             authentication_service: AuthenticationService::new(),
-            games:                  Games::new(),
+            games_service:          GamesService::new(),
         }
     }
 
     pub fn advance_times(&mut self, time: GameTime) {
-        self.games.advance_times(time);
+        self.games_service.advance_times(time);
     }
 
     #[must_use]
-    pub fn sync(&self) -> Vec<ServerResponseWithClientIds> {
-        self.games
-            .sync()
+    pub fn sync_games(&self) -> Vec<ServerResponseWithClientIds> {
+        self.games_service
+            .sync_games()
             .into_iter()
             .map(|response| self.translate_response(response))
             .collect()
@@ -56,7 +56,7 @@ impl ServerState {
                 self.authentication_service.client_ids_for_player(player_id)
             },
             AddressEnvelope::ToAllPlayersInGame(game_id) => {
-                let player_ids = self.games.players_in_game(game_id);
+                let player_ids = self.games_service.players_in_game(game_id);
                 player_ids
                     .into_iter()
                     .flat_map(|player_id| {
@@ -103,7 +103,7 @@ impl ServerState {
             ClientCommand::Lobby(lobby_command) => {
                 let requesting_player_id =
                     self.authentication_service.lookup_player_id(client_id)?;
-                self.games.process_lobby_command(
+                self.games_service.process_lobby_command(
                     &self.authentication_service,
                     requesting_player_id,
                     lobby_command,
@@ -112,7 +112,7 @@ impl ServerState {
             ClientCommand::Game(game_id, game_command) => {
                 let requesting_player_id =
                     self.authentication_service.lookup_player_id(client_id)?;
-                self.games
+                self.games_service
                     .process_command(game_id, requesting_player_id, game_command)
             },
         }

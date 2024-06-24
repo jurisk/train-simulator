@@ -15,12 +15,12 @@ use crate::authentication_service::AuthenticationService;
 use crate::game_state::{GameResponseWithAddress, GameState, GameTime};
 
 // This is also, in a way, `Lobby`. Should we rename it? Split into two somehow? Not sure yet...
-pub(crate) struct Games {
+pub(crate) struct GamesService {
     game_map:       HashMap<GameId, GameState>,
     game_prototype: GameState,
 }
 
-impl Games {
+impl GamesService {
     #[must_use]
     #[allow(clippy::missing_panics_doc, clippy::new_without_default)]
     pub(crate) fn new() -> Self {
@@ -43,7 +43,7 @@ impl Games {
         }
     }
 
-    pub(crate) fn sync(&self) -> Vec<ServerResponseWithAddress> {
+    pub(crate) fn sync_games(&self) -> Vec<ServerResponseWithAddress> {
         self.game_map
             .iter()
             .flat_map(|(game_id, game_state)| {

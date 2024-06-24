@@ -72,7 +72,7 @@ fn process_messages_locally(
     }
 
     server_state.advance_times(GameTime(time.elapsed_seconds()));
-    let sync_responses = server_state.sync();
+    let sync_responses = server_state.sync_games();
     for response in sync_responses {
         info!("Simulating server: Got sync response: {:?}", response);
         if response.client_ids.contains(&client_id) {
