@@ -129,11 +129,19 @@ impl GameState {
         self.transports.push(transport);
     }
 
+    pub fn append_buildings(&mut self, buildings: Vec<BuildingInfo>) {
+        self.buildings.append_all(buildings);
+    }
+
     pub fn build_buildings(
         &mut self,
         requesting_player_id: PlayerId,
         buildings: Vec<BuildingInfo>,
     ) -> Result<(), ()> {
         self.buildings.build(requesting_player_id, buildings)
+    }
+
+    pub fn building_state(&self) -> &BuildingState {
+        &self.buildings
     }
 }

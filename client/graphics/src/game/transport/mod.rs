@@ -15,7 +15,6 @@ use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::{PlayerId, TransportInfo, TransportType};
 
 use crate::communication::domain::ServerMessageEvent;
-use crate::game::buildings::BuildingStateResource;
 use crate::game::transport::train::{calculate_train_component_transforms, create_train};
 use crate::game::{GameStateResource, PlayersInfoResource};
 
@@ -42,9 +41,7 @@ fn move_transports(
     mut query: Query<(&mut TransportInfoComponent, &Children)>,
     mut child_query: Query<(&mut Transform, &TransportIndexComponent)>,
     game_state: Option<Res<GameStateResource>>,
-    building_state_resource: Res<BuildingStateResource>,
 ) {
-    let BuildingStateResource(building_state) = building_state_resource.as_ref();
     if let Some(game_state) = game_state {
         let GameStateResource(game_state) = game_state.as_ref();
         let map_level = game_state.map_level();
@@ -52,7 +49,7 @@ fn move_transports(
             let TransportInfoComponent(ref mut transport_info) = transport_info_component.as_mut();
             // TODO HIGH:   Instead of advancing each transport individually on the client, we should use the same `GameState` `advance_time` and then
             //              here just update the transforms of the transports.
-            transport_info.advance(time.delta_seconds(), building_state);
+            transport_info.advance(time.delta_seconds(), game_state.building_state());
 
             let transforms = match &transport_info.transport_type() {
                 TransportType::Train(components) => {

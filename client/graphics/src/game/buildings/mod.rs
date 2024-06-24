@@ -6,9 +6,8 @@ use std::collections::HashMap;
 
 use bevy::prelude::{
     error, in_state, Assets, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs,
-    Mesh, Plugin, Res, ResMut, Resource, StandardMaterial, Update,
+    Mesh, Plugin, Res, ResMut, StandardMaterial, Update,
 };
-use shared_domain::building_state::BuildingState;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
@@ -26,10 +25,6 @@ use crate::states::ClientState;
 
 pub(crate) struct BuildingsPlugin;
 
-// TODO HIGH: Replace with `GameStateResource` sub-component
-#[derive(Resource)]
-pub struct BuildingStateResource(pub BuildingState);
-
 impl Plugin for BuildingsPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_systems(
@@ -44,7 +39,6 @@ impl Plugin for BuildingsPlugin {
             Update,
             build_track_when_mouse_released.run_if(in_state(ClientState::Playing)),
         );
-        app.insert_resource(BuildingStateResource(BuildingState::empty()));
     }
 }
 
@@ -194,31 +188,27 @@ fn handle_building_built(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    game_state: Option<Res<GameStateResource>>,
     players_info_resource: Res<PlayersInfoResource>,
-    mut building_state_resource: ResMut<BuildingStateResource>,
+    mut game_state_resource: ResMut<GameStateResource>,
 ) {
     let PlayersInfoResource(players_info) = players_info_resource.as_ref();
-    let BuildingStateResource(ref mut building_state) = building_state_resource.as_mut();
+    let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
 
-    if let Some(game_state) = game_state {
-        let GameStateResource(game_state) = game_state.as_ref();
-        let map_level = game_state.map_level();
-        for message in server_messages.read() {
-            if let ServerResponse::Game(_game_id, game_response) = &message.response {
-                if let GameResponse::BuildingsBuilt(building_infos) = game_response {
-                    building_state.append_all(building_infos.clone());
+    let map_level = game_state.map_level().clone();
+    for message in server_messages.read() {
+        if let ServerResponse::Game(_game_id, game_response) = &message.response {
+            if let GameResponse::BuildingsBuilt(building_infos) = game_response {
+                game_state.append_buildings(building_infos.clone());
 
-                    for building_info in building_infos {
-                        create_building(
-                            building_info,
-                            &mut commands,
-                            &mut meshes,
-                            &mut materials,
-                            map_level,
-                            players_info,
-                        );
-                    }
+                for building_info in building_infos {
+                    create_building(
+                        building_info,
+                        &mut commands,
+                        &mut meshes,
+                        &mut materials,
+                        &map_level,
+                        players_info,
+                    );
                 }
             }
         }

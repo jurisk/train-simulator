@@ -45,8 +45,7 @@ impl BuildingState {
         self.buildings.clone()
     }
 
-    // TODO HIGH: Make `private` after refactoring that allows this
-    pub fn append_all(&mut self, additional: Vec<BuildingInfo>) {
+    pub(crate) fn append_all(&mut self, additional: Vec<BuildingInfo>) {
         self.buildings.extend(additional);
     }
 
