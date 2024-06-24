@@ -12,11 +12,12 @@ use shared_domain::server_response::{
 use shared_domain::{GameId, PlayerId};
 
 use crate::authentication_service::AuthenticationService;
-use crate::game_state::{GameResponseWithAddress, GameState, GameTime};
+use crate::game_service::{GameResponseWithAddress, GameService};
+use crate::game_state::{GameState, GameTime};
 
 // This is also, in a way, `Lobby`. Should we rename it? Split into two somehow? Not sure yet...
 pub(crate) struct GamesService {
-    game_map:       HashMap<GameId, GameState>,
+    game_map:       HashMap<GameId, GameService>,
     game_prototype: GameState,
 }
 
@@ -38,16 +39,16 @@ impl GamesService {
     }
 
     pub(crate) fn advance_times(&mut self, time: GameTime) {
-        for game_state in self.game_map.values_mut() {
-            game_state.advance_time(time);
+        for game_service in self.game_map.values_mut() {
+            game_service.advance_time(time);
         }
     }
 
     pub(crate) fn sync_games(&self) -> Vec<ServerResponseWithAddress> {
         self.game_map
             .iter()
-            .flat_map(|(game_id, game_state)| {
-                let results = game_state.sync();
+            .flat_map(|(game_id, game_service)| {
+                let results = game_service.sync();
                 results
                     .into_iter()
                     .map(|game_response| {
@@ -68,7 +69,7 @@ impl GamesService {
         let game_infos = self
             .game_map
             .values()
-            .map(GameState::create_game_info)
+            .map(GameService::create_game_info)
             .collect();
         Ok(vec![ServerResponseWithAddress::new(
             AddressEnvelope::ToPlayer(requesting_player_id),
@@ -81,12 +82,12 @@ impl GamesService {
         requesting_player_info: PlayerInfo,
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
         // Later: Don't allow starting a game if is already a part of another game?
-        let mut game_state = GameState::from_prototype(&self.game_prototype);
-        let game_id = game_state.game_id;
-        let results = game_state
+        let mut game_service = GameService::from_prototype(&self.game_prototype);
+        let game_id = game_service.game_id();
+        let results = game_service
             .join_game(requesting_player_info)
             .map_err(|err| ServerResponse::Game(game_id, err))?;
-        self.game_map.insert(game_id, game_state);
+        self.game_map.insert(game_id, game_service);
         Self::convert_game_response_to_server_response(game_id, Ok(results))
     }
 
@@ -116,21 +117,24 @@ impl GamesService {
         player_id: PlayerId,
         game_command: GameCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, ServerResponse> {
-        let game_state = self.lookup_game_state_mut(game_id)?;
+        let game_service = self.lookup_game_service_mut(game_id)?;
         Self::convert_game_response_to_server_response(
             game_id,
-            game_state.process_command(player_id, game_command),
+            game_service.process_command(player_id, game_command),
         )
     }
 
-    fn lookup_game_state_mut(&mut self, game_id: GameId) -> Result<&mut GameState, ServerResponse> {
+    fn lookup_game_service_mut(
+        &mut self,
+        game_id: GameId,
+    ) -> Result<&mut GameService, ServerResponse> {
         match self.game_map.get_mut(&game_id) {
             None => Err(ServerResponse::Error(ServerError::GameNotFound)),
             Some(result) => Ok(result),
         }
     }
 
-    fn lookup_game_state(&self, game_id: GameId) -> Result<&GameState, ServerResponse> {
+    fn lookup_game_service(&self, game_id: GameId) -> Result<&GameService, ServerResponse> {
         match self.game_map.get(&game_id) {
             None => Err(ServerResponse::Error(ServerError::GameNotFound)),
             Some(result) => Ok(result),
@@ -151,18 +155,19 @@ impl GamesService {
                 self.create_and_join_game(authentication_service.player_info(requesting_player_id))
             },
             LobbyCommand::JoinExistingGame(game_id) => {
-                let game_state = self.lookup_game_state_mut(game_id)?;
+                let game_service = self.lookup_game_service_mut(game_id)?;
                 Self::convert_game_response_to_server_response(
                     game_id,
-                    game_state.join_game(authentication_service.player_info(requesting_player_id)),
+                    game_service
+                        .join_game(authentication_service.player_info(requesting_player_id)),
                 )
             },
             LobbyCommand::LeaveGame(game_id) => {
                 // Later: Not sure how this should even work if the player has buildings and transport owned in the game?
-                let game_state = self.lookup_game_state_mut(game_id)?;
+                let game_service = self.lookup_game_service_mut(game_id)?;
                 Self::convert_game_response_to_server_response(
                     game_id,
-                    game_state.remove_player(requesting_player_id),
+                    game_service.remove_player(requesting_player_id),
                 )
             },
         }
@@ -170,7 +175,7 @@ impl GamesService {
 
     #[allow(clippy::single_match_else)]
     pub(crate) fn players_in_game(&self, game_id: GameId) -> Vec<PlayerId> {
-        match self.lookup_game_state(game_id) {
+        match self.lookup_game_service(game_id) {
             Ok(found) => found.player_ids(),
             Err(_) => {
                 warn!("Failed to find game for {game_id:?}");

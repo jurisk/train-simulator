@@ -206,7 +206,7 @@ fn handle_building_built(
         for message in server_messages.read() {
             if let ServerResponse::Game(_game_id, game_response) = &message.response {
                 if let GameResponse::BuildingsBuilt(building_infos) = game_response {
-                    building_state.append(building_infos.clone());
+                    building_state.append_all(building_infos.clone());
 
                     for building_info in building_infos {
                         create_building(

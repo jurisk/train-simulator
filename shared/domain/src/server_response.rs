@@ -64,6 +64,7 @@ pub struct PlayerInfo {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
+    // TODO HIGH: Merge a lot of these into a single `GameStateProvided(GameState)` response
     MapLevelProvided(MapLevel),
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
     BuildingsBuilt(Vec<BuildingInfo>),
