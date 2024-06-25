@@ -8,13 +8,15 @@ use crate::building_type::BuildingType;
 use crate::edge_xz::EdgeXZ;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
+use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 use crate::{BuildingId, PlayerId};
 
 #[allow(clippy::items_after_statements)]
 fn successors(edge: EdgeXZ, preferred_tiles: &HashSet<TileCoordsXZ>) -> Vec<(EdgeXZ, u32)> {
-    // TODO: Is this even within bounds? Above water?
-    // TODO: Is it free? Use `BuildingState::can_build_building`.
+    // TODO:    Is this even within bounds? Above water?
+    // TODO:    Is it free? Is the terrain suitable?
+    //          Use `BuildingState::can_build_building`.
 
     let mut results = vec![];
 
@@ -65,28 +67,15 @@ pub fn plan_track(
                 let a = w[0];
                 let b = w[1];
 
-                EdgeXZ::common_tile(a, b)
+                track_types_that_fit(a, b)
                     .into_iter()
-                    .flat_map(|tile| {
-                        TrackType::all()
-                            .into_iter()
-                            .flat_map(|track_type| {
-                                let (da, db) = track_type.connections_clockwise();
-                                let ea = EdgeXZ::from_tile_and_direction(tile, da);
-                                let eb = EdgeXZ::from_tile_and_direction(tile, db);
-                                // This track fits!
-                                if (ea == a && eb == b) || (ea == b && eb == a) {
-                                    vec![BuildingInfo {
-                                        owner_id:      player_id,
-                                        building_id:   BuildingId::random(),
-                                        covers_tiles:  TileCoverage::Single(tile),
-                                        building_type: BuildingType::Track(track_type),
-                                    }]
-                                } else {
-                                    vec![]
-                                }
-                            })
-                            .collect::<Vec<_>>()
+                    .map(|tile_track| {
+                        BuildingInfo {
+                            owner_id:      player_id,
+                            building_id:   BuildingId::random(),
+                            covers_tiles:  TileCoverage::Single(tile_track.tile_coords_xz),
+                            building_type: BuildingType::Track(tile_track.track_type),
+                        }
                     })
                     .collect::<Vec<_>>()
             })
@@ -94,4 +83,29 @@ pub fn plan_track(
 
         buildings
     })
+}
+
+fn track_types_that_fit(a: EdgeXZ, b: EdgeXZ) -> Vec<TileTrack> {
+    EdgeXZ::common_tile(a, b)
+        .into_iter()
+        .flat_map(|tile| {
+            TrackType::all()
+                .into_iter()
+                .flat_map(|track_type| {
+                    let (da, db) = track_type.connections_clockwise();
+                    let ea = EdgeXZ::from_tile_and_direction(tile, da);
+                    let eb = EdgeXZ::from_tile_and_direction(tile, db);
+                    // This track fits!
+                    if (ea == a && eb == b) || (ea == b && eb == a) {
+                        vec![TileTrack {
+                            tile_coords_xz: tile,
+                            track_type,
+                        }]
+                    } else {
+                        vec![]
+                    }
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>()
 }
