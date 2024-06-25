@@ -1,7 +1,9 @@
 use bevy::math::Vec3;
 use shared_domain::map_level::MapLevel;
 use shared_domain::terrain::Terrain;
-use shared_domain::{ProgressWithinTile, TileTrack, TrainComponentType, TransportLocation};
+use shared_domain::tile_track::TileTrack;
+use shared_domain::transport_info::{ProgressWithinTile, TransportLocation};
+use shared_domain::transport_type::TrainComponentType;
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::geometry::line_segment_intersection_with_sphere;
 

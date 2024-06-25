@@ -8,14 +8,20 @@ use bevy::prelude::{
     error, in_state, Assets, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs,
     Mesh, Plugin, Res, ResMut, StandardMaterial, Update,
 };
+use shared_domain::building_info::BuildingInfo;
+use shared_domain::building_type::BuildingType;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
-use shared_domain::{
-    BuildingId, BuildingInfo, BuildingType, MovementOrders, PlayerId, ProgressWithinTile,
-    TileCoordsXZ, TileCoverage, TileTrack, TrackType, TrainComponentType, TransportId,
-    TransportInfo, TransportLocation, TransportType, TransportVelocity,
+use shared_domain::tile_coords_xz::TileCoordsXZ;
+use shared_domain::tile_coverage::TileCoverage;
+use shared_domain::tile_track::TileTrack;
+use shared_domain::track_type::TrackType;
+use shared_domain::transport_info::{
+    MovementOrders, ProgressWithinTile, TransportInfo, TransportLocation, TransportVelocity,
 };
+use shared_domain::transport_type::{TrainComponentType, TransportType};
+use shared_domain::{BuildingId, PlayerId, TransportId};
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};

@@ -7,13 +7,13 @@ use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::random::choose_unsafe;
 
+use crate::building_info::BuildingInfo;
 use crate::building_state::BuildingState;
 use crate::map_level::MapLevel;
 use crate::server_response::{GameInfo, PlayerInfo};
-use crate::{
-    BuildingId, BuildingInfo, BuildingType, GameId, PlayerId, TileCoordsXZ, TileCoverage,
-    TrackType, TransportDynamicInfo, TransportId, TransportInfo,
-};
+use crate::tile_coverage::TileCoverage;
+use crate::transport_info::{TransportDynamicInfo, TransportInfo};
+use crate::{BuildingId, BuildingType, GameId, PlayerId, TileCoordsXZ, TrackType, TransportId};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, PartialEq)]
 pub struct GameTime(pub f32);

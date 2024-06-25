@@ -9,7 +9,8 @@ use bevy::prelude::{
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
-use shared_domain::{TileCoordsXZ, TrackType};
+use shared_domain::tile_coords_xz::TileCoordsXZ;
+use shared_domain::track_type::TrackType;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};

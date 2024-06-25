@@ -1,11 +1,13 @@
 #![allow(clippy::unnecessary_wraps, clippy::missing_errors_doc)]
 
+use shared_domain::building_info::BuildingInfo;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::{GameState, GameTime};
 use shared_domain::server_response::{
     AddressEnvelope, GameError, GameInfo, GameResponse, PlayerInfo,
 };
-use shared_domain::{BuildingInfo, GameId, PlayerId, TransportInfo};
+use shared_domain::transport_info::TransportInfo;
+use shared_domain::{GameId, PlayerId};
 
 #[derive(Clone)]
 pub(crate) struct GameResponseWithAddress {

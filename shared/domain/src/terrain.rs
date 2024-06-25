@@ -7,7 +7,9 @@ use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::map_level::Height;
-use crate::{TileCoordsXZ, TileTrack, VertexCoordsXZ};
+use crate::tile_track::TileTrack;
+use crate::vertex_coords_xz::VertexCoordsXZ;
+use crate::TileCoordsXZ;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Terrain {

@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use bevy::render::mesh::{MeshVertexAttribute, PrimitiveTopology};
 use bevy::render::render_asset::RenderAssetUsages;
-use shared_domain::{TileCoordsXZ, VertexCoordsXZ};
+use shared_domain::tile_coords_xz::TileCoordsXZ;
+use shared_domain::vertex_coords_xz::VertexCoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
 #[derive(Copy, Clone, Debug, Default)]

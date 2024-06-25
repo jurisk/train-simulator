@@ -10,7 +10,7 @@ use bevy::render::render_resource::VertexFormat;
 use bevy_mod_raycast::prelude::RaycastMesh;
 use shared_domain::map_level::{MapLevel, TerrainType};
 use shared_domain::server_response::{GameResponse, ServerResponse};
-use shared_domain::VertexCoordsXZ;
+use shared_domain::vertex_coords_xz::VertexCoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::communication::domain::ServerMessageEvent;

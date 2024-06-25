@@ -7,7 +7,7 @@ use bevy::prelude::{
 };
 use bevy_mod_raycast::deferred::RaycastSource;
 use bevy_mod_raycast::prelude::{DeferredRaycastingPlugin, RaycastPluginState};
-use shared_domain::TileCoordsXZ;
+use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::{Tile, Tiles};

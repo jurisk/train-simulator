@@ -6,11 +6,10 @@ use fastrand::Rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::building_info::BuildingInfo;
 use crate::game_state::GameState;
-use crate::{
-    BuildingId, BuildingInfo, ClientId, GameId, PlayerId, PlayerName, TransportDynamicInfo,
-    TransportId, TransportInfo,
-};
+use crate::transport_info::{TransportDynamicInfo, TransportInfo};
+use crate::{BuildingId, ClientId, GameId, PlayerId, PlayerName, TransportId};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum AuthenticationResponse {
