@@ -10,6 +10,7 @@ use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
+use shared_domain::track_planner::plan_track;
 use shared_domain::track_type::TrackType;
 
 use crate::communication::domain::ClientMessageEvent;
@@ -121,7 +122,7 @@ pub(crate) fn build_track_when_mouse_released(
             ordered: ordered_selected_tiles,
         } = selected_tiles;
 
-        if let Some(buildings) = game_state.plan_track(player_id, ordered_selected_tiles) {
+        if let Some(buildings) = plan_track(player_id, ordered_selected_tiles) {
             client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                 game_id,
                 GameCommand::BuildBuildings(buildings),

@@ -25,6 +25,7 @@ pub mod terrain;
 pub mod tile_coords_xz;
 pub mod tile_coverage;
 pub mod tile_track;
+pub mod track_planner;
 pub mod track_type;
 pub mod transport_info;
 pub mod transport_type;
