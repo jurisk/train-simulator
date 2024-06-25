@@ -4,15 +4,12 @@ use bevy::input::ButtonInput;
 use bevy::math::{Quat, Vec3};
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
-    default, info, Color, Commands, Cuboid, EventWriter, Mesh, MouseButton, Res, ResMut, Transform,
+    debug, default, Color, Commands, Cuboid, EventWriter, Mesh, MouseButton, Res, ResMut, Transform,
 };
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
-use shared_domain::{
-    BuildingId, BuildingInfo, BuildingType, TileCoordsXZ, TileCoverage, TrackType,
-};
-use shared_util::random::choose_unsafe;
+use shared_domain::{TileCoordsXZ, TrackType};
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
@@ -123,34 +120,14 @@ pub(crate) fn build_track_when_mouse_released(
             ordered: ordered_selected_tiles,
         } = selected_tiles;
 
-        let mut buildings = vec![];
-        for tile in ordered_selected_tiles.iter() {
-            info!("Building track at {:?}", tile);
-            // TODO: Debug only, replace with a proper route planner, instead of random
-            let tmp_track_types = [
-                TrackType::NorthSouth,
-                TrackType::EastWest,
-                TrackType::NorthEast,
-                TrackType::NorthWest,
-                TrackType::SouthEast,
-                TrackType::SouthWest,
-            ];
-            let tmp_selected_track = choose_unsafe(&tmp_track_types);
-
-            let track = BuildingInfo {
-                owner_id:      player_id,
-                building_id:   BuildingId::random(),
-                covers_tiles:  TileCoverage::Single(*tile),
-                building_type: BuildingType::Track(*tmp_selected_track),
-            };
-
-            buildings.push(track);
+        if let Some(buildings) = game_state.plan_track(player_id, ordered_selected_tiles) {
+            client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
+                game_id,
+                GameCommand::BuildBuildings(buildings),
+            )));
+        } else {
+            debug!("Could not build track.");
         }
-
-        client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
-            game_id,
-            GameCommand::BuildBuildings(buildings),
-        )));
 
         ordered_selected_tiles.clear();
     }

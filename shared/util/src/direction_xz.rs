@@ -14,6 +14,11 @@ pub enum DirectionXZ {
 
 impl DirectionXZ {
     #[must_use]
+    pub const fn cardinal() -> [Self; 4] {
+        [Self::North, Self::East, Self::South, Self::West]
+    }
+
+    #[must_use]
     pub fn reverse(self) -> Self {
         match self {
             DirectionXZ::North => DirectionXZ::South,

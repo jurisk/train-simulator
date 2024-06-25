@@ -299,6 +299,18 @@ impl Debug for TrackType {
 }
 
 impl TrackType {
+    #[must_use]
+    pub const fn all() -> [TrackType; 6] {
+        [
+            TrackType::NorthSouth,
+            TrackType::EastWest,
+            TrackType::NorthEast,
+            TrackType::NorthWest,
+            TrackType::SouthEast,
+            TrackType::SouthWest,
+        ]
+    }
+
     #[allow(clippy::match_same_arms, clippy::missing_panics_doc)]
     #[must_use]
     pub fn other_end(self, direction: DirectionXZ) -> DirectionXZ {

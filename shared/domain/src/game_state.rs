@@ -1,13 +1,19 @@
 #![allow(clippy::missing_errors_doc, clippy::result_unit_err)]
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
+use pathfinding::prelude::dijkstra;
 use serde::{Deserialize, Serialize};
+use shared_util::direction_xz::DirectionXZ;
+use shared_util::random::choose_unsafe;
 
 use crate::building_state::BuildingState;
 use crate::map_level::MapLevel;
 use crate::server_response::{GameInfo, PlayerInfo};
-use crate::{BuildingInfo, GameId, PlayerId, TransportDynamicInfo, TransportId, TransportInfo};
+use crate::{
+    BuildingId, BuildingInfo, BuildingType, GameId, PlayerId, TileCoordsXZ, TileCoverage,
+    TrackType, TransportDynamicInfo, TransportId, TransportInfo,
+};
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, PartialEq)]
 pub struct GameTime(pub f32);
@@ -177,5 +183,61 @@ impl GameState {
         self.transports
             .iter()
             .find(|transport| transport.id() == transport_id)
+    }
+
+    // TODO HIGH: We have a disconnect here, as our pathfinding kind of works with tiles, but our tracks with tile edges...
+    #[allow(clippy::items_after_statements)]
+    #[must_use]
+    pub fn plan_track(
+        &self,
+        player_id: PlayerId,
+        ordered_selected_tiles: &[TileCoordsXZ],
+    ) -> Option<Vec<BuildingInfo>> {
+        let head = *ordered_selected_tiles.first()?;
+        let tail = *ordered_selected_tiles.last()?;
+        let preferred_tiles: HashSet<TileCoordsXZ> =
+            ordered_selected_tiles.iter().copied().collect();
+        const PREFERRED_TILE_BONUS: u32 = 4; // How much shorter "length" do we assign to going through a preferred tile
+
+        // Later: Consider switching to `a_star`
+        let path: Option<(Vec<TileCoordsXZ>, u32)> = dijkstra(
+            &head,
+            |tile| {
+                DirectionXZ::cardinal()
+                    .into_iter()
+                    .map(|direction| {
+                        // TODO: Is this even within bounds? Above water?
+                        let neighbour = *tile + direction;
+                        // TODO: Is it free? Use `BuildingState::can_build_building`.
+                        let length = if preferred_tiles.contains(&neighbour) {
+                            1
+                        } else {
+                            PREFERRED_TILE_BONUS
+                        };
+                        (neighbour, length)
+                    })
+                    .collect::<Vec<_>>()
+            },
+            |tile| *tile == tail,
+        );
+
+        path.map(|(path, _length)| {
+            let buildings = path
+                .iter()
+                .map(|tile| {
+                    let track_options = &TrackType::all();
+                    let tmp_selected_track = choose_unsafe(track_options);
+
+                    BuildingInfo {
+                        owner_id:      player_id,
+                        building_id:   BuildingId::random(),
+                        covers_tiles:  TileCoverage::Single(*tile),
+                        building_type: BuildingType::Track(*tmp_selected_track),
+                    }
+                })
+                .collect();
+
+            buildings
+        })
     }
 }
