@@ -11,8 +11,33 @@ use crate::tile_coverage::TileCoverage;
 use crate::track_type::TrackType;
 use crate::{BuildingId, PlayerId};
 
-// TODO HIGH: We have a disconnect here, as our pathfinding kind of works with tiles, but our tracks with tile edges...
 #[allow(clippy::items_after_statements)]
+fn successors(edge: EdgeXZ, preferred_tiles: &HashSet<TileCoordsXZ>) -> Vec<(EdgeXZ, u32)> {
+    // TODO: Is this even within bounds? Above water?
+    // TODO: Is it free? Use `BuildingState::can_build_building`.
+
+    let mut results = vec![];
+
+    for tile in edge.ordered_tiles() {
+        for neighbour in EdgeXZ::for_tile(tile) {
+            const PREFERRED_TILE_BONUS: u32 = 16; // How much shorter "length" do we assign to going through a preferred tile
+
+            if neighbour != edge {
+                let length = if preferred_tiles.contains(&tile) {
+                    1
+                } else {
+                    PREFERRED_TILE_BONUS
+                };
+                // TODO: Shorter tracks are faster?
+                results.push((neighbour, length));
+            }
+        }
+    }
+
+    results
+}
+
+// TODO HIGH: We have a disconnect here, as our pathfinding kind of works with tiles, but our tracks with tile edges...
 #[must_use]
 pub fn plan_track(
     player_id: PlayerId,
@@ -25,34 +50,11 @@ pub fn plan_track(
     let tail_tile = *ordered_selected_tiles.last()?;
     let tail = EdgeXZ::from_tile_and_direction(tail_tile, DirectionXZ::East);
     let preferred_tiles: HashSet<TileCoordsXZ> = ordered_selected_tiles.iter().copied().collect();
-    const PREFERRED_TILE_BONUS: u32 = 16; // How much shorter "length" do we assign to going through a preferred tile
 
     // Later: Consider switching to `a_star` or `dijkstra_all`
     let path: Option<(Vec<EdgeXZ>, u32)> = dijkstra(
         &head,
-        |&edge| {
-            // TODO: Is this even within bounds? Above water?
-            // TODO: Is it free? Use `BuildingState::can_build_building`.
-
-            edge.ordered_tiles().into_iter().flat_map(move |tile| {
-                EdgeXZ::for_tile(tile)
-                    .into_iter()
-                    .filter(|neighbour| *neighbour != edge)
-                    .map(|neighbour| {
-                        // TODO: Can we actually even build such a track there, are the vertex heights compatible?
-                        let length = 1;
-                        // TODO: Figure out the preferred tiles thing
-                        // let length = if preferred_tiles.contains(&tile) {
-                        //     1
-                        // } else {
-                        //     PREFERRED_TILE_BONUS
-                        // };
-                        // TODO: Shorter tracks are faster?
-                        (neighbour, length)
-                    })
-                    .collect::<Vec<_>>()
-            })
-        },
+        |edge| successors(*edge, &preferred_tiles),
         |edge| *edge == tail,
     );
 
