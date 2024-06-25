@@ -61,7 +61,6 @@ impl BuildingState {
             .all(|building_info| building_info.owner_id == requesting_player_id);
 
         // TODO: Check that this is a valid building and there is enough money to build it, subtract money
-        // TODO: Check that terrain matches building requirements - e.g. no building on water, tracks that go out of bounds, tracks that go into water, etc.
 
         let tiles_are_free = building_infos
             .iter()
@@ -70,11 +69,15 @@ impl BuildingState {
         valid_player_id && tiles_are_free
     }
 
-    fn can_build_building(
-        &mut self,
+    pub(crate) fn can_build_building(
+        &self,
         requesting_player_id: PlayerId,
         building_infos: &BuildingInfo,
     ) -> bool {
+        // TODO: Check that terrain matches building requirements - e.g. no building on water, tracks that go out of bounds, tracks that go into water, etc.
+        // TODO:    Is this even within bounds? Above water?
+        // TODO:    Is it free? Is the terrain suitable?
+
         building_infos
             .covers_tiles
             .to_set()

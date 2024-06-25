@@ -122,7 +122,11 @@ pub(crate) fn build_track_when_mouse_released(
             ordered: ordered_selected_tiles,
         } = selected_tiles;
 
-        if let Some(buildings) = plan_track(player_id, ordered_selected_tiles) {
+        if let Some(buildings) = plan_track(
+            player_id,
+            ordered_selected_tiles,
+            game_state.building_state(),
+        ) {
             client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                 game_id,
                 GameCommand::BuildBuildings(buildings),

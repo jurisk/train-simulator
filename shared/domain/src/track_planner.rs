@@ -4,6 +4,7 @@ use pathfinding::prelude::dijkstra;
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::building_info::BuildingInfo;
+use crate::building_state::BuildingState;
 use crate::building_type::BuildingType;
 use crate::edge_xz::EdgeXZ;
 use crate::tile_coords_xz::TileCoordsXZ;
@@ -12,26 +13,42 @@ use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 use crate::{BuildingId, PlayerId};
 
-#[allow(clippy::items_after_statements)]
-fn successors(edge: EdgeXZ, preferred_tiles: &HashSet<TileCoordsXZ>) -> Vec<(EdgeXZ, u32)> {
-    // TODO:    Is this even within bounds? Above water?
-    // TODO:    Is it free? Is the terrain suitable?
-    //          Use `BuildingState::can_build_building`.
-
+#[allow(
+    clippy::items_after_statements,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss
+)]
+fn successors(
+    edge: EdgeXZ,
+    preferred_tiles: &HashSet<TileCoordsXZ>,
+    building_state: &BuildingState,
+    player_id: PlayerId,
+) -> Vec<(EdgeXZ, u32)> {
     let mut results = vec![];
 
     for tile in edge.ordered_tiles() {
         for neighbour in EdgeXZ::for_tile(tile) {
             const PREFERRED_TILE_BONUS: u32 = 16; // How much shorter "length" do we assign to going through a preferred tile
 
-            if neighbour != edge {
-                let length = if preferred_tiles.contains(&tile) {
+            for tile_track in track_types_that_fit(edge, neighbour) {
+                let building = BuildingInfo {
+                    owner_id:      player_id,
+                    building_id:   BuildingId::random(),
+                    covers_tiles:  TileCoverage::Single(tile_track.tile_coords_xz),
+                    building_type: BuildingType::Track(tile_track.track_type),
+                };
+
+                let length = (tile_track.track_type.length_in_tiles() * 1000.0).round() as u32;
+
+                let malus = if preferred_tiles.contains(&tile) {
                     1
                 } else {
                     PREFERRED_TILE_BONUS
                 };
-                // TODO: Shorter tracks are faster?
-                results.push((neighbour, length));
+
+                if building_state.can_build_building(player_id, &building) {
+                    results.push((neighbour, length * malus));
+                }
             }
         }
     }
@@ -39,11 +56,11 @@ fn successors(edge: EdgeXZ, preferred_tiles: &HashSet<TileCoordsXZ>) -> Vec<(Edg
     results
 }
 
-// TODO HIGH: We have a disconnect here, as our pathfinding kind of works with tiles, but our tracks with tile edges...
 #[must_use]
 pub fn plan_track(
     player_id: PlayerId,
     ordered_selected_tiles: &[TileCoordsXZ],
+    building_state: &BuildingState,
 ) -> Option<Vec<BuildingInfo>> {
     // TODO: Actually get the EdgeXZ that was closest to the mouse when selecting!
     let head_tile = *ordered_selected_tiles.first()?;
@@ -56,7 +73,7 @@ pub fn plan_track(
     // Later: Consider switching to `a_star` or `dijkstra_all`
     let path: Option<(Vec<EdgeXZ>, u32)> = dijkstra(
         &head,
-        |edge| successors(*edge, &preferred_tiles),
+        |edge| successors(*edge, &preferred_tiles, building_state, player_id),
         |edge| *edge == tail,
     );
 
