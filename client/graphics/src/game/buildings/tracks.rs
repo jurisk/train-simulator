@@ -15,7 +15,7 @@ use shared_domain::track_type::TrackType;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
-use crate::selection::SelectedTiles;
+use crate::selection::{SelectedEdges, SelectedTiles};
 
 const RAIL_DIAMETER: f32 = 0.025;
 
@@ -107,6 +107,7 @@ fn spawn_rail(
 // TODO: Only do this when we are in "track building" mode
 pub(crate) fn build_track_when_mouse_released(
     mut selected_tiles: ResMut<SelectedTiles>,
+    mut selected_edges: ResMut<SelectedEdges>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     mut client_messages: EventWriter<ClientMessageEvent>,
     player_id_resource: Res<PlayerIdResource>,
@@ -122,9 +123,15 @@ pub(crate) fn build_track_when_mouse_released(
             ordered: ordered_selected_tiles,
         } = selected_tiles;
 
+        let selected_edges = selected_edges.as_mut();
+        let SelectedEdges {
+            ordered: ordered_selected_edges,
+        } = selected_edges;
+
         if let Some(buildings) = plan_track(
             player_id,
             ordered_selected_tiles,
+            ordered_selected_edges,
             game_state.building_state(),
             game_state.map_level(),
         ) {
@@ -137,5 +144,6 @@ pub(crate) fn build_track_when_mouse_released(
         }
 
         ordered_selected_tiles.clear();
+        ordered_selected_edges.clear();
     }
 }

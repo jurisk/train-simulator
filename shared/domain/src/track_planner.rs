@@ -2,7 +2,6 @@ use std::collections::HashSet;
 
 use log::warn;
 use pathfinding::prelude::dijkstra;
-use shared_util::direction_xz::DirectionXZ;
 
 use crate::building_info::BuildingInfo;
 use crate::building_state::{BuildingState, CanBuildResponse};
@@ -69,15 +68,14 @@ fn successors(
 pub fn plan_track(
     player_id: PlayerId,
     ordered_selected_tiles: &[TileCoordsXZ],
+    ordered_selected_edges: &[EdgeXZ],
     building_state: &BuildingState,
     map_level: &MapLevel,
 ) -> Option<Vec<BuildingInfo>> {
-    // TODO HIGH: Actually get the EdgeXZ that was closest to the mouse when selecting!
-    let head_tile = *ordered_selected_tiles.first()?;
-    let head = EdgeXZ::from_tile_and_direction(head_tile, DirectionXZ::North);
-    // TODO HIGH: Actually get the EdgeXZ that was closest to the mouse when selecting!
-    let tail_tile = *ordered_selected_tiles.last()?;
-    let tail = EdgeXZ::from_tile_and_direction(tail_tile, DirectionXZ::East);
+    let head = *ordered_selected_edges.first()?;
+    let tail = *ordered_selected_edges.last()?;
+
+    // TODO: Use preferred_edges here
     let preferred_tiles: HashSet<TileCoordsXZ> = ordered_selected_tiles.iter().copied().collect();
 
     // Later: If `tail` is under water, no sense to plan?

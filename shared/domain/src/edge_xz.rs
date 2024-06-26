@@ -28,6 +28,14 @@ impl EdgeXZ {
     }
 
     #[must_use]
+    pub fn to_tile_and_direction(self) -> (TileCoordsXZ, DirectionXZ) {
+        match self {
+            EdgeXZ::Horizontal { west } => (west, DirectionXZ::East),
+            EdgeXZ::Vertical { north } => (north, DirectionXZ::South),
+        }
+    }
+
+    #[must_use]
     pub fn for_tile(tile: TileCoordsXZ) -> [EdgeXZ; 4] {
         [
             EdgeXZ::from_tile_and_direction(tile, DirectionXZ::North),

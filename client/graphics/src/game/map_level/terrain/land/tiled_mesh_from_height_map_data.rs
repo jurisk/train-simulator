@@ -3,6 +3,7 @@ use bevy::render::mesh::{MeshVertexAttribute, PrimitiveTopology};
 use bevy::render::render_asset::RenderAssetUsages;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::vertex_coords_xz::VertexCoordsXZ;
+use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
 #[derive(Copy, Clone, Debug, Default)]
@@ -40,6 +41,16 @@ impl Quad {
             + distance(bottom_left, point)
             + distance(bottom_right, point))
             / 4.0
+    }
+
+    #[must_use]
+    pub fn vertex_coordinates_clockwise(&self, direction: DirectionXZ) -> (Vertex, Vertex) {
+        match direction {
+            DirectionXZ::North => (self.top_left, self.top_right),
+            DirectionXZ::East => (self.top_right, self.bottom_right),
+            DirectionXZ::South => (self.bottom_right, self.bottom_left),
+            DirectionXZ::West => (self.bottom_left, self.top_left),
+        }
     }
 }
 

@@ -48,7 +48,7 @@ impl Plugin for BuildingsPlugin {
     }
 }
 
-// TODO: Remove this, this is only for testing
+// TODO: Remove this, this is only for testing - and it glitches as sometimes we get empty `BuildingsAdded` even during the game
 #[allow(clippy::too_many_lines)]
 fn build_sample_objects_for_testing(
     mut server_messages: EventReader<ServerMessageEvent>,
