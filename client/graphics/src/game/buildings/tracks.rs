@@ -126,6 +126,7 @@ pub(crate) fn build_track_when_mouse_released(
             player_id,
             ordered_selected_tiles,
             game_state.building_state(),
+            game_state.map_level(),
         ) {
             client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                 game_id,

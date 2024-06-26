@@ -11,6 +11,7 @@ use crate::tile_track::TileTrack;
 use crate::vertex_coords_xz::VertexCoordsXZ;
 use crate::TileCoordsXZ;
 
+// TODO: Make fields private
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Terrain {
     pub y_coef:         f32,
@@ -78,6 +79,14 @@ impl Terrain {
     }
 
     #[must_use]
+    pub fn height_at(&self, vertex_coords_xz: VertexCoordsXZ) -> Height {
+        match self.vertex_heights.get(vertex_coords_xz) {
+            Some(&height) => height,
+            None => Height::fallback(),
+        }
+    }
+
+    #[must_use]
     #[allow(clippy::cast_precision_loss, clippy::cast_lossless)]
     pub fn logical_to_world(&self, vertex_coords_xz: VertexCoordsXZ) -> Vec3 {
         let Height(height) = self.vertex_heights[vertex_coords_xz];
@@ -97,5 +106,14 @@ impl Terrain {
         let entry = self.edge_center_coordinate(entry_direction, tile);
         let exit = self.edge_center_coordinate(exit_direction, tile);
         (entry, exit)
+    }
+
+    #[must_use]
+    #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
+    pub fn tile_in_bounds(&self, tile: TileCoordsXZ) -> bool {
+        let coords: CoordsXZ = tile.into();
+        let valid_x = coords.x >= 0 && coords.x < self.tile_count_x() as i32;
+        let valid_z = coords.z >= 0 && coords.z < self.tile_count_z() as i32;
+        valid_x && valid_z
     }
 }

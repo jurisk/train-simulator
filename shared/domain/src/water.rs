@@ -13,4 +13,10 @@ impl Water {
         let (below, above) = &self.between;
         below.0 + 1 == above.0
     }
+
+    #[must_use]
+    pub fn under_water(&self, height: Height) -> bool {
+        let (below, _above) = &self.between;
+        height <= *below
+    }
 }

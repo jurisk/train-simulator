@@ -8,12 +8,14 @@ use crate::building_info::BuildingInfo;
 use crate::building_state::{BuildingState, CanBuildResponse};
 use crate::building_type::BuildingType;
 use crate::edge_xz::EdgeXZ;
+use crate::map_level::MapLevel;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 use crate::{BuildingId, PlayerId};
 
+// Later: This possibly allows such sharp turns that trains cannot actually make! But first let us check that this is an issue.
 #[allow(
     clippy::items_after_statements,
     clippy::cast_possible_truncation,
@@ -24,6 +26,7 @@ fn successors(
     preferred_tiles: &HashSet<TileCoordsXZ>,
     building_state: &BuildingState,
     player_id: PlayerId,
+    map_level: &MapLevel,
 ) -> Vec<(EdgeXZ, u32)> {
     let mut results = vec![];
 
@@ -47,8 +50,10 @@ fn successors(
                     PREFERRED_TILE_BONUS
                 };
 
+                // Later: Should we give a bonus in case the track already exists?
+
                 if matches!(
-                    building_state.can_build_building(player_id, &building),
+                    building_state.can_build_building(player_id, &building, map_level),
                     CanBuildResponse::Ok | CanBuildResponse::AlreadyExists
                 ) {
                     results.push((neighbour, length * malus));
@@ -65,19 +70,29 @@ pub fn plan_track(
     player_id: PlayerId,
     ordered_selected_tiles: &[TileCoordsXZ],
     building_state: &BuildingState,
+    map_level: &MapLevel,
 ) -> Option<Vec<BuildingInfo>> {
-    // TODO: Actually get the EdgeXZ that was closest to the mouse when selecting!
+    // TODO HIGH: Actually get the EdgeXZ that was closest to the mouse when selecting!
     let head_tile = *ordered_selected_tiles.first()?;
     let head = EdgeXZ::from_tile_and_direction(head_tile, DirectionXZ::North);
-    // TODO: Actually get the EdgeXZ that was closest to the mouse when selecting!
+    // TODO HIGH: Actually get the EdgeXZ that was closest to the mouse when selecting!
     let tail_tile = *ordered_selected_tiles.last()?;
     let tail = EdgeXZ::from_tile_and_direction(tail_tile, DirectionXZ::East);
     let preferred_tiles: HashSet<TileCoordsXZ> = ordered_selected_tiles.iter().copied().collect();
 
+    // Later: If `tail` is under water, no sense to plan?
     // Later: Consider switching to `a_star` or `dijkstra_all`
     let path: Option<(Vec<EdgeXZ>, u32)> = dijkstra(
         &head,
-        |edge| successors(*edge, &preferred_tiles, building_state, player_id),
+        |edge| {
+            successors(
+                *edge,
+                &preferred_tiles,
+                building_state,
+                player_id,
+                map_level,
+            )
+        },
         |edge| *edge == tail,
     );
 
@@ -96,7 +111,7 @@ pub fn plan_track(
                     building_type: BuildingType::Track(tile_track.track_type),
                 };
 
-                match building_state.can_build_building(player_id, &building) {
+                match building_state.can_build_building(player_id, &building, map_level) {
                     CanBuildResponse::Ok => {
                         buildings.push(building);
                     },

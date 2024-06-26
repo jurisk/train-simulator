@@ -103,8 +103,6 @@ fn build_sample_objects_for_testing(
                         ((49, 49), TrackType::NorthSouth),
                         ((49, 50), TrackType::NorthSouth),
                         ((49, 51), TrackType::NorthSouth),
-                        // A simplified compass, pointing North!
-                        ((48, 39), TrackType::NorthSouth),
                     ];
 
                     let mut initial_buildings = vec![];

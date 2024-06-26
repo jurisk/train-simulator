@@ -3,6 +3,8 @@ use std::fmt::Debug;
 use serde::{Deserialize, Serialize};
 
 use crate::terrain::Terrain;
+use crate::tile_coords_xz::TileCoordsXZ;
+use crate::vertex_coords_xz::VertexCoordsXZ;
 use crate::water::Water;
 
 #[repr(u32)]
@@ -25,8 +27,15 @@ impl TerrainType {
     }
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct Height(pub u8);
+
+impl Height {
+    #[must_use]
+    pub fn fallback() -> Self {
+        Self(u8::default())
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct MapLevel {
@@ -39,6 +48,21 @@ impl MapLevel {
     #[must_use]
     pub fn is_valid(&self) -> bool {
         self.terrain.is_valid() && self.water.is_valid()
+    }
+
+    #[must_use]
+    pub fn height_at(&self, vertex_coords_xz: VertexCoordsXZ) -> Height {
+        self.terrain.height_at(vertex_coords_xz)
+    }
+
+    #[must_use]
+    pub fn under_water(&self, vertex_coords_xz: VertexCoordsXZ) -> bool {
+        self.water.under_water(self.height_at(vertex_coords_xz))
+    }
+
+    #[must_use]
+    pub fn tile_in_bounds(&self, tile: TileCoordsXZ) -> bool {
+        self.terrain.tile_in_bounds(tile)
     }
 }
 

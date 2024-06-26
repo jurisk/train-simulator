@@ -33,6 +33,12 @@ impl TileCoordsXZ {
     }
 
     #[must_use]
+    pub fn vertex_coords(self) -> [VertexCoordsXZ; 4] {
+        let (nw, ne, se, sw) = self.vertex_coords_nw_ne_se_sw();
+        [nw, ne, se, sw]
+    }
+
+    #[must_use]
     pub fn vertex_coords_nw_ne_se_sw(
         self,
     ) -> (

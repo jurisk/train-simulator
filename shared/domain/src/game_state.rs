@@ -153,7 +153,8 @@ impl GameState {
         requesting_player_id: PlayerId,
         buildings: Vec<BuildingInfo>,
     ) -> Result<(), ()> {
-        self.buildings.build(requesting_player_id, buildings)
+        self.buildings
+            .build(requesting_player_id, buildings, &self.map_level)
     }
 
     #[must_use]

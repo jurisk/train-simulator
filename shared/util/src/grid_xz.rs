@@ -78,6 +78,29 @@ where
     }
 }
 
+impl<K, V> GridXZ<K, V>
+where
+    K: Into<CoordsXZ>,
+{
+    #[must_use]
+    pub fn get(&self, k: K) -> Option<&V> {
+        let coords: CoordsXZ = k.into();
+        self.data
+            .get(coords.z as usize)
+            .and_then(|row| row.get(coords.x as usize))
+    }
+
+    #[must_use]
+    #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
+    pub fn in_bounds(&self, k: K) -> bool {
+        let coords: CoordsXZ = k.into();
+        coords.x < self.size_x as i32
+            && coords.z < self.size_z as i32
+            && coords.x >= 0
+            && coords.z >= 0
+    }
+}
+
 impl<K, T> Index<K> for GridXZ<K, T>
 where
     K: Into<CoordsXZ>,
