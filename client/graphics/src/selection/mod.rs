@@ -62,7 +62,7 @@ fn highlight_selected_edges(
         let SelectedEdges {
             ordered: ordered_selected_edges,
         } = selected_edges.as_ref();
-        for edge in ordered_selected_edges {
+        if let Some(edge) = ordered_selected_edges.first() {
             debug_draw_edge(&mut gizmos, *edge, tiles, Color::PURPLE);
         }
 
@@ -103,9 +103,13 @@ fn debug_draw_edge(
     color: Color,
 ) {
     let (tile, direction) = edge.to_tile_and_direction();
-    let (a, b) = tiles[tile].quad.vertex_coordinates_clockwise(direction);
-    gizmos.sphere(a.position, Quat::default(), 0.1, color);
-    gizmos.sphere(b.position, Quat::default(), 0.1, color);
+    if tiles.in_bounds(tile) {
+        // Later:   Actually, we cannot select the edges on some corners of the map (e.g. left side of the map)
+        //          because of the way we represent the edges. We can fix this later, probably by avoiding `to_tile_and_direction`.
+        let (a, b) = tiles[tile].quad.vertex_coordinates_clockwise(direction);
+        gizmos.sphere(a.position, Quat::default(), 0.1, color);
+        gizmos.sphere(b.position, Quat::default(), 0.1, color);
+    }
 }
 
 fn debug_draw_tile(
