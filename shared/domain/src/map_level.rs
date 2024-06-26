@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use serde::{Deserialize, Serialize};
 
 use crate::terrain::Terrain;
+use crate::water::Water;
 
 #[repr(u32)]
 pub enum TerrainType {
@@ -26,18 +27,6 @@ impl TerrainType {
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Height(pub u8);
-
-#[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
-pub struct Water {
-    pub between: (Height, Height),
-}
-
-impl Water {
-    fn is_valid(&self) -> bool {
-        let (below, above) = &self.between;
-        below.0 + 1 == above.0
-    }
-}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct MapLevel {

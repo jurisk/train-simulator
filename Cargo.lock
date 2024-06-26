@@ -3994,6 +3994,7 @@ dependencies = [
  "log",
  "pathfinding",
  "serde",
+ "serde_json",
  "shared-util",
  "uuid",
 ]

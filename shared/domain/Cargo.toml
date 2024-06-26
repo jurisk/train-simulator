@@ -16,3 +16,6 @@ fastrand.workspace = true
 bevy_math.workspace = true
 log.workspace = true
 pathfinding.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true # For tests

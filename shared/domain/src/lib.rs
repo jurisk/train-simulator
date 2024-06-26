@@ -30,6 +30,7 @@ pub mod track_type;
 pub mod transport_info;
 pub mod transport_type;
 pub mod vertex_coords_xz;
+pub mod water;
 
 // Later: We initially wanted it to be Uuid, but bevy_simplenet uses u128, so we can stick with that for now for easier compatibility
 #[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
