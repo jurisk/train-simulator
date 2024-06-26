@@ -14,7 +14,7 @@ use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 use crate::{BuildingId, PlayerId};
 
-// Later: This possibly allows such sharp turns that trains cannot actually make! But first let us check that this is an issue.
+// TODO: This allows turns that trains cannot actually make (e.g. crossing rails)!
 #[allow(
     clippy::items_after_statements,
     clippy::cast_possible_truncation,
@@ -22,7 +22,7 @@ use crate::{BuildingId, PlayerId};
 )]
 fn successors(
     edge: EdgeXZ,
-    preferred_tiles: &HashSet<TileCoordsXZ>,
+    preferred_edges: &HashSet<EdgeXZ>,
     building_state: &BuildingState,
     player_id: PlayerId,
     map_level: &MapLevel,
@@ -31,7 +31,7 @@ fn successors(
 
     for tile in edge.ordered_tiles() {
         for neighbour in EdgeXZ::for_tile(tile) {
-            const PREFERRED_TILE_BONUS: u32 = 16; // How much shorter "length" do we assign to going through a preferred tile
+            const NON_PREFERRED_EDGE_MALUS: u32 = 16; // How much shorter "length" do we assign to going through a preferred tile
 
             for tile_track in track_types_that_fit(edge, neighbour) {
                 let building = BuildingInfo {
@@ -43,10 +43,10 @@ fn successors(
 
                 let length = (tile_track.track_type.length_in_tiles() * 1000.0).round() as u32;
 
-                let malus = if preferred_tiles.contains(&tile) {
+                let malus = if preferred_edges.contains(&neighbour) {
                     1
                 } else {
-                    PREFERRED_TILE_BONUS
+                    NON_PREFERRED_EDGE_MALUS
                 };
 
                 // Later: Should we give a bonus in case the track already exists?
@@ -67,7 +67,7 @@ fn successors(
 #[must_use]
 pub fn plan_track(
     player_id: PlayerId,
-    ordered_selected_tiles: &[TileCoordsXZ],
+    _ordered_selected_tiles: &[TileCoordsXZ],
     ordered_selected_edges: &[EdgeXZ],
     building_state: &BuildingState,
     map_level: &MapLevel,
@@ -75,8 +75,7 @@ pub fn plan_track(
     let head = *ordered_selected_edges.first()?;
     let tail = *ordered_selected_edges.last()?;
 
-    // TODO: Use preferred_edges here
-    let preferred_tiles: HashSet<TileCoordsXZ> = ordered_selected_tiles.iter().copied().collect();
+    let preferred_edges: HashSet<EdgeXZ> = ordered_selected_edges.iter().copied().collect();
 
     // Later: If `tail` is under water, no sense to plan?
     // Later: Consider switching to `a_star` or `dijkstra_all`
@@ -85,7 +84,7 @@ pub fn plan_track(
         |edge| {
             successors(
                 *edge,
-                &preferred_tiles,
+                &preferred_edges,
                 building_state,
                 player_id,
                 map_level,
