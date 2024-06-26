@@ -8,7 +8,7 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::tile_coords_xz::TileCoordsXZ;
 
 // Later: Possibly rename to `ConnectionType` or something. And `TrackType` thus has multiple of these `ConnectionType`-s.
-#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum TrackType {
     NorthEast,
     NorthSouth,

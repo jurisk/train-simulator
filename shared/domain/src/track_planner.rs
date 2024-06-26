@@ -1,10 +1,11 @@
 use std::collections::HashSet;
 
+use log::warn;
 use pathfinding::prelude::dijkstra;
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::building_info::BuildingInfo;
-use crate::building_state::BuildingState;
+use crate::building_state::{BuildingState, CanBuildResponse};
 use crate::building_type::BuildingType;
 use crate::edge_xz::EdgeXZ;
 use crate::tile_coords_xz::TileCoordsXZ;
@@ -46,7 +47,10 @@ fn successors(
                     PREFERRED_TILE_BONUS
                 };
 
-                if building_state.can_build_building(player_id, &building) {
+                if matches!(
+                    building_state.can_build_building(player_id, &building),
+                    CanBuildResponse::Ok | CanBuildResponse::AlreadyExists
+                ) {
                     results.push((neighbour, length * malus));
                 }
             }
@@ -78,25 +82,36 @@ pub fn plan_track(
     );
 
     path.map(|(path, _length)| {
-        let buildings = path
-            .windows(2)
-            .flat_map(|w| {
-                let a = w[0];
-                let b = w[1];
+        let mut buildings = vec![];
 
-                track_types_that_fit(a, b)
-                    .into_iter()
-                    .map(|tile_track| {
-                        BuildingInfo {
-                            owner_id:      player_id,
-                            building_id:   BuildingId::random(),
-                            covers_tiles:  TileCoverage::Single(tile_track.tile_coords_xz),
-                            building_type: BuildingType::Track(tile_track.track_type),
-                        }
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .collect::<Vec<_>>();
+        for w in path.windows(2) {
+            let a = w[0];
+            let b = w[1];
+
+            for tile_track in track_types_that_fit(a, b) {
+                let building = BuildingInfo {
+                    owner_id:      player_id,
+                    building_id:   BuildingId::random(),
+                    covers_tiles:  TileCoverage::Single(tile_track.tile_coords_xz),
+                    building_type: BuildingType::Track(tile_track.track_type),
+                };
+
+                match building_state.can_build_building(player_id, &building) {
+                    CanBuildResponse::Ok => {
+                        buildings.push(building);
+                    },
+                    CanBuildResponse::AlreadyExists => {
+                        // Expected if we are building an addition to existing track
+                    },
+                    CanBuildResponse::Invalid => {
+                        warn!(
+                            "Unexpected state - our found path includes invalid buildings: {:?}",
+                            building
+                        );
+                    },
+                }
+            }
+        }
 
         buildings
     })
