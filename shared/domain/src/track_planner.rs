@@ -22,7 +22,7 @@ use crate::{BuildingId, PlayerId};
 )]
 fn successors(
     edge: EdgeXZ,
-    preferred_edges: &HashSet<EdgeXZ>,
+    preferred_tiles: &HashSet<TileCoordsXZ>,
     building_state: &BuildingState,
     player_id: PlayerId,
     map_level: &MapLevel,
@@ -31,7 +31,7 @@ fn successors(
 
     for tile in edge.ordered_tiles() {
         for neighbour in EdgeXZ::for_tile(tile) {
-            const NON_PREFERRED_EDGE_MALUS: u32 = 16; // How much shorter "length" do we assign to going through a preferred tile
+            const NON_PREFERRED_TILE_MALUS: u32 = 16; // How much shorter "length" do we assign to going through a preferred tile
 
             for tile_track in track_types_that_fit(edge, neighbour) {
                 let building = BuildingInfo {
@@ -43,10 +43,10 @@ fn successors(
 
                 let length = (tile_track.track_type.length_in_tiles() * 1000.0).round() as u32;
 
-                let malus = if preferred_edges.contains(&neighbour) {
+                let malus = if preferred_tiles.contains(&tile) {
                     1
                 } else {
-                    NON_PREFERRED_EDGE_MALUS
+                    NON_PREFERRED_TILE_MALUS
                 };
 
                 // Later: Should we give a bonus in case the track already exists?
@@ -67,7 +67,7 @@ fn successors(
 #[must_use]
 pub fn plan_track(
     player_id: PlayerId,
-    _ordered_selected_tiles: &[TileCoordsXZ],
+    ordered_selected_tiles: &[TileCoordsXZ],
     ordered_selected_edges: &[EdgeXZ],
     building_state: &BuildingState,
     map_level: &MapLevel,
@@ -75,7 +75,7 @@ pub fn plan_track(
     let head = *ordered_selected_edges.first()?;
     let tail = *ordered_selected_edges.last()?;
 
-    let preferred_edges: HashSet<EdgeXZ> = ordered_selected_edges.iter().copied().collect();
+    let preferred_tiles: HashSet<TileCoordsXZ> = ordered_selected_tiles.iter().copied().collect();
 
     // Later: If `tail` is under water, no sense to plan?
     // Later: Consider switching to `a_star` or `dijkstra_all`
@@ -84,7 +84,7 @@ pub fn plan_track(
         |edge| {
             successors(
                 *edge,
-                &preferred_edges,
+                &preferred_tiles,
                 building_state,
                 player_id,
                 map_level,
