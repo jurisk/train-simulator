@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum StationOrientation {
-    NorthSouth,
-    EastWest,
+    NorthToSouth,
+    EastToWest,
 }
 
 // TODO: Build some test stations in test setup
