@@ -12,6 +12,7 @@ use crate::communication::domain::ServerMessageEvent;
 
 pub(crate) struct WaterPlugin;
 
+// Later: Reuse ideas from https://github.com/Neopallium/bevy_water or https://github.com/NickToony/gd-retroterrain/blob/master/WaterPlane.gdshader
 impl Plugin for WaterPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(FixedUpdate, handle_game_state_snapshot);

@@ -116,7 +116,7 @@ fn create_train_component(
 ) -> Entity {
     let mesh = match train_component_type {
         TrainComponentType::Engine => {
-            // TODO: Add also a cylinder
+            // Later: Add also a cylinder
             adjusted_cuboid(
                 GAP_BETWEEN_TRAIN_COMPONENTS,
                 TRAIN_WIDTH,

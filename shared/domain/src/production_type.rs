@@ -9,6 +9,7 @@ pub enum ProductionType {
     CoalMine,
     IronMine,
     IronWorks,
+    CargoPort,
 }
 
 impl ProductionType {

@@ -19,7 +19,8 @@ serde_json.workspace = true
 fastrand.workspace = true
 
 bevy_mod_raycast.workspace = true
-
+bevy_egui.workspace = true
+egui.workspace = true
 bevy-inspector-egui.workspace = true
 uuid = { version = "1.8.0", features = ["v4"] }
 

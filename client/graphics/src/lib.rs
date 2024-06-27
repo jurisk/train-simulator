@@ -11,6 +11,7 @@ use crate::communication::CommunicationPlugin;
 use crate::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
 use crate::debug::DebugPlugin;
 use crate::game::{GameLaunchParams, GamePlugin};
+use crate::hud::HudPlugin;
 use crate::lights::LightsPlugin;
 use crate::lobby::LobbyHandlerPlugin;
 use crate::network::client_ping::ClientPingPlugin;
@@ -21,6 +22,7 @@ pub mod communication;
 mod constants;
 mod debug;
 pub mod game;
+pub mod hud;
 mod lights;
 mod lobby;
 pub mod network;
@@ -76,6 +78,7 @@ impl Plugin for ClientGraphicsPlugin {
             ClientPingPlugin {
                 interval: Duration::from_secs(60),
             },
+            HudPlugin,
         ));
 
         info!("Arch: {}", std::env::consts::ARCH);
