@@ -14,6 +14,7 @@ use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::{Tile, Tiles};
+use crate::hud::SelectedMode;
 
 #[derive(Resource, Default)]
 pub struct HoveredTile(pub Option<TileCoordsXZ>);
@@ -47,6 +48,19 @@ impl Plugin for SelectionPlugin {
 
         app.insert_resource(HoveredEdge::default());
         app.insert_resource(SelectedEdges::default());
+
+        app.add_systems(Update, remove_selection_when_selected_mode_changes);
+    }
+}
+
+fn remove_selection_when_selected_mode_changes(
+    selected_mode: Res<SelectedMode>,
+    mut selected_tiles: ResMut<SelectedTiles>,
+    mut selected_edges: ResMut<SelectedEdges>,
+) {
+    if selected_mode.as_ref() != &SelectedMode::Tracks {
+        selected_tiles.ordered.clear();
+        selected_edges.ordered.clear();
     }
 }
 
@@ -55,20 +69,23 @@ fn highlight_selected_edges(
     selected_edges: Res<SelectedEdges>,
     hovered_edge: Res<HoveredEdge>,
     mut gizmos: Gizmos,
+    selected_mode: Res<SelectedMode>,
 ) {
-    if let Some(tiles) = tiles {
-        let tiles = &tiles.tiles;
+    if selected_mode.as_ref() == &SelectedMode::Tracks {
+        if let Some(tiles) = tiles {
+            let tiles = &tiles.tiles;
 
-        let SelectedEdges {
-            ordered: ordered_selected_edges,
-        } = selected_edges.as_ref();
-        if let Some(edge) = ordered_selected_edges.first() {
-            debug_draw_edge(&mut gizmos, *edge, tiles, Color::PURPLE);
-        }
+            let SelectedEdges {
+                ordered: ordered_selected_edges,
+            } = selected_edges.as_ref();
+            if let Some(edge) = ordered_selected_edges.first() {
+                debug_draw_edge(&mut gizmos, *edge, tiles, Color::PURPLE);
+            }
 
-        let HoveredEdge(hovered_edge) = hovered_edge.as_ref();
-        if let Some(hovered_edge) = hovered_edge {
-            debug_draw_edge(&mut gizmos, *hovered_edge, tiles, Color::PINK);
+            let HoveredEdge(hovered_edge) = hovered_edge.as_ref();
+            if let Some(hovered_edge) = hovered_edge {
+                debug_draw_edge(&mut gizmos, *hovered_edge, tiles, Color::PINK);
+            }
         }
     }
 }
@@ -78,15 +95,18 @@ fn highlight_selected_tiles(
     selected_tiles: Res<SelectedTiles>,
     hovered_tile: Res<HoveredTile>,
     mut gizmos: Gizmos,
+    selected_mode: Res<SelectedMode>,
 ) {
     if let Some(tiles) = tiles {
         let tiles = &tiles.tiles;
 
-        let SelectedTiles {
-            ordered: ordered_selected_tiles,
-        } = selected_tiles.as_ref();
-        for tile_coords in ordered_selected_tiles {
-            debug_draw_tile(&mut gizmos, *tile_coords, tiles, Color::PURPLE);
+        if selected_mode.as_ref() == &SelectedMode::Tracks {
+            let SelectedTiles {
+                ordered: ordered_selected_tiles,
+            } = selected_tiles.as_ref();
+            for tile_coords in ordered_selected_tiles {
+                debug_draw_tile(&mut gizmos, *tile_coords, tiles, Color::PURPLE);
+            }
         }
 
         let HoveredTile(hovered_tile) = hovered_tile.as_ref();

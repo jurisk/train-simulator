@@ -28,6 +28,8 @@ impl Plugin for HudPlugin {
 const MIN_X: f32 = 200.0;
 const MIN_Y: f32 = 40.0;
 fn show_hud(mut contexts: EguiContexts, mut selected_mode: ResMut<SelectedMode>) {
+    // Later: We need to better depict the current building mode in the menu, in case it's a sub-menu item that is selected
+
     let mut style = egui::Style::default();
     style.text_styles.insert(
         egui::TextStyle::Button,
@@ -42,89 +44,60 @@ fn show_hud(mut contexts: EguiContexts, mut selected_mode: ResMut<SelectedMode>)
         );
 
         menu::bar(ui, |ui| {
-            if ui
-                .add(
-                    egui::Button::new("ℹ Info")
-                        .selected(matches!(*selected_mode, SelectedMode::Info))
-                        .min_size(egui::vec2(MIN_X, MIN_Y)),
-                )
-                .clicked()
-            {
-                println!("Info");
-                *selected_mode = SelectedMode::Info;
-                ui.close_menu();
-            }
-
-            if ui
-                .add(
-                    egui::Button::new("🚆 Tracks")
-                        .selected(matches!(*selected_mode, SelectedMode::Tracks))
-                        .min_size(egui::vec2(MIN_X, MIN_Y)),
-                )
-                .clicked()
-            {
-                println!("Tracks");
-                *selected_mode = SelectedMode::Tracks;
-                ui.close_menu();
-            }
-
-            if ui
-                .add(
-                    egui::Button::new("🚉 Stations")
-                        .selected(matches!(*selected_mode, SelectedMode::Stations))
-                        .min_size(egui::vec2(MIN_X, MIN_Y)),
-                )
-                .clicked()
-            {
-                println!("Stations");
-                *selected_mode = SelectedMode::Stations;
-                ui.close_menu();
-            }
-
+            info_menu(&mut selected_mode, ui);
+            tracks_menu(&mut selected_mode, ui);
+            stations_menu(&mut selected_mode, ui);
             production_menu(&mut selected_mode, ui);
-
-            menu::menu_button(ui, "⚔ Military", |ui| {
-                if ui
-                    .add(
-                        egui::Button::new("⚔ Fixed Artillery")
-                            .selected(matches!(*selected_mode, SelectedMode::Military))
-                            .min_size(egui::vec2(MIN_X, MIN_Y)),
-                    )
-                    .clicked()
-                {
-                    println!("Fixed Arty");
-                    *selected_mode = SelectedMode::Military;
-                    ui.close_menu();
-                }
-            });
-            menu::menu_button(ui, "🚆 Trains", |ui| {
-                if ui
-                    .add(
-                        egui::Button::new("🚆 Coal Train")
-                            .selected(matches!(*selected_mode, SelectedMode::Trains))
-                            .min_size(egui::vec2(MIN_X, MIN_Y)),
-                    )
-                    .clicked()
-                {
-                    println!("Coal Train");
-                    *selected_mode = SelectedMode::Trains;
-                    ui.close_menu();
-                }
-            });
-            if ui
-                .add(
-                    egui::Button::new("❎ Demolish")
-                        .selected(matches!(*selected_mode, SelectedMode::Demolish))
-                        .min_size(egui::vec2(MIN_X, MIN_Y)),
-                )
-                .clicked()
-            {
-                println!("Demolish");
-                *selected_mode = SelectedMode::Demolish;
-                ui.close_menu();
-            }
+            military_menu(&mut selected_mode, ui);
+            trains_menu(&mut selected_mode, ui);
+            demolish_menu(&mut selected_mode, ui);
         });
     });
+}
+
+fn info_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+    if ui
+        .add(
+            egui::Button::new("ℹ Info")
+                .selected(matches!(*selected_mode, SelectedMode::Info))
+                .min_size(egui::vec2(MIN_X, MIN_Y)),
+        )
+        .clicked()
+    {
+        println!("Info");
+        *selected_mode = SelectedMode::Info;
+        ui.close_menu();
+    }
+}
+
+fn tracks_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+    if ui
+        .add(
+            egui::Button::new("🚆 Tracks")
+                .selected(matches!(*selected_mode, SelectedMode::Tracks))
+                .min_size(egui::vec2(MIN_X, MIN_Y)),
+        )
+        .clicked()
+    {
+        println!("Tracks");
+        *selected_mode = SelectedMode::Tracks;
+        ui.close_menu();
+    }
+}
+
+fn stations_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+    if ui
+        .add(
+            egui::Button::new("🚉 Stations")
+                .selected(matches!(*selected_mode, SelectedMode::Stations))
+                .min_size(egui::vec2(MIN_X, MIN_Y)),
+        )
+        .clicked()
+    {
+        println!("Stations");
+        *selected_mode = SelectedMode::Stations;
+        ui.close_menu();
+    }
 }
 
 fn production_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
@@ -190,4 +163,54 @@ fn production_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
             ui.close_menu();
         }
     });
+}
+
+fn military_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+    menu::menu_button(ui, "⚔ Military", |ui| {
+        if ui
+            .add(
+                egui::Button::new("⚔ Fixed Artillery")
+                    .selected(matches!(*selected_mode, SelectedMode::Military))
+                    .min_size(egui::vec2(MIN_X, MIN_Y)),
+            )
+            .clicked()
+        {
+            println!("Fixed Arty");
+            *selected_mode = SelectedMode::Military;
+            ui.close_menu();
+        }
+    });
+}
+
+fn trains_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+    // Later: More types of trains
+    menu::menu_button(ui, "🚆 Trains", |ui| {
+        if ui
+            .add(
+                egui::Button::new("🚆 Coal Train")
+                    .selected(matches!(*selected_mode, SelectedMode::Trains))
+                    .min_size(egui::vec2(MIN_X, MIN_Y)),
+            )
+            .clicked()
+        {
+            println!("Coal Train");
+            *selected_mode = SelectedMode::Trains;
+            ui.close_menu();
+        }
+    });
+}
+
+fn demolish_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+    if ui
+        .add(
+            egui::Button::new("❎ Demolish")
+                .selected(matches!(*selected_mode, SelectedMode::Demolish))
+                .min_size(egui::vec2(MIN_X, MIN_Y)),
+        )
+        .clicked()
+    {
+        println!("Demolish");
+        *selected_mode = SelectedMode::Demolish;
+        ui.close_menu();
+    }
 }
