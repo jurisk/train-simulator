@@ -48,18 +48,18 @@ impl Plugin for BuildingsPlugin {
     }
 }
 
-// TODO: Remove this, this is only for testing - and it glitches as sometimes we get empty `BuildingsAdded` even during the game
 #[allow(clippy::too_many_lines)]
 fn build_sample_objects_for_testing(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut client_messages: EventWriter<ClientMessageEvent>,
     player_id_resource: Res<PlayerIdResource>,
+    game_state_resource: Res<GameStateResource>,
 ) {
     let PlayerIdResource(player_id) = *player_id_resource;
     for message in server_messages.read() {
         if let ServerResponse::Game(game_id, game_response) = &message.response {
-            if let GameResponse::BuildingsAdded(buildings) = game_response {
-                if buildings.is_empty() {
+            if let GameResponse::BuildingsAdded(_buildings) = game_response {
+                if game_state_resource.0.transport_infos().is_empty() {
                     // TODO: This is debug-only and to be removed - move this to actually use the "save game" concept instead
                     let test_track = vec![
                         ((49, 43), TrackType::SouthWest),
