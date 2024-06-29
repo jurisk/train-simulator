@@ -23,6 +23,7 @@ mod constants;
 mod debug;
 pub mod game;
 pub mod hud;
+pub mod key_map;
 mod lights;
 mod lobby;
 pub mod network;

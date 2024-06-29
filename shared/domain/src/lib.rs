@@ -72,6 +72,12 @@ impl PlayerName {
     }
 }
 
+impl Display for PlayerName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub struct PlayerId(pub Uuid);
 
