@@ -25,9 +25,10 @@ pub(crate) fn left_panel(
     if let Some(game_state_resource) = game_state_resource {
         let GameStateResource(game_state) = game_state_resource.as_ref();
 
-        egui::SidePanel::left("hud_left_panel").show(contexts.ctx_mut(), |ui| {
-            players_info_panel(ui, game_state.players());
-        });
+        egui::SidePanel::left("hud_left_panel")
+            .show(contexts.ctx_mut(), |ui| {
+                players_info_panel(ui, game_state.players());
+            });
     }
 }
 
