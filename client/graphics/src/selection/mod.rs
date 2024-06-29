@@ -54,7 +54,8 @@ impl Plugin for SelectionPlugin {
     }
 }
 
-// TODO: This doesn't always work, we sometimes switch modes and end up with a selection that we build as tracks
+// TODO:    This doesn't always work, we sometimes switch modes and end up with a selection that we build as tracks.
+//          Possibly this is due to race conditions - this system executes after the system that builds tracks?
 fn remove_selection_when_selected_mode_changes(
     selected_mode: Res<SelectedMode>,
     mut selected_tiles: ResMut<SelectedTiles>,

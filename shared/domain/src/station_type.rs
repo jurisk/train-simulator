@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 
 use crate::tile_coords_xz::TileCoordsXZ;
+use crate::track_type::TrackType;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum StationOrientation {
@@ -20,7 +21,15 @@ pub struct StationType {
 
 impl StationType {
     #[must_use]
-    pub(crate) fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
+    pub fn track_type(self) -> TrackType {
+        match self.orientation {
+            StationOrientation::NorthToSouth => TrackType::NorthSouth,
+            StationOrientation::EastToWest => TrackType::EastWest,
+        }
+    }
+
+    #[must_use]
+    pub fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
         let mut result = HashSet::new();
         match self.orientation {
             StationOrientation::NorthToSouth => {
