@@ -248,8 +248,12 @@ fn create_building(
                         *track_type,
                     );
                 },
-                BuildingType::Production(_) => {}, // TODO: Implement
-                BuildingType::Station(_) => {},    // TODO: Implement
+                BuildingType::Production(production_type) => {
+                    todo!() // TODO: Implement
+                },
+                BuildingType::Station(station_type) => {
+                    todo!() // TODO: Implement
+                },
             }
         },
     }

@@ -9,6 +9,7 @@ use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
 use crate::selection::HoveredTile;
 
+// TODO HIGH: Merge/unify with stations? As currently stations are not being built. Or just copy-paste it. But you need to handle it for stations anyway.
 pub(crate) fn build_production_when_mouse_released(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     selected_mode_resource: Res<SelectedMode>,
@@ -28,7 +29,7 @@ pub(crate) fn build_production_when_mouse_released(
 
                 let game_id = game_state.game_id();
 
-                // Later: Check we can build this?
+                // Later: Check we can build this? And that check is different for stations, as they can be built on top of fully straight tracks with no branching.
                 let building = BuildingInfo {
                     owner_id:       player_id,
                     building_id:    BuildingId::random(),
