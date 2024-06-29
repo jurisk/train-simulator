@@ -10,7 +10,7 @@ use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
-use shared_domain::track_planner::plan_track;
+use shared_domain::track_planner::plan_tracks;
 use shared_domain::track_type::TrackType;
 
 use crate::communication::domain::ClientMessageEvent;
@@ -24,7 +24,7 @@ const RAIL_DIAMETER: f32 = 0.025;
 // Later: Consider what to do with the rails that right now go through the terrain.
 // Either prohibit such, or make them render better.
 #[allow(clippy::similar_names)]
-pub(crate) fn create_track(
+pub(crate) fn create_rails(
     player_info: &PlayerInfo,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
@@ -105,7 +105,7 @@ fn spawn_rail(
     ));
 }
 
-pub(crate) fn build_track_when_mouse_released(
+pub(crate) fn build_tracks_when_mouse_released(
     mut selected_tiles: ResMut<SelectedTiles>,
     mut selected_edges: ResMut<SelectedEdges>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
@@ -133,7 +133,7 @@ pub(crate) fn build_track_when_mouse_released(
             ordered: ordered_selected_edges,
         } = selected_edges;
 
-        if let Some(buildings) = plan_track(
+        if let Some(buildings) = plan_tracks(
             player_id,
             ordered_selected_tiles,
             ordered_selected_edges,

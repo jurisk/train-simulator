@@ -67,7 +67,7 @@ fn successors(
 }
 
 #[must_use]
-pub fn plan_track(
+pub fn plan_tracks(
     player_id: PlayerId,
     ordered_selected_tiles: &[TileCoordsXZ],
     ordered_selected_edges: &[EdgeXZ],

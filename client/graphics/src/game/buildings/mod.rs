@@ -26,7 +26,7 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::building::build_building_when_mouse_released;
-use crate::game::buildings::tracks::{build_track_when_mouse_released, create_track};
+use crate::game::buildings::tracks::{build_tracks_when_mouse_released, create_rails};
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::states::ClientState;
 
@@ -44,7 +44,7 @@ impl Plugin for BuildingsPlugin {
         );
         app.add_systems(
             Update,
-            build_track_when_mouse_released.run_if(in_state(ClientState::Playing)),
+            build_tracks_when_mouse_released.run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(
             Update,
@@ -238,7 +238,7 @@ fn create_building(
         Some(player_info) => {
             match &building_info.building_type {
                 BuildingType::Track(track_type) => {
-                    create_track(
+                    create_rails(
                         player_info,
                         commands,
                         meshes,
