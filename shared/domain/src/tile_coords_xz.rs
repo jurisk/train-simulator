@@ -14,6 +14,11 @@ impl TileCoordsXZ {
     pub const ZERO: TileCoordsXZ = TileCoordsXZ(CoordsXZ::ZERO);
 
     #[must_use]
+    pub fn new(x: i32, z: i32) -> Self {
+        Self(CoordsXZ::new(x, z))
+    }
+
+    #[must_use]
     pub fn from_usizes(x: usize, z: usize) -> Self {
         Self(CoordsXZ::from_usizes(x, z))
     }

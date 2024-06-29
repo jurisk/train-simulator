@@ -14,7 +14,6 @@ use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::tile_coords_xz::TileCoordsXZ;
-use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::tile_track::TileTrack;
 use shared_domain::track_type::TrackType;
 use shared_domain::transport_info::{
@@ -108,10 +107,10 @@ fn build_sample_objects_for_testing(
                     let mut initial_buildings = vec![];
                     for ((x, z), track_type) in test_track {
                         let building_info = BuildingInfo {
-                            owner_id:      player_id,
-                            building_id:   BuildingId::random(),
-                            covers_tiles:  TileCoverage::Single(TileCoordsXZ::from_usizes(x, z)),
-                            building_type: BuildingType::Track(track_type),
+                            owner_id:       player_id,
+                            building_id:    BuildingId::random(),
+                            reference_tile: TileCoordsXZ::from_usizes(x, z),
+                            building_type:  BuildingType::Track(track_type),
                         };
                         initial_buildings.push(building_info);
                     }
@@ -233,19 +232,15 @@ fn create_building(
         Some(player_info) => {
             match &building_info.building_type {
                 BuildingType::Track(track_type) => {
-                    if let TileCoverage::Single(tile) = &building_info.covers_tiles {
-                        create_track(
-                            player_info,
-                            commands,
-                            meshes,
-                            materials,
-                            map_level,
-                            *tile,
-                            *track_type,
-                        );
-                    } else {
-                        error!("Multi-tile track not supported");
-                    }
+                    create_track(
+                        player_info,
+                        commands,
+                        meshes,
+                        materials,
+                        map_level,
+                        building_info.reference_tile,
+                        *track_type,
+                    );
                 },
                 BuildingType::Production(_) => {}, // TODO: Implement
                 BuildingType::Station(_) => {},    // TODO: Implement

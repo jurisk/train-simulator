@@ -16,12 +16,11 @@ pub enum BuildingType {
 
 impl BuildingType {
     #[must_use]
-    #[allow(unused)] // TODO: Start using eventually
-    fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
+    pub fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
         match self {
             BuildingType::Track(track_type) => track_type.relative_tiles_used(),
             BuildingType::Production(production_type) => production_type.relative_tiles_used(),
-            BuildingType::Station(_station_type) => todo!(), // TODO: Implement
+            BuildingType::Station(station_type) => station_type.relative_tiles_used(),
         }
     }
 }

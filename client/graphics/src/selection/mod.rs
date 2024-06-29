@@ -54,6 +54,7 @@ impl Plugin for SelectionPlugin {
     }
 }
 
+// TODO: This doesn't always work, we sometimes switch modes and end up with a selection that we build as tracks
 fn remove_selection_when_selected_mode_changes(
     selected_mode: Res<SelectedMode>,
     mut selected_tiles: ResMut<SelectedTiles>,
@@ -101,10 +102,11 @@ fn highlight_selected_tiles(
     mut gizmos: Gizmos,
     selected_mode: Res<SelectedMode>,
 ) {
+    let selected_mode = selected_mode.as_ref();
     if let Some(tiles) = tiles {
         let tiles = &tiles.tiles;
 
-        if selected_mode.as_ref().show_selected_tiles() {
+        if selected_mode.show_selected_tiles() {
             let SelectedTiles {
                 ordered: ordered_selected_tiles,
             } = selected_tiles.as_ref();
@@ -113,10 +115,14 @@ fn highlight_selected_tiles(
             }
         }
 
-        if selected_mode.as_ref().show_hovered_tile() {
-            let HoveredTile(hovered_tile) = hovered_tile.as_ref();
-            if let Some(hovered_tile) = hovered_tile {
+        let HoveredTile(hovered_tile) = hovered_tile.as_ref();
+        if let Some(hovered_tile) = hovered_tile {
+            if selected_mode.show_hovered_tile() {
                 debug_draw_tile(&mut gizmos, *hovered_tile, tiles, Color::PINK);
+            }
+
+            for tile in selected_mode.building_tiles(*hovered_tile) {
+                debug_draw_tile(&mut gizmos, tile, tiles, Color::TOMATO);
             }
         }
     }
@@ -144,12 +150,14 @@ fn debug_draw_tile(
     tiles: &GridXZ<TileCoordsXZ, Tile>,
     color: Color,
 ) {
-    let tile = &tiles[tile_coords];
-    let quad = tile.quad;
-    gizmos.line(quad.top_left.position, quad.top_right.position, color);
-    gizmos.line(quad.top_right.position, quad.bottom_right.position, color);
-    gizmos.line(quad.bottom_right.position, quad.bottom_left.position, color);
-    gizmos.line(quad.bottom_left.position, quad.top_left.position, color);
+    if tiles.in_bounds(tile_coords) {
+        let tile = &tiles[tile_coords];
+        let quad = tile.quad;
+        gizmos.line(quad.top_left.position, quad.top_right.position, color);
+        gizmos.line(quad.top_right.position, quad.bottom_right.position, color);
+        gizmos.line(quad.bottom_right.position, quad.bottom_left.position, color);
+        gizmos.line(quad.bottom_left.position, quad.top_left.position, color);
+    }
 }
 
 const HACK_COEF: f32 = 1_000_000.0;

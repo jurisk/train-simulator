@@ -23,7 +23,6 @@ pub mod server_response;
 pub mod station_type;
 pub mod terrain;
 pub mod tile_coords_xz;
-pub mod tile_coverage;
 pub mod tile_track;
 pub mod track_planner;
 pub mod track_type;
@@ -134,7 +133,7 @@ impl GameId {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Hash)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Hash)]
 pub struct BuildingId(pub Uuid);
 
 impl BuildingId {

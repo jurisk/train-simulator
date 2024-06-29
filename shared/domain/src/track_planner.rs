@@ -9,7 +9,6 @@ use crate::building_type::BuildingType;
 use crate::edge_xz::EdgeXZ;
 use crate::map_level::MapLevel;
 use crate::tile_coords_xz::TileCoordsXZ;
-use crate::tile_coverage::TileCoverage;
 use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 use crate::{BuildingId, PlayerId};
@@ -38,10 +37,10 @@ fn successors(
 
             for tile_track in track_types_that_fit(edge, neighbour) {
                 let building = BuildingInfo {
-                    owner_id:      player_id,
-                    building_id:   BuildingId::random(),
-                    covers_tiles:  TileCoverage::Single(tile_track.tile_coords_xz),
-                    building_type: BuildingType::Track(tile_track.track_type),
+                    owner_id:       player_id,
+                    building_id:    BuildingId::random(),
+                    reference_tile: tile_track.tile_coords_xz,
+                    building_type:  BuildingType::Track(tile_track.track_type),
                 };
 
                 let length = (tile_track.track_type.length_in_tiles() * 1000.0).round() as u32;
@@ -105,10 +104,10 @@ pub fn plan_track(
 
             for tile_track in track_types_that_fit(a, b) {
                 let building = BuildingInfo {
-                    owner_id:      player_id,
-                    building_id:   BuildingId::random(),
-                    covers_tiles:  TileCoverage::Single(tile_track.tile_coords_xz),
-                    building_type: BuildingType::Track(tile_track.track_type),
+                    owner_id:       player_id,
+                    building_id:    BuildingId::random(),
+                    reference_tile: tile_track.tile_coords_xz,
+                    building_type:  BuildingType::Track(tile_track.track_type),
                 };
 
                 match building_state.can_build_building(player_id, &building, map_level) {

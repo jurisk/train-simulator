@@ -15,6 +15,12 @@ pub enum ProductionType {
 impl ProductionType {
     #[must_use]
     pub(crate) fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
-        HashSet::new() // TODO: Implement
+        let mut result = HashSet::new();
+        for x in -1 ..= 1 {
+            for z in -1 ..= 1 {
+                result.insert(TileCoordsXZ::new(x, z));
+            }
+        }
+        result
     }
 }

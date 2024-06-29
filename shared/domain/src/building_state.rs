@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::building_info::BuildingInfo;
 use crate::map_level::MapLevel;
-use crate::tile_coverage::TileCoverage;
 use crate::{BuildingType, PlayerId, TileCoordsXZ, TrackType};
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
@@ -48,7 +47,7 @@ impl BuildingState {
     fn buildings_at(&self, tile: TileCoordsXZ) -> Vec<&BuildingInfo> {
         self.buildings
             .iter()
-            .filter(|building| building.covers_tiles.contains(tile))
+            .filter(|building| building.covers_tiles().contains(&tile))
             .collect()
     }
 
@@ -92,8 +91,7 @@ impl BuildingState {
         // Later: Do not allow tracks that go out of bounds
         // Later: Are you doing bounds checking at all here? Can buildings be built out of bounds?
         let any_tile_out_of_bounds = building_info
-            .covers_tiles
-            .to_set()
+            .covers_tiles()
             .into_iter()
             .any(|tile| !map_level.tile_in_bounds(tile));
 
@@ -102,8 +100,7 @@ impl BuildingState {
         }
 
         let overlapping_buildings = building_info
-            .covers_tiles
-            .to_set()
+            .covers_tiles()
             .into_iter()
             .flat_map(|tile| self.buildings_at(tile))
             .collect::<Vec<_>>();
@@ -142,8 +139,7 @@ impl BuildingState {
         };
 
         let vertex_coords: Vec<_> = building_info
-            .covers_tiles
-            .to_set()
+            .covers_tiles()
             .into_iter()
             .flat_map(TileCoordsXZ::vertex_coords)
             .collect();
@@ -160,12 +156,7 @@ impl BuildingState {
         let all_equal_heights = vertex_heights.len() == 1;
         let valid_heights = match building_info.building_type {
             BuildingType::Track(track_type) => {
-                let tile = match building_info.covers_tiles {
-                    TileCoverage::Single(tile) => tile,
-                    TileCoverage::Multiple(_) => {
-                        panic!("Did not expect track to cover multiple tiles")
-                    },
-                };
+                let tile = building_info.reference_tile;
 
                 // Later: Consider allowing more: https://wiki.openttd.org/en/Archive/Manual/Settings/Build%20on%20slopes .
                 // Later: Consider not allowing slopes that are too steep
