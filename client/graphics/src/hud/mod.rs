@@ -76,18 +76,8 @@ const MIN_Y: f32 = 40.0;
 fn show_hud(mut contexts: EguiContexts, mut selected_mode: ResMut<SelectedMode>) {
     // Later: We need to better depict the current building mode in the menu, in case it's a sub-menu item that is selected
 
-    let mut style = egui::Style::default();
-    style.text_styles.insert(
-        egui::TextStyle::Button,
-        egui::FontId::new(24.0, egui::FontFamily::Proportional),
-    );
-    contexts.ctx_mut().set_style(style);
-
     egui::TopBottomPanel::top("hud_top_panel").show(contexts.ctx_mut(), |ui| {
-        ui.style_mut().text_styles.insert(
-            egui::TextStyle::Button,
-            egui::FontId::new(32.0, egui::FontFamily::Proportional),
-        );
+        set_font_size(ui, 32.0);
 
         // The way we pass `ResMut<SelectedMode>` is on purpose, so that change detection works correctly.
         menu::bar(ui, |ui| {
@@ -100,6 +90,13 @@ fn show_hud(mut contexts: EguiContexts, mut selected_mode: ResMut<SelectedMode>)
             demolish_menu(&mut selected_mode, ui);
         });
     });
+}
+
+fn set_font_size(ui: &mut Ui, size: f32) {
+    ui.style_mut().text_styles.insert(
+        egui::TextStyle::Button,
+        egui::FontId::new(size, egui::FontFamily::Proportional),
+    );
 }
 
 fn info_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
@@ -133,6 +130,7 @@ fn tracks_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     // Later: We could build stations by just dragging the mouse, but it can wait.
     menu::menu_button(ui, "🚉 Stations", |ui| {
+        set_font_size(ui, 24.0);
         if ui
             .add(
                 egui::Button::new("⬌ East-West")
@@ -166,6 +164,7 @@ fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 
 fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     menu::menu_button(ui, "⚒ Production", |ui| {
+        set_font_size(ui, 24.0);
         if ui
             .add(
                 egui::Button::new("⛏ Iron Mine")
@@ -228,6 +227,7 @@ fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 // Later: Fixed artillery, movable artillery, troops, trenches? Need to think carefully about the model and what's needed and what's not.
 fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     menu::menu_button(ui, "⚔ Military", |ui| {
+        set_font_size(ui, 24.0);
         if ui
             .add(
                 egui::Button::new("⚔ Fixed Artillery")
@@ -245,6 +245,7 @@ fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 fn trains_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     // Later: More types of trains
     menu::menu_button(ui, "🚆 Trains", |ui| {
+        set_font_size(ui, 24.0);
         if ui
             .add(
                 egui::Button::new("🚆 Coal Train")
