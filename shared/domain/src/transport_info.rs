@@ -95,7 +95,7 @@ pub struct TransportVelocity {
     pub tiles_per_second: f32,
 }
 
-// TODO: Later - this needs to be developed into proper path-finding
+// TODO HIGH: Implement StationsList
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum MovementOrders {
     Stop,
