@@ -1,6 +1,6 @@
 #![allow(clippy::needless_pass_by_value, clippy::collapsible_match)]
 
-mod production;
+mod building;
 pub mod tracks;
 
 use std::collections::HashMap;
@@ -25,7 +25,7 @@ use shared_domain::{BuildingId, PlayerId, TransportId};
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
-use crate::game::buildings::production::build_production_when_mouse_released;
+use crate::game::buildings::building::build_building_when_mouse_released;
 use crate::game::buildings::tracks::{build_track_when_mouse_released, create_track};
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::states::ClientState;
@@ -48,7 +48,7 @@ impl Plugin for BuildingsPlugin {
         );
         app.add_systems(
             Update,
-            build_production_when_mouse_released.run_if(in_state(ClientState::Playing)),
+            build_building_when_mouse_released.run_if(in_state(ClientState::Playing)),
         );
     }
 }

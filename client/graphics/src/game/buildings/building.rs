@@ -1,6 +1,5 @@
 use bevy::prelude::{ButtonInput, EventWriter, MouseButton, Res};
 use shared_domain::building_info::BuildingInfo;
-use shared_domain::building_type::BuildingType;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::BuildingId;
 
@@ -9,8 +8,7 @@ use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
 use crate::selection::HoveredTile;
 
-// TODO HIGH: Merge/unify with stations? As currently stations are not being built. Or just copy-paste it. But you need to handle it for stations anyway.
-pub(crate) fn build_production_when_mouse_released(
+pub(crate) fn build_building_when_mouse_released(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     selected_mode_resource: Res<SelectedMode>,
     game_state_resource: Res<GameStateResource>,
@@ -19,7 +17,7 @@ pub(crate) fn build_production_when_mouse_released(
     hovered_tile: Res<HoveredTile>,
 ) {
     if mouse_buttons.just_released(MouseButton::Left) {
-        if let SelectedMode::Production(production_type) = selected_mode_resource.as_ref() {
+        if let Some(building_type) = selected_mode_resource.as_ref().corresponding_building() {
             let HoveredTile(hovered_tile) = hovered_tile.as_ref();
             if let Some(hovered_tile) = hovered_tile {
                 // Later: Check we can build this?
@@ -31,10 +29,10 @@ pub(crate) fn build_production_when_mouse_released(
 
                 // Later: Check we can build this? And that check is different for stations, as they can be built on top of fully straight tracks with no branching.
                 let building = BuildingInfo {
-                    owner_id:       player_id,
-                    building_id:    BuildingId::random(),
+                    owner_id: player_id,
+                    building_id: BuildingId::random(),
                     reference_tile: *hovered_tile,
-                    building_type:  BuildingType::Production(*production_type),
+                    building_type,
                 };
                 let buildings = vec![building];
 
