@@ -1,10 +1,9 @@
-use std::collections::HashSet;
-
 use serde::{Deserialize, Serialize};
 
 use crate::production_type::ProductionType;
 use crate::station_type::StationType;
 use crate::tile_coords_xz::TileCoordsXZ;
+use crate::tile_coverage::TileCoverage;
 use crate::track_type::TrackType;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
@@ -15,13 +14,15 @@ pub enum BuildingType {
 }
 
 impl BuildingType {
+    // Note:    Currently, this could return `Option`, but we may want to refactor the track tiles to have
+    //          multiple tracks in the same "building", so a `Vec` may be helpful then.
     #[must_use]
     pub fn track_types_at(self, relative_tile: TileCoordsXZ) -> Vec<TrackType> {
         match self {
             BuildingType::Track(track_type) => vec![track_type],
             BuildingType::Production(_) => vec![],
             BuildingType::Station(station_type) => {
-                if station_type.relative_tiles_used().contains(&relative_tile) {
+                if station_type.relative_tiles_used().contains(relative_tile) {
                     vec![station_type.track_type()]
                 } else {
                     vec![]
@@ -31,7 +32,7 @@ impl BuildingType {
     }
 
     #[must_use]
-    pub fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
+    pub fn relative_tiles_used(self) -> TileCoverage {
         match self {
             BuildingType::Track(track_type) => track_type.relative_tiles_used(),
             BuildingType::Production(production_type) => production_type.relative_tiles_used(),

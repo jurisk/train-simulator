@@ -1,8 +1,7 @@
-use std::collections::HashSet;
-
 use serde::{Deserialize, Serialize};
 
 use crate::tile_coords_xz::TileCoordsXZ;
+use crate::tile_coverage::TileCoverage;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum ProductionType {
@@ -14,13 +13,10 @@ pub enum ProductionType {
 
 impl ProductionType {
     #[must_use]
-    pub(crate) fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
-        let mut result = HashSet::new();
-        for x in -1 ..= 1 {
-            for z in -1 ..= 1 {
-                result.insert(TileCoordsXZ::new(x, z));
-            }
+    pub(crate) fn relative_tiles_used(self) -> TileCoverage {
+        TileCoverage::Rectangular {
+            north_west_inclusive: TileCoordsXZ::new(-1, -1),
+            south_east_inclusive: TileCoordsXZ::new(1, 1),
         }
-        result
     }
 }

@@ -3,6 +3,7 @@ use shared_domain::building_type::BuildingType;
 use shared_domain::production_type::ProductionType;
 use shared_domain::station_type::{StationOrientation, StationType};
 use shared_domain::tile_coords_xz::TileCoordsXZ;
+use shared_domain::tile_coverage::TileCoverage;
 
 #[derive(Resource, Eq, PartialEq, Debug, Copy, Clone)]
 pub enum SelectedMode {
@@ -59,16 +60,10 @@ impl SelectedMode {
     }
 
     #[must_use]
-    pub fn building_tiles(self, reference_tile: TileCoordsXZ) -> Vec<TileCoordsXZ> {
+    pub fn building_tiles(self, reference_tile: TileCoordsXZ) -> TileCoverage {
         match self.corresponding_building() {
-            None => vec![],
-            Some(building) => {
-                building
-                    .relative_tiles_used()
-                    .into_iter()
-                    .map(|relative_tile| reference_tile + relative_tile)
-                    .collect()
-            },
+            None => TileCoverage::Empty,
+            Some(building) => building.relative_tiles_used().offset_by(reference_tile),
         }
     }
 }

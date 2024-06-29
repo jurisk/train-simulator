@@ -42,7 +42,7 @@ impl BuildingState {
     fn buildings_at(&self, tile: TileCoordsXZ) -> Vec<&BuildingInfo> {
         self.buildings
             .iter()
-            .filter(|building| building.covers_tiles().contains(&tile))
+            .filter(|building| building.covers_tiles().contains(tile))
             .collect()
     }
 
@@ -87,6 +87,7 @@ impl BuildingState {
         // Later: Are you doing bounds checking at all here? Can buildings be built out of bounds?
         let any_tile_out_of_bounds = building_info
             .covers_tiles()
+            .to_set()
             .into_iter()
             .any(|tile| !map_level.tile_in_bounds(tile));
 
@@ -96,6 +97,7 @@ impl BuildingState {
 
         let overlapping_buildings = building_info
             .covers_tiles()
+            .to_set()
             .into_iter()
             .flat_map(|tile| self.buildings_at(tile))
             .collect::<Vec<_>>();
@@ -135,6 +137,7 @@ impl BuildingState {
 
         let vertex_coords: Vec<_> = building_info
             .covers_tiles()
+            .to_set()
             .into_iter()
             .flat_map(TileCoordsXZ::vertex_coords)
             .collect();

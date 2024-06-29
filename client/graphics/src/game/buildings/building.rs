@@ -1,6 +1,12 @@
-use bevy::prelude::{ButtonInput, EventWriter, MouseButton, Res};
+use bevy::prelude::{
+    Assets, ButtonInput, Color, Commands, Cuboid, EventWriter, Mesh, MouseButton, Name, PbrBundle,
+    Res, ResMut, StandardMaterial, Transform,
+};
 use shared_domain::building_info::BuildingInfo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
+use shared_domain::map_level::MapLevel;
+use shared_domain::server_response::Colour;
+use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::BuildingId;
 
 use crate::communication::domain::ClientMessageEvent;
@@ -43,4 +49,53 @@ pub(crate) fn build_building_when_mouse_released(
             }
         }
     }
+}
+
+#[allow(clippy::too_many_arguments, clippy::similar_names)]
+pub(crate) fn create_building_cuboid(
+    tile_coverage: TileCoverage,
+    label: String,
+    colour: Colour,
+    height: f32,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    commands: &mut Commands,
+    map_level: &MapLevel,
+) {
+    let terrain = &map_level.terrain;
+    let (nw, se) = match tile_coverage {
+        TileCoverage::Empty => panic!("Cannot create a building with no tiles"),
+        TileCoverage::Single(tile) => (tile, tile),
+        TileCoverage::Rectangular {
+            north_west_inclusive,
+            south_east_inclusive,
+        } => (north_west_inclusive, south_east_inclusive),
+    };
+    let nw = nw.vertex_coords_nw();
+    let se = se.vertex_coords_se();
+    let nw = terrain.logical_to_world(nw);
+    let se = terrain.logical_to_world(se);
+
+    let color = Color::rgb_u8(colour.r, colour.g, colour.b);
+    let material = materials.add(color);
+    let x_length = se.x - nw.x;
+    let z_length = se.z - nw.z;
+    let center = (se + nw) / 2.0;
+
+    let mesh = meshes.add(Mesh::from(Cuboid::new(x_length, height * 2.0, z_length)));
+
+    // TODO HIGH: Use `label` to also draw text on the sides / roof of the building
+
+    commands.spawn((
+        PbrBundle {
+            transform: Transform {
+                translation: center,
+                ..Default::default()
+            },
+            material,
+            mesh,
+            ..Default::default()
+        },
+        Name::new(label),
+    ));
 }

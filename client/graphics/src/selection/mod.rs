@@ -122,7 +122,7 @@ fn highlight_selected_tiles(
                 debug_draw_tile(&mut gizmos, *hovered_tile, tiles, Color::PINK);
             }
 
-            for tile in selected_mode.building_tiles(*hovered_tile) {
+            for tile in selected_mode.building_tiles(*hovered_tile).to_set() {
                 debug_draw_tile(&mut gizmos, tile, tiles, Color::TOMATO);
             }
         }

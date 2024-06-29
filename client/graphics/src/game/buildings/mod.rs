@@ -13,7 +13,7 @@ use shared_domain::building_info::BuildingInfo;
 use shared_domain::building_type::BuildingType;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
-use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
+use shared_domain::server_response::{Colour, GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_track::TileTrack;
 use shared_domain::track_type::TrackType;
@@ -25,7 +25,9 @@ use shared_domain::{BuildingId, PlayerId, TransportId};
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
-use crate::game::buildings::building::build_building_when_mouse_released;
+use crate::game::buildings::building::{
+    build_building_when_mouse_released, create_building_cuboid,
+};
 use crate::game::buildings::tracks::{build_tracks_when_mouse_released, create_rails};
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::states::ClientState;
@@ -222,6 +224,8 @@ fn handle_building_built(
     }
 }
 
+const STATION_BASE_COLOUR: Colour = Colour::rgb(128, 128, 128);
+
 #[allow(clippy::similar_names, clippy::match_same_arms)]
 fn create_building(
     building_info: &BuildingInfo,
@@ -236,23 +240,48 @@ fn create_building(
             error!("Player with ID {:?} not found", building_info.owner_id);
         },
         Some(player_info) => {
+            for tile_track in building_info.tile_tracks() {
+                let tile_coords = tile_track.tile_coords_xz;
+                let track_type = tile_track.track_type;
+
+                create_rails(
+                    player_info,
+                    commands,
+                    meshes,
+                    materials,
+                    map_level,
+                    tile_coords,
+                    track_type,
+                );
+            }
+
             match &building_info.building_type {
-                BuildingType::Track(track_type) => {
-                    create_rails(
-                        player_info,
-                        commands,
-                        meshes,
-                        materials,
-                        map_level,
-                        building_info.reference_tile,
-                        *track_type,
-                    );
+                BuildingType::Track(_track_type) => {
+                    // For now, nothing more - just the rails are enough
                 },
                 BuildingType::Production(production_type) => {
-                    todo!() // TODO HIGH: Implement
+                    create_building_cuboid(
+                        building_info.covers_tiles(),
+                        format!("{production_type:?}"),
+                        player_info.colour,
+                        0.5,
+                        meshes,
+                        materials,
+                        commands,
+                        map_level,
+                    );
                 },
                 BuildingType::Station(station_type) => {
-                    todo!() // TODO HIGH: Implement
+                    create_building_cuboid(
+                        building_info.covers_tiles(),
+                        format!("{station_type:?}"),
+                        STATION_BASE_COLOUR,
+                        0.01,
+                        meshes,
+                        materials,
+                        commands,
+                        map_level,
+                    );
                 },
             }
         },

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::tile_coords_xz::TileCoordsXZ;
+use crate::tile_coverage::TileCoverage;
 
 // Later: Possibly rename to `ConnectionType` or something. And `TrackType` thus has multiple of these `ConnectionType`-s.
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
@@ -67,8 +68,8 @@ impl TrackType {
     }
 
     #[must_use]
-    pub fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
-        HashSet::from([TileCoordsXZ::ZERO])
+    pub fn relative_tiles_used(self) -> TileCoverage {
+        TileCoverage::Single(TileCoordsXZ::ZERO)
     }
 
     #[must_use]

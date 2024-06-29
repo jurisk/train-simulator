@@ -1,8 +1,7 @@
-use std::collections::HashSet;
-
 use serde::{Deserialize, Serialize};
 
 use crate::tile_coords_xz::TileCoordsXZ;
+use crate::tile_coverage::TileCoverage;
 use crate::track_type::TrackType;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
@@ -29,24 +28,26 @@ impl StationType {
     }
 
     #[must_use]
-    pub fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
-        let mut result = HashSet::new();
+    pub fn relative_tiles_used(self) -> TileCoverage {
         match self.orientation {
             StationOrientation::NorthToSouth => {
-                for x in 0 .. self.platforms {
-                    for z in 0 .. self.length_in_tiles {
-                        result.insert(TileCoordsXZ::from_usizes(x, z));
-                    }
+                TileCoverage::Rectangular {
+                    north_west_inclusive: TileCoordsXZ::from_usizes(0, 0),
+                    south_east_inclusive: TileCoordsXZ::from_usizes(
+                        self.platforms - 1,
+                        self.length_in_tiles - 1,
+                    ),
                 }
             },
             StationOrientation::EastToWest => {
-                for x in 0 .. self.length_in_tiles {
-                    for z in 0 .. self.platforms {
-                        result.insert(TileCoordsXZ::from_usizes(x, z));
-                    }
+                TileCoverage::Rectangular {
+                    north_west_inclusive: TileCoordsXZ::from_usizes(0, 0),
+                    south_east_inclusive: TileCoordsXZ::from_usizes(
+                        self.length_in_tiles - 1,
+                        self.platforms - 1,
+                    ),
                 }
             },
         }
-        result
     }
 }
