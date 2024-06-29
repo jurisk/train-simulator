@@ -8,10 +8,8 @@ use crate::hud::domain::SelectedMode;
 
 const MIN_X: f32 = 200.0;
 const MIN_Y: f32 = 40.0;
-pub(crate) fn show_mode_selection_hud(
-    mut contexts: EguiContexts,
-    mut selected_mode: ResMut<SelectedMode>,
-) {
+
+pub(crate) fn show_top_panel(mut contexts: EguiContexts, mut selected_mode: ResMut<SelectedMode>) {
     // Later: We need to better depict the current building mode in the menu, in case it's a sub-menu item that is selected
 
     egui::TopBottomPanel::top("hud_top_panel").show(contexts.ctx_mut(), |ui| {

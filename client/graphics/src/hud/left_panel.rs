@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use bevy::prelude::{App, Plugin, Res, Update};
+use bevy::prelude::Res;
 use bevy::utils::default;
 use bevy_egui::EguiContexts;
 use egui::text::LayoutJob;
@@ -10,25 +10,16 @@ use shared_domain::PlayerId;
 
 use crate::game::GameStateResource;
 
-pub(crate) struct LeftPanel;
-
-impl Plugin for LeftPanel {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Update, left_panel);
-    }
-}
-
-pub(crate) fn left_panel(
+pub(crate) fn show_left_panel(
     mut contexts: EguiContexts,
     game_state_resource: Option<Res<GameStateResource>>,
 ) {
     if let Some(game_state_resource) = game_state_resource {
         let GameStateResource(game_state) = game_state_resource.as_ref();
 
-        egui::SidePanel::left("hud_left_panel")
-            .show(contexts.ctx_mut(), |ui| {
-                players_info_panel(ui, game_state.players());
-            });
+        egui::SidePanel::left("hud_left_panel").show(contexts.ctx_mut(), |ui| {
+            players_info_panel(ui, game_state.players());
+        });
     }
 }
 
