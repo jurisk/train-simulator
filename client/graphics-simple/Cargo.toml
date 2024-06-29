@@ -10,8 +10,13 @@ rust-version.workspace = true
 game-logic = { path = "../../game/logic"}
 shared-domain = { path = "../../shared/domain" }
 
-# TODO HIGH: Move to workspace dependencies
-uuid = { version = "1.8.0", features = ["v4", "serde"] }
-serde = { version = "1.0", features = ["derive"] }
 serde_json.workspace = true
 macroquad.workspace = true
+
+[dependencies.uuid]
+workspace = true
+features = ["v4", "serde"]
+
+[dependencies.serde]
+workspace = true
+features = ["derive"]

@@ -23,8 +23,9 @@ bevy_egui.workspace = true
 egui.workspace = true
 bevy-inspector-egui.workspace = true
 
-# TODO HIGH: Move to workspace dependencies
-uuid = { version = "1.8.0", features = ["v4"] }
+[dependencies.uuid]
+workspace = true
+features = ["v4"]
 
 # TODO: Use https://github.com/NiklasEi/bevy_asset_loader ?
 
