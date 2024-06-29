@@ -7,6 +7,8 @@ use crate::station_type::StationType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::track_type::TrackType;
 
+// TODO HIGH: Merge these somehow, so that each building takes up some space, and has some tracks at some positions? So that neither Track nor Station are "too special"?
+
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum BuildingType {
     Track(TrackType),
@@ -15,6 +17,21 @@ pub enum BuildingType {
 }
 
 impl BuildingType {
+    #[must_use]
+    pub fn track_types_at(self, relative_tile: TileCoordsXZ) -> Vec<TrackType> {
+        match self {
+            BuildingType::Track(track_type) => vec![track_type],
+            BuildingType::Production(_) => vec![],
+            BuildingType::Station(station_type) => {
+                if station_type.relative_tiles_used().contains(&relative_tile) {
+                    vec![station_type.track_type()]
+                } else {
+                    vec![]
+                }
+            },
+        }
+    }
+
     #[must_use]
     pub fn relative_tiles_used(self) -> HashSet<TileCoordsXZ> {
         match self {

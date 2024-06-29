@@ -34,12 +34,7 @@ impl BuildingState {
     pub fn track_types_at(&self, tile: TileCoordsXZ) -> Vec<TrackType> {
         self.buildings_at(tile)
             .into_iter()
-            .filter_map(|building| {
-                match building.building_type {
-                    BuildingType::Track(track_type) => Some(track_type),
-                    BuildingType::Station(_) | BuildingType::Production(_) => None,
-                }
-            })
+            .flat_map(|building| building.track_types_at(tile))
             .collect()
     }
 

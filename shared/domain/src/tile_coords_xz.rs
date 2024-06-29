@@ -1,5 +1,5 @@
 use std::fmt::{Debug, Formatter};
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 use serde::{Deserialize, Serialize};
 use shared_util::coords_xz::CoordsXZ;
@@ -81,7 +81,7 @@ impl From<CoordsXZ> for TileCoordsXZ {
 }
 
 impl Add<DirectionXZ> for TileCoordsXZ {
-    type Output = TileCoordsXZ;
+    type Output = Self;
 
     fn add(self, rhs: DirectionXZ) -> Self::Output {
         Self(self.0 + rhs)
@@ -89,9 +89,17 @@ impl Add<DirectionXZ> for TileCoordsXZ {
 }
 
 impl Add<TileCoordsXZ> for TileCoordsXZ {
-    type Output = TileCoordsXZ;
+    type Output = Self;
 
     fn add(self, rhs: TileCoordsXZ) -> Self::Output {
         Self(self.0 + rhs.0)
+    }
+}
+
+impl Sub<TileCoordsXZ> for TileCoordsXZ {
+    type Output = Self;
+
+    fn sub(self, rhs: TileCoordsXZ) -> Self::Output {
+        Self(self.0 - rhs.0)
     }
 }

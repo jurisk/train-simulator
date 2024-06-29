@@ -1,7 +1,7 @@
 #![allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
 
 use std::fmt::{Debug, Formatter};
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 use serde::{Deserialize, Serialize};
 
@@ -53,5 +53,16 @@ impl Add<DirectionXZ> for CoordsXZ {
 
     fn add(self, rhs: DirectionXZ) -> Self::Output {
         self + CoordsXZ::from(rhs)
+    }
+}
+
+impl Sub<CoordsXZ> for CoordsXZ {
+    type Output = Self;
+
+    fn sub(self, rhs: CoordsXZ) -> Self::Output {
+        Self {
+            x: self.x - rhs.x,
+            z: self.z - rhs.z,
+        }
     }
 }
