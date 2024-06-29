@@ -15,7 +15,7 @@ use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::{Tile, Tiles};
-use crate::hud::SelectedMode;
+use crate::hud::domain::SelectedMode;
 
 #[derive(Resource, Default)]
 pub struct HoveredTile(pub Option<TileCoordsXZ>);

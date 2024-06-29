@@ -15,7 +15,7 @@ use shared_domain::track_type::TrackType;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
-use crate::hud::SelectedMode;
+use crate::hud::domain::SelectedMode;
 use crate::selection::{SelectedEdges, SelectedTiles};
 
 const RAIL_DIAMETER: f32 = 0.025;
