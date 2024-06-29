@@ -7,8 +7,6 @@ use crate::station_type::StationType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::track_type::TrackType;
 
-// TODO HIGH: Merge these somehow, so that each building takes up some space, and has some tracks at some positions? So that neither Track nor Station are "too special"?
-
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum BuildingType {
     Track(TrackType),

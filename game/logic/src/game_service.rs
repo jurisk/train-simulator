@@ -111,6 +111,7 @@ impl GameService {
         if requesting_player_id == transport_info.owner_id() {
             // TODO: Check if the track / road / etc. is free and owned by the purchaser
             // TODO: Subtract money
+            // TODO: But do it all within the `GameState`
 
             self.state.upsert_transport(transport_info.clone());
             Ok(vec![GameResponseWithAddress::new(
