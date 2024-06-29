@@ -17,6 +17,7 @@ pub(crate) fn show_top_panel(mut contexts: EguiContexts, mut selected_mode: ResM
 
         // The way we pass `ResMut<SelectedMode>` is on purpose, so that change detection works correctly.
         menu::bar(ui, |ui| {
+            // Later: Landscaping for terrain modification
             info_menu(&mut selected_mode, ui);
             tracks_menu(&mut selected_mode, ui);
             stations_menu(&mut selected_mode, ui);

@@ -249,10 +249,10 @@ fn create_building(
                     );
                 },
                 BuildingType::Production(production_type) => {
-                    todo!() // TODO: Implement
+                    todo!() // TODO HIGH: Implement
                 },
                 BuildingType::Station(station_type) => {
-                    todo!() // TODO: Implement
+                    todo!() // TODO HIGH: Implement
                 },
             }
         },
