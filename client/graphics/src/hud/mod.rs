@@ -4,12 +4,13 @@ use bevy_egui::EguiContexts;
 use egui;
 use egui::{menu, Ui};
 use shared_domain::production_type::ProductionType;
+use shared_domain::station_type::StationOrientation;
 
 #[derive(Resource, Eq, PartialEq, Debug)]
 pub enum SelectedMode {
     Info,
     Tracks,
-    Stations,
+    Stations(StationOrientation),
     Production(ProductionType),
     Military,
     Trains,
@@ -43,6 +44,7 @@ fn show_hud(mut contexts: EguiContexts, mut selected_mode: ResMut<SelectedMode>)
             egui::FontId::new(32.0, egui::FontFamily::Proportional),
         );
 
+        // The way we pass `ResMut<SelectedMode>` is on purpose, so that change detection works correctly.
         menu::bar(ui, |ui| {
             info_menu(&mut selected_mode, ui);
             tracks_menu(&mut selected_mode, ui);
@@ -55,58 +57,79 @@ fn show_hud(mut contexts: EguiContexts, mut selected_mode: ResMut<SelectedMode>)
     });
 }
 
-fn info_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+fn info_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     if ui
         .add(
             egui::Button::new("ℹ Info")
-                .selected(matches!(*selected_mode, SelectedMode::Info))
+                .selected(matches!(*selected_mode.as_ref(), SelectedMode::Info))
                 .min_size(egui::vec2(MIN_X, MIN_Y)),
         )
         .clicked()
     {
         println!("Info");
-        *selected_mode = SelectedMode::Info;
+        *selected_mode.as_mut() = SelectedMode::Info;
         ui.close_menu();
     }
 }
 
-fn tracks_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+fn tracks_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     if ui
         .add(
             egui::Button::new("🚆 Tracks")
-                .selected(matches!(*selected_mode, SelectedMode::Tracks))
+                .selected(matches!(*selected_mode.as_ref(), SelectedMode::Tracks))
                 .min_size(egui::vec2(MIN_X, MIN_Y)),
         )
         .clicked()
     {
         println!("Tracks");
-        *selected_mode = SelectedMode::Tracks;
+        *selected_mode.as_mut() = SelectedMode::Tracks;
         ui.close_menu();
     }
 }
 
-fn stations_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
-    if ui
-        .add(
-            egui::Button::new("🚉 Stations")
-                .selected(matches!(*selected_mode, SelectedMode::Stations))
-                .min_size(egui::vec2(MIN_X, MIN_Y)),
-        )
-        .clicked()
-    {
-        println!("Stations");
-        *selected_mode = SelectedMode::Stations;
-        ui.close_menu();
-    }
+fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
+    // Later: We could build stations by just dragging the mouse, but it can wait.
+    menu::menu_button(ui, "🚉 Stations", |ui| {
+        if ui
+            .add(
+                egui::Button::new("⬌ East-West")
+                    .selected(matches!(
+                        *selected_mode.as_ref(),
+                        SelectedMode::Stations(StationOrientation::EastToWest),
+                    ))
+                    .min_size(egui::vec2(MIN_X, MIN_Y)),
+            )
+            .clicked()
+        {
+            println!("EW Station");
+            *selected_mode.as_mut() = SelectedMode::Stations(StationOrientation::EastToWest);
+            ui.close_menu();
+        }
+        if ui
+            .add(
+                egui::Button::new("⬍ North-South")
+                    .selected(matches!(
+                        *selected_mode.as_ref(),
+                        SelectedMode::Stations(StationOrientation::NorthToSouth)
+                    ))
+                    .min_size(egui::vec2(MIN_X, MIN_Y)),
+            )
+            .clicked()
+        {
+            println!("NS Station");
+            *selected_mode.as_mut() = SelectedMode::Stations(StationOrientation::NorthToSouth);
+            ui.close_menu();
+        }
+    });
 }
 
-fn production_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     menu::menu_button(ui, "⚒ Production", |ui| {
         if ui
             .add(
                 egui::Button::new("⛏ Iron Mine")
                     .selected(matches!(
-                        *selected_mode,
+                        *selected_mode.as_ref(),
                         SelectedMode::Production(ProductionType::IronMine)
                     ))
                     .min_size(egui::vec2(MIN_X, MIN_Y)),
@@ -114,14 +137,14 @@ fn production_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
             .clicked()
         {
             println!("Iron Mine");
-            *selected_mode = SelectedMode::Production(ProductionType::IronMine);
+            *selected_mode.as_mut() = SelectedMode::Production(ProductionType::IronMine);
             ui.close_menu();
         }
         if ui
             .add(
                 egui::Button::new("⛏ Coal Mine")
                     .selected(matches!(
-                        *selected_mode,
+                        *selected_mode.as_ref(),
                         SelectedMode::Production(ProductionType::CoalMine)
                     ))
                     .min_size(egui::vec2(MIN_X, MIN_Y)),
@@ -129,14 +152,14 @@ fn production_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
             .clicked()
         {
             println!("Coal Mine");
-            *selected_mode = SelectedMode::Production(ProductionType::CoalMine);
+            *selected_mode.as_mut() = SelectedMode::Production(ProductionType::CoalMine);
             ui.close_menu();
         }
         if ui
             .add(
                 egui::Button::new("⚒ Iron Works")
                     .selected(matches!(
-                        *selected_mode,
+                        *selected_mode.as_ref(),
                         SelectedMode::Production(ProductionType::IronWorks)
                     ))
                     .min_size(egui::vec2(MIN_X, MIN_Y)),
@@ -144,14 +167,14 @@ fn production_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
             .clicked()
         {
             println!("Iron Works");
-            *selected_mode = SelectedMode::Production(ProductionType::IronWorks);
+            *selected_mode.as_mut() = SelectedMode::Production(ProductionType::IronWorks);
             ui.close_menu();
         }
         if ui
             .add(
                 egui::Button::new("⚓ Cargo Port")
                     .selected(matches!(
-                        *selected_mode,
+                        *selected_mode.as_ref(),
                         SelectedMode::Production(ProductionType::CargoPort)
                     ))
                     .min_size(egui::vec2(MIN_X, MIN_Y)),
@@ -159,58 +182,58 @@ fn production_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
             .clicked()
         {
             println!("Cargo Port");
-            *selected_mode = SelectedMode::Production(ProductionType::CargoPort);
+            *selected_mode.as_mut() = SelectedMode::Production(ProductionType::CargoPort);
             ui.close_menu();
         }
     });
 }
 
-fn military_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     menu::menu_button(ui, "⚔ Military", |ui| {
         if ui
             .add(
                 egui::Button::new("⚔ Fixed Artillery")
-                    .selected(matches!(*selected_mode, SelectedMode::Military))
+                    .selected(matches!(*selected_mode.as_ref(), SelectedMode::Military))
                     .min_size(egui::vec2(MIN_X, MIN_Y)),
             )
             .clicked()
         {
             println!("Fixed Arty");
-            *selected_mode = SelectedMode::Military;
+            *selected_mode.as_mut() = SelectedMode::Military;
             ui.close_menu();
         }
     });
 }
 
-fn trains_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+fn trains_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     // Later: More types of trains
     menu::menu_button(ui, "🚆 Trains", |ui| {
         if ui
             .add(
                 egui::Button::new("🚆 Coal Train")
-                    .selected(matches!(*selected_mode, SelectedMode::Trains))
+                    .selected(matches!(*selected_mode.as_ref(), SelectedMode::Trains))
                     .min_size(egui::vec2(MIN_X, MIN_Y)),
             )
             .clicked()
         {
             println!("Coal Train");
-            *selected_mode = SelectedMode::Trains;
+            *selected_mode.as_mut() = SelectedMode::Trains;
             ui.close_menu();
         }
     });
 }
 
-fn demolish_menu(selected_mode: &mut SelectedMode, ui: &mut Ui) {
+fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     if ui
         .add(
             egui::Button::new("❎ Demolish")
-                .selected(matches!(*selected_mode, SelectedMode::Demolish))
+                .selected(matches!(*selected_mode.as_ref(), SelectedMode::Demolish))
                 .min_size(egui::vec2(MIN_X, MIN_Y)),
         )
         .clicked()
     {
         println!("Demolish");
-        *selected_mode = SelectedMode::Demolish;
+        *selected_mode.as_mut() = SelectedMode::Demolish;
         ui.close_menu();
     }
 }

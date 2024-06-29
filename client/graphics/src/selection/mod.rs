@@ -4,7 +4,8 @@ use bevy::app::App;
 use bevy::input::ButtonInput;
 use bevy::math::Quat;
 use bevy::prelude::{
-    Color, Gizmos, MouseButton, Plugin, Query, Res, ResMut, Resource, TypePath, Update, Vec3,
+    Color, DetectChanges, Gizmos, MouseButton, Plugin, Query, Res, ResMut, Resource, TypePath,
+    Update, Vec3,
 };
 use bevy_mod_raycast::deferred::RaycastSource;
 use bevy_mod_raycast::prelude::{DeferredRaycastingPlugin, RaycastPluginState};
@@ -58,7 +59,8 @@ fn remove_selection_when_selected_mode_changes(
     mut selected_tiles: ResMut<SelectedTiles>,
     mut selected_edges: ResMut<SelectedEdges>,
 ) {
-    if selected_mode.as_ref() != &SelectedMode::Tracks {
+    if selected_mode.is_changed() {
+        println!("Selected mode changed: {selected_mode:?}, clearing selections");
         selected_tiles.ordered.clear();
         selected_edges.ordered.clear();
     }
