@@ -73,17 +73,19 @@ fn highlight_selected_edges(
     mut gizmos: Gizmos,
     selected_mode: Res<SelectedMode>,
 ) {
-    if selected_mode.as_ref() == &SelectedMode::Tracks {
-        if let Some(tiles) = tiles {
-            let tiles = &tiles.tiles;
+    if let Some(tiles) = tiles {
+        let tiles = &tiles.tiles;
 
+        if selected_mode.as_ref().show_selected_edges() {
             let SelectedEdges {
                 ordered: ordered_selected_edges,
             } = selected_edges.as_ref();
             if let Some(edge) = ordered_selected_edges.first() {
                 debug_draw_edge(&mut gizmos, *edge, tiles, Color::PURPLE);
             }
+        }
 
+        if selected_mode.as_ref().show_hovered_edge() {
             let HoveredEdge(hovered_edge) = hovered_edge.as_ref();
             if let Some(hovered_edge) = hovered_edge {
                 debug_draw_edge(&mut gizmos, *hovered_edge, tiles, Color::PINK);
@@ -102,7 +104,7 @@ fn highlight_selected_tiles(
     if let Some(tiles) = tiles {
         let tiles = &tiles.tiles;
 
-        if selected_mode.as_ref() == &SelectedMode::Tracks {
+        if selected_mode.as_ref().show_selected_tiles() {
             let SelectedTiles {
                 ordered: ordered_selected_tiles,
             } = selected_tiles.as_ref();
@@ -111,9 +113,11 @@ fn highlight_selected_tiles(
             }
         }
 
-        let HoveredTile(hovered_tile) = hovered_tile.as_ref();
-        if let Some(hovered_tile) = hovered_tile {
-            debug_draw_tile(&mut gizmos, *hovered_tile, tiles, Color::PINK);
+        if selected_mode.as_ref().show_hovered_tile() {
+            let HoveredTile(hovered_tile) = hovered_tile.as_ref();
+            if let Some(hovered_tile) = hovered_tile {
+                debug_draw_tile(&mut gizmos, *hovered_tile, tiles, Color::PINK);
+            }
         }
     }
 }

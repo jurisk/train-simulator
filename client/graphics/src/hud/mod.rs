@@ -3,10 +3,11 @@ use bevy::prelude::{ResMut, Resource, Update};
 use bevy_egui::EguiContexts;
 use egui;
 use egui::{menu, Ui};
+use shared_domain::building_type::BuildingType;
 use shared_domain::production_type::ProductionType;
-use shared_domain::station_type::StationOrientation;
+use shared_domain::station_type::{StationOrientation, StationType};
 
-#[derive(Resource, Eq, PartialEq, Debug)]
+#[derive(Resource, Eq, PartialEq, Debug, Copy, Clone)]
 pub enum SelectedMode {
     Info,
     Tracks,
@@ -15,6 +16,50 @@ pub enum SelectedMode {
     Military,
     Trains,
     Demolish,
+}
+
+impl SelectedMode {
+    #[must_use]
+    pub fn show_selected_edges(self) -> bool {
+        matches!(self, SelectedMode::Tracks)
+    }
+
+    #[must_use]
+    pub fn show_hovered_edge(self) -> bool {
+        matches!(self, SelectedMode::Tracks)
+    }
+
+    #[must_use]
+    pub fn show_selected_tiles(self) -> bool {
+        matches!(self, SelectedMode::Tracks)
+    }
+
+    #[must_use]
+    pub fn show_hovered_tile(self) -> bool {
+        true
+    }
+
+    #[must_use]
+    #[allow(clippy::match_same_arms)]
+    pub fn corresponding_building(self) -> Option<BuildingType> {
+        match self {
+            SelectedMode::Tracks => None,
+            SelectedMode::Stations(orientation) => {
+                Some(BuildingType::Station(StationType {
+                    orientation,
+                    platforms: 1,
+                    length_in_tiles: 4,
+                }))
+            },
+            SelectedMode::Production(production_type) => {
+                Some(BuildingType::Production(production_type))
+            },
+            SelectedMode::Military => None,
+            SelectedMode::Trains => None,
+            SelectedMode::Info => None,
+            SelectedMode::Demolish => None,
+        }
+    }
 }
 
 pub(crate) struct HudPlugin;
@@ -66,7 +111,6 @@ fn info_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
         )
         .clicked()
     {
-        println!("Info");
         *selected_mode.as_mut() = SelectedMode::Info;
         ui.close_menu();
     }
@@ -81,7 +125,6 @@ fn tracks_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
         )
         .clicked()
     {
-        println!("Tracks");
         *selected_mode.as_mut() = SelectedMode::Tracks;
         ui.close_menu();
     }
@@ -101,7 +144,6 @@ fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
             )
             .clicked()
         {
-            println!("EW Station");
             *selected_mode.as_mut() = SelectedMode::Stations(StationOrientation::EastToWest);
             ui.close_menu();
         }
@@ -116,7 +158,6 @@ fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
             )
             .clicked()
         {
-            println!("NS Station");
             *selected_mode.as_mut() = SelectedMode::Stations(StationOrientation::NorthToSouth);
             ui.close_menu();
         }
@@ -136,7 +177,6 @@ fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
             )
             .clicked()
         {
-            println!("Iron Mine");
             *selected_mode.as_mut() = SelectedMode::Production(ProductionType::IronMine);
             ui.close_menu();
         }
@@ -151,7 +191,6 @@ fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
             )
             .clicked()
         {
-            println!("Coal Mine");
             *selected_mode.as_mut() = SelectedMode::Production(ProductionType::CoalMine);
             ui.close_menu();
         }
@@ -166,7 +205,6 @@ fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
             )
             .clicked()
         {
-            println!("Iron Works");
             *selected_mode.as_mut() = SelectedMode::Production(ProductionType::IronWorks);
             ui.close_menu();
         }
@@ -181,13 +219,13 @@ fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
             )
             .clicked()
         {
-            println!("Cargo Port");
             *selected_mode.as_mut() = SelectedMode::Production(ProductionType::CargoPort);
             ui.close_menu();
         }
     });
 }
 
+// Later: Fixed artillery, movable artillery, troops, trenches? Need to think carefully about the model and what's needed and what's not.
 fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     menu::menu_button(ui, "⚔ Military", |ui| {
         if ui
@@ -198,7 +236,6 @@ fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
             )
             .clicked()
         {
-            println!("Fixed Arty");
             *selected_mode.as_mut() = SelectedMode::Military;
             ui.close_menu();
         }
@@ -216,7 +253,6 @@ fn trains_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
             )
             .clicked()
         {
-            println!("Coal Train");
             *selected_mode.as_mut() = SelectedMode::Trains;
             ui.close_menu();
         }
@@ -232,7 +268,6 @@ fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
         )
         .clicked()
     {
-        println!("Demolish");
         *selected_mode.as_mut() = SelectedMode::Demolish;
         ui.close_menu();
     }
