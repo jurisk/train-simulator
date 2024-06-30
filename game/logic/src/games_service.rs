@@ -4,7 +4,8 @@ use std::collections::HashMap;
 
 use log::warn;
 use shared_domain::client_command::{GameCommand, LobbyCommand};
-use shared_domain::game_state::{GameState, GameTime};
+use shared_domain::game_state::GameState;
+use shared_domain::game_time::GameTime;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{
     AddressEnvelope, GameError, GameResponse, LobbyResponse, PlayerInfo, ServerResponse,

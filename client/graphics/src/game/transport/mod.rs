@@ -86,7 +86,6 @@ fn move_transports(
     }
 }
 
-// TODO: This is choppy. And it kind of takes this update, but then it jumps back immediately. Should we do something with the elapsed time in `GameState` at this point to make it smoother?
 #[allow(clippy::collapsible_match)]
 fn handle_transports_sync(
     mut server_messages: EventReader<ServerMessageEvent>,
@@ -95,10 +94,8 @@ fn handle_transports_sync(
     let GameStateResource(game_state) = game_state_resource.as_mut();
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
-            if let GameResponse::TransportsSync(transports_sync) = game_response {
-                for (transport_id, transport_dynamic_info) in transports_sync {
-                    game_state.update_transport_dynamic_info(*transport_id, transport_dynamic_info);
-                }
+            if let GameResponse::TransportsSync(game_time, transport_infos) = game_response {
+                game_state.update_transport_dynamic_infos(*game_time, transport_infos);
             }
         }
     }

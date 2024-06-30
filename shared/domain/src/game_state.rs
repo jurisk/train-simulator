@@ -2,24 +2,16 @@
 
 use std::collections::HashMap;
 
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::building_info::BuildingInfo;
 use crate::building_state::BuildingState;
+use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::MapLevel;
 use crate::server_response::{GameInfo, PlayerInfo};
 use crate::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::{GameId, PlayerId, TransportId};
-
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, PartialEq)]
-pub struct GameTime(pub f32);
-
-impl GameTime {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
 //          So the API gets quite busy because of this. There may be better ways.
@@ -55,6 +47,11 @@ impl GameState {
     }
 
     #[must_use]
+    pub fn time(&self) -> GameTime {
+        self.time
+    }
+
+    #[must_use]
     pub fn from_prototype(prototype: &GameState) -> Self {
         let game_id = GameId::random();
         Self {
@@ -68,12 +65,21 @@ impl GameState {
         }
     }
 
-    pub fn advance_time(&mut self, time: GameTime) {
-        let diff = time.0 - self.time.0;
+    pub fn advance_time_diff(&mut self, diff: GameTimeDiff) {
+        self.advance_time_diff_internal(diff);
+        self.time = self.time + diff;
+    }
+
+    fn advance_time_diff_internal(&mut self, diff: GameTimeDiff) {
         for transport in &mut self.transports {
             // Later: If game is paused then no need to advance transports
             transport.advance(diff, &self.buildings);
         }
+    }
+
+    pub fn advance_time(&mut self, time: GameTime) {
+        let diff = time - self.time;
+        self.advance_time_diff_internal(diff);
         self.time = time;
         self.time_steps += 1;
     }
@@ -162,7 +168,24 @@ impl GameState {
         &self.buildings
     }
 
-    pub fn update_transport_dynamic_info(
+    pub fn update_transport_dynamic_infos(
+        &mut self,
+        server_time: GameTime,
+        dynamic_infos: &HashMap<TransportId, TransportDynamicInfo>,
+    ) {
+        info!(
+            "Updated {} transport dynamic infos, old {:?}, new {:?}",
+            dynamic_infos.len(),
+            self.time,
+            server_time
+        );
+        self.time = server_time;
+        for (transport_id, transport_dynamic_info) in dynamic_infos {
+            self.update_transport_dynamic_info(*transport_id, transport_dynamic_info);
+        }
+    }
+
+    fn update_transport_dynamic_info(
         &mut self,
         transport_id: TransportId,
         transport_dynamic_info: &TransportDynamicInfo,

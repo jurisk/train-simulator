@@ -2,7 +2,8 @@
 
 use shared_domain::building_info::BuildingInfo;
 use shared_domain::client_command::GameCommand;
-use shared_domain::game_state::{GameState, GameTime};
+use shared_domain::game_state::GameState;
+use shared_domain::game_time::GameTime;
 use shared_domain::server_response::{
     AddressEnvelope, GameError, GameInfo, GameResponse, PlayerInfo,
 };
@@ -176,6 +177,7 @@ impl GameService {
             vec![GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id()),
                 GameResponse::TransportsSync(
+                    self.state.time(),
                     self.state
                         .transport_infos()
                         .into_iter()

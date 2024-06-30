@@ -17,6 +17,7 @@ pub mod building_type;
 pub mod client_command;
 pub mod edge_xz;
 pub mod game_state;
+pub mod game_time;
 pub mod map_level;
 pub mod production_type;
 pub mod server_response;

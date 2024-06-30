@@ -8,6 +8,7 @@ use uuid::Uuid;
 
 use crate::building_info::BuildingInfo;
 use crate::game_state::GameState;
+use crate::game_time::GameTime;
 use crate::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::{BuildingId, ClientId, GameId, PlayerId, PlayerName, TransportId};
 
@@ -70,10 +71,12 @@ pub struct PlayerInfo {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
     GameStateSnapshot(GameState),
+
+    // Later: Actually, many of these should be sending `GameTime` (if it's not already included in other structures such as `GameState`), and it should be handled on the client.
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
     BuildingsAdded(Vec<BuildingInfo>),
     TransportsAdded(Vec<TransportInfo>),
-    TransportsSync(HashMap<TransportId, TransportDynamicInfo>),
+    TransportsSync(GameTime, HashMap<TransportId, TransportDynamicInfo>),
     GameJoined,
     GameLeft,
 
@@ -90,8 +93,8 @@ pub enum GameError {
 impl Debug for GameResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            GameResponse::GameStateSnapshot(_map_level) => {
-                write!(f, "GameStateSnapshot")
+            GameResponse::GameStateSnapshot(game_state) => {
+                write!(f, "GameStateSnapshot({:?} time)", game_state.time())
             },
             GameResponse::PlayersUpdated(players) => {
                 write!(f, "PlayersUpdated({} players)", players.len())
@@ -110,8 +113,13 @@ impl Debug for GameResponse {
                         .join(", ")
                 )
             },
-            GameResponse::TransportsSync(transports) => {
-                write!(f, "TransportsSync({} transports)", transports.len())
+            GameResponse::TransportsSync(game_time, transports) => {
+                write!(
+                    f,
+                    "TransportsSync({:?} time, {} transports)",
+                    game_time,
+                    transports.len()
+                )
             },
             GameResponse::GameJoined => write!(f, "GameJoined"),
             GameResponse::GameLeft => write!(f, "GameLeft"),

@@ -73,7 +73,8 @@ fn maybe_find_tail(
     terrain: &Terrain,
     max_progress_within_tile: Option<ProgressWithinTile>,
 ) -> Option<LogicalPositionOnTilePath> {
-    // Later: Think of better error handling, e.g., print a warning and assume a random tile_track
+    // Later:   This can actually happen with large game time jumps.
+    //          Think of better error handling, e.g., print a warning and assume a random tile_track
     assert!(tile_path_offset < tile_path.len(), "Ran out of tile path!");
     let tile_track = tile_path[tile_path_offset];
 

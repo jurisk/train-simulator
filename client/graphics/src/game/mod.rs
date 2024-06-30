@@ -8,7 +8,8 @@ use shared_domain::client_command::GameCommand::{QueryBuildings, QueryTransports
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
 };
-use shared_domain::game_state::{GameState, GameTime};
+use shared_domain::game_state::GameState;
+use shared_domain::game_time::GameTimeDiff;
 use shared_domain::server_response::{AuthenticationResponse, GameResponse, ServerResponse};
 use shared_domain::{GameId, PlayerId};
 
@@ -67,7 +68,7 @@ pub struct PlayerIdResource(pub PlayerId);
 #[allow(clippy::needless_pass_by_value)]
 fn client_side_time_advance(mut game_state_resource: ResMut<GameStateResource>, time: Res<Time>) {
     let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
-    game_state.advance_time(GameTime(time.elapsed_seconds()));
+    game_state.advance_time_diff(GameTimeDiff::from_seconds(time.delta_seconds()));
 }
 
 #[allow(clippy::needless_pass_by_value)]

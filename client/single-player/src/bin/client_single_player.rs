@@ -2,7 +2,7 @@ use std::env::args;
 use std::str::FromStr;
 
 use bevy::prelude::{
-    info, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time,
+    info, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time, Update,
 };
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::game::GameLaunchParams;
@@ -10,7 +10,7 @@ use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
 use game_logic::server_state::ServerState;
 use shared_domain::client_command::{AccessToken, ClientCommandWithClientId};
-use shared_domain::game_state::GameTime;
+use shared_domain::game_time::GameTime;
 use shared_domain::{ClientId, PlayerId};
 
 #[allow(clippy::expect_used)]
@@ -34,6 +34,7 @@ fn main() {
     });
     app.insert_state(ClientState::LoggingIn);
     app.add_systems(FixedUpdate, process_messages_locally);
+    app.add_systems(Update, advance_time_locally);
     app.run();
 }
 
@@ -49,7 +50,6 @@ fn process_messages_locally(
     mut server_state_resource: ResMut<ServerStateResource>,
     mut client_messages: EventReader<ClientMessageEvent>,
     mut server_messages: EventWriter<ServerMessageEvent>,
-    time: Res<Time>,
 ) {
     let ClientIdResource(client_id) = *client_id_resource;
     let ServerStateResource(ref mut server_state) = server_state_resource.as_mut();
@@ -70,8 +70,19 @@ fn process_messages_locally(
             }
         }
     }
+}
 
-    server_state.advance_times(GameTime(time.elapsed_seconds()));
+#[allow(clippy::needless_pass_by_value)]
+fn advance_time_locally(
+    time: Res<Time>,
+    client_id_resource: Res<ClientIdResource>,
+    mut server_state_resource: ResMut<ServerStateResource>,
+    mut server_messages: EventWriter<ServerMessageEvent>,
+) {
+    let ClientIdResource(client_id) = *client_id_resource;
+    let ServerStateResource(ref mut server_state) = server_state_resource.as_mut();
+    server_state.advance_times(GameTime::from_seconds(time.elapsed_seconds()));
+
     let sync_responses = server_state.sync_games();
     for response in sync_responses {
         info!("Simulating server: Got sync response: {:?}", response);

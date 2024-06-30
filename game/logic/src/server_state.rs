@@ -7,7 +7,7 @@
 use std::convert::identity;
 
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId, NetworkCommand};
-use shared_domain::game_state::GameTime;
+use shared_domain::game_time::GameTime;
 use shared_domain::server_response::{
     AddressEnvelope, NetworkResponse, ServerResponse, ServerResponseWithAddress,
     ServerResponseWithClientIds,

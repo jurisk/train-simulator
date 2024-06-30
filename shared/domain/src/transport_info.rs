@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::building_state::BuildingState;
+use crate::game_time::GameTimeDiff;
 use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 use crate::transport_type::TransportType;
@@ -239,7 +240,8 @@ impl TransportInfo {
         }
     }
 
-    pub fn advance(&mut self, seconds: f32, building_state: &BuildingState) {
+    pub fn advance(&mut self, diff: GameTimeDiff, building_state: &BuildingState) {
+        let seconds = diff.to_seconds();
         let TransportVelocity { tiles_per_second } = self.velocity();
         let track_type = self.location().tile_path[0].track_type;
         let location = &mut self.dynamic_info.location;

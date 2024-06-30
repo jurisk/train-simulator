@@ -16,7 +16,7 @@ use bevy_simplenet::{
 use game_logic::server_state::ServerState;
 use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
-use shared_domain::game_state::GameTime;
+use shared_domain::game_time::GameTime;
 use shared_domain::server_response::ServerResponseWithClientIds;
 use shared_domain::ClientId;
 
@@ -129,7 +129,7 @@ fn process_client_command_with_client_id_events(
         }
     }
 
-    server_state.advance_times(GameTime(time.elapsed_seconds()));
+    server_state.advance_times(GameTime::from_seconds(time.elapsed_seconds()));
     for response in server_state.sync_games() {
         send_responses_to_clients(server.as_ref(), &response);
     }
