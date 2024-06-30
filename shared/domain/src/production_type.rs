@@ -13,6 +13,16 @@ pub enum ProductionType {
 
 impl ProductionType {
     #[must_use]
+    pub const fn all() -> [Self; 4] {
+        [
+            ProductionType::CoalMine,
+            ProductionType::IronMine,
+            ProductionType::IronWorks,
+            ProductionType::CargoPort,
+        ]
+    }
+
+    #[must_use]
     pub(crate) fn relative_tiles_used(self) -> TileCoverage {
         TileCoverage::Rectangular {
             north_west_inclusive: TileCoordsXZ::new(-1, -1),

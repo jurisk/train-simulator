@@ -92,64 +92,29 @@ fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
+#[allow(clippy::match_same_arms)]
 fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     menu::menu_button(ui, "⚒ Production", |ui| {
         set_font_size(ui, 24.0);
-        if ui
-            .add(
-                egui::Button::new("⛏ Iron Mine")
-                    .selected(matches!(
-                        *selected_mode.as_ref(),
-                        SelectedMode::Production(ProductionType::IronMine)
-                    ))
-                    .min_size(egui::vec2(MIN_X, MIN_Y)),
-            )
-            .clicked()
-        {
-            *selected_mode.as_mut() = SelectedMode::Production(ProductionType::IronMine);
-            ui.close_menu();
-        }
-        if ui
-            .add(
-                egui::Button::new("⛏ Coal Mine")
-                    .selected(matches!(
-                        *selected_mode.as_ref(),
-                        SelectedMode::Production(ProductionType::CoalMine)
-                    ))
-                    .min_size(egui::vec2(MIN_X, MIN_Y)),
-            )
-            .clicked()
-        {
-            *selected_mode.as_mut() = SelectedMode::Production(ProductionType::CoalMine);
-            ui.close_menu();
-        }
-        if ui
-            .add(
-                egui::Button::new("⚒ Iron Works")
-                    .selected(matches!(
-                        *selected_mode.as_ref(),
-                        SelectedMode::Production(ProductionType::IronWorks)
-                    ))
-                    .min_size(egui::vec2(MIN_X, MIN_Y)),
-            )
-            .clicked()
-        {
-            *selected_mode.as_mut() = SelectedMode::Production(ProductionType::IronWorks);
-            ui.close_menu();
-        }
-        if ui
-            .add(
-                egui::Button::new("⚓ Cargo Port")
-                    .selected(matches!(
-                        *selected_mode.as_ref(),
-                        SelectedMode::Production(ProductionType::CargoPort)
-                    ))
-                    .min_size(egui::vec2(MIN_X, MIN_Y)),
-            )
-            .clicked()
-        {
-            *selected_mode.as_mut() = SelectedMode::Production(ProductionType::CargoPort);
-            ui.close_menu();
+
+        for production_type in ProductionType::all() {
+            let symbol = match production_type {
+                ProductionType::IronMine => "⛏",
+                ProductionType::CoalMine => "⛏",
+                ProductionType::IronWorks => "⚒",
+                ProductionType::CargoPort => "⚓",
+            };
+            if ui
+                .add(
+                    egui::Button::new(format!("{symbol} {production_type:#?}"))
+                        .selected(*selected_mode.as_ref() == SelectedMode::Production(production_type))
+                        .min_size(egui::vec2(MIN_X, MIN_Y)),
+                )
+                .clicked()
+            {
+                *selected_mode.as_mut() = SelectedMode::Production(production_type);
+                ui.close_menu();
+            }
         }
     });
 }
