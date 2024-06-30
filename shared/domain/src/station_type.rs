@@ -20,6 +20,22 @@ pub struct StationType {
 
 impl StationType {
     #[must_use]
+    pub const fn all() -> [Self; 2] {
+        [
+            StationType {
+                orientation:     StationOrientation::NorthToSouth,
+                platforms:       1,
+                length_in_tiles: 4,
+            },
+            StationType {
+                orientation:     StationOrientation::EastToWest,
+                platforms:       1,
+                length_in_tiles: 4,
+            },
+        ]
+    }
+
+    #[must_use]
     pub fn track_type(self) -> TrackType {
         match self.orientation {
             StationOrientation::NorthToSouth => TrackType::NorthSouth,

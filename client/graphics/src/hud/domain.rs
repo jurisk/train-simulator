@@ -1,7 +1,7 @@
 use bevy::prelude::Resource;
 use shared_domain::building_type::BuildingType;
 use shared_domain::production_type::ProductionType;
-use shared_domain::station_type::{StationOrientation, StationType};
+use shared_domain::station_type::StationType;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
 
@@ -9,7 +9,7 @@ use shared_domain::tile_coverage::TileCoverage;
 pub enum SelectedMode {
     Info,
     Tracks,
-    Stations(StationOrientation),
+    Stations(StationType),
     Production(ProductionType),
     Military,
     Trains,
@@ -42,13 +42,7 @@ impl SelectedMode {
     pub fn corresponding_building(self) -> Option<BuildingType> {
         match self {
             SelectedMode::Tracks => None,
-            SelectedMode::Stations(orientation) => {
-                Some(BuildingType::Station(StationType {
-                    orientation,
-                    platforms: 1,
-                    length_in_tiles: 4,
-                }))
-            },
+            SelectedMode::Stations(station_type) => Some(BuildingType::Station(station_type)),
             SelectedMode::Production(production_type) => {
                 Some(BuildingType::Production(production_type))
             },

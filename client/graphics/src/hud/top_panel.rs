@@ -2,7 +2,7 @@ use bevy::prelude::ResMut;
 use bevy_egui::EguiContexts;
 use egui::{menu, Ui};
 use shared_domain::production_type::ProductionType;
-use shared_domain::station_type::StationOrientation;
+use shared_domain::station_type::{StationOrientation, StationType};
 
 use crate::hud::domain::SelectedMode;
 
@@ -68,33 +68,26 @@ fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     // Later: We could build stations by just dragging the mouse, but it can wait.
     menu::menu_button(ui, "🚉 Stations", |ui| {
         set_font_size(ui, 24.0);
-        if ui
-            .add(
-                egui::Button::new("⬌ East-West")
-                    .selected(matches!(
-                        *selected_mode.as_ref(),
-                        SelectedMode::Stations(StationOrientation::EastToWest),
+
+        for station_type in StationType::all() {
+            let symbol = match station_type.orientation {
+                StationOrientation::NorthToSouth => "⬍ NS",
+                StationOrientation::EastToWest => "⬌ EW",
+            };
+            if ui
+                .add(
+                    egui::Button::new(format!(
+                        "{symbol} {} × {}",
+                        station_type.length_in_tiles, station_type.platforms
                     ))
+                    .selected(*selected_mode.as_ref() == SelectedMode::Stations(station_type))
                     .min_size(egui::vec2(MIN_X, MIN_Y)),
-            )
-            .clicked()
-        {
-            *selected_mode.as_mut() = SelectedMode::Stations(StationOrientation::EastToWest);
-            ui.close_menu();
-        }
-        if ui
-            .add(
-                egui::Button::new("⬍ North-South")
-                    .selected(matches!(
-                        *selected_mode.as_ref(),
-                        SelectedMode::Stations(StationOrientation::NorthToSouth)
-                    ))
-                    .min_size(egui::vec2(MIN_X, MIN_Y)),
-            )
-            .clicked()
-        {
-            *selected_mode.as_mut() = SelectedMode::Stations(StationOrientation::NorthToSouth);
-            ui.close_menu();
+                )
+                .clicked()
+            {
+                *selected_mode.as_mut() = SelectedMode::Stations(station_type);
+                ui.close_menu();
+            }
         }
     });
 }
