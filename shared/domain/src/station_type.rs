@@ -4,14 +4,14 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::track_type::TrackType;
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum StationOrientation {
     NorthToSouth,
     EastToWest,
 }
 
 // TODO: Build some test stations in test setup
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct StationType {
     pub orientation:     StationOrientation,
     pub platforms:       usize,

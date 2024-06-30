@@ -66,6 +66,7 @@ fn tracks_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 
 fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     // Later: We could build stations by just dragging the mouse, but it can wait.
+    // TODO: Use `StationType::all()`
     menu::menu_button(ui, "🚉 Stations", |ui| {
         set_font_size(ui, 24.0);
 
@@ -94,6 +95,7 @@ fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 
 #[allow(clippy::match_same_arms)]
 fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
+    // TODO: Use `ProductionType::all()`
     menu::menu_button(ui, "⚒ Production", |ui| {
         set_font_size(ui, 24.0);
 

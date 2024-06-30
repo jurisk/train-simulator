@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum ProductionType {
     CoalMine,
     IronMine,
@@ -28,5 +28,15 @@ impl ProductionType {
             north_west_inclusive: TileCoordsXZ::new(-1, -1),
             south_east_inclusive: TileCoordsXZ::new(1, 1),
         }
+    }
+
+    #[must_use]
+    pub const fn all() -> [ProductionType; 4] {
+        [
+            ProductionType::CoalMine,
+            ProductionType::IronMine,
+            ProductionType::IronWorks,
+            ProductionType::CargoPort,
+        ]
     }
 }

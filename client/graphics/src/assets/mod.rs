@@ -3,6 +3,7 @@
 use bevy::app::{App, Plugin};
 use bevy::prelude::{Assets, Mesh, ResMut, Resource, Startup};
 
+use crate::game::buildings::assets::BuildingAssets;
 use crate::game::buildings::tracks::TrackAssets;
 
 // Later: Use https://github.com/NiklasEi/bevy_asset_loader? Or perhaps not.
@@ -10,7 +11,8 @@ use crate::game::buildings::tracks::TrackAssets;
 // TODO HIGH: Use such pre-loaded assets instead of creating a new mesh / material every time.
 #[derive(Resource)]
 pub struct GameAssets {
-    pub track_assets: TrackAssets,
+    pub track_assets:    TrackAssets,
+    pub building_assets: BuildingAssets,
 }
 
 pub struct GameAssetsPlugin;
@@ -22,7 +24,9 @@ impl Plugin for GameAssetsPlugin {
 }
 
 fn setup_assets(mut commands: bevy::prelude::Commands, mut meshes: ResMut<Assets<Mesh>>) {
+    let meshes = meshes.as_mut();
     commands.insert_resource(GameAssets {
-        track_assets: TrackAssets::new(meshes.as_mut()),
+        track_assets:    TrackAssets::new(meshes),
+        building_assets: BuildingAssets::new(meshes),
     });
 }

@@ -1,5 +1,5 @@
 use bevy::prelude::{
-    Assets, ButtonInput, Color, Commands, Cuboid, EventWriter, Mesh, MouseButton, Name, PbrBundle,
+    Assets, ButtonInput, Color, Commands, EventWriter, Handle, Mesh, MouseButton, Name, PbrBundle,
     Res, ResMut, StandardMaterial, Transform,
 };
 use bevy_egui::EguiContexts;
@@ -58,12 +58,11 @@ pub(crate) fn build_building_when_mouse_released(
 }
 
 #[allow(clippy::too_many_arguments, clippy::similar_names)]
-pub(crate) fn create_building_cuboid(
+pub(crate) fn create_building_entity(
     tile_coverage: TileCoverage,
     label: String,
     colour: Colour,
-    height: f32,
-    meshes: &mut ResMut<Assets<Mesh>>,
+    mesh: Handle<Mesh>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     commands: &mut Commands,
     map_level: &MapLevel,
@@ -84,11 +83,7 @@ pub(crate) fn create_building_cuboid(
 
     let color = Color::rgb_u8(colour.r, colour.g, colour.b);
     let material = materials.add(color);
-    let x_length = se.x - nw.x;
-    let z_length = se.z - nw.z;
     let center = (se + nw) / 2.0;
-
-    let mesh = meshes.add(Mesh::from(Cuboid::new(x_length, height * 2.0, z_length)));
 
     // TODO HIGH: Use `label` to also draw text on the sides / roof of the building
 

@@ -1,5 +1,6 @@
 #![allow(clippy::needless_pass_by_value, clippy::collapsible_match)]
 
+pub mod assets;
 mod building;
 pub mod tracks;
 
@@ -7,7 +8,7 @@ use std::collections::HashMap;
 
 use bevy::prelude::{
     error, in_state, Assets, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs,
-    Mesh, Plugin, Res, ResMut, StandardMaterial, Update,
+    Plugin, Res, ResMut, StandardMaterial, Update,
 };
 use shared_domain::building_info::BuildingInfo;
 use shared_domain::building_type::BuildingType;
@@ -27,7 +28,7 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::assets::GameAssets;
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::building::{
-    build_building_when_mouse_released, create_building_cuboid,
+    build_building_when_mouse_released, create_building_entity,
 };
 use crate::game::buildings::tracks::{build_tracks_when_mouse_released, create_rails};
 use crate::game::{GameStateResource, PlayerIdResource};
@@ -198,9 +199,8 @@ fn build_sample_objects_for_testing(
 fn handle_building_built(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     game_assets: Res<GameAssets>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     mut game_state_resource: ResMut<GameStateResource>,
 ) {
     let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
@@ -215,7 +215,6 @@ fn handle_building_built(
                     create_building(
                         building_info,
                         &mut commands,
-                        &mut meshes,
                         &mut materials,
                         game_assets.as_ref(),
                         &map_level,
@@ -233,7 +232,6 @@ const STATION_BASE_COLOUR: Colour = Colour::rgb(128, 128, 128);
 fn create_building(
     building_info: &BuildingInfo,
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     game_assets: &GameAssets,
     map_level: &MapLevel,
@@ -264,24 +262,26 @@ fn create_building(
                     // For now, nothing more - just the rails are enough
                 },
                 BuildingType::Production(production_type) => {
-                    create_building_cuboid(
+                    let mesh = game_assets
+                        .building_assets
+                        .production_mesh_for(*production_type);
+                    create_building_entity(
                         building_info.covers_tiles(),
                         format!("{production_type:?}"),
                         player_info.colour,
-                        0.5,
-                        meshes,
+                        mesh,
                         materials,
                         commands,
                         map_level,
                     );
                 },
                 BuildingType::Station(station_type) => {
-                    create_building_cuboid(
+                    let mesh = game_assets.building_assets.station_mesh_for(*station_type);
+                    create_building_entity(
                         building_info.covers_tiles(),
                         format!("{station_type:?}"),
                         STATION_BASE_COLOUR,
-                        0.01,
-                        meshes,
+                        mesh,
                         materials,
                         commands,
                         map_level,
