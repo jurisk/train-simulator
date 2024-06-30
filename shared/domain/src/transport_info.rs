@@ -2,15 +2,17 @@ use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter};
 
 use bevy_math::Vec3;
+use log::warn;
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
+use shared_util::non_empty_circular_list::NonEmptyCircularList;
 
 use crate::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
 use crate::tile_track::TileTrack;
-use crate::track_type::TrackType;
+use crate::track_pathfinding::find_route_to_station;
 use crate::transport_type::TransportType;
-use crate::{PlayerId, TransportId};
+use crate::{BuildingId, PlayerId, TransportId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct ProgressWithinTile(f32);
@@ -96,11 +98,20 @@ pub struct TransportVelocity {
     pub tiles_per_second: f32,
 }
 
-// TODO HIGH: Implement StationsList
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub enum MovementOrders {
-    Stop,
-    TemporaryPickFirst,
+pub struct MovementOrders {
+    is_stopped: bool,
+    stations:   NonEmptyCircularList<BuildingId>,
+}
+
+impl MovementOrders {
+    #[must_use]
+    pub fn new(station_id: BuildingId) -> Self {
+        Self {
+            is_stopped: false,
+            stations:   NonEmptyCircularList::new(station_id),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -198,40 +209,54 @@ impl TransportInfo {
     )]
     fn jump_tile(&mut self, building_state: &BuildingState) {
         let transport_type = self.transport_type().clone();
+        let id = self.id();
+
         let movement_orders = self.movement_orders().clone();
         let location = &mut self.dynamic_info.location;
         let current_tile_track = location.tile_path[0];
-        let next_tile_coords = current_tile_track.tile_coords_xz + location.pointing_in;
-        let tracks_at_next_tile: Vec<TrackType> = building_state.track_types_at(next_tile_coords);
-        let reversed = location.pointing_in.reverse();
-        let valid_tracks_at_next_tile: Vec<TrackType> = tracks_at_next_tile
-            .into_iter()
-            .filter(|track_type| track_type.connections().contains(&reversed))
-            .collect();
-        // TODO: Support other strategies
-        assert_eq!(movement_orders, MovementOrders::TemporaryPickFirst);
-        let next_track_type = valid_tracks_at_next_tile[0];
-        let next_tile_track = TileTrack {
-            tile_coords_xz: next_tile_coords,
-            track_type:     next_track_type,
+
+        let target_station = movement_orders.stations.next();
+        let route = find_route_to_station(
+            current_tile_track,
+            location.pointing_in,
+            target_station,
+            building_state,
+        );
+        let next = match route {
+            None => None,
+            Some(found) => found.first().cloned(),
         };
+        match next {
+            None => {
+                warn!(
+                    "No route found to station {target_station:?} for transport {:?}",
+                    id
+                );
+                location.progress_within_tile = ProgressWithinTile::about_to_exit();
+            },
+            Some(next_tile_track) => {
+                let next_track_type = next_tile_track.track_type;
+                location.tile_path.insert(0, next_tile_track);
 
-        location.tile_path.insert(0, next_tile_track);
+                // Later: We are rather crudely sometimes removing the last element when we are inserting an
+                // element.
+                // This means - depending on `HEURISTIC_COEF` - that sometimes we will be carrying around
+                // "too many tiles", or it could lead to running out of tiles if it is too short.
+                // The alternative is to use `calculate_train_component_head_tails_and_final_tail_position`
+                // to calculate the tail position, and then remove the last tiles if they are not needed,
+                // but that introduces more complexity.
+                const HEURISTIC_COEF: f32 = 2.0;
+                if location.tile_path.len()
+                    > (HEURISTIC_COEF * transport_type.length_in_tiles()) as usize
+                {
+                    let _ = location.tile_path.pop();
+                }
 
-        // Later: We are rather crudely sometimes removing the last element when we are inserting an
-        // element.
-        // This means - depending on `HEURISTIC_COEF` - that sometimes we will be carrying around
-        // "too many tiles", or it could lead to running out of tiles if it is too short.
-        // The alternative is to use `calculate_train_component_head_tails_and_final_tail_position`
-        // to calculate the tail position, and then remove the last tiles if they are not needed,
-        // but that introduces more complexity.
-        const HEURISTIC_COEF: f32 = 2.0;
-        if location.tile_path.len() > (HEURISTIC_COEF * transport_type.length_in_tiles()) as usize {
-            let _ = location.tile_path.pop();
+                location.progress_within_tile.0 -= 1.0;
+                let reversed = location.pointing_in.reverse();
+                location.pointing_in = next_track_type.other_end(reversed);
+            },
         }
-
-        location.progress_within_tile.0 -= 1.0;
-        location.pointing_in = next_track_type.other_end(reversed);
     }
 
     fn normalise_progress_jumping_tiles(&mut self, building_state: &BuildingState) {

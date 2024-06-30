@@ -107,7 +107,9 @@ fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
             if ui
                 .add(
                     egui::Button::new(format!("{symbol} {production_type:#?}"))
-                        .selected(*selected_mode.as_ref() == SelectedMode::Production(production_type))
+                        .selected(
+                            *selected_mode.as_ref() == SelectedMode::Production(production_type),
+                        )
                         .min_size(egui::vec2(MIN_X, MIN_Y)),
                 )
                 .clicked()

@@ -13,10 +13,9 @@ use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 use crate::{BuildingId, PlayerId};
 
-// TODO:    This actually allows turns that the trains cannot actually make (e.g. crossing rails),
-//          so we should consider the direction of the train when planning the track.
-//          But I think we will write similar code for the train pathfinding, then we can reuse it
-//          here, for the track planning pathfinding.
+// TODO HIGH:   This actually allows turns that the trains cannot actually make (e.g. crossing rails),
+//              so we should consider the direction of the train when planning the track.
+//              Reuse the `find_route_to_station` code for train pathfinding here.
 #[allow(
     clippy::items_after_statements,
     clippy::cast_possible_truncation,

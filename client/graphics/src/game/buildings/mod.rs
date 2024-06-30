@@ -180,7 +180,7 @@ fn build_sample_objects_for_testing(
                             TransportVelocity {
                                 tiles_per_second: 2.0,
                             },
-                            MovementOrders::TemporaryPickFirst,
+                            MovementOrders::new(BuildingId::random()), // TODO HIGH: Actually start with a known station! Where the train was spawned!
                         )),
                     )));
 
