@@ -24,6 +24,7 @@ use shared_domain::transport_type::{TrainComponentType, TransportType};
 use shared_domain::{BuildingId, PlayerId, TransportId};
 use shared_util::direction_xz::DirectionXZ;
 
+use crate::assets::GameAssets;
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::building::{
     build_building_when_mouse_released, create_building_cuboid,
@@ -199,6 +200,7 @@ fn handle_building_built(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    game_assets: Res<GameAssets>,
     mut game_state_resource: ResMut<GameStateResource>,
 ) {
     let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
@@ -215,6 +217,7 @@ fn handle_building_built(
                         &mut commands,
                         &mut meshes,
                         &mut materials,
+                        game_assets.as_ref(),
                         &map_level,
                         game_state.players(),
                     );
@@ -232,6 +235,7 @@ fn create_building(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
+    game_assets: &GameAssets,
     map_level: &MapLevel,
     players_info: &HashMap<PlayerId, PlayerInfo>,
 ) {
@@ -247,7 +251,7 @@ fn create_building(
                 create_rails(
                     player_info,
                     commands,
-                    meshes,
+                    &game_assets.track_assets,
                     materials,
                     map_level,
                     tile_coords,

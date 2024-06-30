@@ -17,6 +17,7 @@ shared-util = { path = "../../shared/util" }
 serde.workspace = true
 serde_json.workspace = true
 fastrand.workspace = true
+bigdecimal.workspace = true
 
 bevy_mod_raycast.workspace = true
 bevy_egui.workspace = true
@@ -26,8 +27,6 @@ bevy-inspector-egui.workspace = true
 [dependencies.uuid]
 workspace = true
 features = ["v4"]
-
-# TODO: Use https://github.com/NiklasEi/bevy_asset_loader ?
 
 # https://crates.io/crates/bevy/versions
 [dependencies.bevy]

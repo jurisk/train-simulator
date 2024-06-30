@@ -161,6 +161,7 @@ fn debug_draw_tile(
     }
 }
 
+// TODO: Avoid this, and use BigDecimal
 const HACK_COEF: f32 = 1_000_000.0;
 
 #[allow(clippy::cast_possible_truncation)]

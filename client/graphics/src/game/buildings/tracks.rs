@@ -1,15 +1,20 @@
+use std::collections::HashMap;
+
 use bevy::asset::Assets;
 use bevy::core::Name;
 use bevy::input::ButtonInput;
 use bevy::math::{Quat, Vec3};
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
-    debug, default, Color, Commands, Cuboid, EventWriter, Mesh, MouseButton, Res, ResMut, Transform,
+    debug, default, info, warn, Color, Commands, Cuboid, EventWriter, Handle, Mesh, MouseButton,
+    Res, ResMut, Transform,
 };
 use bevy_egui::EguiContexts;
+use bigdecimal::BigDecimal;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
+use shared_domain::terrain::DEFAULT_Y_COEF;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::track_planner::plan_tracks;
 use shared_domain::track_type::TrackType;
@@ -21,6 +26,95 @@ use crate::selection::{SelectedEdges, SelectedTiles};
 
 const RAIL_DIAMETER: f32 = 0.025;
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct RailLengthKey(BigDecimal);
+
+impl RailLengthKey {
+    #[must_use]
+    fn for_vectors(a: Vec3, b: Vec3) -> Self {
+        let length_squared = (b - a).length_squared();
+
+        let length_squared = BigDecimal::try_from(length_squared).unwrap_or_else(|e| {
+            warn!("Could not convert length squared to BigDecimal: {e}");
+            BigDecimal::from(1)
+        });
+
+        // Note.    Not sure if we have bugs in how we pre-populate the rail meshes, but this
+        //          rounding was important for the meshes to be found.
+        let rounded = length_squared.round(1);
+
+        Self(rounded)
+    }
+}
+
+pub struct TrackAssets {
+    fallback:           Handle<Mesh>,
+    rail_meshes_by_key: HashMap<RailLengthKey, Handle<Mesh>>,
+}
+
+impl TrackAssets {
+    #[must_use]
+    pub fn new(meshes: &mut Assets<Mesh>) -> Self {
+        let mut rail_meshes_by_key = HashMap::new();
+
+        // For the diagonal rails
+        let (a1, a2) = pick_rail_positions(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 0.0));
+        let (b1, b2) = pick_rail_positions(Vec3::new(1.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 1.0));
+
+        // This is suboptimal, as it is tied to `DEFAULT_Y_COEF` instead of dynamically taking it from `Terrain`.
+        let nominals = vec![
+            (Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 0.0)),
+            (
+                Vec3::new(0.0, 0.0, 0.0),
+                Vec3::new(1.0, DEFAULT_Y_COEF, 0.0),
+            ),
+            (a1, b2),
+            (a2, b1),
+        ];
+
+        for (a, b) in nominals {
+            let key = RailLengthKey::for_vectors(a, b);
+            let length = (b - a).length();
+            let length_squared = (b - a).length_squared();
+            let handle = meshes.add(Mesh::from(Cuboid::new(
+                RAIL_DIAMETER,
+                RAIL_DIAMETER,
+                length,
+            )));
+
+            info!(
+                "Registering rail mesh for key {key:?} ({a:?}, {b:?}, l = {length}, l_sq = {length_squared})"
+            );
+
+            rail_meshes_by_key.insert(key, handle);
+        }
+
+        let fallback = meshes.add(Mesh::from(Cuboid::default()));
+
+        Self {
+            fallback,
+            rail_meshes_by_key,
+        }
+    }
+
+    #[must_use]
+    fn rail_mesh_for(&self, a: Vec3, b: Vec3) -> Handle<Mesh> {
+        let key = RailLengthKey::for_vectors(a, b);
+        match self.rail_meshes_by_key.get(&key) {
+            None => {
+                let length = (b - a).length();
+                let length_squared = (b - a).length_squared();
+                let known_keys: Vec<_> = self.rail_meshes_by_key.keys().collect();
+                warn!(
+                    "Rail mesh not found for length {length}: key {key:?} ({a:?}, {b:?}, l_sq = {length_squared}), using fallback. Known keys: {known_keys:?}"
+                );
+                self.fallback.clone()
+            },
+            Some(found) => found.clone(),
+        }
+    }
+}
+
 // Later: Make the rails round, they will look nicer. Look at Rise of Industry, for example.
 // Later: Consider what to do with the rails that right now go through the terrain.
 // Either prohibit such, or make them render better.
@@ -28,7 +122,7 @@ const RAIL_DIAMETER: f32 = 0.025;
 pub(crate) fn create_rails(
     player_info: &PlayerInfo,
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
+    track_assets: &TrackAssets,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
     tile: TileCoordsXZ,
@@ -52,7 +146,7 @@ pub(crate) fn create_rails(
         b2,
         color,
         commands,
-        meshes,
+        track_assets,
         materials,
         format!("Track A {track_type:?} at {tile:?}"),
     );
@@ -61,7 +155,7 @@ pub(crate) fn create_rails(
         b1,
         color,
         commands,
-        meshes,
+        track_assets,
         materials,
         format!("Track B {track_type:?} at {tile:?}"),
     );
@@ -83,7 +177,7 @@ fn spawn_rail(
     b: Vec3,
     color: Color,
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
+    track_assets: &TrackAssets,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     name: String,
 ) {
@@ -95,17 +189,18 @@ fn spawn_rail(
         PbrBundle {
             transform: Transform {
                 translation: a + direction * length / 2.0,
-                rotation:    Quat::from_rotation_arc(Vec3::Z, direction),
+                rotation: Quat::from_rotation_arc(Vec3::Z, direction),
                 ..default()
             },
             material: materials.add(color),
-            mesh: meshes.add(Mesh::from(Cuboid::new(RAIL_DIAMETER, RAIL_DIAMETER, length))),
+            mesh: track_assets.rail_mesh_for(a, b),
             ..default()
         },
         Name::new(name),
     ));
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn build_tracks_when_mouse_released(
     mut selected_tiles: ResMut<SelectedTiles>,
     mut selected_edges: ResMut<SelectedEdges>,

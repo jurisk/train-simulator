@@ -19,7 +19,7 @@ use crate::game::map_level::MapLevelPlugin;
 use crate::game::transport::TransportPlugin;
 use crate::states::ClientState;
 
-mod buildings;
+pub mod buildings;
 pub mod map_level;
 mod transport;
 

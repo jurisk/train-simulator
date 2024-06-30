@@ -6,6 +6,7 @@ use bevy::utils::default;
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution};
 use bevy::DefaultPlugins;
 
+use crate::assets::GameAssetsPlugin;
 use crate::cameras::CameraPlugin;
 use crate::communication::CommunicationPlugin;
 use crate::constants::{WINDOW_HEIGHT, WINDOW_WIDTH};
@@ -17,6 +18,7 @@ use crate::lobby::LobbyHandlerPlugin;
 use crate::network::client_ping::ClientPingPlugin;
 use crate::selection::SelectionPlugin;
 
+pub mod assets;
 mod cameras;
 pub mod communication;
 mod constants;
@@ -67,6 +69,7 @@ impl Plugin for ClientGraphicsPlugin {
                 }),
         );
         app.add_plugins((
+            GameAssetsPlugin,
             CommunicationPlugin,
             LightsPlugin,
             LobbyHandlerPlugin,

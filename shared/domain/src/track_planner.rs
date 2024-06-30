@@ -43,6 +43,7 @@ fn successors(
                     building_type:  BuildingType::Track(tile_track.track_type),
                 };
 
+                // Later: Consider using BigDecimal instead for this
                 let length = (tile_track.track_type.length_in_tiles() * 1000.0).round() as u32;
 
                 let malus = if preferred_tiles.contains(&tile) {

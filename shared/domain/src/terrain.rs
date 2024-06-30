@@ -28,11 +28,12 @@ impl Debug for Terrain {
     }
 }
 
+pub const DEFAULT_Y_COEF: f32 = 0.5;
 impl Terrain {
     #[must_use]
     pub fn new(vertex_heights: Vec<Vec<u8>>) -> Self {
         Self {
-            y_coef:         0.5,
+            y_coef:         DEFAULT_Y_COEF,
             vertex_heights: GridXZ::new(vertex_heights).map(|&height| Height(height)),
         }
     }
