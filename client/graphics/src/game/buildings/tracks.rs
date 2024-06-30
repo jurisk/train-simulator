@@ -96,10 +96,10 @@ fn spawn_rail(
             transform: Transform {
                 translation: a + direction * length / 2.0,
                 rotation:    Quat::from_rotation_arc(Vec3::Z, direction),
-                scale:       Vec3::new(RAIL_DIAMETER, RAIL_DIAMETER, length),
+                ..default()
             },
             material: materials.add(color),
-            mesh: meshes.add(Mesh::from(Cuboid::default())),
+            mesh: meshes.add(Mesh::from(Cuboid::new(RAIL_DIAMETER, RAIL_DIAMETER, length))),
             ..default()
         },
         Name::new(name),
