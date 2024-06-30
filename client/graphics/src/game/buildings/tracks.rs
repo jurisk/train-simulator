@@ -6,6 +6,7 @@ use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
     debug, default, Color, Commands, Cuboid, EventWriter, Mesh, MouseButton, Res, ResMut, Transform,
 };
+use bevy_egui::EguiContexts;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
@@ -113,7 +114,12 @@ pub(crate) fn build_tracks_when_mouse_released(
     player_id_resource: Res<PlayerIdResource>,
     game_state_resource: Res<GameStateResource>,
     selected_mode_resource: Res<SelectedMode>,
+    mut egui_contexts: EguiContexts,
 ) {
+    if egui_contexts.ctx_mut().is_pointer_over_area() {
+        return;
+    }
+
     if selected_mode_resource.as_ref() != &SelectedMode::Tracks {
         return;
     }

@@ -173,11 +173,13 @@ impl GameState {
         server_time: GameTime,
         dynamic_infos: &HashMap<TransportId, TransportDynamicInfo>,
     ) {
+        let diff = server_time - self.time;
         info!(
-            "Updated {} transport dynamic infos, old {:?}, new {:?}",
-            dynamic_infos.len(),
+            "Updated dynamic infos, diff {:?}, old {:?}, new {:?}, {} transports",
+            diff,
             self.time,
-            server_time
+            server_time,
+            dynamic_infos.len(),
         );
         self.time = server_time;
         for (transport_id, transport_dynamic_info) in dynamic_infos {

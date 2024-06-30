@@ -2,6 +2,7 @@ use bevy::prelude::{
     Assets, ButtonInput, Color, Commands, Cuboid, EventWriter, Mesh, MouseButton, Name, PbrBundle,
     Res, ResMut, StandardMaterial, Transform,
 };
+use bevy_egui::EguiContexts;
 use shared_domain::building_info::BuildingInfo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
@@ -21,7 +22,12 @@ pub(crate) fn build_building_when_mouse_released(
     mut client_messages: EventWriter<ClientMessageEvent>,
     player_id_resource: Res<PlayerIdResource>,
     hovered_tile: Res<HoveredTile>,
+    mut egui_contexts: EguiContexts,
 ) {
+    if egui_contexts.ctx_mut().is_pointer_over_area() {
+        return;
+    }
+
     if mouse_buttons.just_released(MouseButton::Left) {
         if let Some(building_type) = selected_mode_resource.as_ref().corresponding_building() {
             let HoveredTile(hovered_tile) = hovered_tile.as_ref();

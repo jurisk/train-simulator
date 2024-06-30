@@ -2,7 +2,7 @@ use std::env::args;
 use std::str::FromStr;
 
 use bevy::prelude::{
-    info, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time, Update,
+    info, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time,
 };
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::game::GameLaunchParams;
@@ -34,7 +34,7 @@ fn main() {
     });
     app.insert_state(ClientState::LoggingIn);
     app.add_systems(FixedUpdate, process_messages_locally);
-    app.add_systems(Update, advance_time_locally);
+    app.add_systems(FixedUpdate, advance_time_locally);
     app.run();
 }
 
