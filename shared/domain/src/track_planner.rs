@@ -143,10 +143,12 @@ fn track_types_that_fit(a: EdgeXZ, b: EdgeXZ) -> Vec<TileTrack> {
                     let eb = EdgeXZ::from_tile_and_direction(tile, db);
                     // This track fits!
                     if (ea == a && eb == b) || (ea == b && eb == a) {
-                        vec![TileTrack {
+                        let tile_track = TileTrack {
                             tile_coords_xz: tile,
                             track_type,
-                        }]
+                            pointing_in: db,
+                        };
+                        vec![tile_track]
                     } else {
                         vec![]
                     }

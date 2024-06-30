@@ -17,11 +17,7 @@ pub struct LogicalPositionOnTilePath {
 impl LogicalPositionOnTilePath {
     #[must_use]
     fn coordinates(&self, tile_path: &[TileTrack], terrain: &Terrain) -> Vec3 {
-        tile_path[self.tile_path_offset].progress_coordinates(
-            self.pointing_in,
-            self.progress_within_tile,
-            terrain,
-        )
+        tile_path[self.tile_path_offset].progress_coordinates(self.progress_within_tile, terrain)
     }
 }
 
@@ -78,7 +74,7 @@ fn maybe_find_tail(
     assert!(tile_path_offset < tile_path.len(), "Ran out of tile path!");
     let tile_track = tile_path[tile_path_offset];
 
-    let (entry, exit) = terrain.entry_and_exit(pointing_in, &tile_track);
+    let (entry, exit) = terrain.entry_and_exit(tile_track);
 
     line_segment_intersection_with_sphere((entry, exit), (head, component_length))
         .into_iter()
@@ -113,7 +109,7 @@ pub(crate) fn calculate_train_component_head_tails_and_final_tail_position(
     let mut results = vec![];
     let mut state = LogicalPositionOnTilePath {
         tile_path_offset:     0,
-        pointing_in:          transport_location.pointing_in,
+        pointing_in:          transport_location.tile_path[0].pointing_in,
         progress_within_tile: transport_location.progress_within_tile,
     };
 

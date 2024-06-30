@@ -15,7 +15,6 @@ impl<T: Clone> NonEmptyCircularList<T> {
         }
     }
 
-    #[must_use]
     pub fn push(&mut self, item: T) {
         self.list.push(item);
     }

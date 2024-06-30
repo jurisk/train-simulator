@@ -21,10 +21,13 @@ impl BuildingInfo {
         let mut results = Vec::new();
         for relative_tile in self.building_type.relative_tiles_used().to_set() {
             for track_type in self.building_type.track_types_at(relative_tile) {
-                results.push(TileTrack {
-                    tile_coords_xz: self.reference_tile + relative_tile,
-                    track_type,
-                });
+                for pointing_in in track_type.connections() {
+                    results.push(TileTrack {
+                        tile_coords_xz: self.reference_tile + relative_tile,
+                        track_type,
+                        pointing_in,
+                    });
+                }
             }
         }
         results

@@ -99,10 +99,10 @@ impl Terrain {
     }
 
     #[must_use]
-    pub fn entry_and_exit(&self, pointing_in: DirectionXZ, tile_track: &TileTrack) -> (Vec3, Vec3) {
+    pub fn entry_and_exit(&self, tile_track: TileTrack) -> (Vec3, Vec3) {
         let tile = tile_track.tile_coords_xz;
         let track_type = tile_track.track_type;
-        let exit_direction = pointing_in;
+        let exit_direction = tile_track.pointing_in;
         let entry_direction = track_type.other_end(exit_direction);
         let entry = self.edge_center_coordinate(entry_direction, tile);
         let exit = self.edge_center_coordinate(exit_direction, tile);

@@ -13,6 +13,7 @@ use crate::transport_info::ProgressWithinTile;
 pub struct TileTrack {
     pub tile_coords_xz: TileCoordsXZ,
     pub track_type:     TrackType,
+    pub pointing_in:    DirectionXZ,
 }
 
 impl Debug for TileTrack {
@@ -24,12 +25,11 @@ impl Debug for TileTrack {
 impl TileTrack {
     #[must_use]
     pub fn progress_coordinates(
-        &self,
-        pointing_in: DirectionXZ,
+        self,
         progress_within_tile: ProgressWithinTile,
         terrain: &Terrain,
     ) -> Vec3 {
-        let (entry, exit) = terrain.entry_and_exit(pointing_in, self);
+        let (entry, exit) = terrain.entry_and_exit(self);
         let track_length = (exit - entry).length();
         let direction = (exit - entry).normalize();
         entry + direction * progress_within_tile.progress() * track_length

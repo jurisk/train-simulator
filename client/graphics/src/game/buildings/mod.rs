@@ -141,39 +141,52 @@ fn build_sample_objects_for_testing(
                                 TrainComponentType::Engine,
                             ]),
                             TransportLocation {
-                                pointing_in:          DirectionXZ::East,
                                 tile_path:            vec![
                                     TileTrack {
                                         tile_coords_xz: TileCoordsXZ::from_usizes(46, 43),
                                         track_type:     TrackType::SouthEast,
+                                        pointing_in:          DirectionXZ::East,
                                     },
                                     TileTrack {
                                         tile_coords_xz: TileCoordsXZ::from_usizes(46, 44),
                                         track_type:     TrackType::NorthSouth,
+                                        pointing_in:          DirectionXZ::North,
                                     },
                                     TileTrack {
                                         tile_coords_xz: TileCoordsXZ::from_usizes(46, 45),
                                         track_type:     TrackType::NorthSouth,
+                                        pointing_in:          DirectionXZ::North,
+
                                     },
                                     TileTrack {
                                         tile_coords_xz: TileCoordsXZ::from_usizes(46, 46),
                                         track_type:     TrackType::NorthSouth,
+                                        pointing_in:          DirectionXZ::North,
+
                                     },
                                     TileTrack {
                                         tile_coords_xz: TileCoordsXZ::from_usizes(46, 47),
                                         track_type:     TrackType::NorthSouth,
+                                        pointing_in:          DirectionXZ::North,
+
                                     },
                                     TileTrack {
                                         tile_coords_xz: TileCoordsXZ::from_usizes(46, 48),
                                         track_type:     TrackType::NorthSouth,
+                                        pointing_in:          DirectionXZ::North,
+
                                     },
                                     TileTrack {
                                         tile_coords_xz: TileCoordsXZ::from_usizes(46, 49),
                                         track_type:     TrackType::NorthSouth,
+                                        pointing_in:          DirectionXZ::North,
+
                                     },
                                     TileTrack {
                                         tile_coords_xz: TileCoordsXZ::from_usizes(46, 50),
                                         track_type:     TrackType::NorthSouth,
+                                        pointing_in:          DirectionXZ::North,
+
                                     },
                                 ],
                                 progress_within_tile: ProgressWithinTile::just_entering(),

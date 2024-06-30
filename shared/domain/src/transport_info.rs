@@ -80,7 +80,6 @@ impl ProgressWithinTile {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportLocation {
-    pub pointing_in:          DirectionXZ,
     pub tile_path:            Vec<TileTrack>, /* Which tile is it on now, and which tiles has it been on - only as much as to cover the vehicle's length */
     pub progress_within_tile: ProgressWithinTile,
 }
@@ -88,8 +87,10 @@ pub struct TransportLocation {
 impl TransportLocation {
     #[must_use]
     pub fn entering_from(&self) -> DirectionXZ {
-        let track_type = self.tile_path[0].track_type;
-        track_type.other_end(self.pointing_in)
+        let current_tile_track = self.tile_path[0];
+        current_tile_track
+            .track_type
+            .other_end(current_tile_track.pointing_in)
     }
 }
 
@@ -216,15 +217,10 @@ impl TransportInfo {
         let current_tile_track = location.tile_path[0];
 
         let target_station = movement_orders.stations.next();
-        let route = find_route_to_station(
-            current_tile_track,
-            location.pointing_in,
-            target_station,
-            building_state,
-        );
+        let route = find_route_to_station(current_tile_track, target_station, building_state);
         let next = match route {
             None => None,
-            Some(found) => found.first().cloned(),
+            Some(found) => found.first().copied(),
         };
         match next {
             None => {
@@ -235,7 +231,6 @@ impl TransportInfo {
                 location.progress_within_tile = ProgressWithinTile::about_to_exit();
             },
             Some(next_tile_track) => {
-                let next_track_type = next_tile_track.track_type;
                 location.tile_path.insert(0, next_tile_track);
 
                 // Later: We are rather crudely sometimes removing the last element when we are inserting an
@@ -253,8 +248,6 @@ impl TransportInfo {
                 }
 
                 location.progress_within_tile.0 -= 1.0;
-                let reversed = location.pointing_in.reverse();
-                location.pointing_in = next_track_type.other_end(reversed);
             },
         }
     }

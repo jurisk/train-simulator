@@ -29,14 +29,4 @@ impl ProductionType {
             south_east_inclusive: TileCoordsXZ::new(1, 1),
         }
     }
-
-    #[must_use]
-    pub const fn all() -> [ProductionType; 4] {
-        [
-            ProductionType::CoalMine,
-            ProductionType::IronMine,
-            ProductionType::IronWorks,
-            ProductionType::CargoPort,
-        ]
-    }
 }
