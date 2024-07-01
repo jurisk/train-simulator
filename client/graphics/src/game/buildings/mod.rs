@@ -123,6 +123,14 @@ fn build_sample_objects_for_testing(
                         building_type:  BuildingType::Station(StationType::all()[1]),
                     });
 
+                    let station_d = BuildingId::random();
+                    initial_buildings.push(BuildingInfo {
+                        owner_id:       player_id,
+                        building_id:    station_d,
+                        reference_tile: TileCoordsXZ::from_usizes(54, 35),
+                        building_type:  BuildingType::Station(StationType::all()[0]),
+                    });
+
                     initial_buildings.push(BuildingInfo {
                         owner_id:       player_id,
                         building_id:    BuildingId::random(),
@@ -134,6 +142,8 @@ fn build_sample_objects_for_testing(
                         ((43, 33, DirectionXZ::South), (14, 83, DirectionXZ::East)),
                         ((11, 83, DirectionXZ::West), (7, 41, DirectionXZ::West)),
                         ((10, 41, DirectionXZ::East), (43, 30, DirectionXZ::North)),
+                        ((43, 33, DirectionXZ::South), (54, 38, DirectionXZ::South)),
+                        ((54, 35, DirectionXZ::North), (43, 30, DirectionXZ::North)),
                     ];
                     for ((ax, az, ad), (bx, bz, bd)) in connections {
                         if let Some(route) = plan_tracks(
@@ -158,6 +168,8 @@ fn build_sample_objects_for_testing(
 
                     // TODO: This will be overlapping with other players' purchased transport, but this may be good for testing anyway. Improve the server so that it rejects such overlaps.
                     let mut movement_orders = MovementOrders::one(station_a);
+                    movement_orders.push(station_d);
+                    movement_orders.push(station_a);
                     movement_orders.push(station_b);
                     movement_orders.push(station_c);
 
