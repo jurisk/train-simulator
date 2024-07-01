@@ -10,7 +10,6 @@ pub enum StationOrientation {
     EastToWest,
 }
 
-// TODO: Build some test stations in test setup
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct StationType {
     pub orientation:     StationOrientation,

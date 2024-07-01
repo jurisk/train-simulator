@@ -13,10 +13,14 @@ use bevy::prelude::{
 use shared_domain::building_info::BuildingInfo;
 use shared_domain::building_type::BuildingType;
 use shared_domain::client_command::{ClientCommand, GameCommand};
+use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::map_level::MapLevel;
+use shared_domain::production_type::ProductionType;
 use shared_domain::server_response::{Colour, GameResponse, PlayerInfo, ServerResponse};
+use shared_domain::station_type::StationType;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_track::TileTrack;
+use shared_domain::track_planner::plan_tracks;
 use shared_domain::track_type::TrackType;
 use shared_domain::transport_info::{
     MovementOrders, ProgressWithinTile, TransportInfo, TransportLocation, TransportVelocity,
@@ -68,11 +72,10 @@ fn build_sample_objects_for_testing(
     for message in server_messages.read() {
         if let ServerResponse::Game(game_id, game_response) = &message.response {
             if let GameResponse::BuildingsAdded(_buildings) = game_response {
-                if game_state_resource.0.transport_infos().is_empty() {
-                    // TODO: This is debug-only and to be removed - move this to actually use the "save game" concept instead
+                let GameStateResource(game_state) = game_state_resource.as_ref();
+                if game_state.transport_infos().is_empty() {
+                    // TODO: This is debug-only and to be removed - move this to actually use the "save game" concept instead, also build some stations
                     let test_track = vec![
-                        ((49, 43), TrackType::SouthWest),
-                        ((48, 43), TrackType::EastWest),
                         ((48, 42), TrackType::NorthSouth),
                         ((48, 41), TrackType::NorthSouth),
                         ((48, 41), TrackType::EastWest),
@@ -83,35 +86,6 @@ fn build_sample_objects_for_testing(
                         ((47, 41), TrackType::EastWest),
                         ((48, 40), TrackType::NorthSouth),
                         ((49, 41), TrackType::EastWest),
-                        ((47, 43), TrackType::EastWest),
-                        ((46, 43), TrackType::SouthEast),
-                        ((46, 44), TrackType::NorthSouth),
-                        ((46, 45), TrackType::NorthSouth),
-                        ((46, 46), TrackType::NorthSouth),
-                        ((46, 47), TrackType::NorthSouth),
-                        ((46, 48), TrackType::NorthSouth),
-                        ((46, 49), TrackType::NorthSouth),
-                        ((46, 50), TrackType::NorthSouth),
-                        ((46, 51), TrackType::NorthSouth),
-                        ((46, 52), TrackType::NorthEast),
-                        ((47, 52), TrackType::EastWest),
-                        ((48, 52), TrackType::EastWest),
-                        ((49, 52), TrackType::NorthWest),
-                        ((49, 44), TrackType::NorthSouth),
-                        ((49, 45), TrackType::NorthSouth),
-                        ((49, 46), TrackType::NorthSouth),
-                        ((49, 46), TrackType::NorthEast),
-                        ((50, 46), TrackType::SouthWest),
-                        ((50, 47), TrackType::NorthSouth),
-                        ((50, 48), TrackType::NorthSouth),
-                        ((50, 49), TrackType::NorthSouth),
-                        ((50, 50), TrackType::NorthWest),
-                        ((49, 50), TrackType::SouthEast),
-                        ((49, 47), TrackType::NorthSouth),
-                        ((49, 48), TrackType::NorthSouth),
-                        ((49, 49), TrackType::NorthSouth),
-                        ((49, 50), TrackType::NorthSouth),
-                        ((49, 51), TrackType::NorthSouth),
                     ];
 
                     let mut initial_buildings = vec![];
@@ -125,7 +99,68 @@ fn build_sample_objects_for_testing(
                         initial_buildings.push(building_info);
                     }
 
+                    let station_a = BuildingId::random();
+                    initial_buildings.push(BuildingInfo {
+                        owner_id:       player_id,
+                        building_id:    station_a,
+                        reference_tile: TileCoordsXZ::from_usizes(43, 30),
+                        building_type:  BuildingType::Station(StationType::all()[0]),
+                    });
+
+                    let station_b = BuildingId::random();
+                    initial_buildings.push(BuildingInfo {
+                        owner_id:       player_id,
+                        building_id:    station_b,
+                        reference_tile: TileCoordsXZ::from_usizes(11, 83),
+                        building_type:  BuildingType::Station(StationType::all()[1]),
+                    });
+
+                    let station_c = BuildingId::random();
+                    initial_buildings.push(BuildingInfo {
+                        owner_id:       player_id,
+                        building_id:    station_c,
+                        reference_tile: TileCoordsXZ::from_usizes(7, 41),
+                        building_type:  BuildingType::Station(StationType::all()[1]),
+                    });
+
+                    initial_buildings.push(BuildingInfo {
+                        owner_id:       player_id,
+                        building_id:    BuildingId::random(),
+                        reference_tile: TileCoordsXZ::from_usizes(40, 31),
+                        building_type:  BuildingType::Production(ProductionType::CoalMine),
+                    });
+
+                    let connections = [
+                        ((43, 33, DirectionXZ::South), (14, 83, DirectionXZ::East)),
+                        ((11, 83, DirectionXZ::West), (7, 41, DirectionXZ::West)),
+                        ((10, 41, DirectionXZ::East), (43, 30, DirectionXZ::North)),
+                    ];
+                    for ((ax, az, ad), (bx, bz, bd)) in connections {
+                        if let Some(route) = plan_tracks(
+                            player_id,
+                            &[],
+                            &[
+                                EdgeXZ::from_tile_and_direction(
+                                    TileCoordsXZ::from_usizes(ax, az),
+                                    ad,
+                                ),
+                                EdgeXZ::from_tile_and_direction(
+                                    TileCoordsXZ::from_usizes(bx, bz),
+                                    bd,
+                                ),
+                            ],
+                            game_state.building_state(),
+                            game_state.map_level(),
+                        ) {
+                            initial_buildings.extend(route);
+                        }
+                    }
+
                     // TODO: This will be overlapping with other players' purchased transport, but this may be good for testing anyway. Improve the server so that it rejects such overlaps.
+                    let mut movement_orders = MovementOrders::one(station_a);
+                    movement_orders.push(station_b);
+                    movement_orders.push(station_c);
+
                     client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                         *game_id,
                         GameCommand::PurchaseTransport(TransportInfo::new(
@@ -138,63 +173,26 @@ fn build_sample_objects_for_testing(
                                 TrainComponentType::Car,
                                 TrainComponentType::Car,
                                 TrainComponentType::Car,
-                                TrainComponentType::Engine,
+                                TrainComponentType::Car,
+                                TrainComponentType::Car,
+                                TrainComponentType::Car,
                             ]),
                             TransportLocation {
-                                tile_path:            vec![
-                                    TileTrack {
-                                        tile_coords_xz: TileCoordsXZ::from_usizes(46, 43),
-                                        track_type:     TrackType::SouthEast,
-                                        pointing_in:          DirectionXZ::East,
-                                    },
-                                    TileTrack {
-                                        tile_coords_xz: TileCoordsXZ::from_usizes(46, 44),
-                                        track_type:     TrackType::NorthSouth,
-                                        pointing_in:          DirectionXZ::North,
-                                    },
-                                    TileTrack {
-                                        tile_coords_xz: TileCoordsXZ::from_usizes(46, 45),
-                                        track_type:     TrackType::NorthSouth,
-                                        pointing_in:          DirectionXZ::North,
-
-                                    },
-                                    TileTrack {
-                                        tile_coords_xz: TileCoordsXZ::from_usizes(46, 46),
-                                        track_type:     TrackType::NorthSouth,
-                                        pointing_in:          DirectionXZ::North,
-
-                                    },
-                                    TileTrack {
-                                        tile_coords_xz: TileCoordsXZ::from_usizes(46, 47),
-                                        track_type:     TrackType::NorthSouth,
-                                        pointing_in:          DirectionXZ::North,
-
-                                    },
-                                    TileTrack {
-                                        tile_coords_xz: TileCoordsXZ::from_usizes(46, 48),
-                                        track_type:     TrackType::NorthSouth,
-                                        pointing_in:          DirectionXZ::North,
-
-                                    },
-                                    TileTrack {
-                                        tile_coords_xz: TileCoordsXZ::from_usizes(46, 49),
-                                        track_type:     TrackType::NorthSouth,
-                                        pointing_in:          DirectionXZ::North,
-
-                                    },
-                                    TileTrack {
-                                        tile_coords_xz: TileCoordsXZ::from_usizes(46, 50),
-                                        track_type:     TrackType::NorthSouth,
-                                        pointing_in:          DirectionXZ::North,
-
-                                    },
-                                ],
-                                progress_within_tile: ProgressWithinTile::just_entering(),
+                                tile_path:            (0 .. 4)
+                                    .map(|idx| {
+                                        TileTrack {
+                                            tile_coords_xz: TileCoordsXZ::from_usizes(43, 33 - idx),
+                                            track_type:     TrackType::NorthSouth,
+                                            pointing_in:    DirectionXZ::South,
+                                        }
+                                    })
+                                    .collect(),
+                                progress_within_tile: ProgressWithinTile::about_to_exit(),
                             },
                             TransportVelocity {
                                 tiles_per_second: 2.0,
                             },
-                            MovementOrders::new(BuildingId::random()), // TODO HIGH: Actually start with a known station! Where the train was spawned!
+                            movement_orders,
                         )),
                     )));
 

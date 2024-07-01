@@ -107,11 +107,15 @@ pub struct MovementOrders {
 
 impl MovementOrders {
     #[must_use]
-    pub fn new(station_id: BuildingId) -> Self {
+    pub fn one(station_id: BuildingId) -> Self {
         Self {
             is_stopped: false,
-            stations:   NonEmptyCircularList::new(station_id),
+            stations:   NonEmptyCircularList::one(station_id),
         }
+    }
+
+    pub fn push(&mut self, station_id: BuildingId) {
+        self.stations.push(station_id);
     }
 }
 

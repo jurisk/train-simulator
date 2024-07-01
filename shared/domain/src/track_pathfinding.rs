@@ -3,6 +3,8 @@ use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 use crate::BuildingId;
 
+// TODO HIGH:   We need to think how to handle station expansion. Can a station have multiple buildings?
+//              And thus we need `StationId` for pathfinding as `target_station`?
 #[must_use]
 pub fn find_route_to_station(
     current_tile_track: TileTrack,

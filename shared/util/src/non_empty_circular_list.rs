@@ -8,10 +8,22 @@ pub struct NonEmptyCircularList<T: Clone> {
 
 impl<T: Clone> NonEmptyCircularList<T> {
     #[must_use]
-    pub fn new(first: T) -> Self {
+    pub fn one(first: T) -> Self {
         Self {
             next: 0,
             list: vec![first],
+        }
+    }
+
+    #[must_use]
+    pub fn from_vec(data: Vec<T>) -> Option<Self> {
+        if data.is_empty() {
+            None
+        } else {
+            Some(Self {
+                next: 0,
+                list: data,
+            })
         }
     }
 
