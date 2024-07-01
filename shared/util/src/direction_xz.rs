@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Formatter};
+
 use serde::{Deserialize, Serialize};
 
 use crate::coords_xz::CoordsXZ;
@@ -5,12 +7,23 @@ use crate::coords_xz::CoordsXZ;
 // SW = X axis, smaller is W, larger is E
 // NS = Z axis, smaller is N, larger is S
 // Thus smallest coords are NW, and largest are SE.
-#[derive(Debug, Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum DirectionXZ {
     North,
     East,
     South,
     West,
+}
+
+impl Debug for DirectionXZ {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DirectionXZ::North => write!(f, "N"),
+            DirectionXZ::East => write!(f, "E"),
+            DirectionXZ::South => write!(f, "S"),
+            DirectionXZ::West => write!(f, "W"),
+        }
+    }
 }
 
 impl DirectionXZ {

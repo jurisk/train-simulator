@@ -9,7 +9,7 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::track_type::TrackType;
 use crate::transport_info::ProgressWithinTile;
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct TileTrack {
     pub tile_coords_xz: TileCoordsXZ,
     pub track_type:     TrackType,
@@ -18,7 +18,11 @@ pub struct TileTrack {
 
 impl Debug for TileTrack {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}-{:?}", self.tile_coords_xz, self.track_type)
+        write!(
+            f,
+            "{:?}-{:?}-{:?}",
+            self.tile_coords_xz, self.track_type, self.pointing_in
+        )
     }
 }
 
