@@ -1,6 +1,7 @@
 use pathfinding::prelude::dijkstra;
 
 use crate::building_state::BuildingState;
+use crate::building_type::BuildingType;
 use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 use crate::BuildingId;
@@ -37,7 +38,19 @@ fn is_target(
     target_station: BuildingId,
     building_state: &BuildingState,
 ) -> bool {
-    todo!() // TODO HIGH: Implement
+    match building_state.find_building(target_station) {
+        None => false,
+        Some(building) => {
+            match building.building_type {
+                BuildingType::Station(station_type) => {
+                    station_type
+                        .exit_tile_tracks(building.reference_tile)
+                        .contains(&tile_track)
+                },
+                BuildingType::Production(_) | BuildingType::Track(_) => false,
+            }
+        },
+    }
 }
 
 // TODO HIGH:   We need to think how to handle station expansion. Can a station have multiple buildings?

@@ -10,11 +10,16 @@ rust-version.workspace = true
 shared-util = { path = "../util" }
 
 # Note - not allowed to have a `bevy` (except `bevy_math`) or any networking dependencies!
-serde.workspace = true
 serde_json.workspace = true
-uuid.workspace = true
 fastrand.workspace = true
 bevy_math.workspace = true
 log.workspace = true
 pathfinding.workspace = true
 
+[dependencies.uuid]
+workspace = true
+features = ["v4", "serde"]
+
+[dependencies.serde]
+workspace = true
+features = ["derive"]

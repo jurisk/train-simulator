@@ -73,7 +73,8 @@ fn build_sample_objects_for_testing(
         if let ServerResponse::Game(game_id, game_response) = &message.response {
             if let GameResponse::BuildingsAdded(_buildings) = game_response {
                 let GameStateResource(game_state) = game_state_resource.as_ref();
-                if game_state.transport_infos().is_empty() {
+                if game_state.building_infos().is_empty() && game_state.transport_infos().is_empty()
+                {
                     // TODO: This is debug-only and to be removed - move this to actually use the "save game" concept instead, also build some stations
                     let test_track = vec![
                         ((48, 42), TrackType::NorthSouth),
@@ -166,14 +167,19 @@ fn build_sample_objects_for_testing(
                         }
                     }
 
+                    client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
+                        *game_id,
+                        GameCommand::BuildBuildings(initial_buildings),
+                    )));
+
                     // TODO: This will be overlapping with other players' purchased transport, but this may be good for testing anyway. Improve the server so that it rejects such overlaps.
                     let mut movement_orders = MovementOrders::one(station_a);
-                    movement_orders.push(station_d);
-                    movement_orders.push(station_a);
                     movement_orders.push(station_b);
                     movement_orders.push(station_c);
+                    movement_orders.push(station_a);
+                    movement_orders.push(station_d);
 
-                    client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
+                    let transport_message = ClientMessageEvent::new(ClientCommand::Game(
                         *game_id,
                         GameCommand::PurchaseTransport(TransportInfo::new(
                             TransportId::random(),
@@ -206,12 +212,8 @@ fn build_sample_objects_for_testing(
                             },
                             movement_orders,
                         )),
-                    )));
-
-                    client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
-                        *game_id,
-                        GameCommand::BuildBuildings(initial_buildings),
-                    )));
+                    ));
+                    client_messages.send(transport_message);
                 }
             }
         }

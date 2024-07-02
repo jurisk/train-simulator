@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::building_info::BuildingInfo;
 use crate::map_level::MapLevel;
-use crate::{BuildingType, PlayerId, TileCoordsXZ, TrackType};
+use crate::{BuildingId, BuildingType, PlayerId, TileCoordsXZ, TrackType};
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum CanBuildResponse {
@@ -191,5 +191,12 @@ impl BuildingState {
         } else {
             Err(())
         }
+    }
+
+    #[must_use]
+    pub fn find_building(&self, building_id: BuildingId) -> Option<&BuildingInfo> {
+        self.buildings
+            .iter()
+            .find(|building| building.building_id == building_id)
     }
 }

@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter};
 
 use bevy_math::Vec3;
-use log::warn;
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::non_empty_circular_list::NonEmptyCircularList;
@@ -213,6 +213,8 @@ impl TransportInfo {
         clippy::items_after_statements
     )]
     fn jump_tile(&mut self, building_state: &BuildingState) {
+        info!("Jumping tile: {:?}", self);
+
         let transport_type = self.transport_type().clone();
         let id = self.id();
 
@@ -224,15 +226,15 @@ impl TransportInfo {
         let route = find_route_to_station(current_tile_track, target_station, building_state);
         let next = match route {
             None => None,
-            Some(found) => found.first().copied(),
+            Some(found) => found.get(1).copied(), // The first one is the current tile
         };
         match next {
             None => {
-                warn!(
-                    "No route found to station {target_station:?} for transport {:?}",
-                    id
-                );
                 location.progress_within_tile = ProgressWithinTile::about_to_exit();
+                self.dynamic_info.movement_orders.is_stopped = true;
+                warn!(
+                    "No route found to station {target_station:?} for transport {id:?}, stopping: {self:?}",
+                );
             },
             Some(next_tile_track) => {
                 location.tile_path.insert(0, next_tile_track);
@@ -252,17 +254,25 @@ impl TransportInfo {
                 }
 
                 location.progress_within_tile.0 -= 1.0;
+
+                info!("Finished jump: {:?}", self);
             },
         }
     }
 
     fn normalise_progress_jumping_tiles(&mut self, building_state: &BuildingState) {
-        while self.location().progress_within_tile.out_of_bounds() {
+        while self.location().progress_within_tile.out_of_bounds()
+            && !self.dynamic_info.movement_orders.is_stopped
+        {
             self.jump_tile(building_state);
         }
     }
 
     pub fn advance(&mut self, diff: GameTimeDiff, building_state: &BuildingState) {
+        if self.dynamic_info.movement_orders.is_stopped {
+            return;
+        }
+
         let seconds = diff.to_seconds();
         let TransportVelocity { tiles_per_second } = self.velocity();
         let track_type = self.location().tile_path[0].track_type;
