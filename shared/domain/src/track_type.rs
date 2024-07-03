@@ -33,6 +33,8 @@ impl Debug for TrackType {
 }
 
 impl TrackType {
+    const SQRT_2_DIV_2: f32 = SQRT_2 / 2.0;
+
     #[must_use]
     pub const fn all() -> [TrackType; 6] {
         [
@@ -91,13 +93,19 @@ impl TrackType {
     }
 
     #[must_use]
-    pub fn length_in_tiles(self) -> f32 {
+    pub const fn length_in_tiles(self) -> f32 {
         match self {
             TrackType::NorthSouth | TrackType::EastWest => 1.0,
             TrackType::NorthEast
             | TrackType::NorthWest
             | TrackType::SouthEast
-            | TrackType::SouthWest => SQRT_2 / 2.0,
+            | TrackType::SouthWest => Self::SQRT_2_DIV_2,
         }
+    }
+
+    #[must_use]
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    pub fn length_in_tiles_for_pathfinding(self) -> u32 {
+        (self.length_in_tiles() * 10_000.0).round() as u32
     }
 }

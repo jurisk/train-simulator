@@ -145,12 +145,12 @@ mod tests {
                 pointing_in:    DirectionXZ::South,
             },
             TileTrack {
-                tile_coords_xz: TileCoordsXZ::from_usizes(10, 20),
+                tile_coords_xz: TileCoordsXZ::from_usizes(11, 20),
                 track_type:     TrackType::NorthSouth,
                 pointing_in:    DirectionXZ::North,
             },
             TileTrack {
-                tile_coords_xz: TileCoordsXZ::from_usizes(10, 22),
+                tile_coords_xz: TileCoordsXZ::from_usizes(11, 22),
                 track_type:     TrackType::NorthSouth,
                 pointing_in:    DirectionXZ::South,
             },

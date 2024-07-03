@@ -23,13 +23,12 @@ fn successors(tile_track: TileTrack, building_state: &BuildingState) -> Vec<(Til
     valid_tracks_at_next_tile
         .into_iter()
         .map(|track_type| {
-            let cost = 1; // TODO HIGH: Implement cost function, reuse with `track_planner` part
             let tile_track = TileTrack {
                 tile_coords_xz: next_tile_coords,
                 track_type,
                 pointing_in: track_type.other_end(tile_track.pointing_in.reverse()),
             };
-            (tile_track, cost)
+            (tile_track, track_type.length_in_tiles_for_pathfinding())
         })
         .collect::<Vec<_>>()
 }

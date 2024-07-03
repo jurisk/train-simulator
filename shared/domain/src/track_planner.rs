@@ -43,9 +43,6 @@ fn successors(
                     building_type:  BuildingType::Track(tile_track.track_type),
                 };
 
-                // Later: Consider using BigDecimal instead for this
-                let length = (tile_track.track_type.length_in_tiles() * 1000.0).round() as u32;
-
                 let malus = if preferred_tiles.contains(&tile) {
                     1
                 } else {
@@ -58,7 +55,10 @@ fn successors(
                     building_state.can_build_building(player_id, &building, map_level),
                     CanBuildResponse::Ok | CanBuildResponse::AlreadyExists
                 ) {
-                    results.push((neighbour, length * malus));
+                    results.push((
+                        neighbour,
+                        tile_track.track_type.length_in_tiles_for_pathfinding() * malus,
+                    ));
                 }
             }
         }
