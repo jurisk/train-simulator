@@ -1,3 +1,4 @@
+use log::info;
 use pathfinding::prelude::dijkstra;
 
 use crate::building_state::BuildingState;
@@ -33,26 +34,6 @@ fn successors(tile_track: TileTrack, building_state: &BuildingState) -> Vec<(Til
         .collect::<Vec<_>>()
 }
 
-fn is_target(
-    tile_track: TileTrack,
-    target_station: BuildingId,
-    building_state: &BuildingState,
-) -> bool {
-    match building_state.find_building(target_station) {
-        None => false,
-        Some(building) => {
-            match building.building_type {
-                BuildingType::Station(station_type) => {
-                    station_type
-                        .exit_tile_tracks(building.reference_tile)
-                        .contains(&tile_track)
-                },
-                BuildingType::Production(_) | BuildingType::Track(_) => false,
-            }
-        },
-    }
-}
-
 // TODO HIGH:   We need to think how to handle station expansion. Can a station have multiple buildings?
 //              And thus we need `StationId` for pathfinding as `target_station`?
 #[must_use]
@@ -61,10 +42,21 @@ pub fn find_route_to_station(
     target_station: BuildingId,
     building_state: &BuildingState,
 ) -> Option<Vec<TileTrack>> {
-    dijkstra(
+    let building = building_state.find_building(target_station)?;
+    let station_type = match building.building_type {
+        BuildingType::Station(station_type) => Some(station_type),
+        BuildingType::Production(_) | BuildingType::Track(_) => None,
+    }?;
+    let targets = station_type.exit_tile_tracks(building.reference_tile);
+    info!(
+        "Doing pathfinding. Current: {current_tile_track:?}, Target ID: {target_station:?}, Targets: {targets:?}"
+    );
+
+    let (path, _length) = dijkstra(
         &current_tile_track,
         |tile_track| successors(*tile_track, building_state),
-        |tile_track| is_target(*tile_track, target_station, building_state),
-    )
-    .map(|(path, _length)| path)
+        |tile_track| targets.contains(tile_track),
+    )?;
+
+    Some(path)
 }

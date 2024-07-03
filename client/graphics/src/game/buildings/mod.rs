@@ -173,11 +173,11 @@ fn build_sample_objects_for_testing(
                     )));
 
                     // TODO: This will be overlapping with other players' purchased transport, but this may be good for testing anyway. Improve the server so that it rejects such overlaps.
-                    let mut movement_orders = MovementOrders::one(station_a);
-                    movement_orders.push(station_b);
+                    let mut movement_orders = MovementOrders::one(station_b);
                     movement_orders.push(station_c);
                     movement_orders.push(station_a);
                     movement_orders.push(station_d);
+                    movement_orders.push(station_a);
 
                     let transport_message = ClientMessageEvent::new(ClientCommand::Game(
                         *game_id,
