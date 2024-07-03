@@ -2,7 +2,7 @@ use std::env::args;
 use std::str::FromStr;
 
 use bevy::prelude::{
-    info, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time,
+    debug, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time,
 };
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::game::GameLaunchParams;
@@ -58,13 +58,13 @@ fn process_messages_locally(
         let client_command_with_client_id =
             ClientCommandWithClientId::new(client_id, message.command.clone());
 
-        info!(
+        debug!(
             "Simulating server: processing message: {:?}",
             client_command_with_client_id
         );
         let responses = server_state.process(client_command_with_client_id);
         for response in responses {
-            info!("Simulating server: Got response: {:?}", response);
+            debug!("Simulating server: Got response: {:?}", response);
             if response.client_ids.contains(&client_id) {
                 server_messages.send(ServerMessageEvent::new(response.response));
             }
@@ -85,7 +85,7 @@ fn advance_time_locally(
 
     let sync_responses = server_state.sync_games();
     for response in sync_responses {
-        info!("Simulating server: Got sync response: {:?}", response);
+        debug!("Simulating server: Got sync response: {:?}", response);
         if response.client_ids.contains(&client_id) {
             server_messages.send(ServerMessageEvent::new(response.response));
         }

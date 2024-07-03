@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use log::info;
+use log::trace;
 use serde::{Deserialize, Serialize};
 
 use crate::building_info::BuildingInfo;
@@ -174,7 +174,7 @@ impl GameState {
         dynamic_infos: &HashMap<TransportId, TransportDynamicInfo>,
     ) {
         let diff = server_time - self.time;
-        info!(
+        trace!(
             "Updated dynamic infos, diff {:?}, old {:?}, new {:?}, {} transports",
             diff,
             self.time,

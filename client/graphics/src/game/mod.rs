@@ -16,11 +16,13 @@ use shared_domain::{GameId, PlayerId};
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;
 use crate::game::map_level::MapLevelPlugin;
+use crate::game::test_objects::build_test_objects;
 use crate::game::transport::TransportPlugin;
 use crate::states::ClientState;
 
 pub mod buildings;
 pub mod map_level;
+mod test_objects;
 mod transport;
 
 #[derive(Resource)]
@@ -57,6 +59,10 @@ impl Plugin for GamePlugin {
         app.add_systems(
             Update,
             client_side_time_advance.run_if(in_state(ClientState::Playing)),
+        );
+        app.add_systems(
+            Update,
+            build_test_objects.run_if(in_state(ClientState::Playing)),
         );
     }
 }

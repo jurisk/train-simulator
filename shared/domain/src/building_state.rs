@@ -199,4 +199,15 @@ impl BuildingState {
             .iter()
             .find(|building| building.building_id == building_id)
     }
+
+    #[must_use]
+    pub fn filter_buildings_by_reference_tile(
+        &self,
+        reference_tile: TileCoordsXZ,
+    ) -> Vec<&BuildingInfo> {
+        self.buildings
+            .iter()
+            .filter(|building| building.reference_tile == reference_tile)
+            .collect()
+    }
 }
