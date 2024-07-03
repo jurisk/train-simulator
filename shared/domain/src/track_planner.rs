@@ -13,9 +13,10 @@ use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 use crate::{BuildingId, PlayerId};
 
-// TODO HIGH:   This actually allows turns that the trains cannot actually make (e.g. crossing rails),
-//              so we should consider the direction of the train when planning the track.
-//              Reuse the `find_route_to_station` code for train pathfinding here.
+// Later:   This actually allows turns that the trains cannot actually make (e.g. crossing rails),
+//          so we should consider the direction of the train when planning the track.
+//          Reuse the `find_route_to_station` code for train pathfinding here, except you probably have
+//          to run this multiple times for various start-end `TrackTile` combos.
 #[allow(
     clippy::items_after_statements,
     clippy::cast_possible_truncation,
@@ -66,7 +67,7 @@ fn successors(
     results
 }
 
-// TODO HIGH: This should be TrackTile- instead of EdgeXZ-based!
+// Later:   This should be TrackTile- instead of EdgeXZ-based!
 #[must_use]
 pub fn plan_tracks(
     player_id: PlayerId,

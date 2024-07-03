@@ -8,7 +8,8 @@ use crate::game::buildings::tracks::TrackAssets;
 
 // Later: Use https://github.com/NiklasEi/bevy_asset_loader? Or perhaps not.
 
-// TODO HIGH: Use such pre-loaded assets instead of creating a new mesh / material every time.
+// TODO HIGH:   Use such pre-loaded assets in all cases (biggest gap - train models!) instead of
+//              creating a new mesh / material every time.
 #[derive(Resource)]
 pub struct GameAssets {
     pub track_assets:    TrackAssets,

@@ -23,7 +23,7 @@ fn successors(tile_track: TileTrack, building_state: &BuildingState) -> Vec<(Til
     valid_tracks_at_next_tile
         .into_iter()
         .map(|track_type| {
-            let cost = 1; // TODO HIGH: Implement cost function
+            let cost = 1; // TODO HIGH: Implement cost function, reuse with `track_planner` part
             let tile_track = TileTrack {
                 tile_coords_xz: next_tile_coords,
                 track_type,
