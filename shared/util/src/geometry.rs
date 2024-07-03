@@ -1,6 +1,8 @@
 use bevy_math::{Quat, Vec3};
 
 // We not only align with a direction, but also preserve the "up" direction.
+// Later:   Not sure this actually works correctly, I still see weird situations where the trains
+//          are not aligned correctly.
 #[must_use]
 pub fn rotation_aligned_with_direction(direction: Vec3) -> Quat {
     debug_assert!(direction.is_normalized());

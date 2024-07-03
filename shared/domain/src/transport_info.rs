@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter};
 
 use bevy_math::Vec3;
-use log::{info, warn};
+use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::non_empty_circular_list::NonEmptyCircularList;
@@ -122,6 +122,10 @@ impl MovementOrders {
     pub fn current_target(&self) -> BuildingId {
         self.stations.next()
     }
+
+    pub fn advance_to_next_target(&mut self) {
+        self.stations.advance();
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -212,57 +216,77 @@ impl TransportInfo {
         &self.dynamic_info.movement_orders
     }
 
+    fn jump_tile(&mut self, building_state: &BuildingState) {
+        info!("Jumping tile: {:?}", self);
+
+        let transport_type = self.transport_type().clone();
+        let target_station = self.movement_orders().current_target();
+        let route = find_route_to_station(
+            self.dynamic_info.location.tile_path[0],
+            target_station,
+            building_state,
+        );
+
+        match route {
+            None => {
+                self.dynamic_info.location.progress_within_tile =
+                    ProgressWithinTile::about_to_exit();
+                self.dynamic_info.movement_orders.force_stop = true;
+                warn!(
+                    "No route found to station {target_station:?} for transport {:?}, stopping: {self:?}",
+                    self.id()
+                );
+            },
+            Some(found) => {
+                if found.is_empty() {
+                    error!(
+                        "Found empty route to station for transport {self:?}, this should never happen!",
+                    );
+                    self.dynamic_info.movement_orders.force_stop = true;
+                } else if found.len() == 1 {
+                    // We are at the right station already
+                    // TODO HIGH: Implement acceleration/deceleration and station loading/unloading logic - we should not be just passing the station by without stopping
+                    self.dynamic_info.movement_orders.advance_to_next_target();
+                    self.jump_tile(building_state);
+                } else {
+                    // The first one is the current tile, so we take the second one
+                    let next_tile_track = found[1];
+                    Self::perform_jump(
+                        &mut self.dynamic_info.location,
+                        &transport_type,
+                        next_tile_track,
+                    );
+                    info!("Finished jump: {:?}", self);
+                }
+            },
+        };
+    }
+
     #[allow(
         clippy::cast_possible_truncation,
         clippy::cast_sign_loss,
         clippy::items_after_statements
     )]
-    fn jump_tile(&mut self, building_state: &BuildingState) {
-        info!("Jumping tile: {:?}", self);
+    fn perform_jump(
+        location: &mut TransportLocation,
+        transport_type: &TransportType,
+        next_tile_track: TileTrack,
+    ) {
+        location.tile_path.insert(0, next_tile_track);
 
-        let transport_type = self.transport_type().clone();
-        let id = self.id();
-
-        let movement_orders = self.movement_orders().clone();
-        let location = &mut self.dynamic_info.location;
-        let current_tile_track = location.tile_path[0];
-
-        let target_station = movement_orders.current_target();
-        let route = find_route_to_station(current_tile_track, target_station, building_state);
-        let next = match route {
-            None => None,
-            Some(found) => found.get(1).copied(), // The first one is the current tile
-        };
-        match next {
-            None => {
-                location.progress_within_tile = ProgressWithinTile::about_to_exit();
-                self.dynamic_info.movement_orders.force_stop = true;
-                warn!(
-                    "No route found to station {target_station:?} for transport {id:?}, stopping: {self:?}",
-                );
-            },
-            Some(next_tile_track) => {
-                location.tile_path.insert(0, next_tile_track);
-
-                // Later: We are rather crudely sometimes removing the last element when we are inserting an
-                // element.
-                // This means - depending on `HEURISTIC_COEF` - that sometimes we will be carrying around
-                // "too many tiles", or it could lead to running out of tiles if it is too short.
-                // The alternative is to use `calculate_train_component_head_tails_and_final_tail_position`
-                // to calculate the tail position, and then remove the last tiles if they are not needed,
-                // but that introduces more complexity.
-                const HEURISTIC_COEF: f32 = 2.0;
-                if location.tile_path.len()
-                    > (HEURISTIC_COEF * transport_type.length_in_tiles()) as usize
-                {
-                    let _ = location.tile_path.pop();
-                }
-
-                location.progress_within_tile.0 -= 1.0;
-
-                info!("Finished jump: {:?}", self);
-            },
+        // Later: We are rather crudely sometimes removing the last element when we are inserting an
+        // element.
+        // This means - depending on `HEURISTIC_COEF` - that sometimes we will be carrying around
+        // "too many tiles", or it could lead to running out of tiles if it is too short.
+        // The alternative is to use `calculate_train_component_head_tails_and_final_tail_position`
+        // to calculate the tail position, and then remove the last tiles if they are not needed,
+        // but that introduces more complexity.
+        const HEURISTIC_COEF: f32 = 2.0;
+        if location.tile_path.len() > (HEURISTIC_COEF * transport_type.length_in_tiles()) as usize {
+            let _ = location.tile_path.pop();
         }
+
+        location.progress_within_tile.0 -= 1.0;
     }
 
     fn normalise_progress_jumping_tiles(&mut self, building_state: &BuildingState) {
