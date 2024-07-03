@@ -101,7 +101,7 @@ pub struct TransportVelocity {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct MovementOrders {
-    is_stopped: bool,
+    force_stop: bool,
     stations:   NonEmptyCircularList<BuildingId>,
 }
 
@@ -109,13 +109,18 @@ impl MovementOrders {
     #[must_use]
     pub fn one(station_id: BuildingId) -> Self {
         Self {
-            is_stopped: false,
+            force_stop: false,
             stations:   NonEmptyCircularList::one(station_id),
         }
     }
 
     pub fn push(&mut self, station_id: BuildingId) {
         self.stations.push(station_id);
+    }
+
+    #[must_use]
+    pub fn current_target(&self) -> BuildingId {
+        self.stations.next()
     }
 }
 
@@ -222,7 +227,7 @@ impl TransportInfo {
         let location = &mut self.dynamic_info.location;
         let current_tile_track = location.tile_path[0];
 
-        let target_station = movement_orders.stations.next();
+        let target_station = movement_orders.current_target();
         let route = find_route_to_station(current_tile_track, target_station, building_state);
         let next = match route {
             None => None,
@@ -231,7 +236,7 @@ impl TransportInfo {
         match next {
             None => {
                 location.progress_within_tile = ProgressWithinTile::about_to_exit();
-                self.dynamic_info.movement_orders.is_stopped = true;
+                self.dynamic_info.movement_orders.force_stop = true;
                 warn!(
                     "No route found to station {target_station:?} for transport {id:?}, stopping: {self:?}",
                 );
@@ -262,14 +267,14 @@ impl TransportInfo {
 
     fn normalise_progress_jumping_tiles(&mut self, building_state: &BuildingState) {
         while self.location().progress_within_tile.out_of_bounds()
-            && !self.dynamic_info.movement_orders.is_stopped
+            && !self.dynamic_info.movement_orders.force_stop
         {
             self.jump_tile(building_state);
         }
     }
 
     pub fn advance(&mut self, diff: GameTimeDiff, building_state: &BuildingState) {
-        if self.dynamic_info.movement_orders.is_stopped {
+        if self.dynamic_info.movement_orders.force_stop {
             return;
         }
 

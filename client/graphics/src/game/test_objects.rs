@@ -115,10 +115,10 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Option<
         .filter_buildings_by_reference_tile(STATION_D)
         .first()
         .copied()?;
-    let mut movement_orders = MovementOrders::one(station_b.building_id);
-    movement_orders.push(station_c.building_id);
+    let mut movement_orders = MovementOrders::one(station_d.building_id);
     movement_orders.push(station_a.building_id);
-    movement_orders.push(station_d.building_id);
+    movement_orders.push(station_b.building_id);
+    movement_orders.push(station_c.building_id);
     movement_orders.push(station_a.building_id);
 
     let command = GameCommand::PurchaseTransport(TransportInfo::new(
