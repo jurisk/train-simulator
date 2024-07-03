@@ -64,13 +64,13 @@ impl StationType {
                     let a = TileTrack {
                         tile_coords_xz: reference_tile + TileCoordsXZ::from_usizes(0, platform),
                         track_type:     TrackType::EastWest,
-                        pointing_in:    DirectionXZ::East,
+                        pointing_in:    DirectionXZ::West,
                     };
                     let b = TileTrack {
                         tile_coords_xz: reference_tile
                             + TileCoordsXZ::from_usizes(self.length_in_tiles - 1, platform),
                         track_type:     TrackType::EastWest,
-                        pointing_in:    DirectionXZ::West,
+                        pointing_in:    DirectionXZ::East,
                     };
                     results.insert(a);
                     results.insert(b);
@@ -135,22 +135,22 @@ mod tests {
         let actual = station_type.exit_tile_tracks(reference_tile);
         let expected: HashSet<TileTrack> = [
             TileTrack {
-                tile_coords_xz: reference_tile + TileCoordsXZ::from_usizes(0, 0),
+                tile_coords_xz: TileCoordsXZ::from_usizes(10, 20),
                 track_type:     TrackType::NorthSouth,
                 pointing_in:    DirectionXZ::North,
             },
             TileTrack {
-                tile_coords_xz: reference_tile + TileCoordsXZ::from_usizes(0, 2),
+                tile_coords_xz: TileCoordsXZ::from_usizes(10, 22),
                 track_type:     TrackType::NorthSouth,
                 pointing_in:    DirectionXZ::South,
             },
             TileTrack {
-                tile_coords_xz: reference_tile + TileCoordsXZ::from_usizes(1, 0),
+                tile_coords_xz: TileCoordsXZ::from_usizes(10, 20),
                 track_type:     TrackType::NorthSouth,
                 pointing_in:    DirectionXZ::North,
             },
             TileTrack {
-                tile_coords_xz: reference_tile + TileCoordsXZ::from_usizes(1, 2),
+                tile_coords_xz: TileCoordsXZ::from_usizes(10, 22),
                 track_type:     TrackType::NorthSouth,
                 pointing_in:    DirectionXZ::South,
             },
