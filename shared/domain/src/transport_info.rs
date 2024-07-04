@@ -5,14 +5,14 @@ use bevy_math::Vec3;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
-use shared_util::non_empty_circular_list::NonEmptyCircularList;
 
 use crate::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
+use crate::movement_orders::{MovementOrderAction, MovementOrderLocation, MovementOrders};
 use crate::tile_track::TileTrack;
 use crate::track_pathfinding::find_route_to_station;
 use crate::transport_type::TransportType;
-use crate::{BuildingId, PlayerId, TransportId};
+use crate::{PlayerId, TransportId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct ProgressWithinTile(f32);
@@ -97,35 +97,6 @@ impl TransportLocation {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct TransportVelocity {
     pub tiles_per_second: f32,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub struct MovementOrders {
-    force_stop: bool,
-    stations:   NonEmptyCircularList<BuildingId>,
-}
-
-impl MovementOrders {
-    #[must_use]
-    pub fn one(station_id: BuildingId) -> Self {
-        Self {
-            force_stop: false,
-            stations:   NonEmptyCircularList::one(station_id),
-        }
-    }
-
-    pub fn push(&mut self, station_id: BuildingId) {
-        self.stations.push(station_id);
-    }
-
-    #[must_use]
-    pub fn current_target(&self) -> BuildingId {
-        self.stations.next()
-    }
-
-    pub fn advance_to_next_target(&mut self) {
-        self.stations.advance();
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -220,7 +191,8 @@ impl TransportInfo {
         info!("Jumping tile: {:?}", self);
 
         let transport_type = self.transport_type().clone();
-        let target_station = self.movement_orders().current_target();
+        let current_order = self.movement_orders().current_order();
+        let MovementOrderLocation::StationId(target_station) = current_order.go_to;
         let route = find_route_to_station(
             self.dynamic_info.location.tile_path[0],
             target_station,
@@ -231,7 +203,7 @@ impl TransportInfo {
             None => {
                 self.dynamic_info.location.progress_within_tile =
                     ProgressWithinTile::about_to_exit();
-                self.dynamic_info.movement_orders.force_stop = true;
+                self.dynamic_info.movement_orders.force_stop();
                 warn!(
                     "No route found to station {target_station:?} for transport {:?}, stopping: {self:?}",
                     self.id()
@@ -242,12 +214,22 @@ impl TransportInfo {
                     error!(
                         "Found empty route to station for transport {self:?}, this should never happen!",
                     );
-                    self.dynamic_info.movement_orders.force_stop = true;
+                    self.dynamic_info.movement_orders.force_stop();
                 } else if found.len() == 1 {
                     // We are at the right station already
                     // TODO HIGH: Implement acceleration/deceleration and station loading/unloading logic - we should not be just passing the station by without stopping
-                    self.dynamic_info.movement_orders.advance_to_next_target();
-                    self.jump_tile(building_state);
+                    match current_order.action {
+                        MovementOrderAction::LoadAndUnload => {
+                            // TODO HIGH: We are at the station, so we should stop
+                            self.dynamic_info.movement_orders.advance_to_next_order();
+                            self.jump_tile(building_state);
+                            // TODO HIGH: Replace 2 lines above
+                        },
+                        MovementOrderAction::PassingThrough => {
+                            self.dynamic_info.movement_orders.advance_to_next_order();
+                            self.jump_tile(building_state);
+                        },
+                    }
                 } else {
                     // The first one is the current tile, so we take the second one
                     let next_tile_track = found[1];
@@ -291,14 +273,14 @@ impl TransportInfo {
 
     fn normalise_progress_jumping_tiles(&mut self, building_state: &BuildingState) {
         while self.location().progress_within_tile.out_of_bounds()
-            && !self.dynamic_info.movement_orders.force_stop
+            && !self.dynamic_info.movement_orders.is_stopped()
         {
             self.jump_tile(building_state);
         }
     }
 
     pub fn advance(&mut self, diff: GameTimeDiff, building_state: &BuildingState) {
-        if self.dynamic_info.movement_orders.force_stop {
+        if self.dynamic_info.movement_orders.is_stopped() {
             return;
         }
 

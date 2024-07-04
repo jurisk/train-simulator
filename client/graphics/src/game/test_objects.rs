@@ -5,6 +5,7 @@ use shared_domain::building_type::BuildingType;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
+use shared_domain::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::production_type::ProductionType;
 use shared_domain::station_type::StationType;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
@@ -12,7 +13,7 @@ use shared_domain::tile_track::TileTrack;
 use shared_domain::track_planner::plan_tracks;
 use shared_domain::track_type::TrackType;
 use shared_domain::transport_info::{
-    MovementOrders, ProgressWithinTile, TransportInfo, TransportLocation, TransportVelocity,
+    ProgressWithinTile, TransportInfo, TransportLocation, TransportVelocity,
 };
 use shared_domain::transport_type::{TrainComponentType, TransportType};
 use shared_domain::{BuildingId, PlayerId, TransportId};
@@ -115,11 +116,12 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Option<
         .filter_buildings_by_reference_tile(STATION_D)
         .first()
         .copied()?;
-    let mut movement_orders = MovementOrders::one(station_d.building_id);
-    movement_orders.push(station_a.building_id);
-    movement_orders.push(station_b.building_id);
-    movement_orders.push(station_c.building_id);
-    movement_orders.push(station_a.building_id);
+    let mut movement_orders =
+        MovementOrders::one(MovementOrder::stop_at_station(station_d.building_id));
+    movement_orders.push(MovementOrder::stop_at_station(station_a.building_id));
+    movement_orders.push(MovementOrder::stop_at_station(station_b.building_id));
+    movement_orders.push(MovementOrder::stop_at_station(station_c.building_id));
+    movement_orders.push(MovementOrder::stop_at_station(station_a.building_id));
 
     let command = GameCommand::PurchaseTransport(TransportInfo::new(
         TransportId::random(),
