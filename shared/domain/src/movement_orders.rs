@@ -11,9 +11,23 @@ pub enum MovementOrderLocation {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
+pub enum LoadAction {
+    NoLoad,
+    LoadAvailable,
+    LoadUntilFull,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
+pub enum UnloadAction {
+    NoUnload,
+    UnloadAvailable,
+    UnloadUntilEmpty,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub enum MovementOrderAction {
     PassingThrough,
-    LoadAndUnload,
+    LoadAndUnload(LoadAction, UnloadAction),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Copy, Clone)]
@@ -27,7 +41,10 @@ impl MovementOrder {
     pub fn stop_at_station(building_id: BuildingId) -> Self {
         Self {
             go_to:  MovementOrderLocation::StationId(building_id),
-            action: MovementOrderAction::LoadAndUnload,
+            action: MovementOrderAction::LoadAndUnload(
+                LoadAction::LoadAvailable,
+                UnloadAction::UnloadAvailable,
+            ),
         }
     }
 }

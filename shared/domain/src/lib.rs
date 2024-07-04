@@ -21,6 +21,7 @@ pub mod game_time;
 pub mod map_level;
 pub mod movement_orders;
 pub mod production_type;
+pub mod resource_type;
 pub mod server_response;
 pub mod station_type;
 pub mod terrain;

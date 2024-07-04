@@ -1,5 +1,8 @@
+#![allow(clippy::match_same_arms)]
+
 use serde::{Deserialize, Serialize};
 
+use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 
@@ -27,6 +30,28 @@ impl ProductionType {
         TileCoverage::Rectangular {
             north_west_inclusive: TileCoordsXZ::new(-1, -1),
             south_east_inclusive: TileCoordsXZ::new(1, 1),
+        }
+    }
+
+    #[must_use]
+    pub fn accepts(self) -> Vec<ResourceType> {
+        match self {
+            ProductionType::CoalMine => vec![],
+            ProductionType::IronMine => vec![],
+            ProductionType::IronWorks => vec![ResourceType::Iron, ResourceType::Coal],
+            ProductionType::CargoPort => {
+                vec![ResourceType::Iron, ResourceType::Coal, ResourceType::Steel]
+            },
+        }
+    }
+
+    #[must_use]
+    pub fn provides(self) -> Vec<ResourceType> {
+        match self {
+            ProductionType::CoalMine => vec![ResourceType::Coal],
+            ProductionType::IronMine => vec![ResourceType::Iron],
+            ProductionType::IronWorks => vec![ResourceType::Steel],
+            ProductionType::CargoPort => vec![],
         }
     }
 }

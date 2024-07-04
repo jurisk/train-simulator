@@ -219,7 +219,7 @@ impl TransportInfo {
                     // We are at the right station already
                     // TODO HIGH: Implement acceleration/deceleration and station loading/unloading logic - we should not be just passing the station by without stopping
                     match current_order.action {
-                        MovementOrderAction::LoadAndUnload => {
+                        MovementOrderAction::LoadAndUnload(..) => {
                             // TODO HIGH: We are at the station, so we should stop
                             self.dynamic_info.movement_orders.advance_to_next_order();
                             self.jump_tile(building_state);
