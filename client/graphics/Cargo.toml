@@ -60,7 +60,7 @@ features = [
     "asset_processor",
     "embedded_watcher",
     "file_watcher",
-    "multi-threaded", # Renamed to "multi_threaded" in newer Bevy versions
+    "multi-threaded", # TODO: Renamed to "multi_threaded" in newer Bevy versions
 ]
 
 
