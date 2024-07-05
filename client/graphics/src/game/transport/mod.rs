@@ -67,7 +67,7 @@ fn move_transports(
                         map_level,
                     )
                 },
-                TransportType::RoadVehicle | TransportType::Ship => todo!(), /* TODO: Also handle others! */
+                TransportType::RoadVehicle(_) | TransportType::Ship(_) => todo!(), /* TODO: Also handle others! */
             };
 
             for &child in children {
@@ -167,7 +167,7 @@ fn create_transport(
                         map_level,
                     ))
                 },
-                TransportType::RoadVehicle | TransportType::Ship => {
+                TransportType::RoadVehicle(_) | TransportType::Ship(_) => {
                     None // TODO: Implement
                 },
             }

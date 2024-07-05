@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 
 use bevy_math::Vec3;
@@ -9,9 +10,10 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
 use crate::movement_orders::{MovementOrderAction, MovementOrderLocation, MovementOrders};
+use crate::resource_type::ResourceType;
 use crate::tile_track::TileTrack;
 use crate::track_pathfinding::find_route_to_station;
-use crate::transport_type::TransportType;
+use crate::transport_type::{CargoAmount, TransportType};
 use crate::{PlayerId, TransportId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
@@ -111,6 +113,7 @@ pub struct TransportDynamicInfo {
     pub location:        TransportLocation,
     pub velocity:        TransportVelocity,
     pub movement_orders: MovementOrders,
+    pub cargo_loaded:    HashMap<ResourceType, CargoAmount>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -139,6 +142,7 @@ impl TransportInfo {
                 location,
                 velocity,
                 movement_orders,
+                cargo_loaded: HashMap::new(),
             },
         }
     }
@@ -217,10 +221,10 @@ impl TransportInfo {
                     self.dynamic_info.movement_orders.force_stop();
                 } else if found.len() == 1 {
                     // We are at the right station already
-                    // TODO HIGH: Implement acceleration/deceleration and station loading/unloading logic - we should not be just passing the station by without stopping
+                    // TODO HIGH: Implement acceleration/deceleration to stop at the right tile, gradually, like trains do
                     match current_order.action {
                         MovementOrderAction::LoadAndUnload(..) => {
-                            // TODO HIGH: We are at the station, so we should stop
+                            // TODO HIGH: Implement station stopping and loading/unloading logic
                             self.dynamic_info.movement_orders.advance_to_next_order();
                             self.jump_tile(building_state);
                             // TODO HIGH: Replace 2 lines above

@@ -7,6 +7,7 @@ use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
 use shared_domain::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::production_type::ProductionType;
+use shared_domain::resource_type::ResourceType;
 use shared_domain::station_type::StationType;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_track::TileTrack;
@@ -128,14 +129,14 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Option<
         player_id,
         TransportType::Train(vec![
             TrainComponentType::Engine,
-            TrainComponentType::Car,
-            TrainComponentType::Car,
-            TrainComponentType::Car,
-            TrainComponentType::Car,
-            TrainComponentType::Car,
-            TrainComponentType::Car,
-            TrainComponentType::Car,
-            TrainComponentType::Car,
+            TrainComponentType::Car(ResourceType::Coal),
+            TrainComponentType::Car(ResourceType::Coal),
+            TrainComponentType::Car(ResourceType::Coal),
+            TrainComponentType::Car(ResourceType::Iron),
+            TrainComponentType::Car(ResourceType::Iron),
+            TrainComponentType::Car(ResourceType::Iron),
+            TrainComponentType::Car(ResourceType::Steel),
+            TrainComponentType::Car(ResourceType::Steel),
         ]),
         TransportLocation {
             tile_path:            (0 .. 4)

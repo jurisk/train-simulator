@@ -125,7 +125,7 @@ fn create_train_component(
                 TRAIN_EXTRA_HEIGHT,
             )
         },
-        TrainComponentType::Car => {
+        TrainComponentType::Car(_) => {
             adjusted_cuboid(
                 GAP_BETWEEN_TRAIN_COMPONENTS,
                 TRAIN_WIDTH,
