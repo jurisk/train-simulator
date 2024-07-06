@@ -28,12 +28,41 @@ impl TerrainType {
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
-pub struct Height(pub u8);
+pub struct Height(u8);
 
 impl Height {
     #[must_use]
+    pub fn from_u8(height: u8) -> Self {
+        Self(height)
+    }
+
+    #[must_use]
     pub fn fallback() -> Self {
         Self(u8::default())
+    }
+
+    #[must_use]
+    #[allow(clippy::cast_lossless)]
+    pub fn as_f32(self) -> f32 {
+        self.0 as f32
+    }
+
+    #[must_use]
+    pub fn as_u8(self) -> u8 {
+        self.0
+    }
+
+    #[must_use]
+    #[allow(
+        clippy::cast_precision_loss,
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss
+    )]
+    pub fn average_rounded(heights: &[Self]) -> Self {
+        let sum: f32 = heights.iter().map(|&height| height.as_f32()).sum();
+        let average = sum / heights.len() as f32;
+        let rounded = average.round() as u8;
+        Self(rounded)
     }
 }
 

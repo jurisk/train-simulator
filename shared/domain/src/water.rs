@@ -11,7 +11,7 @@ impl Water {
     #[must_use]
     pub fn is_valid(&self) -> bool {
         let (below, above) = &self.between;
-        below.0 + 1 == above.0
+        below.as_u8() + 1 == above.as_u8()
     }
 
     #[must_use]

@@ -83,7 +83,7 @@ pub(crate) fn create_land(
 ) {
     let terrain = map_level.terrain();
     let data_slice: GridXZ<VertexCoordsXZ, f32> =
-        terrain.vertex_heights.map(|h| h.0 as f32 * terrain.y_coef);
+        terrain.vertex_heights.map(|h| h.as_f32() * terrain.y_coef);
 
     let half_x = (terrain.tile_count_x() as f32) / 2.0;
     let half_z = (terrain.tile_count_z() as f32) / 2.0;

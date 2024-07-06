@@ -23,8 +23,7 @@ pub fn render_map(map_level: &MapLevel) {
                 terrain.vertex_heights[se],
                 terrain.vertex_heights[sw],
             );
-            let average_height = (nw.0 + ne.0 + se.0 + sw.0) as f32 / 4.0;
-            let height = Height(average_height.round() as u8);
+            let height = Height::average_rounded(&[nw, ne, se, sw]);
             let terrain_type = TerrainType::default_from_height(height);
             let is_under_water = water.under_water(height);
 

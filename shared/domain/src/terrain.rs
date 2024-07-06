@@ -34,7 +34,7 @@ impl Terrain {
     pub fn new(vertex_heights: Vec<Vec<u8>>) -> Self {
         Self {
             y_coef:         DEFAULT_Y_COEF,
-            vertex_heights: GridXZ::new(vertex_heights).map(|&height| Height(height)),
+            vertex_heights: GridXZ::new(vertex_heights).map(|&height| Height::from_u8(height)),
         }
     }
 
@@ -90,9 +90,9 @@ impl Terrain {
     #[must_use]
     #[allow(clippy::cast_precision_loss, clippy::cast_lossless)]
     pub fn logical_to_world(&self, vertex_coords_xz: VertexCoordsXZ) -> Vec3 {
-        let Height(height) = self.vertex_heights[vertex_coords_xz];
+        let height = self.vertex_heights[vertex_coords_xz].as_f32();
         let coords_xz: CoordsXZ = vertex_coords_xz.into();
-        let y = (height as f32) * self.y_coef;
+        let y = height * self.y_coef;
         let x = (coords_xz.x as f32) - (self.tile_count_x() as f32) / 2.0;
         let z = (coords_xz.z as f32) - (self.tile_count_z() as f32) / 2.0;
         Vec3::new(x, y, z)
