@@ -89,10 +89,10 @@ fn read_on_server(
                     Ok(command) => {
                         info!("Received {command:?}");
                         let client_command_with_client_id_event =
-                            ClientCommandWithClientIdEvent(ClientCommandWithClientId {
-                                client_id: ClientId::from_u128(session_id),
+                            ClientCommandWithClientIdEvent(ClientCommandWithClientId::new(
+                                ClientId::from_u128(session_id),
                                 command,
-                            });
+                            ));
                         client_command_with_client_id_events
                             .send(client_command_with_client_id_event);
                     },
@@ -122,7 +122,7 @@ fn process_client_command_with_client_id_events(
         client_command_with_client_id_events.read()
     {
         debug!("Picked up {client_command_with_client_id:?}...");
-        let responses = server_state.process(client_command_with_client_id.clone());
+        let responses = server_state.process(client_command_with_client_id);
 
         for response in responses {
             send_responses_to_clients(server.as_ref(), &response);

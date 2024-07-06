@@ -128,7 +128,7 @@ pub(crate) fn create_rails(
     tile: TileCoordsXZ,
     track_type: TrackType,
 ) {
-    let terrain = &map_level.terrain;
+    let terrain = &map_level.terrain();
 
     let (a, b) = track_type.connections_clockwise();
 

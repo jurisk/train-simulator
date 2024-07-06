@@ -67,7 +67,7 @@ pub(crate) fn create_building_entity(
     commands: &mut Commands,
     map_level: &MapLevel,
 ) {
-    let terrain = &map_level.terrain;
+    let terrain = &map_level.terrain();
     let (nw, se) = match tile_coverage {
         TileCoverage::Empty => panic!("Cannot create a building with no tiles"),
         TileCoverage::Single(tile) => (tile, tile),

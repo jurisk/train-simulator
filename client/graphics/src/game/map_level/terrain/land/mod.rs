@@ -81,13 +81,13 @@ pub(crate) fn create_land(
     standard_materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
 ) {
-    let terrain = &map_level.terrain;
+    let terrain = map_level.terrain();
     let data_slice: GridXZ<VertexCoordsXZ, f32> =
         terrain.vertex_heights.map(|h| h.0 as f32 * terrain.y_coef);
 
-    let half_x = (map_level.terrain.tile_count_x() as f32) / 2.0;
-    let half_z = (map_level.terrain.tile_count_z() as f32) / 2.0;
-    let height_map = &map_level.terrain.vertex_heights;
+    let half_x = (terrain.tile_count_x() as f32) / 2.0;
+    let half_z = (terrain.tile_count_z() as f32) / 2.0;
+    let height_map = &terrain.vertex_heights;
 
     let (tiles, mesh) = tiled_mesh_from_height_map_data(
         -half_x,

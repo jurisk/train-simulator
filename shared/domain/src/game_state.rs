@@ -149,7 +149,7 @@ impl GameState {
     pub fn build_buildings(
         &mut self,
         requesting_player_id: PlayerId,
-        buildings: Vec<BuildingInfo>,
+        buildings: &[BuildingInfo],
     ) -> Result<(), ()> {
         self.buildings
             .build(requesting_player_id, buildings, &self.map_level)

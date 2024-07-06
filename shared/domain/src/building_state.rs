@@ -182,11 +182,11 @@ impl BuildingState {
     pub fn build(
         &mut self,
         requesting_player_id: PlayerId,
-        building_infos: Vec<BuildingInfo>,
+        building_infos: &[BuildingInfo],
         map_level: &MapLevel,
     ) -> Result<(), ()> {
-        if self.can_build(requesting_player_id, &building_infos, map_level) {
-            self.append_all(building_infos);
+        if self.can_build(requesting_player_id, building_infos, map_level) {
+            self.append_all(building_infos.to_vec());
             Ok(())
         } else {
             Err(())

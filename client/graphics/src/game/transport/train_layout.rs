@@ -106,6 +106,7 @@ pub(crate) fn calculate_train_component_head_tails_and_final_tail_position(
     transport_location: &TransportLocation,
     map_level: &MapLevel,
 ) -> (Vec<(Vec3, Vec3)>, LogicalPositionOnTilePath) {
+    let terrain = map_level.terrain();
     let mut results = vec![];
     let mut state = LogicalPositionOnTilePath {
         tile_path_offset:     0,
@@ -117,17 +118,17 @@ pub(crate) fn calculate_train_component_head_tails_and_final_tail_position(
 
     for train_component in train_components {
         let new_state = recursive_calculate_tail(
-            state.coordinates(tile_path, &map_level.terrain),
+            state.coordinates(tile_path, terrain),
             train_component.length_in_tiles(),
             state.pointing_in,
             state.tile_path_offset,
             tile_path,
-            &map_level.terrain,
+            terrain,
             Some(state.progress_within_tile),
         );
 
-        let head = state.coordinates(tile_path, &map_level.terrain);
-        let tail = new_state.coordinates(tile_path, &map_level.terrain);
+        let head = state.coordinates(tile_path, terrain);
+        let tail = new_state.coordinates(tile_path, terrain);
         results.push((head, tail));
 
         state = new_state;

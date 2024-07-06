@@ -51,14 +51,16 @@ pub(crate) fn create_water(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
 ) {
+    let terrain = &map_level.terrain();
+    let water = &map_level.water();
     let rectangle = Rectangle::new(
-        map_level.terrain.vertex_count_x() as f32,
-        map_level.terrain.vertex_count_z() as f32,
+        terrain.vertex_count_x() as f32,
+        terrain.vertex_count_z() as f32,
     );
     let mesh = meshes.add(rectangle);
 
-    let (above, below) = &map_level.water.between;
-    let water_level = ((above.0 as f32 + below.0 as f32) / 2.0) * map_level.terrain.y_coef;
+    let (above, below) = water.between;
+    let water_level = ((above.0 as f32 + below.0 as f32) / 2.0) * terrain.y_coef;
     let mut transform = Transform::from_xyz(0.0, water_level, 0.0);
     transform.rotate_x(-FRAC_PI_2);
 

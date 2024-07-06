@@ -11,8 +11,8 @@ use crate::TILE_SIZE;
     clippy::cast_lossless
 )]
 pub fn render_map(map_level: &MapLevel) {
-    let terrain = &map_level.terrain;
-    let water = &map_level.water;
+    let terrain = &map_level.terrain();
+    let water = &map_level.water();
     for x in 0 .. terrain.tile_count_x() {
         for z in 0 .. terrain.tile_count_z() {
             let tile = TileCoordsXZ::from_usizes(x, z);

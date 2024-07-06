@@ -28,7 +28,7 @@ fn main() {
     app.add_plugins(ClientGraphicsPlugin {
         game_launch_params: GameLaunchParams {
             player_id,
-            access_token: AccessToken("valid-token".to_string()),
+            access_token: AccessToken::new("valid-token".to_string()),
             game_id: None,
         },
     });
@@ -62,7 +62,7 @@ fn process_messages_locally(
             "Simulating server: processing message: {:?}",
             client_command_with_client_id
         );
-        let responses = server_state.process(client_command_with_client_id);
+        let responses = server_state.process(&client_command_with_client_id);
         for response in responses {
             debug!("Simulating server: Got response: {:?}", response);
             if response.client_ids.contains(&client_id) {

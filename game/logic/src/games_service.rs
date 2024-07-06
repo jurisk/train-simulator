@@ -121,7 +121,7 @@ impl GamesService {
         &mut self,
         game_id: GameId,
         player_id: PlayerId,
-        game_command: GameCommand,
+        game_command: &GameCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         let game_service = self.lookup_game_service_mut(game_id)?;
         Self::convert_game_response_to_server_response(
@@ -163,7 +163,7 @@ impl GamesService {
         &mut self,
         authentication_service: &AuthenticationService,
         requesting_player_id: PlayerId,
-        lobby_command: LobbyCommand,
+        lobby_command: &LobbyCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match lobby_command {
             LobbyCommand::ListGames => self.create_game_infos(requesting_player_id),
@@ -171,18 +171,18 @@ impl GamesService {
                 self.create_and_join_game(authentication_service.player_info(requesting_player_id))
             },
             LobbyCommand::JoinExistingGame(game_id) => {
-                let game_service = self.lookup_game_service_mut(game_id)?;
+                let game_service = self.lookup_game_service_mut(*game_id)?;
                 Self::convert_game_response_to_server_response(
-                    game_id,
+                    *game_id,
                     game_service
                         .join_game(authentication_service.player_info(requesting_player_id)),
                 )
             },
             LobbyCommand::LeaveGame(game_id) => {
                 // Later: Not sure how this should even work if the player has buildings and transport owned in the game?
-                let game_service = self.lookup_game_service_mut(game_id)?;
+                let game_service = self.lookup_game_service_mut(*game_id)?;
                 Self::convert_game_response_to_server_response(
-                    game_id,
+                    *game_id,
                     game_service.remove_player(requesting_player_id),
                 )
             },

@@ -75,13 +75,16 @@ impl ServerState {
     #[allow(clippy::needless_pass_by_value)]
     fn process_network_command(
         client_id: ClientId,
-        network_command: NetworkCommand,
+        network_command: &NetworkCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match network_command {
             NetworkCommand::Ping { id, elapsed } => {
                 Ok(vec![ServerResponseWithAddress {
                     address:  AddressEnvelope::ToClient(client_id),
-                    response: ServerResponse::Network(NetworkResponse::Pong { id, elapsed }),
+                    response: ServerResponse::Network(NetworkResponse::Pong {
+                        id:      *id,
+                        elapsed: *elapsed,
+                    }),
                 }])
             },
         }
@@ -89,10 +92,10 @@ impl ServerState {
 
     fn process_internal(
         &mut self,
-        client_command_with_client_id: ClientCommandWithClientId,
+        client_command_with_client_id: &ClientCommandWithClientId,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
-        let client_id = client_command_with_client_id.client_id;
-        match client_command_with_client_id.command {
+        let client_id = client_command_with_client_id.client_id();
+        match client_command_with_client_id.command() {
             ClientCommand::Network(network_command) => {
                 Self::process_network_command(client_id, network_command)
             },
@@ -113,7 +116,7 @@ impl ServerState {
                 let requesting_player_id =
                     self.authentication_service.lookup_player_id(client_id)?;
                 self.games_service
-                    .process_command(game_id, requesting_player_id, game_command)
+                    .process_command(*game_id, requesting_player_id, game_command)
             },
         }
     }
@@ -121,9 +124,9 @@ impl ServerState {
     #[must_use]
     pub fn process(
         &mut self,
-        client_command_with_client_id: ClientCommandWithClientId,
+        client_command_with_client_id: &ClientCommandWithClientId,
     ) -> Vec<ServerResponseWithClientIds> {
-        let client_id = client_command_with_client_id.client_id;
+        let client_id = client_command_with_client_id.client_id();
         let responses = self.process_internal(client_command_with_client_id);
 
         let flattened = responses

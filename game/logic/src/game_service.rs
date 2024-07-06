@@ -44,7 +44,7 @@ impl GameService {
     pub(crate) fn process_command(
         &mut self,
         requesting_player_id: PlayerId,
-        game_command: GameCommand,
+        game_command: &GameCommand,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         match game_command {
             GameCommand::PurchaseTransport(transport_info) => {
@@ -81,23 +81,23 @@ impl GameService {
     fn process_build_buildings(
         &mut self,
         requesting_player_id: PlayerId,
-        building_infos: Vec<BuildingInfo>,
+        building_infos: &[BuildingInfo],
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         match self
             .state
-            .build_buildings(requesting_player_id, building_infos.clone())
+            .build_buildings(requesting_player_id, building_infos)
         {
             Ok(()) => {
                 Ok(vec![GameResponseWithAddress::new(
                     AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-                    GameResponse::BuildingsAdded(building_infos),
+                    GameResponse::BuildingsAdded(building_infos.to_vec()),
                 )])
             },
             Err(()) => {
                 Err(GameError::CannotBuild(
                     building_infos
-                        .into_iter()
-                        .map(|building_info| building_info.building_id())
+                        .iter()
+                        .map(BuildingInfo::building_id)
                         .collect(),
                 ))
             },
@@ -107,7 +107,7 @@ impl GameService {
     fn process_purchase_transport(
         &mut self,
         requesting_player_id: PlayerId,
-        transport_info: TransportInfo,
+        transport_info: &TransportInfo,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         if requesting_player_id == transport_info.owner_id() {
             // TODO: Check if the track / road / etc. is free and owned by the purchaser
@@ -117,7 +117,7 @@ impl GameService {
             self.state.upsert_transport(transport_info.clone());
             Ok(vec![GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-                GameResponse::TransportsAdded(vec![transport_info]),
+                GameResponse::TransportsAdded(vec![transport_info.clone()]),
             )])
         } else {
             Err(GameError::CannotPurchase(transport_info.transport_id()))

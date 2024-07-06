@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use log::{info, warn};
-use shared_domain::client_command::AuthenticationCommand;
+use shared_domain::client_command::{AccessToken, AuthenticationCommand};
 use shared_domain::server_response::{
     AddressEnvelope, AuthenticationError, AuthenticationResponse, Colour, PlayerInfo, ServerError,
     ServerResponse, ServerResponseWithAddress,
@@ -81,18 +81,18 @@ impl AuthenticationService {
     pub(crate) fn process_authentication_command(
         &mut self,
         client_id: ClientId,
-        authentication_command: AuthenticationCommand,
+        authentication_command: &AuthenticationCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match authentication_command {
             AuthenticationCommand::Login(player_id, access_token) => {
                 // Later: Check the token for validity.
-                if access_token.0 == "valid-token" {
-                    self.connection_registry.register(player_id, client_id);
+                if *access_token == AccessToken::new("valid-token".to_string()) {
+                    self.connection_registry.register(*player_id, client_id);
 
                     Ok(vec![ServerResponseWithAddress::new(
                         AddressEnvelope::ToClient(client_id),
                         ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(
-                            player_id,
+                            *player_id,
                         )),
                     )])
                 } else {

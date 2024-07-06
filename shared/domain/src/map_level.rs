@@ -39,8 +39,8 @@ impl Height {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct MapLevel {
-    pub terrain: Terrain,
-    pub water:   Water,
+    terrain: Terrain,
+    water:   Water,
 }
 
 impl MapLevel {
@@ -48,6 +48,16 @@ impl MapLevel {
     #[must_use]
     pub fn is_valid(&self) -> bool {
         self.terrain.is_valid() && self.water.is_valid()
+    }
+
+    #[must_use]
+    pub fn terrain(&self) -> &Terrain {
+        &self.terrain
+    }
+
+    #[must_use]
+    pub fn water(&self) -> &Water {
+        &self.water
     }
 
     #[must_use]

@@ -11,7 +11,14 @@ use crate::transport_info::TransportInfo;
 use crate::{ClientId, GameId, PlayerId};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub struct AccessToken(pub String);
+pub struct AccessToken(String);
+
+impl AccessToken {
+    #[must_use]
+    pub fn new(token: String) -> Self {
+        Self(token)
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum AuthenticationCommand {
@@ -67,13 +74,23 @@ pub enum ClientCommand {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct ClientCommandWithClientId {
-    pub client_id: ClientId,
-    pub command:   ClientCommand,
+    client_id: ClientId,
+    command:   ClientCommand,
 }
 
 impl ClientCommandWithClientId {
     #[must_use]
     pub fn new(client_id: ClientId, command: ClientCommand) -> Self {
         Self { client_id, command }
+    }
+
+    #[must_use]
+    pub fn client_id(&self) -> ClientId {
+        self.client_id
+    }
+
+    #[must_use]
+    pub fn command(&self) -> &ClientCommand {
+        &self.command
     }
 }

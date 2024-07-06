@@ -56,7 +56,7 @@ fn run_with_url(url: url::Url, player_id: PlayerId) {
     app.add_plugins(ClientGraphicsPlugin {
         game_launch_params: GameLaunchParams {
             player_id,
-            access_token: AccessToken("valid-token".to_string()),
+            access_token: AccessToken::new("valid-token".to_string()),
             game_id: None,
         },
     });
