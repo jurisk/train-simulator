@@ -66,6 +66,29 @@ impl<K, V> GridXZ<K, V> {
             _marker: PhantomData,
         }
     }
+
+    pub fn map_with_coords<F, U>(&self, f: F) -> GridXZ<K, U>
+    where
+        F: Fn(CoordsXZ, &V) -> U,
+        K: From<CoordsXZ>,
+    {
+        GridXZ::<K, U> {
+            size_x:  self.size_x,
+            size_z:  self.size_z,
+            data:    self
+                .data
+                .iter()
+                .enumerate()
+                .map(|(z, row)| {
+                    row.iter()
+                        .enumerate()
+                        .map(|(x, v)| f(CoordsXZ::from_usizes(x, z), v))
+                        .collect()
+                })
+                .collect(),
+            _marker: PhantomData,
+        }
+    }
 }
 
 impl<K, V> GridXZ<K, V>

@@ -14,8 +14,8 @@ use crate::TileCoordsXZ;
 // TODO: Make fields private
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Terrain {
-    pub y_coef:         f32,
-    pub vertex_heights: GridXZ<VertexCoordsXZ, Height>,
+    pub y_coef:     f32,
+    vertex_heights: GridXZ<VertexCoordsXZ, Height>,
 }
 
 impl Debug for Terrain {

@@ -11,17 +11,17 @@ use crate::TILE_SIZE;
     clippy::cast_lossless
 )]
 pub fn render_map(map_level: &MapLevel) {
-    let terrain = &map_level.terrain();
-    let water = &map_level.water();
+    let terrain = map_level.terrain();
+    let water = map_level.water();
     for x in 0 .. terrain.tile_count_x() {
         for z in 0 .. terrain.tile_count_z() {
             let tile = TileCoordsXZ::from_usizes(x, z);
             let (nw, ne, se, sw) = tile.vertex_coords_nw_ne_se_sw();
             let (nw, ne, se, sw) = (
-                terrain.vertex_heights[nw],
-                terrain.vertex_heights[ne],
-                terrain.vertex_heights[se],
-                terrain.vertex_heights[sw],
+                terrain.height_at(nw),
+                terrain.height_at(ne),
+                terrain.height_at(se),
+                terrain.height_at(sw),
             );
             let height = Height::average_rounded(&[nw, ne, se, sw]);
             let terrain_type = TerrainType::default_from_height(height);

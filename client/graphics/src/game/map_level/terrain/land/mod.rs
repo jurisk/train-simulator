@@ -82,12 +82,15 @@ pub(crate) fn create_land(
     map_level: &MapLevel,
 ) {
     let terrain = map_level.terrain();
-    let data_slice: GridXZ<VertexCoordsXZ, f32> =
-        terrain.vertex_heights.map(|h| h.as_f32() * terrain.y_coef);
+    let data_slice: GridXZ<VertexCoordsXZ, f32> = GridXZ::filled_with(
+        terrain.vertex_count_x(),
+        terrain.vertex_count_z(),
+        f32::default(),
+    )
+    .map_with_coords(|coords, _| terrain.height_at(coords.into()).as_f32() * terrain.y_coef);
 
     let half_x = (terrain.tile_count_x() as f32) / 2.0;
     let half_z = (terrain.tile_count_z() as f32) / 2.0;
-    let height_map = &terrain.vertex_heights;
 
     let (tiles, mesh) = tiled_mesh_from_height_map_data(
         -half_x,
@@ -96,7 +99,7 @@ pub(crate) fn create_land(
         half_z,
         data_slice,
         ATTRIBUTE_TERRAIN_TYPE,
-        |coords: VertexCoordsXZ| TerrainType::default_from_height(height_map[coords]) as u32,
+        |coords: VertexCoordsXZ| TerrainType::default_from_height(terrain.height_at(coords)) as u32,
     );
 
     commands.insert_resource(tiles);
