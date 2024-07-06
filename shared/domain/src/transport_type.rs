@@ -1,3 +1,4 @@
+use std::fmt::{Debug, Formatter};
 use std::ops::{Add, AddAssign};
 
 use serde::{Deserialize, Serialize};
@@ -5,13 +6,19 @@ use serde::{Deserialize, Serialize};
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy, Default)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Default)]
 pub struct CargoAmount(f32);
 
 impl CargoAmount {
     #[must_use]
     pub fn new() -> Self {
         Self(0.0)
+    }
+}
+
+impl Debug for CargoAmount {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.2}", self.0)
     }
 }
 
