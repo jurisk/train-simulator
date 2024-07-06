@@ -1,4 +1,4 @@
-use log::info;
+use log::debug;
 use pathfinding::prelude::dijkstra;
 
 use crate::building_state::BuildingState;
@@ -51,7 +51,7 @@ pub fn find_route_to_station(
         .into_iter()
         .map(|(_, _, track)| track)
         .collect::<Vec<_>>();
-    info!(
+    debug!(
         "Doing pathfinding. Current: {current_tile_track:?}, Target ID: {target_station:?}, Targets: {targets:?}"
     );
 
@@ -61,7 +61,7 @@ pub fn find_route_to_station(
         |tile_track| targets.contains(tile_track),
     )?;
 
-    info!("Next in path is {:?}", path.get(1));
+    debug!("Next in path is {:?}", path.get(1));
 
     Some(path)
 }

@@ -176,11 +176,6 @@ impl TransportInfo {
     }
 
     #[must_use]
-    pub fn id(&self) -> TransportId {
-        self.static_info.transport_id
-    }
-
-    #[must_use]
     pub fn dynamic_info(&self) -> TransportDynamicInfo {
         self.dynamic_info.clone()
     }
@@ -234,7 +229,7 @@ impl TransportInfo {
                 self.dynamic_info.movement_orders.force_stop();
                 warn!(
                     "No route found to station {target_station:?} for transport {:?}, stopping: {self:?}",
-                    self.id()
+                    self.transport_id()
                 );
             },
             Some(found) => {

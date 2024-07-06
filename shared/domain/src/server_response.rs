@@ -6,7 +6,7 @@ use fastrand::Rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::building_info::BuildingInfo;
+use crate::building_info::{BuildingDynamicInfo, BuildingInfo};
 use crate::game_state::GameState;
 use crate::game_time::GameTime;
 use crate::transport_info::{TransportDynamicInfo, TransportInfo};
@@ -76,7 +76,11 @@ pub enum GameResponse {
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
     BuildingsAdded(Vec<BuildingInfo>),
     TransportsAdded(Vec<TransportInfo>),
-    TransportsSync(GameTime, HashMap<TransportId, TransportDynamicInfo>),
+    DynamicInfosSync(
+        GameTime,
+        HashMap<BuildingId, BuildingDynamicInfo>,
+        HashMap<TransportId, TransportDynamicInfo>,
+    ),
     GameJoined,
     GameLeft,
 
@@ -108,16 +112,17 @@ impl Debug for GameResponse {
                     "TransportsAdded({})",
                     transports
                         .iter()
-                        .map(|t| format!("{:?}", t.id()))
+                        .map(|t| format!("{:?}", t.transport_id()))
                         .collect::<Vec<_>>()
                         .join(", ")
                 )
             },
-            GameResponse::TransportsSync(game_time, transports) => {
+            GameResponse::DynamicInfosSync(game_time, buildings, transports) => {
                 write!(
                     f,
-                    "TransportsSync({:?} time, {} transports)",
+                    "DynamicInfosSync({:?} time, {} buildings, {} transports)",
                     game_time,
+                    buildings.len(),
                     transports.len()
                 )
             },

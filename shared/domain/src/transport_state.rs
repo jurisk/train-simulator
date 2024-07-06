@@ -28,9 +28,11 @@ impl TransportState {
     }
 
     pub(crate) fn upsert(&mut self, transport: TransportInfo) {
-        let transport_id = transport.id();
-        if let Some(existing_transport) =
-            self.transports.iter_mut().find(|t| t.id() == transport_id)
+        let transport_id = transport.transport_id();
+        if let Some(existing_transport) = self
+            .transports
+            .iter_mut()
+            .find(|t| t.transport_id() == transport_id)
         {
             existing_transport.clone_from(&transport);
         } else {
@@ -44,7 +46,7 @@ impl TransportState {
         transport_dynamic_info: &TransportDynamicInfo,
     ) {
         for transport in &mut self.transports {
-            if transport.id() == transport_id {
+            if transport.transport_id() == transport_id {
                 transport.update_dynamic_info(transport_dynamic_info);
                 return;
             }
@@ -54,6 +56,6 @@ impl TransportState {
     pub(crate) fn info_by_id(&self, transport_id: TransportId) -> Option<&TransportInfo> {
         self.transports
             .iter()
-            .find(|transport| transport.id() == transport_id)
+            .find(|transport| transport.transport_id() == transport_id)
     }
 }

@@ -5,14 +5,14 @@ use std::collections::HashMap;
 use log::trace;
 use serde::{Deserialize, Serialize};
 
-use crate::building_info::BuildingInfo;
+use crate::building_info::{BuildingDynamicInfo, BuildingInfo};
 use crate::building_state::BuildingState;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::MapLevel;
 use crate::server_response::{GameInfo, PlayerInfo};
 use crate::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::transport_state::TransportState;
-use crate::{GameId, PlayerId, TransportId};
+use crate::{BuildingId, GameId, PlayerId, TransportId};
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
 //          So the API gets quite busy because of this. There may be better ways.
@@ -160,32 +160,30 @@ impl GameState {
         &self.buildings
     }
 
-    pub fn update_transport_dynamic_infos(
+    pub fn update_dynamic_infos(
         &mut self,
         server_time: GameTime,
-        dynamic_infos: &HashMap<TransportId, TransportDynamicInfo>,
+        building_dynamic_infos: &HashMap<BuildingId, BuildingDynamicInfo>,
+        transport_dynamic_infos: &HashMap<TransportId, TransportDynamicInfo>,
     ) {
         let diff = server_time - self.time;
         trace!(
-            "Updated dynamic infos, diff {:?}, old {:?}, new {:?}, {} transports",
+            "Updated dynamic infos, diff {:?}, old {:?}, new {:?}, {} buildings, {} transports",
             diff,
             self.time,
             server_time,
-            dynamic_infos.len(),
+            building_dynamic_infos.len(),
+            transport_dynamic_infos.len(),
         );
         self.time = server_time;
-        for (transport_id, transport_dynamic_info) in dynamic_infos {
-            self.update_transport_dynamic_info(*transport_id, transport_dynamic_info);
+        for (transport_id, transport_dynamic_info) in transport_dynamic_infos {
+            self.transports
+                .update_dynamic_info(*transport_id, transport_dynamic_info);
         }
-    }
-
-    fn update_transport_dynamic_info(
-        &mut self,
-        transport_id: TransportId,
-        transport_dynamic_info: &TransportDynamicInfo,
-    ) {
-        self.transports
-            .update_dynamic_info(transport_id, transport_dynamic_info);
+        for (building_id, building_dynamic_info) in building_dynamic_infos {
+            self.buildings
+                .update_dynamic_info(*building_id, building_dynamic_info);
+        }
     }
 
     #[must_use]

@@ -55,6 +55,10 @@ impl BuildingInfo {
         }
     }
 
+    pub fn update_dynamic_info(&mut self, dynamic_info: &BuildingDynamicInfo) {
+        self.dynamic_info = dynamic_info.clone();
+    }
+
     // TODO: Refactor this as this is really station specific, not building specific
     #[must_use]
     #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
@@ -114,6 +118,11 @@ impl BuildingInfo {
     #[must_use]
     pub fn owner_id(&self) -> PlayerId {
         self.static_info.owner_id
+    }
+
+    #[must_use]
+    pub fn dynamic_info(&self) -> BuildingDynamicInfo {
+        self.dynamic_info.clone()
     }
 
     #[must_use]

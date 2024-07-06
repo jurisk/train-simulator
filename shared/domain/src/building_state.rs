@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
 
-use crate::building_info::BuildingInfo;
+use crate::building_info::{BuildingDynamicInfo, BuildingInfo};
 use crate::map_level::MapLevel;
 use crate::{BuildingId, BuildingType, PlayerId, TileCoordsXZ, TrackType};
 
@@ -209,5 +209,18 @@ impl BuildingState {
             .iter()
             .filter(|building| building.reference_tile() == reference_tile)
             .collect()
+    }
+
+    pub(crate) fn update_dynamic_info(
+        &mut self,
+        building_id: BuildingId,
+        building_dynamic_info: &BuildingDynamicInfo,
+    ) {
+        for building in &mut self.buildings {
+            if building.building_id() == building_id {
+                building.update_dynamic_info(building_dynamic_info);
+                return;
+            }
+        }
     }
 }

@@ -176,12 +176,17 @@ impl GameService {
         if self.state.time_steps() % SYNC_EVERY_N_TIMESTEPS == 0 {
             vec![GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-                GameResponse::TransportsSync(
+                GameResponse::DynamicInfosSync(
                     self.state.time(),
+                    self.state
+                        .building_infos()
+                        .into_iter()
+                        .map(|building| (building.building_id(), building.dynamic_info()))
+                        .collect(),
                     self.state
                         .transport_infos()
                         .into_iter()
-                        .map(|transport| (transport.id(), transport.dynamic_info()))
+                        .map(|transport| (transport.transport_id(), transport.dynamic_info()))
                         .collect(),
                 ),
             )]
