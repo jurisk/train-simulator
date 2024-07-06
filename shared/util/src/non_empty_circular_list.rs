@@ -1,9 +1,24 @@
+use std::fmt::{Debug, Formatter};
+
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct NonEmptyCircularList<T: Clone> {
     next: usize,
     list: Vec<T>,
+}
+
+impl<T: Clone + Debug> Debug for NonEmptyCircularList<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut results = vec![];
+        for i in 0 .. self.list.len() {
+            results.push(format!(
+                "{:?}",
+                self.list[(self.next + i) % self.list.len()]
+            ));
+        }
+        write!(f, "{}", results.join(", "))
+    }
 }
 
 impl<T: Clone> NonEmptyCircularList<T> {
