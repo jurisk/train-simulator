@@ -108,7 +108,7 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Vec<Gam
 
     let mut results = vec![];
     for (station, direction) in [
-        (station_a, DirectionXZ::South),
+        (station_a, DirectionXZ::North),
         // TODO HIGH: These stations don't work as track layout fails for them... figure out why and fix it - probably in track layout.
         // (station_b, DirectionXZ::East),
         // (station_c, DirectionXZ::West),
