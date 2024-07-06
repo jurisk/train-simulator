@@ -33,6 +33,7 @@ pub mod track_pathfinding;
 pub mod track_planner;
 pub mod track_type;
 pub mod transport_info;
+pub mod transport_state;
 pub mod transport_type;
 pub mod vertex_coords_xz;
 pub mod water;

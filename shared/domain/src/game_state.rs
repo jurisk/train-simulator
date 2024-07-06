@@ -11,6 +11,7 @@ use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::MapLevel;
 use crate::server_response::{GameInfo, PlayerInfo};
 use crate::transport_info::{TransportDynamicInfo, TransportInfo};
+use crate::transport_state::TransportState;
 use crate::{GameId, PlayerId, TransportId};
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
@@ -20,8 +21,7 @@ pub struct GameState {
     game_id:    GameId,
     map_level:  MapLevel,
     buildings:  BuildingState,
-    // TODO HIGH: Move to `TransportState` for encapsulation
-    transports: Vec<TransportInfo>,
+    transports: TransportState,
     players:    HashMap<PlayerId, PlayerInfo>,
     time:       GameTime,
     time_steps: u64,
@@ -40,7 +40,7 @@ impl GameState {
             game_id,
             map_level,
             buildings: BuildingState::from_vec(buildings),
-            transports,
+            transports: TransportState::from_vec(transports),
             players,
             time: GameTime::new(),
             time_steps: 0,
@@ -72,10 +72,8 @@ impl GameState {
     }
 
     fn advance_time_diff_internal(&mut self, diff: GameTimeDiff) {
-        for transport in &mut self.transports {
-            // Later: If game is paused then no need to advance transports
-            transport.advance(diff, &self.buildings);
-        }
+        // Later: If game is paused then no need to advance transports
+        self.transports.advance_time_diff(diff, &self.buildings);
     }
 
     pub fn advance_time(&mut self, time: GameTime) {
@@ -110,7 +108,7 @@ impl GameState {
 
     #[must_use]
     pub fn transport_infos(&self) -> Vec<TransportInfo> {
-        self.transports.clone()
+        self.transports.to_vec()
     }
 
     #[must_use]
@@ -141,14 +139,7 @@ impl GameState {
     }
 
     pub fn upsert_transport(&mut self, transport: TransportInfo) {
-        let transport_id = transport.id();
-        if let Some(existing_transport) =
-            self.transports.iter_mut().find(|t| t.id() == transport_id)
-        {
-            existing_transport.clone_from(&transport);
-        } else {
-            self.transports.push(transport);
-        }
+        self.transports.upsert(transport);
     }
 
     pub fn append_buildings(&mut self, buildings: Vec<BuildingInfo>) {
@@ -193,18 +184,12 @@ impl GameState {
         transport_id: TransportId,
         transport_dynamic_info: &TransportDynamicInfo,
     ) {
-        for transport in &mut self.transports {
-            if transport.id() == transport_id {
-                transport.update_dynamic_info(transport_dynamic_info);
-                return;
-            }
-        }
+        self.transports
+            .update_dynamic_info(transport_id, transport_dynamic_info);
     }
 
     #[must_use]
     pub fn get_transport_info(&self, transport_id: TransportId) -> Option<&TransportInfo> {
-        self.transports
-            .iter()
-            .find(|transport| transport.id() == transport_id)
+        self.transports.info_by_id(transport_id)
     }
 }

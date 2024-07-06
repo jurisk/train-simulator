@@ -1,0 +1,59 @@
+use serde::{Deserialize, Serialize};
+
+use crate::building_state::BuildingState;
+use crate::game_time::GameTimeDiff;
+use crate::transport_info::{TransportDynamicInfo, TransportInfo};
+use crate::TransportId;
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct TransportState {
+    transports: Vec<TransportInfo>,
+}
+
+impl TransportState {
+    #[must_use]
+    pub fn from_vec(transports: Vec<TransportInfo>) -> Self {
+        Self { transports }
+    }
+
+    #[must_use]
+    pub fn to_vec(&self) -> Vec<TransportInfo> {
+        self.transports.clone()
+    }
+
+    pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff, buildings: &BuildingState) {
+        for transport in &mut self.transports {
+            transport.advance(diff, buildings);
+        }
+    }
+
+    pub(crate) fn upsert(&mut self, transport: TransportInfo) {
+        let transport_id = transport.id();
+        if let Some(existing_transport) =
+            self.transports.iter_mut().find(|t| t.id() == transport_id)
+        {
+            existing_transport.clone_from(&transport);
+        } else {
+            self.transports.push(transport);
+        }
+    }
+
+    pub(crate) fn update_dynamic_info(
+        &mut self,
+        transport_id: TransportId,
+        transport_dynamic_info: &TransportDynamicInfo,
+    ) {
+        for transport in &mut self.transports {
+            if transport.id() == transport_id {
+                transport.update_dynamic_info(transport_dynamic_info);
+                return;
+            }
+        }
+    }
+
+    pub(crate) fn info_by_id(&self, transport_id: TransportId) -> Option<&TransportInfo> {
+        self.transports
+            .iter()
+            .find(|transport| transport.id() == transport_id)
+    }
+}
