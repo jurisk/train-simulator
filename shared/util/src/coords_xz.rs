@@ -38,9 +38,9 @@ impl Debug for CoordsXZ {
 }
 
 impl Add<CoordsXZ> for CoordsXZ {
-    type Output = CoordsXZ;
+    type Output = Self;
 
-    fn add(self, rhs: CoordsXZ) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         Self {
             x: self.x + rhs.x,
             z: self.z + rhs.z,
@@ -68,7 +68,7 @@ impl Sub<CoordsXZ> for CoordsXZ {
 }
 
 impl Mul<i32> for CoordsXZ {
-    type Output = CoordsXZ;
+    type Output = Self;
 
     fn mul(self, rhs: i32) -> Self::Output {
         Self {

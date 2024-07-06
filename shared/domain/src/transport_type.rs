@@ -1,5 +1,5 @@
 use std::fmt::{Debug, Formatter};
-use std::ops::{Add, AddAssign};
+use std::ops::{Add, AddAssign, Div, Mul, Neg};
 
 use serde::{Deserialize, Serialize};
 
@@ -11,8 +11,13 @@ pub struct CargoAmount(f32);
 
 impl CargoAmount {
     #[must_use]
-    pub fn new() -> Self {
+    pub fn empty() -> Self {
         Self(0.0)
+    }
+
+    #[must_use]
+    pub fn new(amount: f32) -> Self {
+        Self(amount)
     }
 }
 
@@ -27,6 +32,30 @@ impl Add for CargoAmount {
 
     fn add(self, other: Self) -> Self {
         Self(self.0 + other.0)
+    }
+}
+
+impl Mul<f32> for CargoAmount {
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self(self.0 * rhs)
+    }
+}
+
+impl Div for CargoAmount {
+    type Output = f32;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self.0 / rhs.0
+    }
+}
+
+impl Neg for CargoAmount {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self(-self.0)
     }
 }
 

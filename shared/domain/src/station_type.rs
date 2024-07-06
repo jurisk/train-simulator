@@ -166,7 +166,11 @@ mod tests {
             length_in_tiles: 3,
         };
         let reference_tile = TileCoordsXZ::from_usizes(10, 20);
-        let actual = station_type.exit_tile_tracks(reference_tile);
+        let actual = station_type
+            .exit_tile_tracks(reference_tile)
+            .into_iter()
+            .map(|(_, _, tile_track)| tile_track)
+            .collect::<HashSet<_>>();
         let expected: HashSet<TileTrack> = [
             TileTrack {
                 tile_coords_xz: TileCoordsXZ::from_usizes(10, 20),

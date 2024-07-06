@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 
 use crate::building_info::{BuildingDynamicInfo, BuildingInfo};
+use crate::game_time::GameTimeDiff;
 use crate::map_level::MapLevel;
 use crate::{BuildingId, BuildingType, PlayerId, TileCoordsXZ, TrackType};
 
@@ -209,6 +210,12 @@ impl BuildingState {
             .iter()
             .filter(|building| building.reference_tile() == reference_tile)
             .collect()
+    }
+
+    pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff) {
+        for building in &mut self.buildings {
+            building.advance(diff);
+        }
     }
 
     pub(crate) fn update_dynamic_info(
