@@ -1,4 +1,5 @@
 use bevy::math::Vec3;
+use bevy::prelude::{trace, warn};
 use shared_domain::map_level::MapLevel;
 use shared_domain::terrain::Terrain;
 use shared_domain::tile_track::TileTrack;
@@ -30,12 +31,22 @@ fn recursive_calculate_tail(
     terrain: &Terrain,
     max_progress_within_tile: Option<ProgressWithinTile>,
 ) -> LogicalPositionOnTilePath {
+    if tile_path_offset >= tile_path.len() {
+        warn!("Ran out of tile path while calculating train component tails");
+        // Later: Improve this somehow?
+        return LogicalPositionOnTilePath {
+            tile_path_offset: tile_path.len() - 1,
+            pointing_in,
+            progress_within_tile: ProgressWithinTile::about_to_exit(),
+        };
+    }
+
     let attempt = maybe_find_tail(
         head,
         component_length,
         pointing_in,
         tile_path_offset,
-        tile_path,
+        tile_path[tile_path_offset],
         terrain,
         max_progress_within_tile,
     );
@@ -65,18 +76,10 @@ fn maybe_find_tail(
     component_length: f32,
     pointing_in: DirectionXZ,
     tile_path_offset: usize,
-    tile_path: &[TileTrack],
+    tile_track: TileTrack,
     terrain: &Terrain,
     max_progress_within_tile: Option<ProgressWithinTile>,
 ) -> Option<LogicalPositionOnTilePath> {
-    // Later:   This can actually happen with large game time jumps.
-    //          Think of better error handling, e.g., print a warning and assume a random tile_track
-    assert!(
-        tile_path_offset < tile_path.len(),
-        "Ran out of tile path {tile_path:?} at offset {tile_path_offset}!"
-    );
-    let tile_track = tile_path[tile_path_offset];
-
     let (entry, exit) = terrain.entry_and_exit(tile_track);
 
     line_segment_intersection_with_sphere((entry, exit), (head, component_length))
@@ -94,11 +97,11 @@ fn maybe_find_tail(
         // I'm not sure if this should be `min_by_key` or `max_by_key` or something else...
         // Hopefully it does not matter
         .min_by_key(|progress| *progress)
-        .map(|progress| {
+        .map(|progress_within_tile| {
             LogicalPositionOnTilePath {
                 tile_path_offset,
                 pointing_in,
-                progress_within_tile: progress,
+                progress_within_tile,
             }
         })
 }
@@ -128,6 +131,10 @@ pub(crate) fn calculate_train_component_head_tails_and_final_tail_position(
             tile_path,
             terrain,
             Some(state.progress_within_tile),
+        );
+
+        trace!(
+            "Found logical position for train_component {train_component:?}:\nOld: {state:?}\nNew: {new_state:?}\n"
         );
 
         let head = state.coordinates(tile_path, terrain);

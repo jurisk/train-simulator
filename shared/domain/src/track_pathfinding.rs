@@ -61,5 +61,7 @@ pub fn find_route_to_station(
         |tile_track| targets.contains(tile_track),
     )?;
 
+    info!("Next in path is {:?}", path.get(1));
+
     Some(path)
 }
