@@ -19,9 +19,9 @@ use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
 
 const STATION_A: TileCoordsXZ = TileCoordsXZ::from_usizes(43, 30);
-const STATION_B: TileCoordsXZ = TileCoordsXZ::from_usizes(11, 83);
+const STATION_B: TileCoordsXZ = TileCoordsXZ::from_usizes(10, 84);
 const STATION_C: TileCoordsXZ = TileCoordsXZ::from_usizes(7, 41);
-const STATION_D: TileCoordsXZ = TileCoordsXZ::from_usizes(54, 35);
+const STATION_D: TileCoordsXZ = TileCoordsXZ::from_usizes(53, 35);
 
 #[allow(clippy::vec_init_then_push)]
 fn build_test_buildings(player_id: PlayerId) -> GameCommand {
@@ -33,6 +33,18 @@ fn build_test_buildings(player_id: PlayerId) -> GameCommand {
         (
             TileCoordsXZ::from_usizes(40, 31),
             BuildingType::Production(ProductionType::CoalMine),
+        ),
+        (
+            TileCoordsXZ::from_usizes(55, 36),
+            BuildingType::Production(ProductionType::CoalMine),
+        ),
+        (
+            TileCoordsXZ::from_usizes(7, 39),
+            BuildingType::Production(ProductionType::IronMine),
+        ),
+        (
+            TileCoordsXZ::from_usizes(12, 82),
+            BuildingType::Production(ProductionType::IronWorks),
         ),
     ];
 
@@ -52,11 +64,11 @@ fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCom
 
     let mut buildings = vec![];
     let connections = [
-        ((43, 33, DirectionXZ::South), (14, 83, DirectionXZ::East)),
-        ((11, 83, DirectionXZ::West), (7, 41, DirectionXZ::West)),
+        ((43, 33, DirectionXZ::South), (13, 84, DirectionXZ::East)),
+        ((10, 84, DirectionXZ::West), (7, 41, DirectionXZ::West)),
         ((10, 41, DirectionXZ::East), (43, 30, DirectionXZ::North)),
-        ((43, 33, DirectionXZ::South), (54, 38, DirectionXZ::South)),
-        ((54, 35, DirectionXZ::North), (43, 30, DirectionXZ::North)),
+        ((43, 33, DirectionXZ::South), (53, 38, DirectionXZ::South)),
+        ((53, 35, DirectionXZ::North), (43, 30, DirectionXZ::North)),
     ];
     for ((ax, az, ad), (bx, bz, bd)) in connections {
         if let Some(route) = plan_tracks(

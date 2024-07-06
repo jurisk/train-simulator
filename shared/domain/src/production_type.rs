@@ -90,7 +90,6 @@ impl ProductionType {
             },
             ProductionType::CargoPort => {
                 ResourceTransform::new(
-                    vec![],
                     vec![
                         ResourceTransformItem::new(
                             ResourceType::Coal,
@@ -105,6 +104,7 @@ impl ProductionType {
                             CargoAmount::new(CARGO_PER_SECOND),
                         ),
                     ],
+                    vec![],
                 )
             },
         }
@@ -123,7 +123,7 @@ impl ResourceTransformItem {
     }
 }
 
-// TODO HIGH: What about money here? Positive and negative? Because the port if strange otherwise.
+// TODO HIGH: What about money here? Positive and negative? Because the port is strange otherwise.
 pub struct ResourceTransform {
     pub inputs:  Vec<ResourceTransformItem>,
     pub outputs: Vec<ResourceTransformItem>,
