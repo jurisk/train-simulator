@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Formatter};
+
 use serde::{Deserialize, Serialize};
 
 use crate::building_type::BuildingType;
@@ -8,11 +10,24 @@ use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 use crate::{BuildingId, PlayerId};
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct BuildingInfo {
     static_info:  BuildingStaticInfo,
     // TODO: Not all building types have dynamic info, and it can differ between building types... think of a better design.
     dynamic_info: BuildingDynamicInfo,
+}
+
+impl Debug for BuildingInfo {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{:?} {:?} {:?} {:?}",
+            self.building_id(),
+            self.static_info.reference_tile,
+            self.static_info.building_type,
+            self.dynamic_info
+        )
+    }
 }
 
 impl BuildingInfo {
@@ -45,9 +60,15 @@ pub struct BuildingStaticInfo {
     building_type:  BuildingType,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct BuildingDynamicInfo {
     cargo: CargoMap,
+}
+
+impl Debug for BuildingDynamicInfo {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.cargo)
+    }
 }
 
 impl BuildingInfo {

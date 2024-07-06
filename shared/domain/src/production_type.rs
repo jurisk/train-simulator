@@ -1,17 +1,30 @@
 #![allow(clippy::match_same_arms)]
 
+use std::fmt::{Debug, Formatter};
+
 use serde::{Deserialize, Serialize};
 
 use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum ProductionType {
     CoalMine,
     IronMine,
     IronWorks,
     CargoPort,
+}
+
+impl Debug for ProductionType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ProductionType::CoalMine => write!(f, "CM"),
+            ProductionType::IronMine => write!(f, "IM"),
+            ProductionType::IronWorks => write!(f, "IW"),
+            ProductionType::CargoPort => write!(f, "CP"),
+        }
+    }
 }
 
 impl ProductionType {

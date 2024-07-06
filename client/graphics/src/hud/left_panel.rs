@@ -35,10 +35,10 @@ fn buildings_info_panel(ui: &mut Ui, buildings: &BuildingState) {
         match building.building_type() {
             BuildingType::Track(_) => {},
             BuildingType::Station(_) => {
-                ui.label(format!("{:?}", building.building_id()));
+                ui.label(format!("{building:?}"));
             },
             BuildingType::Production(_) => {
-                ui.label(format!("{:?}", building.building_id()));
+                ui.label(format!("{building:?}"));
             },
         }
     }

@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
@@ -8,17 +9,36 @@ use crate::tile_coverage::TileCoverage;
 use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum StationOrientation {
     NorthToSouth,
     EastToWest,
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
+impl Debug for StationOrientation {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StationOrientation::NorthToSouth => write!(f, "NS"),
+            StationOrientation::EastToWest => write!(f, "EW"),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct StationType {
     pub orientation:     StationOrientation,
     pub platforms:       usize,
     pub length_in_tiles: usize,
+}
+
+impl Debug for StationType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{:?}-{}-{}",
+            self.orientation, self.platforms, self.length_in_tiles
+        )
+    }
 }
 
 impl StationType {

@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Formatter};
+
 use serde::{Deserialize, Serialize};
 
 use crate::production_type::ProductionType;
@@ -6,11 +8,21 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::track_type::TrackType;
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum BuildingType {
     Track(TrackType),
     Station(StationType),
     Production(ProductionType),
+}
+
+impl Debug for BuildingType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BuildingType::Track(track_type) => write!(f, "T-{track_type:?}"),
+            BuildingType::Station(station_type) => write!(f, "S-{station_type:?}"),
+            BuildingType::Production(production_type) => write!(f, "P-{production_type:?}"),
+        }
+    }
 }
 
 impl BuildingType {
