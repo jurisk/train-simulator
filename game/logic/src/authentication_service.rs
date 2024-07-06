@@ -23,28 +23,28 @@ impl AuthenticationService {
             // Later: Have a proper player database.
             player_infos:        vec![
                 (
-                    PlayerId(uuid!("ee6b4aa1-67e0-4d6b-a42c-56320f61390e")),
-                    PlayerName("Juris".to_string()),
+                    PlayerId::new(uuid!("ee6b4aa1-67e0-4d6b-a42c-56320f61390e")),
+                    PlayerName::new("Juris".to_string()),
                     Colour::rgb(153, 51, 255),
                 ),
                 (
-                    PlayerId(uuid!("dd761bc8-cc22-4035-aab9-c79ab4a3b941")),
-                    PlayerName("Isaak".to_string()),
+                    PlayerId::new(uuid!("dd761bc8-cc22-4035-aab9-c79ab4a3b941")),
+                    PlayerName::new("Isaak".to_string()),
                     Colour::rgb(255, 51, 51),
                 ),
                 (
-                    PlayerId(uuid!("2628b18e-cd05-4be3-a6ad-05b9128ab01f")),
-                    PlayerName("Jānis".to_string()),
+                    PlayerId::new(uuid!("2628b18e-cd05-4be3-a6ad-05b9128ab01f")),
+                    PlayerName::new("Jānis".to_string()),
                     Colour::rgb(51, 51, 255),
                 ),
                 (
-                    PlayerId(uuid!("e4eca11c-f88b-4b45-8046-ae93b99fa9df")),
-                    PlayerName("Арцём".to_string()),
+                    PlayerId::new(uuid!("e4eca11c-f88b-4b45-8046-ae93b99fa9df")),
+                    PlayerName::new("Арцём".to_string()),
                     Colour::rgb(0, 153, 0),
                 ),
                 (
-                    PlayerId(uuid!("c11f557b-57d8-4820-a363-615fe024155d")),
-                    PlayerName("Imants".to_string()),
+                    PlayerId::new(uuid!("c11f557b-57d8-4820-a363-615fe024155d")),
+                    PlayerName::new("Imants".to_string()),
                     Colour::rgb(255, 255, 0),
                 ),
             ]

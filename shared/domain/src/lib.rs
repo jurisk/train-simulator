@@ -69,12 +69,17 @@ impl ClientId {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
-pub struct PlayerName(pub String);
+pub struct PlayerName(String);
 
 impl PlayerName {
     #[must_use]
     pub fn random(seed: u64) -> Self {
         Self(generate_random_string(6, seed))
+    }
+
+    #[must_use]
+    pub fn new(name: String) -> Self {
+        Self(name)
     }
 }
 
@@ -85,7 +90,7 @@ impl Display for PlayerName {
 }
 
 #[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
-pub struct PlayerId(pub Uuid);
+pub struct PlayerId(Uuid);
 
 impl Debug for PlayerId {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -96,6 +101,11 @@ impl Debug for PlayerId {
 }
 
 impl PlayerId {
+    #[must_use]
+    pub fn new(uuid: Uuid) -> Self {
+        Self(uuid)
+    }
+
     #[must_use]
     pub fn random() -> Self {
         Self(Uuid::new_v4())
@@ -123,7 +133,7 @@ impl Display for PlayerId {
 }
 
 #[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
-pub struct GameId(pub Uuid);
+pub struct GameId(Uuid);
 
 impl Debug for GameId {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -141,7 +151,7 @@ impl GameId {
 }
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Hash)]
-pub struct BuildingId(pub Uuid);
+pub struct BuildingId(Uuid);
 
 impl BuildingId {
     #[must_use]
@@ -159,7 +169,7 @@ impl Debug for BuildingId {
 }
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
-pub struct TransportId(pub Uuid);
+pub struct TransportId(Uuid);
 
 impl Debug for TransportId {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

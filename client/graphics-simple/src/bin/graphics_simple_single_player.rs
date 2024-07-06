@@ -24,7 +24,7 @@ async fn main() {
         .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
     let player_info = PlayerInfo {
         id:     PlayerId::random(),
-        name:   PlayerName("Test Player".to_string()),
+        name:   PlayerName::new("Test Player".to_string()),
         colour: Colour { r: 255, g: 0, b: 0 },
     };
     let game_state = GameState::new(
