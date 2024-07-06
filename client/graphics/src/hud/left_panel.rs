@@ -5,7 +5,10 @@ use bevy::utils::default;
 use bevy_egui::EguiContexts;
 use egui::text::LayoutJob;
 use egui::{Color32, TextFormat, Ui};
+use shared_domain::building_state::BuildingState;
+use shared_domain::building_type::BuildingType;
 use shared_domain::server_response::PlayerInfo;
+use shared_domain::transport_info::TransportInfo;
 use shared_domain::PlayerId;
 
 use crate::game::GameStateResource;
@@ -19,7 +22,32 @@ pub(crate) fn show_left_panel(
 
         egui::SidePanel::left("hud_left_panel").show(contexts.ctx_mut(), |ui| {
             players_info_panel(ui, game_state.players());
+            buildings_info_panel(ui, game_state.building_state());
+            transport_info_panel(ui, &game_state.transport_infos());
         });
+    }
+}
+
+#[allow(clippy::match_same_arms)]
+fn buildings_info_panel(ui: &mut Ui, buildings: &BuildingState) {
+    ui.heading("Buildings");
+    for building in buildings.to_vec() {
+        match building.building_type() {
+            BuildingType::Track(_) => {},
+            BuildingType::Station(_) => {
+                ui.label(format!("{:?}", building.building_id()));
+            },
+            BuildingType::Production(_) => {
+                ui.label(format!("{:?}", building.building_id()));
+            },
+        }
+    }
+}
+
+fn transport_info_panel(ui: &mut Ui, transport_infos: &Vec<TransportInfo>) {
+    ui.heading("Transports");
+    for transport_info in transport_infos {
+        ui.label(format!("{transport_info:?}"));
     }
 }
 

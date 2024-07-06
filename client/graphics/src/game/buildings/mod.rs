@@ -86,9 +86,9 @@ fn create_building(
     map_level: &MapLevel,
     players_info: &HashMap<PlayerId, PlayerInfo>,
 ) {
-    match players_info.get(&building_info.owner_id) {
+    match players_info.get(&building_info.owner_id()) {
         None => {
-            error!("Player with ID {:?} not found", building_info.owner_id);
+            error!("Player with ID {:?} not found", building_info.owner_id());
         },
         Some(player_info) => {
             for tile_track in building_info.tile_tracks() {
@@ -106,7 +106,7 @@ fn create_building(
                 );
             }
 
-            match &building_info.building_type {
+            match &building_info.building_type() {
                 BuildingType::Track(_track_type) => {
                     // For now, nothing more - just the rails are enough
                 },

@@ -36,12 +36,12 @@ fn successors(
             const NON_PREFERRED_TILE_MALUS: u32 = 16; // How much shorter "length" do we assign to going through a preferred tile
 
             for tile_track in track_types_that_fit(edge, neighbour) {
-                let building = BuildingInfo {
-                    owner_id:       player_id,
-                    building_id:    BuildingId::random(),
-                    reference_tile: tile_track.tile_coords_xz,
-                    building_type:  BuildingType::Track(tile_track.track_type),
-                };
+                let building = BuildingInfo::new(
+                    player_id,
+                    BuildingId::random(),
+                    tile_track.tile_coords_xz,
+                    BuildingType::Track(tile_track.track_type),
+                );
 
                 let malus = if preferred_tiles.contains(&tile) {
                     1
@@ -105,12 +105,12 @@ pub fn plan_tracks(
             let b = w[1];
 
             for tile_track in track_types_that_fit(a, b) {
-                let building = BuildingInfo {
-                    owner_id:       player_id,
-                    building_id:    BuildingId::random(),
-                    reference_tile: tile_track.tile_coords_xz,
-                    building_type:  BuildingType::Track(tile_track.track_type),
-                };
+                let building = BuildingInfo::new(
+                    player_id,
+                    BuildingId::random(),
+                    tile_track.tile_coords_xz,
+                    BuildingType::Track(tile_track.track_type),
+                );
 
                 match building_state.can_build_building(player_id, &building, map_level) {
                     CanBuildResponse::Ok => {

@@ -14,6 +14,7 @@ use crate::track_type::TrackType;
 pub mod building_info;
 pub mod building_state;
 pub mod building_type;
+pub mod cargo_map;
 pub mod client_command;
 pub mod edge_xz;
 pub mod game_state;
@@ -138,13 +139,21 @@ impl GameId {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Hash)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Hash)]
 pub struct BuildingId(pub Uuid);
 
 impl BuildingId {
     #[must_use]
     pub fn random() -> Self {
         Self(Uuid::new_v4())
+    }
+}
+
+impl Debug for BuildingId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let uuid_str = self.0.to_string();
+        let truncated_uuid = &uuid_str[.. 8];
+        write!(f, "B-{truncated_uuid}")
     }
 }
 

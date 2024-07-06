@@ -30,41 +30,23 @@ const STATION_D: TileCoordsXZ = TileCoordsXZ::from_usizes(54, 35);
 
 #[allow(clippy::vec_init_then_push)]
 fn build_test_buildings(player_id: PlayerId) -> GameCommand {
-    let mut buildings = vec![];
-    buildings.push(BuildingInfo {
-        owner_id:       player_id,
-        building_id:    BuildingId::random(),
-        reference_tile: STATION_A,
-        building_type:  BuildingType::Station(StationType::all()[0]),
-    });
+    let buildings = [
+        (STATION_A, BuildingType::Station(StationType::all()[0])),
+        (STATION_B, BuildingType::Station(StationType::all()[1])),
+        (STATION_C, BuildingType::Station(StationType::all()[1])),
+        (STATION_D, BuildingType::Station(StationType::all()[0])),
+        (
+            TileCoordsXZ::from_usizes(40, 31),
+            BuildingType::Production(ProductionType::CoalMine),
+        ),
+    ];
 
-    buildings.push(BuildingInfo {
-        owner_id:       player_id,
-        building_id:    BuildingId::random(),
-        reference_tile: STATION_B,
-        building_type:  BuildingType::Station(StationType::all()[1]),
-    });
-
-    buildings.push(BuildingInfo {
-        owner_id:       player_id,
-        building_id:    BuildingId::random(),
-        reference_tile: STATION_C,
-        building_type:  BuildingType::Station(StationType::all()[1]),
-    });
-
-    buildings.push(BuildingInfo {
-        owner_id:       player_id,
-        building_id:    BuildingId::random(),
-        reference_tile: STATION_D,
-        building_type:  BuildingType::Station(StationType::all()[0]),
-    });
-
-    buildings.push(BuildingInfo {
-        owner_id:       player_id,
-        building_id:    BuildingId::random(),
-        reference_tile: TileCoordsXZ::from_usizes(40, 31),
-        building_type:  BuildingType::Production(ProductionType::CoalMine),
-    });
+    let buildings = buildings
+        .into_iter()
+        .map(|(tile, building_type)| {
+            BuildingInfo::new(player_id, BuildingId::random(), tile, building_type)
+        })
+        .collect();
 
     GameCommand::BuildBuildings(buildings)
 }
@@ -118,11 +100,11 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Option<
         .first()
         .copied()?;
     let mut movement_orders =
-        MovementOrders::one(MovementOrder::stop_at_station(station_d.building_id));
-    movement_orders.push(MovementOrder::stop_at_station(station_a.building_id));
-    movement_orders.push(MovementOrder::stop_at_station(station_b.building_id));
-    movement_orders.push(MovementOrder::stop_at_station(station_c.building_id));
-    movement_orders.push(MovementOrder::stop_at_station(station_a.building_id));
+        MovementOrders::one(MovementOrder::stop_at_station(station_d.building_id()));
+    movement_orders.push(MovementOrder::stop_at_station(station_a.building_id()));
+    movement_orders.push(MovementOrder::stop_at_station(station_b.building_id()));
+    movement_orders.push(MovementOrder::stop_at_station(station_c.building_id()));
+    movement_orders.push(MovementOrder::stop_at_station(station_a.building_id()));
 
     let command = GameCommand::PurchaseTransport(TransportInfo::new(
         TransportId::random(),

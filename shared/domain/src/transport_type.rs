@@ -1,12 +1,19 @@
-use std::collections::HashMap;
 use std::ops::{Add, AddAssign};
 
 use serde::{Deserialize, Serialize};
 
+use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy, Default)]
 pub struct CargoAmount(f32);
+
+impl CargoAmount {
+    #[must_use]
+    pub fn new() -> Self {
+        Self(0.0)
+    }
+}
 
 impl Add for CargoAmount {
     type Output = Self;
@@ -61,32 +68,26 @@ impl TransportType {
     }
 
     #[must_use]
-    pub fn cargo_capacity(&self) -> HashMap<ResourceType, CargoAmount> {
-        let mut cargo_capacity = HashMap::new();
+    pub fn cargo_capacity(&self) -> CargoMap {
+        let mut result = CargoMap::new();
         match self {
             TransportType::Train(components) => {
                 for component in components {
                     match component {
                         TrainComponentType::Engine => {},
                         TrainComponentType::Car(resource_type) => {
-                            *cargo_capacity
-                                .entry(*resource_type)
-                                .or_insert(CargoAmount(0.0)) += CargoAmount(1.0);
+                            result.add(*resource_type, CargoAmount(1.0));
                         },
                     }
                 }
             },
             TransportType::RoadVehicle(resource_type) => {
-                *cargo_capacity
-                    .entry(*resource_type)
-                    .or_insert(CargoAmount(0.0)) += CargoAmount(0.5);
+                result.add(*resource_type, CargoAmount(0.5));
             },
             TransportType::Ship(resource_type) => {
-                *cargo_capacity
-                    .entry(*resource_type)
-                    .or_insert(CargoAmount(0.0)) += CargoAmount(10.0);
+                result.add(*resource_type, CargoAmount(10.0));
             },
         }
-        cargo_capacity
+        result
     }
 }

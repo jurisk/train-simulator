@@ -97,7 +97,7 @@ impl GameService {
                 Err(GameError::CannotBuild(
                     building_infos
                         .into_iter()
-                        .map(|building_info| building_info.building_id)
+                        .map(|building_info| building_info.building_id())
                         .collect(),
                 ))
             },

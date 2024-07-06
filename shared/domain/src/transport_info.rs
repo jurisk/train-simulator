@@ -1,5 +1,4 @@
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 
 use bevy_math::Vec3;
@@ -8,12 +7,12 @@ use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::building_state::BuildingState;
+use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
 use crate::movement_orders::{MovementOrderAction, MovementOrderLocation, MovementOrders};
-use crate::resource_type::ResourceType;
 use crate::tile_track::TileTrack;
 use crate::track_pathfinding::find_route_to_station;
-use crate::transport_type::{CargoAmount, TransportType};
+use crate::transport_type::TransportType;
 use crate::{PlayerId, TransportId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
@@ -113,7 +112,7 @@ pub struct TransportDynamicInfo {
     pub location:        TransportLocation,
     pub velocity:        TransportVelocity,
     pub movement_orders: MovementOrders,
-    pub cargo_loaded:    HashMap<ResourceType, CargoAmount>,
+    pub cargo_loaded:    CargoMap,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -142,7 +141,7 @@ impl TransportInfo {
                 location,
                 velocity,
                 movement_orders,
-                cargo_loaded: HashMap::new(),
+                cargo_loaded: CargoMap::new(),
             },
         }
     }

@@ -64,7 +64,7 @@ impl BuildingState {
     ) -> bool {
         let valid_player_id = building_infos
             .iter()
-            .all(|building_info| building_info.owner_id == requesting_player_id);
+            .all(|building_info| building_info.owner_id() == requesting_player_id);
 
         // TODO: Check that this is a valid building and there is enough money to build it, subtract money
 
@@ -104,12 +104,12 @@ impl BuildingState {
 
         let overlapping_other_players = overlapping_buildings
             .iter()
-            .any(|building| building.owner_id != requesting_player_id);
+            .any(|building| building.owner_id() != requesting_player_id);
 
         let overlapping_tracks = overlapping_buildings
             .iter()
             .filter_map(|building| {
-                match building.building_type {
+                match building.building_type() {
                     BuildingType::Track(track_type) => Some(track_type),
                     BuildingType::Station(_) | BuildingType::Production(_) => None,
                 }
@@ -117,20 +117,20 @@ impl BuildingState {
             .collect::<HashSet<_>>();
 
         let has_overlapping_non_tracks = overlapping_buildings.iter().any(|building| {
-            match building.building_type {
+            match building.building_type() {
                 BuildingType::Track(_) => false,
                 BuildingType::Station(_) | BuildingType::Production(_) => true,
             }
         });
 
-        let invalid_overlaps = match building_info.building_type {
+        let invalid_overlaps = match building_info.building_type() {
             BuildingType::Track(_track_type) => has_overlapping_non_tracks,
             BuildingType::Station(_) | BuildingType::Production(_) => {
                 !overlapping_buildings.is_empty()
             },
         };
 
-        let has_same_track = match building_info.building_type {
+        let has_same_track = match building_info.building_type() {
             BuildingType::Track(track_type) => overlapping_tracks.contains(&track_type),
             BuildingType::Station(_) | BuildingType::Production(_) => false,
         };
@@ -152,9 +152,9 @@ impl BuildingState {
             .collect::<HashSet<_>>();
 
         let all_equal_heights = vertex_heights.len() == 1;
-        let valid_heights = match building_info.building_type {
+        let valid_heights = match building_info.building_type() {
             BuildingType::Track(track_type) => {
-                let tile = building_info.reference_tile;
+                let tile = building_info.reference_tile();
 
                 // Later: Consider allowing more: https://wiki.openttd.org/en/Archive/Manual/Settings/Build%20on%20slopes .
                 // Later: Consider not allowing slopes that are too steep
@@ -197,7 +197,7 @@ impl BuildingState {
     pub fn find_building(&self, building_id: BuildingId) -> Option<&BuildingInfo> {
         self.buildings
             .iter()
-            .find(|building| building.building_id == building_id)
+            .find(|building| building.building_id() == building_id)
     }
 
     #[must_use]
@@ -207,7 +207,7 @@ impl BuildingState {
     ) -> Vec<&BuildingInfo> {
         self.buildings
             .iter()
-            .filter(|building| building.reference_tile == reference_tile)
+            .filter(|building| building.reference_tile() == reference_tile)
             .collect()
     }
 }

@@ -40,12 +40,12 @@ pub(crate) fn build_building_when_mouse_released(
                 let game_id = game_state.game_id();
 
                 // Later: Check we can build this? And that check is different for stations, as they can be built on top of fully straight tracks with no branching.
-                let building = BuildingInfo {
-                    owner_id: player_id,
-                    building_id: BuildingId::random(),
-                    reference_tile: *hovered_tile,
+                let building = BuildingInfo::new(
+                    player_id,
+                    BuildingId::random(),
+                    *hovered_tile,
                     building_type,
-                };
+                );
                 let buildings = vec![building];
 
                 client_messages.send(ClientMessageEvent::new(ClientCommand::Game(

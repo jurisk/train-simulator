@@ -20,6 +20,7 @@ pub struct GameState {
     game_id:    GameId,
     map_level:  MapLevel,
     buildings:  BuildingState,
+    // TODO HIGH: Move to `TransportState` for encapsulation
     transports: Vec<TransportInfo>,
     players:    HashMap<PlayerId, PlayerInfo>,
     time:       GameTime,
