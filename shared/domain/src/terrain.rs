@@ -14,7 +14,7 @@ use crate::TileCoordsXZ;
 // TODO: Make fields private
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Terrain {
-    pub y_coef:     f32,
+    y_coef:         f32,
     vertex_heights: GridXZ<VertexCoordsXZ, Height>,
 }
 
@@ -116,5 +116,10 @@ impl Terrain {
         let valid_x = coords.x >= 0 && coords.x < self.tile_count_x() as i32;
         let valid_z = coords.z >= 0 && coords.z < self.tile_count_z() as i32;
         valid_x && valid_z
+    }
+
+    #[must_use]
+    pub fn y_coef(&self) -> f32 {
+        self.y_coef
     }
 }

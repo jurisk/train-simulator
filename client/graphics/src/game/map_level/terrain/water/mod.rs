@@ -60,7 +60,7 @@ pub(crate) fn create_water(
     let mesh = meshes.add(rectangle);
 
     let (above, below) = water.between();
-    let water_level = ((above.as_f32() + below.as_f32()) / 2.0) * terrain.y_coef;
+    let water_level = ((above.as_f32() + below.as_f32()) / 2.0) * terrain.y_coef();
     let mut transform = Transform::from_xyz(0.0, water_level, 0.0);
     transform.rotate_x(-FRAC_PI_2);
 

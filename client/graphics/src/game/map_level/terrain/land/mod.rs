@@ -87,7 +87,7 @@ pub(crate) fn create_land(
         terrain.vertex_count_z(),
         f32::default(),
     )
-    .map_with_coords(|coords, _| terrain.height_at(coords.into()).as_f32() * terrain.y_coef);
+    .map_with_coords(|coords, _| terrain.height_at(coords.into()).as_f32() * terrain.y_coef());
 
     let half_x = (terrain.tile_count_x() as f32) / 2.0;
     let half_z = (terrain.tile_count_z() as f32) / 2.0;
