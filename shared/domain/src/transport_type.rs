@@ -59,10 +59,19 @@ impl Neg for CargoAmount {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum TrainComponentType {
     Engine,
     Car(ResourceType),
+}
+
+impl Debug for TrainComponentType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TrainComponentType::Engine => write!(f, "E"),
+            TrainComponentType::Car(resource_type) => write!(f, "{resource_type:?}"),
+        }
+    }
 }
 
 impl TrainComponentType {
@@ -75,11 +84,32 @@ impl TrainComponentType {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub enum TransportType {
     Train(Vec<TrainComponentType>),
     RoadVehicle(ResourceType),
     Ship(ResourceType),
+}
+
+impl Debug for TransportType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TransportType::Train(components) => {
+                write!(f, "T-")?;
+                let mut info = vec![];
+                for component in components {
+                    info.push(format!("{component:?}"));
+                }
+                write!(f, "{}", info.join("-"))
+            },
+            TransportType::RoadVehicle(resource_type) => {
+                write!(f, "RV-{resource_type:?}")
+            },
+            TransportType::Ship(resource_type) => {
+                write!(f, "S-{resource_type:?}")
+            },
+        }
+    }
 }
 
 impl AddAssign for CargoAmount {

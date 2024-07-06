@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter};
 
 use bevy_math::Vec3;
-use log::{error, info, warn};
+use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
@@ -79,10 +79,16 @@ impl ProgressWithinTile {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportLocation {
     tile_path:            Vec<TileTrack>, /* Which tile is it on now, and which tiles has it been on - only as much as to cover the vehicle's length */
     progress_within_tile: ProgressWithinTile,
+}
+
+impl Debug for TransportLocation {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}-{:?}", self.tile_path[0], self.progress_within_tile)
+    }
 }
 
 impl TransportLocation {
@@ -113,9 +119,15 @@ impl TransportLocation {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct TransportVelocity {
     tiles_per_second: f32,
+}
+
+impl Debug for TransportVelocity {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.2}", self.tiles_per_second)
+    }
 }
 
 impl TransportVelocity {
@@ -140,10 +152,25 @@ pub struct TransportDynamicInfo {
     cargo_loaded:    CargoMap,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportInfo {
     static_info:  TransportStaticInfo,
     dynamic_info: TransportDynamicInfo,
+}
+
+impl Debug for TransportInfo {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{:?} {:?} {:?} {:?} {:?} {:?}",
+            self.static_info.transport_id,
+            self.static_info.transport_type,
+            self.dynamic_info.location,
+            self.dynamic_info.movement_orders,
+            self.dynamic_info.velocity,
+            self.dynamic_info.cargo_loaded
+        )
+    }
 }
 
 impl TransportInfo {
@@ -211,7 +238,7 @@ impl TransportInfo {
     }
 
     fn jump_tile(&mut self, building_state: &BuildingState) {
-        info!("Jumping tile: {:?}", self);
+        debug!("Jumping tile: {:?}", self);
 
         let transport_type = self.transport_type().clone();
         let current_order = self.movement_orders().current_order();
@@ -261,7 +288,7 @@ impl TransportInfo {
                         &transport_type,
                         next_tile_track,
                     );
-                    info!("Finished jump: {:?}", self);
+                    debug!("Finished jump: {:?}", self);
                 }
             },
         };
