@@ -7,7 +7,7 @@ use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
 use shared_domain::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::production_type::ProductionType;
-use shared_domain::station_type::StationType;
+use shared_domain::station_type::{PlatformIndex, StationType};
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::track_planner::plan_tracks;
 use shared_domain::transport_info::{TransportInfo, TransportVelocity};
@@ -107,11 +107,19 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Vec<Gam
     movement_orders.push(MovementOrder::stop_at_station(station_a.building_id()));
 
     let mut results = vec![];
-    for station in [station_a, station_b, station_c, station_d] {
+    for (station, direction) in [
+        (station_a, DirectionXZ::South),
+        // TODO HIGH: These stations don't work as track layout fails for them... figure out why and fix it - probably in track layout.
+        // (station_b, DirectionXZ::East),
+        // (station_c, DirectionXZ::West),
+        (station_d, DirectionXZ::South),
+    ] {
         let movement_orders = movement_orders.clone();
         // Later: We could adjust the movement orders to be right depending on the spawn station
 
-        let transport_location = station.transport_location_at_station(0).unwrap();
+        let transport_location = station
+            .transport_location_at_station(PlatformIndex::new(0), direction)
+            .unwrap();
         let command = GameCommand::PurchaseTransport(TransportInfo::new(
             TransportId::random(),
             player_id,

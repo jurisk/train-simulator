@@ -9,6 +9,16 @@ use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
+pub struct PlatformIndex(usize);
+
+impl PlatformIndex {
+    #[must_use]
+    pub const fn new(index: usize) -> Self {
+        Self(index)
+    }
+}
+
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum StationOrientation {
     NorthToSouth,
     EastToWest,
@@ -61,9 +71,13 @@ impl StationType {
     /// one of these, it is properly parked at the station using all of its length.
     /// Think about how to return the directions and platforms in a more structured way.
     #[must_use]
-    pub fn exit_tile_tracks(self, reference_tile: TileCoordsXZ) -> Vec<TileTrack> {
+    pub fn exit_tile_tracks(
+        self,
+        reference_tile: TileCoordsXZ,
+    ) -> Vec<(PlatformIndex, DirectionXZ, TileTrack)> {
         let mut results = vec![];
         for platform in 0 .. self.platforms {
+            let platform_index = PlatformIndex(platform);
             match self.orientation {
                 StationOrientation::NorthToSouth => {
                     let a = TileTrack {
@@ -77,8 +91,8 @@ impl StationType {
                         track_type:     TrackType::NorthSouth,
                         pointing_in:    DirectionXZ::South,
                     };
-                    results.push(a);
-                    results.push(b);
+                    results.push((platform_index, DirectionXZ::North, a));
+                    results.push((platform_index, DirectionXZ::South, b));
                 },
                 StationOrientation::EastToWest => {
                     let a = TileTrack {
@@ -92,8 +106,8 @@ impl StationType {
                         track_type:     TrackType::EastWest,
                         pointing_in:    DirectionXZ::East,
                     };
-                    results.push(a);
-                    results.push(b);
+                    results.push((platform_index, DirectionXZ::West, a));
+                    results.push((platform_index, DirectionXZ::East, b));
                 },
             }
         }

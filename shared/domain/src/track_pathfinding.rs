@@ -46,7 +46,11 @@ pub fn find_route_to_station(
         BuildingType::Station(station_type) => Some(station_type),
         BuildingType::Production(_) | BuildingType::Track(_) => None,
     }?;
-    let targets = station_type.exit_tile_tracks(building.reference_tile());
+    let targets = station_type
+        .exit_tile_tracks(building.reference_tile())
+        .into_iter()
+        .map(|(_, _, track)| track)
+        .collect::<Vec<_>>();
     info!(
         "Doing pathfinding. Current: {current_tile_track:?}, Target ID: {target_station:?}, Targets: {targets:?}"
     );
