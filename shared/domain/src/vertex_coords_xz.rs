@@ -8,7 +8,7 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::TileCoordsXZ;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone)]
-pub struct VertexCoordsXZ(pub CoordsXZ);
+pub struct VertexCoordsXZ(CoordsXZ);
 
 impl Debug for VertexCoordsXZ {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

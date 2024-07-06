@@ -81,11 +81,19 @@ impl ProgressWithinTile {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportLocation {
-    pub tile_path:            Vec<TileTrack>, /* Which tile is it on now, and which tiles has it been on - only as much as to cover the vehicle's length */
-    pub progress_within_tile: ProgressWithinTile,
+    tile_path:            Vec<TileTrack>, /* Which tile is it on now, and which tiles has it been on - only as much as to cover the vehicle's length */
+    progress_within_tile: ProgressWithinTile,
 }
 
 impl TransportLocation {
+    #[must_use]
+    pub fn new(tile_path: Vec<TileTrack>, progress_within_tile: ProgressWithinTile) -> Self {
+        Self {
+            tile_path,
+            progress_within_tile,
+        }
+    }
+
     #[must_use]
     pub fn entering_from(&self) -> DirectionXZ {
         let current_tile_track = self.tile_path[0];
@@ -93,26 +101,43 @@ impl TransportLocation {
             .track_type
             .other_end(current_tile_track.pointing_in)
     }
+
+    #[must_use]
+    pub fn progress_within_tile(&self) -> ProgressWithinTile {
+        self.progress_within_tile
+    }
+
+    #[must_use]
+    pub fn tile_path(&self) -> Vec<TileTrack> {
+        self.tile_path.clone()
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct TransportVelocity {
-    pub tiles_per_second: f32,
+    tiles_per_second: f32,
+}
+
+impl TransportVelocity {
+    #[must_use]
+    pub fn new(tiles_per_second: f32) -> Self {
+        Self { tiles_per_second }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportStaticInfo {
-    pub transport_id:   TransportId,
-    pub owner_id:       PlayerId,
-    pub transport_type: TransportType,
+    transport_id:   TransportId,
+    owner_id:       PlayerId,
+    transport_type: TransportType,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportDynamicInfo {
-    pub location:        TransportLocation,
-    pub velocity:        TransportVelocity,
-    pub movement_orders: MovementOrders,
-    pub cargo_loaded:    CargoMap,
+    location:        TransportLocation,
+    velocity:        TransportVelocity,
+    movement_orders: MovementOrders,
+    cargo_loaded:    CargoMap,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

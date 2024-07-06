@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
@@ -60,9 +59,10 @@ impl StationType {
 
     /// These are the last `TileTrack`-s in a station, so if a train is parked `about_to_exit` on
     /// one of these, it is properly parked at the station using all of its length.
+    /// Think about how to return the directions and platforms in a more structured way.
     #[must_use]
-    pub fn exit_tile_tracks(self, reference_tile: TileCoordsXZ) -> HashSet<TileTrack> {
-        let mut results = HashSet::new();
+    pub fn exit_tile_tracks(self, reference_tile: TileCoordsXZ) -> Vec<TileTrack> {
+        let mut results = vec![];
         for platform in 0 .. self.platforms {
             match self.orientation {
                 StationOrientation::NorthToSouth => {
@@ -77,8 +77,8 @@ impl StationType {
                         track_type:     TrackType::NorthSouth,
                         pointing_in:    DirectionXZ::South,
                     };
-                    results.insert(a);
-                    results.insert(b);
+                    results.push(a);
+                    results.push(b);
                 },
                 StationOrientation::EastToWest => {
                     let a = TileTrack {
@@ -92,8 +92,8 @@ impl StationType {
                         track_type:     TrackType::EastWest,
                         pointing_in:    DirectionXZ::East,
                     };
-                    results.insert(a);
-                    results.insert(b);
+                    results.push(a);
+                    results.push(b);
                 },
             }
         }

@@ -7,16 +7,11 @@ use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
 use shared_domain::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::production_type::ProductionType;
-use shared_domain::resource_type::ResourceType;
 use shared_domain::station_type::StationType;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
-use shared_domain::tile_track::TileTrack;
 use shared_domain::track_planner::plan_tracks;
-use shared_domain::track_type::TrackType;
-use shared_domain::transport_info::{
-    ProgressWithinTile, TransportInfo, TransportLocation, TransportVelocity,
-};
-use shared_domain::transport_type::{TrainComponentType, TransportType};
+use shared_domain::transport_info::{TransportInfo, TransportVelocity};
+use shared_domain::transport_type::TransportType;
 use shared_domain::{BuildingId, PlayerId, TransportId};
 use shared_util::direction_xz::DirectionXZ;
 
@@ -52,7 +47,7 @@ fn build_test_buildings(player_id: PlayerId) -> GameCommand {
 }
 
 #[allow(clippy::unnecessary_wraps)]
-fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Option<GameCommand> {
+fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCommand> {
     // Later: Could automatically generate these connections from the station exits
 
     let mut buildings = vec![];
@@ -78,27 +73,32 @@ fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Option<Game
         }
     }
 
-    Some(GameCommand::BuildBuildings(buildings))
+    vec![GameCommand::BuildBuildings(buildings)]
 }
 
-fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Option<GameCommand> {
+#[allow(clippy::unwrap_used)]
+fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Vec<GameCommand> {
     let building_state = game_state.building_state();
     let station_a = building_state
         .filter_buildings_by_reference_tile(STATION_A)
         .first()
-        .copied()?;
+        .copied()
+        .unwrap();
     let station_b = building_state
         .filter_buildings_by_reference_tile(STATION_B)
         .first()
-        .copied()?;
+        .copied()
+        .unwrap();
     let station_c = building_state
         .filter_buildings_by_reference_tile(STATION_C)
         .first()
-        .copied()?;
+        .copied()
+        .unwrap();
     let station_d = building_state
         .filter_buildings_by_reference_tile(STATION_D)
         .first()
-        .copied()?;
+        .copied()
+        .unwrap();
     let mut movement_orders =
         MovementOrders::one(MovementOrder::stop_at_station(station_d.building_id()));
     movement_orders.push(MovementOrder::stop_at_station(station_a.building_id()));
@@ -106,40 +106,25 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Option<
     movement_orders.push(MovementOrder::stop_at_station(station_c.building_id()));
     movement_orders.push(MovementOrder::stop_at_station(station_a.building_id()));
 
-    let command = GameCommand::PurchaseTransport(TransportInfo::new(
-        TransportId::random(),
-        player_id,
-        TransportType::Train(vec![
-            TrainComponentType::Engine,
-            TrainComponentType::Car(ResourceType::Coal),
-            TrainComponentType::Car(ResourceType::Coal),
-            TrainComponentType::Car(ResourceType::Coal),
-            TrainComponentType::Car(ResourceType::Iron),
-            TrainComponentType::Car(ResourceType::Iron),
-            TrainComponentType::Car(ResourceType::Iron),
-            TrainComponentType::Car(ResourceType::Steel),
-            TrainComponentType::Car(ResourceType::Steel),
-        ]),
-        TransportLocation {
-            tile_path:            (0 .. 4)
-                .map(|idx| {
-                    TileTrack {
-                        // TODO: Spawn trains in all stations, using the standard logic for spawning trains
-                        tile_coords_xz: TileCoordsXZ::from_usizes(43, 33 - idx),
-                        track_type:     TrackType::NorthSouth,
-                        pointing_in:    DirectionXZ::South,
-                    }
-                })
-                .collect(),
-            progress_within_tile: ProgressWithinTile::about_to_exit(),
-        },
-        TransportVelocity {
-            tiles_per_second: 2.0,
-        },
-        movement_orders,
-    ));
+    let mut results = vec![];
+    for station in [station_a, station_b, station_c, station_d] {
+        let movement_orders = movement_orders.clone();
+        // Later: We could adjust the movement orders to be right depending on the spawn station
 
-    Some(command)
+        let transport_location = station.transport_location_at_station(0).unwrap();
+        let command = GameCommand::PurchaseTransport(TransportInfo::new(
+            TransportId::random(),
+            player_id,
+            TransportType::mixed_train(),
+            transport_location,
+            TransportVelocity::new(2.0),
+            movement_orders,
+        ));
+
+        results.push(command);
+    }
+
+    results
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -152,17 +137,17 @@ pub(crate) fn build_test_objects(
     let PlayerIdResource(player_id) = *player_id_resource;
     let GameStateResource(game_state) = game_state_resource.as_ref();
 
-    let chosen = if keyboard_input.just_pressed(KeyCode::Digit1) {
-        Some(build_test_buildings(player_id))
+    let commands = if keyboard_input.just_pressed(KeyCode::Digit1) {
+        vec![build_test_buildings(player_id)]
     } else if keyboard_input.just_pressed(KeyCode::Digit2) {
         build_test_tracks(player_id, game_state)
     } else if keyboard_input.just_pressed(KeyCode::Digit3) {
         build_test_transports(player_id, game_state)
     } else {
-        None
+        vec![]
     };
 
-    if let Some(command) = chosen {
+    for command in commands {
         client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
             game_state.game_id(),
             command,

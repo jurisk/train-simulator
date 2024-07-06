@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
+use shared_util::coords_xz::CoordsXZ;
 
 use crate::building_type::BuildingType;
 use crate::cargo_map::CargoMap;
@@ -8,6 +9,7 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
+use crate::transport_info::{ProgressWithinTile, TransportLocation};
 use crate::{BuildingId, PlayerId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -50,6 +52,32 @@ impl BuildingInfo {
             },
         }
     }
+
+    // TODO: Refactor this as this is really station specific, not building specific
+    #[must_use]
+    #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
+    pub fn transport_location_at_station(&self, platform: usize) -> Option<TransportLocation> {
+        let station_type = match self.building_type() {
+            BuildingType::Track(_) | BuildingType::Production(_) => None,
+            BuildingType::Station(station_type) => Some(station_type),
+        }?;
+        let exit_track = station_type.exit_tile_tracks(self.reference_tile())[platform];
+        let diff: CoordsXZ = exit_track.pointing_in.reverse().into();
+        let mut tile_path = vec![];
+        for i in 0 .. station_type.length_in_tiles {
+            let delta: CoordsXZ = diff * (i as i32);
+            let delta_t: TileCoordsXZ = delta.into();
+            let tile_coords_xz = exit_track.tile_coords_xz + delta_t;
+            let tile_track = TileTrack {
+                tile_coords_xz,
+                track_type: exit_track.track_type,
+                pointing_in: exit_track.pointing_in,
+            };
+            tile_path.push(tile_track);
+        }
+        let progress_within_tile = ProgressWithinTile::about_to_exit();
+        Some(TransportLocation::new(tile_path, progress_within_tile))
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
@@ -88,7 +116,7 @@ impl BuildingInfo {
     }
 
     #[must_use]
-    pub(crate) fn reference_tile(&self) -> TileCoordsXZ {
+    pub fn reference_tile(&self) -> TileCoordsXZ {
         self.static_info.reference_tile
     }
 

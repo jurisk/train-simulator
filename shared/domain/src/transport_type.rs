@@ -74,6 +74,23 @@ impl TransportType {
         }
     }
 
+    // TODO: Make more elegant
+    #[must_use]
+    pub fn mixed_train() -> Self {
+        // TODO HIGH: Make longer again after you fix the issue with not enough tile track
+        TransportType::Train(vec![
+            TrainComponentType::Engine,
+            TrainComponentType::Car(ResourceType::Coal),
+            TrainComponentType::Car(ResourceType::Coal),
+            // TrainComponentType::Car(ResourceType::Coal),
+            TrainComponentType::Car(ResourceType::Iron),
+            TrainComponentType::Car(ResourceType::Iron),
+            // TrainComponentType::Car(ResourceType::Iron),
+            TrainComponentType::Car(ResourceType::Steel),
+            TrainComponentType::Car(ResourceType::Steel),
+        ])
+    }
+
     #[must_use]
     pub fn cargo_capacity(&self) -> CargoMap {
         let mut result = CargoMap::new();

@@ -75,10 +75,11 @@ fn highlight_selected_edges(
     mut gizmos: Gizmos,
     selected_mode: Res<SelectedMode>,
 ) {
+    let selected_mode = selected_mode.as_ref();
     if let Some(tiles) = tiles {
         let tiles = &tiles.tiles;
 
-        if selected_mode.as_ref().show_selected_edges() {
+        if selected_mode.show_selected_edges() {
             let SelectedEdges {
                 ordered: ordered_selected_edges,
             } = selected_edges.as_ref();
@@ -87,7 +88,7 @@ fn highlight_selected_edges(
             }
         }
 
-        if selected_mode.as_ref().show_hovered_edge() {
+        if selected_mode.show_hovered_edge() {
             let HoveredEdge(hovered_edge) = hovered_edge.as_ref();
             if let Some(hovered_edge) = hovered_edge {
                 debug_draw_edge(&mut gizmos, *hovered_edge, tiles, Color::PINK);

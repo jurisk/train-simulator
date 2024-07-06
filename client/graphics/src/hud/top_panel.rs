@@ -3,6 +3,7 @@ use bevy_egui::EguiContexts;
 use egui::{menu, Ui};
 use shared_domain::production_type::ProductionType;
 use shared_domain::station_type::{StationOrientation, StationType};
+use shared_domain::transport_type::TransportType;
 
 use crate::hud::domain::SelectedMode;
 
@@ -147,13 +148,16 @@ fn trains_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
         set_font_size(ui, 24.0);
         if ui
             .add(
-                egui::Button::new("🚆 Coal Train")
-                    .selected(matches!(*selected_mode.as_ref(), SelectedMode::Trains))
+                egui::Button::new("🚆 Mixed Train")
+                    .selected(matches!(
+                        *selected_mode.as_ref(),
+                        SelectedMode::Transport(_)
+                    ))
                     .min_size(egui::vec2(MIN_X, MIN_Y)),
             )
             .clicked()
         {
-            *selected_mode.as_mut() = SelectedMode::Trains;
+            *selected_mode.as_mut() = SelectedMode::Transport(TransportType::mixed_train());
             ui.close_menu();
         }
     });

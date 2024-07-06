@@ -8,7 +8,7 @@ use shared_util::direction_xz::DirectionXZ;
 use shared_util::geometry::line_segment_intersection_with_sphere;
 
 #[derive(Debug)]
-pub struct LogicalPositionOnTilePath {
+pub(crate) struct LogicalPositionOnTilePath {
     pub tile_path_offset:     usize,
     pub pointing_in:          DirectionXZ,
     pub progress_within_tile: ProgressWithinTile,
@@ -71,7 +71,10 @@ fn maybe_find_tail(
 ) -> Option<LogicalPositionOnTilePath> {
     // Later:   This can actually happen with large game time jumps.
     //          Think of better error handling, e.g., print a warning and assume a random tile_track
-    assert!(tile_path_offset < tile_path.len(), "Ran out of tile path!");
+    assert!(
+        tile_path_offset < tile_path.len(),
+        "Ran out of tile path {tile_path:?} at offset {tile_path_offset}!"
+    );
     let tile_track = tile_path[tile_path_offset];
 
     let (entry, exit) = terrain.entry_and_exit(tile_track);
@@ -108,13 +111,13 @@ pub(crate) fn calculate_train_component_head_tails_and_final_tail_position(
 ) -> (Vec<(Vec3, Vec3)>, LogicalPositionOnTilePath) {
     let terrain = map_level.terrain();
     let mut results = vec![];
+    let tile_path = &transport_location.tile_path();
+
     let mut state = LogicalPositionOnTilePath {
         tile_path_offset:     0,
-        pointing_in:          transport_location.tile_path[0].pointing_in,
-        progress_within_tile: transport_location.progress_within_tile,
+        pointing_in:          tile_path[0].pointing_in,
+        progress_within_tile: transport_location.progress_within_tile(),
     };
-
-    let tile_path = &transport_location.tile_path;
 
     for train_component in train_components {
         let new_state = recursive_calculate_tail(

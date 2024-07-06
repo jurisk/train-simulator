@@ -1,7 +1,7 @@
 #![allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
 
 use std::fmt::{Debug, Formatter};
-use std::ops::{Add, Sub};
+use std::ops::{Add, Mul, Sub};
 
 use serde::{Deserialize, Serialize};
 
@@ -63,6 +63,17 @@ impl Sub<CoordsXZ> for CoordsXZ {
         Self {
             x: self.x - rhs.x,
             z: self.z - rhs.z,
+        }
+    }
+}
+
+impl Mul<i32> for CoordsXZ {
+    type Output = CoordsXZ;
+
+    fn mul(self, rhs: i32) -> Self::Output {
+        Self {
+            x: self.x * rhs,
+            z: self.z * rhs,
         }
     }
 }

@@ -43,8 +43,8 @@ impl Plugin for TransportPlugin {
             Update,
             move_transports.run_if(in_state(ClientState::Playing)),
         );
-        // TODO HIGH: Spawn trains when in Train building mode
-        // TODO HIGH: When a train is clicked, allow to adjust MovementOrders
+        // TODO HIGH: Spawn transports when in Transport building mode
+        // TODO HIGH: When a transport is clicked, allow to adjust MovementOrders
     }
 }
 

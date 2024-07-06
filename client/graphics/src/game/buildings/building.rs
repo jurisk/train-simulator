@@ -29,7 +29,8 @@ pub(crate) fn build_building_when_mouse_released(
     }
 
     if mouse_buttons.just_released(MouseButton::Left) {
-        if let Some(building_type) = selected_mode_resource.as_ref().corresponding_building() {
+        let selected_mode = selected_mode_resource.as_ref();
+        if let Some(building_type) = selected_mode.corresponding_building() {
             let HoveredTile(hovered_tile) = hovered_tile.as_ref();
             if let Some(hovered_tile) = hovered_tile {
                 // Later: Check we can build this?
