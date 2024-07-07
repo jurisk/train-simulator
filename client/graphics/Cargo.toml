@@ -36,6 +36,7 @@ features = [
     "bevy_gizmos",
     "bevy_gltf",
     "bevy_pbr",
+    "bevy_dev_tools",
     "bevy_render",
     "bevy_state",
     "bevy_text",
