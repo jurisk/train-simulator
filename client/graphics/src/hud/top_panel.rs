@@ -105,7 +105,6 @@ fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
                 ProductionType::IronMine => "⛏",
                 ProductionType::CoalMine => "⛏",
                 ProductionType::IronWorks => "⚒",
-                ProductionType::CargoPort => "⚓",
             };
             if ui
                 .add(

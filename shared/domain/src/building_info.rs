@@ -7,6 +7,7 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::building_type::BuildingType;
 use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
+use crate::production_type::ProductionType;
 use crate::station_type::PlatformIndex;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
@@ -175,23 +176,27 @@ impl BuildingInfo {
         let seconds = diff.to_seconds();
         match self.building_type() {
             BuildingType::Track(_) | BuildingType::Station(_) => {},
-            BuildingType::Production(building_type) => {
-                let transform = building_type.transform_per_second();
-                let utilisation =
-                    transform.calculate_utilisation_percentage(&self.dynamic_info.cargo, seconds);
-                let effective = seconds * utilisation;
-
-                for item in transform.inputs {
-                    self.dynamic_info
-                        .cargo
-                        .add(item.resource, -item.amount * effective);
-                }
-                for item in transform.outputs {
-                    self.dynamic_info
-                        .cargo
-                        .add(item.resource, item.amount * effective);
-                }
+            BuildingType::Production(production_type) => {
+                self.advance_production(seconds, production_type);
             },
+        }
+    }
+
+    fn advance_production(&mut self, seconds: f32, production_type: ProductionType) {
+        let transform = production_type.transform_per_second();
+        let utilisation =
+            transform.calculate_utilisation_percentage(&self.dynamic_info.cargo, seconds);
+        let effective = seconds * utilisation;
+
+        for item in transform.inputs {
+            self.dynamic_info
+                .cargo
+                .add(item.resource, -item.amount * effective);
+        }
+        for item in transform.outputs {
+            self.dynamic_info
+                .cargo
+                .add(item.resource, item.amount * effective);
         }
     }
 }

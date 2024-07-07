@@ -33,6 +33,9 @@ cargo install cargo-cache
 cargo cache --autoclean
 
 cargo tree --duplicates
+
+cargo install cargo-duplicates
+cargo duplicates
 ----
 
 Removing `~/.cargo/registry` is sometimes needed.

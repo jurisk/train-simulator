@@ -1,0 +1,62 @@
+digraph G {
+    node [shape = box, style = filled];
+    CoalMine [label = "Coal Mine"];
+    IronMine [label = "Iron Mine"];
+    Forestry [label = "Forestry"];
+    SulfurMine [label = "Sulfur Mine"];
+    NitrateMine [label = "Nitrate Mine"];
+    OilWell [label = "Oil Well"];
+    LimestoneMine [label = "Limestone Mine"];
+    ClayMining [label = "Clay Mining"];
+    SandAndGravelMine [label = "Sand & Gravel Mine"];
+    { rank = same; CoalMine; IronMine; Forestry; SulfurMine; NitrateMine; OilWell; LimestoneMine; ClayMining; SandAndGravelMine; }
+
+    node [shape = ellipse, style = filled];
+    IronWorks [label = "Iron Works"];
+    WeaponsFactory [label = "Weapons Factory"];
+    LumberMill [label = "Lumber Mill"];
+    AmmunitionFactory [label = "Ammunition Factory"];
+    OilRefinery [label = "Oil Refinery"];
+    CementPlant [label = "Cement Plant"];
+    ConcretePlant [label = "Concrete Plant"];
+
+    subgraph cluster_ExplosivesPlant {
+        label = "Explosives Plant";
+        node [shape = ellipse];
+        NitricAcidPlant [label = "Nitric Acid Plant"];
+        SulfuricAcidPlant [label = "Sulfuric Acid Plant"];
+        NitrationPlant [label = "Nitration Plant"];
+    }
+
+    node [shape = doubleoctagon, style = filled];
+    Construction [label = "Construction"];
+    Military [label = "Military"];
+    CoalUsageByTrains [label = "Coal Usage by Trains"]
+    PowerPlant [label = "Power Plant"];
+    { rank = same; Construction; Military; CoalUsageByTrains; PowerPlant; }
+
+    CoalMine -> IronWorks [label = "Coal"];
+    IronMine -> IronWorks [label = "Iron"];
+    NitrateMine -> NitricAcidPlant [label = "Nitrates"];
+    SulfurMine -> SulfuricAcidPlant [label = "Sulfur"];
+    Forestry -> LumberMill [label = "Wood"];
+    LumberMill -> NitrationPlant [label = "Cellulose"];
+    NitricAcidPlant -> NitrationPlant [label = "Nitric Acid"];
+    SulfuricAcidPlant -> NitrationPlant [label = "Sulfuric Acid"];
+    NitrationPlant -> AmmunitionFactory [label = "Nitrocellulose"];
+    AmmunitionFactory -> Military [label = "Ammunition"];
+    IronWorks -> AmmunitionFactory [label = "Steel"];
+    WeaponsFactory -> Military [label = "Weapons"];
+    IronWorks -> WeaponsFactory [label = "Steel"];
+    IronWorks -> Construction [label = "Steel"];
+    LumberMill -> Construction [label = "Timber"];
+    CoalMine -> CoalUsageByTrains [label = "Coal"];
+    OilWell -> OilRefinery [label = "Oil"];
+    LimestoneMine -> CementPlant [label = "Limestone"];
+    ClayMining -> CementPlant [label = "Clay"];
+    CementPlant -> ConcretePlant [label = "Cement"];
+    SandAndGravelMine -> ConcretePlant [label = "Sand & Gravel"];
+    ConcretePlant -> Construction [label = "Concrete"];
+    OilRefinery -> Military [label = "Fuel"];
+    CoalMine -> PowerPlant [label = "Coal"];
+}

@@ -15,7 +15,6 @@ pub enum ProductionType {
     CoalMine,
     IronMine,
     IronWorks,
-    CargoPort,
 }
 
 impl Debug for ProductionType {
@@ -24,19 +23,17 @@ impl Debug for ProductionType {
             ProductionType::CoalMine => write!(f, "CM"),
             ProductionType::IronMine => write!(f, "IM"),
             ProductionType::IronWorks => write!(f, "IW"),
-            ProductionType::CargoPort => write!(f, "CP"),
         }
     }
 }
 
 impl ProductionType {
     #[must_use]
-    pub const fn all() -> [Self; 4] {
+    pub const fn all() -> [Self; 3] {
         [
             ProductionType::CoalMine,
             ProductionType::IronMine,
             ProductionType::IronWorks,
-            ProductionType::CargoPort,
         ]
     }
 
@@ -86,25 +83,6 @@ impl ProductionType {
                         ResourceType::Steel,
                         CargoAmount::new(CARGO_PER_SECOND),
                     )],
-                )
-            },
-            ProductionType::CargoPort => {
-                ResourceTransform::new(
-                    vec![
-                        ResourceTransformItem::new(
-                            ResourceType::Coal,
-                            CargoAmount::new(CARGO_PER_SECOND),
-                        ),
-                        ResourceTransformItem::new(
-                            ResourceType::Iron,
-                            CargoAmount::new(CARGO_PER_SECOND),
-                        ),
-                        ResourceTransformItem::new(
-                            ResourceType::Steel,
-                            CargoAmount::new(CARGO_PER_SECOND),
-                        ),
-                    ],
-                    vec![],
                 )
             },
         }
