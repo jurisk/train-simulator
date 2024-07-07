@@ -10,7 +10,6 @@ use shared_domain::server_response::PlayerInfo;
 use shared_domain::transport_info::TransportLocation;
 use shared_domain::transport_type::TrainComponentType;
 use shared_domain::TransportId;
-use shared_util::geometry::rotation_aligned_with_direction;
 
 use crate::game::transport::train_layout::calculate_train_component_head_tails_and_final_tail_position;
 use crate::game::transport::TransportIndexComponent;
@@ -24,11 +23,10 @@ fn transform_from_head_and_tail(head: Vec3, tail: Vec3) -> Transform {
     let direction = (head - tail).normalize(); // Recalculating with new tail
 
     let midpoint = (head + tail) / 2.0;
-    Transform {
-        rotation: rotation_aligned_with_direction(direction),
-        translation: midpoint,
-        ..default()
-    }
+
+    let mut transform = Transform::from_translation(midpoint);
+    transform.align(Vec3::Z, direction, Vec3::Y, Vec3::Y);
+    transform
 }
 
 pub(crate) fn calculate_train_component_transforms(
