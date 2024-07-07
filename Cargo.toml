@@ -2,7 +2,6 @@
 members = [
     "client/single-player",
     "client/graphics",
-    "client/graphics-simple",
     "shared/domain",
     "shared/util",
     "networking/client",
@@ -57,8 +56,6 @@ axum = "0.6"
 tokio = { version = "1.29", features = ["full"] }
 tower = { version = "0.4" }
 tower-http = { version = "0.3" }
-
-macroquad = "0.4"
 
 # From https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units
 # From https://rapier.rs/docs/user_guides/bevy_plugin/common_mistakes#my-local-build-of-rapier-is-slower-than-the-online-demos
