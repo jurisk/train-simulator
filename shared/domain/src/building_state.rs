@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
@@ -17,18 +17,18 @@ pub enum CanBuildResponse {
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct BuildingState {
-    buildings: Vec<BuildingInfo>,
+    buildings:              Vec<BuildingInfo>,
+    // Link from each production building to the closest station
+    cargo_forwarding_links: HashMap<BuildingId, BuildingId>,
 }
 
 impl BuildingState {
     #[must_use]
     pub fn empty() -> Self {
-        Self::from_vec(vec![])
-    }
-
-    #[must_use]
-    pub fn from_vec(buildings: Vec<BuildingInfo>) -> Self {
-        Self { buildings }
+        Self {
+            buildings:              Vec::new(),
+            cargo_forwarding_links: HashMap::new(),
+        }
     }
 
     #[must_use]
@@ -54,6 +54,47 @@ impl BuildingState {
 
     pub(crate) fn append_all(&mut self, additional: Vec<BuildingInfo>) {
         self.buildings.extend(additional);
+        self.recalculate_cargo_forwarding_links();
+    }
+
+    #[allow(clippy::items_after_statements)]
+    fn recalculate_cargo_forwarding_links(&mut self) {
+        self.cargo_forwarding_links.clear();
+        for building in &self.buildings {
+            if let BuildingType::Production(_) = building.building_type() {
+                let closest_station = self.find_closest_station(building);
+
+                if let Some(closest_station) = closest_station {
+                    let distance = BuildingInfo::manhattan_distance_between_closest_tiles(
+                        building,
+                        closest_station,
+                    );
+                    const CARGO_FORWARDING_DISTANCE_THRESHOLD: i32 = 2;
+                    if distance <= CARGO_FORWARDING_DISTANCE_THRESHOLD {
+                        self.cargo_forwarding_links
+                            .insert(building.building_id(), closest_station.building_id());
+                    }
+                }
+            }
+        }
+    }
+
+    fn find_closest_station(&self, building: &BuildingInfo) -> Option<&BuildingInfo> {
+        self.stations_owned_by(building.owner_id())
+            .into_iter()
+            .min_by_key(|station| {
+                BuildingInfo::manhattan_distance_between_closest_tiles(building, station)
+            })
+    }
+
+    fn stations_owned_by(&self, owner_id: PlayerId) -> Vec<&BuildingInfo> {
+        self.buildings
+            .iter()
+            .filter(|building| {
+                building.owner_id() == owner_id
+                    && matches!(building.building_type(), BuildingType::Station(_))
+            })
+            .collect()
     }
 
     #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
@@ -202,6 +243,13 @@ impl BuildingState {
     }
 
     #[must_use]
+    fn find_building_mut(&mut self, building_id: BuildingId) -> Option<&mut BuildingInfo> {
+        self.buildings
+            .iter_mut()
+            .find(|building| building.building_id() == building_id)
+    }
+
+    #[must_use]
     pub fn filter_buildings_by_reference_tile(
         &self,
         reference_tile: TileCoordsXZ,
@@ -216,6 +264,20 @@ impl BuildingState {
         for building in &mut self.buildings {
             building.advance(diff);
         }
+        for (building_id, station_id) in self.cargo_forwarding_links.clone() {
+            self.send_cargo_to_station(building_id, station_id);
+        }
+    }
+
+    #[allow(clippy::unwrap_used)]
+    fn send_cargo_to_station(&mut self, building_id: BuildingId, station_id: BuildingId) {
+        let building = self.find_building_mut(building_id).unwrap();
+        let cargo = building.shippable_cargo();
+        let reverse = -cargo.clone();
+        building.add_cargo(&reverse);
+
+        let station = self.find_building_mut(station_id).unwrap();
+        station.add_cargo(&cargo);
     }
 
     pub(crate) fn update_dynamic_info(

@@ -12,8 +12,10 @@ pub struct TransportState {
 
 impl TransportState {
     #[must_use]
-    pub fn from_vec(transports: Vec<TransportInfo>) -> Self {
-        Self { transports }
+    pub fn empty() -> Self {
+        Self {
+            transports: Vec::new(),
+        }
     }
 
     #[must_use]

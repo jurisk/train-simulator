@@ -149,6 +149,7 @@ pub enum NetworkResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum ServerResponse {
     Network(NetworkResponse),
     Authentication(AuthenticationResponse),

@@ -90,6 +90,11 @@ impl TileCoordsXZ {
             self.vertex_coords_sw(),
         )
     }
+
+    #[must_use]
+    pub fn manhattan_distance(self, other: TileCoordsXZ) -> i32 {
+        (self.x - other.x).abs() + (self.z - other.z).abs()
+    }
 }
 
 impl Debug for TileCoordsXZ {

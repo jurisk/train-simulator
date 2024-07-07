@@ -31,7 +31,7 @@ impl GamesService {
             .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
         assert!(default_level.is_valid());
 
-        let game_prototype = GameState::new(default_level, vec![], vec![], HashMap::new());
+        let game_prototype = GameState::empty_from_level(default_level);
 
         Self {
             game_map: HashMap::new(),

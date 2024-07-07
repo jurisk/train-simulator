@@ -29,19 +29,14 @@ pub struct GameState {
 
 impl GameState {
     #[must_use]
-    pub fn new(
-        map_level: MapLevel,
-        buildings: Vec<BuildingInfo>,
-        transports: Vec<TransportInfo>,
-        players: HashMap<PlayerId, PlayerInfo>,
-    ) -> Self {
+    pub fn empty_from_level(map_level: MapLevel) -> Self {
         let game_id = GameId::random();
         Self {
             game_id,
             map_level,
-            buildings: BuildingState::from_vec(buildings),
-            transports: TransportState::from_vec(transports),
-            players,
+            buildings: BuildingState::empty(),
+            transports: TransportState::empty(),
+            players: HashMap::new(),
             time: GameTime::new(),
             time_steps: 0,
         }

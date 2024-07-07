@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
+use std::ops::Neg;
 
 use serde::{Deserialize, Serialize};
 
@@ -16,6 +17,12 @@ impl CargoMap {
     pub(crate) fn new() -> Self {
         Self {
             map: HashMap::new(),
+        }
+    }
+
+    pub(crate) fn add_all(&mut self, other: &Self) {
+        for (resource, amount) in &other.map {
+            *self.map.entry(*resource).or_default() += *amount;
         }
     }
 
@@ -37,5 +44,17 @@ impl Debug for CargoMap {
             results.push(as_string);
         }
         write!(f, "{}", results.join(", "))
+    }
+}
+
+impl Neg for CargoMap {
+    type Output = CargoMap;
+
+    fn neg(self) -> Self::Output {
+        let mut result = CargoMap::new();
+        for (&resource, &amount) in &self.map {
+            result.add(resource, -amount);
+        }
+        result
     }
 }

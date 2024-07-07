@@ -57,6 +57,10 @@ impl BuildingInfo {
         }
     }
 
+    pub fn add_cargo(&mut self, cargo: &CargoMap) {
+        self.dynamic_info.cargo.add_all(cargo);
+    }
+
     pub fn update_dynamic_info(&mut self, dynamic_info: &BuildingDynamicInfo) {
         self.dynamic_info = dynamic_info.clone();
     }
@@ -182,6 +186,24 @@ impl BuildingInfo {
         }
     }
 
+    #[must_use]
+    pub fn shippable_cargo(&self) -> CargoMap {
+        match self.building_type() {
+            BuildingType::Track(_) | BuildingType::Station(_) => CargoMap::new(),
+            BuildingType::Production(production_type) => {
+                let transform = production_type.transform_per_second();
+                let mut result = CargoMap::new();
+                for output in transform.outputs {
+                    let resource = output.resource;
+                    // Later: This is now insta-shipping of everything... consider doing this more gradually?
+                    let amount = self.dynamic_info.cargo.get(resource);
+                    result.add(resource, amount);
+                }
+                result
+            },
+        }
+    }
+
     fn advance_production(&mut self, seconds: f32, production_type: ProductionType) {
         let transform = production_type.transform_per_second();
         let utilisation =
@@ -198,5 +220,17 @@ impl BuildingInfo {
                 .cargo
                 .add(item.resource, item.amount * effective);
         }
+    }
+
+    #[must_use]
+    pub fn manhattan_distance_between_closest_tiles(a: &BuildingInfo, b: &BuildingInfo) -> i32 {
+        let mut result = i32::MAX;
+        for a in a.covers_tiles().to_set() {
+            for b in b.covers_tiles().to_set() {
+                let distance = a.manhattan_distance(b);
+                result = result.min(distance);
+            }
+        }
+        result
     }
 }
