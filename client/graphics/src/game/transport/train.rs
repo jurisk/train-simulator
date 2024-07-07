@@ -60,7 +60,7 @@ pub(crate) fn create_train(
     map_level: &MapLevel,
 ) -> Entity {
     let colour = player_info.colour;
-    let color = Color::rgb_u8(colour.r, colour.g, colour.b);
+    let color = Color::srgb_u8(colour.r, colour.g, colour.b);
 
     let transforms =
         calculate_train_component_transforms(train_components, transport_location, map_level);

@@ -139,7 +139,7 @@ pub(crate) fn create_rails(
     let (b1, b2) = pick_rail_positions(b1, b2);
 
     let colour = player_info.colour;
-    let color = Color::rgb_u8(colour.r, colour.g, colour.b);
+    let color = Color::srgb_u8(colour.r, colour.g, colour.b);
 
     spawn_rail(
         a1,

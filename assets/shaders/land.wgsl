@@ -6,7 +6,7 @@
 }
 
 #import bevy_pbr::{
-	mesh_functions::{get_model_matrix, mesh_position_local_to_world, mesh_normal_local_to_world},
+	mesh_functions::{get_world_from_local, mesh_position_local_to_world, mesh_normal_local_to_world},
 	view_transformations::position_world_to_clip,
 }
 
@@ -68,7 +68,7 @@ struct Output {
 fn vertex(vertex: Vertex, @location(8) terrain_type: u32) -> Output {
     var out: Output;
 
-    let model = get_model_matrix(vertex.instance_index);
+    let model = get_world_from_local(vertex.instance_index);
 
     #ifdef VERTEX_NORMALS
         out.world_normal = mesh_normal_local_to_world(vertex.normal, vertex.instance_index);

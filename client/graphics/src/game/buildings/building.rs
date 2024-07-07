@@ -82,7 +82,7 @@ pub(crate) fn create_building_entity(
     let nw = terrain.logical_to_world(nw);
     let se = terrain.logical_to_world(se);
 
-    let color = Color::rgb_u8(colour.r, colour.g, colour.b);
+    let color = Color::srgb_u8(colour.r, colour.g, colour.b);
     let material = materials.add(color);
     let center = (se + nw) / 2.0;
 

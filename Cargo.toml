@@ -31,25 +31,20 @@ pathfinding = "4.10"
 
 # Later:    Consider using Frame pacing:
 #           https://github.com/aevyrie/bevy_framepace
-# TODO: Update to 0.14 when other dependencies have caught up
-bevy = { version = "0.13", default-features = false, features = [] }
-bevy_math = "0.13"
-# TODO: Update to 0.12 when other dependencies have caught up
-bevy_simplenet = { version = "0.11", default-features = false, features = [] }
+bevy = { version = "0.14", default-features = false, features = [] }
+bevy_math = "0.14"
+bevy_simplenet = { version = "0.12", default-features = false, features = [] }
 
 # https://github.com/jakobhellermann/bevy-inspector-egui
 # https://crates.io/crates/bevy-inspector-egui/versions
 # Pulls in egui and that has to match with other egui versions used!
 
-# TODO: Update when https://github.com/jakobhellermann/bevy-inspector-egui/pull/197 done
-bevy-inspector-egui = {  version = "0.24", features = ["highlight_changes", "bevy_pbr"] }
+bevy-inspector-egui = {  version = "0.25", features = ["highlight_changes", "bevy_pbr"] }
 
-# TODO: Update when https://github.com/mvlabat/bevy_egui/pull/284 done
-bevy_egui = "0.27"
-egui = "0.27"
+bevy_egui = "0.28"
+egui = "0.28"
 
-# TODO: Update to 0.18 when other dependencies have caught up
-bevy_mod_raycast = "0.17"
+bevy_mod_raycast = "0.18"
 
 # Should only be imported by `networking` code
 enfync = "0.1"

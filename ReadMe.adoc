@@ -28,8 +28,14 @@ rustup update
 cargo update
 cargo udeps --all-targets
 cargo audit
+
+cargo install cargo-cache
+cargo cache --autoclean
+
 cargo tree --duplicates
 ----
+
+Removing `~/.cargo/registry` is sometimes needed.
 
 Frequent:
 

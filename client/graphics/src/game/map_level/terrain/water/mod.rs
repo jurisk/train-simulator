@@ -72,7 +72,7 @@ pub(crate) fn create_water(
         PbrBundle {
             mesh,
             material: materials.add(StandardMaterial {
-                base_color: Color::rgba_u8(0, 164, 196, 224),
+                base_color: Color::srgba_u8(0, 164, 196, 224),
                 alpha_mode: AlphaMode::Blend,
                 ..default()
             }),

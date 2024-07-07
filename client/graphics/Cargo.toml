@@ -37,6 +37,7 @@ features = [
     "bevy_gltf",
     "bevy_pbr",
     "bevy_render",
+    "bevy_state",
     "bevy_text",
     "bevy_ui",
     "default_font",
@@ -60,7 +61,7 @@ features = [
     "asset_processor",
     "embedded_watcher",
     "file_watcher",
-    "multi-threaded", # TODO: Renamed to "multi_threaded" in newer Bevy versions
+    "multi_threaded",
 ]
 
 

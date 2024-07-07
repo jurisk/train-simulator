@@ -7,9 +7,10 @@ pub mod tracks;
 use std::collections::HashMap;
 
 use bevy::prelude::{
-    error, in_state, Assets, Commands, EventReader, FixedUpdate, IntoSystemConfigs, Plugin, Res,
-    ResMut, StandardMaterial, Update,
+    error, Assets, Commands, EventReader, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut,
+    StandardMaterial, Update,
 };
+use bevy::state::condition::in_state;
 use shared_domain::building_info::BuildingInfo;
 use shared_domain::building_type::BuildingType;
 use shared_domain::map_level::MapLevel;

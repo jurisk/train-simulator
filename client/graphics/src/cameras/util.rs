@@ -1,7 +1,7 @@
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::input::ButtonInput;
-use bevy::math::Vec3;
-use bevy::prelude::{debug, Direction3d, EventReader, KeyCode, Mat3, Mut, Res, Transform};
+use bevy::math::{Dir3, Vec3};
+use bevy::prelude::{debug, EventReader, KeyCode, Mat3, Mut, Res, Transform};
 
 fn zx_movement(keyboard_input: &Res<ButtonInput<KeyCode>>, transform: &Transform) -> Vec3 {
     let zx_direction = zx_direction(keyboard_input);
@@ -89,7 +89,7 @@ fn rotation_value(keyboard_input: &Res<ButtonInput<KeyCode>>) -> f32 {
     result
 }
 
-fn flatten_in_y_plane(direction: Direction3d) -> Vec3 {
+fn flatten_in_y_plane(direction: Dir3) -> Vec3 {
     let mut result = *direction;
     result.y = 0.0;
     result.normalize()

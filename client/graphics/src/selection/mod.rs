@@ -1,10 +1,11 @@
 #![allow(clippy::needless_pass_by_value)]
 
 use bevy::app::App;
+use bevy::color::palettes::css::{PINK, PURPLE, TOMATO};
 use bevy::input::ButtonInput;
 use bevy::math::Quat;
 use bevy::prelude::{
-    Color, DetectChanges, Gizmos, MouseButton, Plugin, Query, Res, ResMut, Resource, TypePath,
+    DetectChanges, Gizmos, MouseButton, Plugin, Query, Res, ResMut, Resource, Srgba, TypePath,
     Update, Vec3,
 };
 use bevy_mod_raycast::deferred::RaycastSource;
@@ -84,14 +85,14 @@ fn highlight_selected_edges(
                 ordered: ordered_selected_edges,
             } = selected_edges.as_ref();
             if let Some(edge) = ordered_selected_edges.first() {
-                debug_draw_edge(&mut gizmos, *edge, tiles, Color::PURPLE);
+                debug_draw_edge(&mut gizmos, *edge, tiles, PURPLE);
             }
         }
 
         if selected_mode.show_hovered_edge() {
             let HoveredEdge(hovered_edge) = hovered_edge.as_ref();
             if let Some(hovered_edge) = hovered_edge {
-                debug_draw_edge(&mut gizmos, *hovered_edge, tiles, Color::PINK);
+                debug_draw_edge(&mut gizmos, *hovered_edge, tiles, PINK);
             }
         }
     }
@@ -113,18 +114,18 @@ fn highlight_selected_tiles(
                 ordered: ordered_selected_tiles,
             } = selected_tiles.as_ref();
             for tile_coords in ordered_selected_tiles {
-                debug_draw_tile(&mut gizmos, *tile_coords, tiles, Color::PURPLE);
+                debug_draw_tile(&mut gizmos, *tile_coords, tiles, PURPLE);
             }
         }
 
         let HoveredTile(hovered_tile) = hovered_tile.as_ref();
         if let Some(hovered_tile) = hovered_tile {
             if selected_mode.show_hovered_tile() {
-                debug_draw_tile(&mut gizmos, *hovered_tile, tiles, Color::PINK);
+                debug_draw_tile(&mut gizmos, *hovered_tile, tiles, PINK);
             }
 
             for tile in selected_mode.building_tiles(*hovered_tile).to_set() {
-                debug_draw_tile(&mut gizmos, tile, tiles, Color::TOMATO);
+                debug_draw_tile(&mut gizmos, tile, tiles, TOMATO);
             }
         }
     }
@@ -134,7 +135,7 @@ fn debug_draw_edge(
     gizmos: &mut Gizmos,
     edge: EdgeXZ,
     tiles: &GridXZ<TileCoordsXZ, Tile>,
-    color: Color,
+    color: Srgba,
 ) {
     let (tile, direction) = edge.to_tile_and_direction();
     if tiles.in_bounds(tile) {
@@ -150,7 +151,7 @@ fn debug_draw_tile(
     gizmos: &mut Gizmos,
     tile_coords: TileCoordsXZ,
     tiles: &GridXZ<TileCoordsXZ, Tile>,
-    color: Color,
+    color: Srgba,
 ) {
     if tiles.in_bounds(tile_coords) {
         let tile = &tiles[tile_coords];
@@ -217,8 +218,8 @@ fn update_selections<T: TypePath + Send + Sync>(
             .map(|(i, hit)| (i == 0, hit))
     }) {
         let color = match is_first {
-            true => Color::PURPLE,
-            false => Color::PINK,
+            true => PURPLE,
+            false => PINK,
         };
         gizmos.ray(intersection.position(), intersection.normal(), color);
 
