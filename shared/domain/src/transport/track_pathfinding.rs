@@ -3,10 +3,10 @@ use pathfinding::prelude::dijkstra;
 
 use crate::building_state::BuildingState;
 use crate::building_type::BuildingType;
+use crate::transport::movement_orders::MovementOrderLocation;
 use crate::transport::tile_track::TileTrack;
 use crate::transport::track_length::TrackLength;
 use crate::transport::track_type::TrackType;
-use crate::BuildingId;
 
 fn successors(
     tile_track: TileTrack,
@@ -37,15 +37,13 @@ fn successors(
         .collect::<Vec<_>>()
 }
 
-// Later:   We need to think how to handle station expansion. Can a station have multiple buildings?
-//          And thus we need `StationId` for pathfinding as `target_station`?
 #[must_use]
-pub fn find_route_to_station(
-    current_tile_track: TileTrack,
-    target_station: BuildingId,
+pub fn find_location_tile_tracks(
+    location: MovementOrderLocation,
     building_state: &BuildingState,
 ) -> Option<Vec<TileTrack>> {
-    let building = building_state.find_building(target_station)?;
+    let MovementOrderLocation::StationId(station_id) = location;
+    let building = building_state.find_building(station_id)?;
     let station_type = match building.building_type() {
         BuildingType::Station(station_type) => Some(station_type),
         BuildingType::Production(_) | BuildingType::Track(_) => None,
@@ -55,8 +53,21 @@ pub fn find_route_to_station(
         .into_iter()
         .map(|(_, _, track)| track)
         .collect::<Vec<_>>();
+    Some(targets)
+}
+
+// Later:   We need to think how to handle station expansion. Can a station have multiple buildings?
+//          And thus we need `StationId` for pathfinding as `target_station`?
+#[must_use]
+pub fn find_route_to(
+    current_tile_track: TileTrack,
+    go_to: MovementOrderLocation,
+    building_state: &BuildingState,
+) -> Option<Vec<TileTrack>> {
+    let targets = find_location_tile_tracks(go_to, building_state)?;
+
     debug!(
-        "Doing pathfinding. Current: {current_tile_track:?}, Target ID: {target_station:?}, Targets: {targets:?}"
+        "Doing pathfinding. Current: {current_tile_track:?}, Go to: {go_to:?}, Targets: {targets:?}"
     );
 
     let (path, _length) = dijkstra(

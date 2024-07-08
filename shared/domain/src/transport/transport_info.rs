@@ -1,16 +1,14 @@
 use std::fmt::{Debug, Formatter};
 
-use log::{debug, error, warn};
+use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
 
 use crate::building_state::BuildingState;
 use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
-use crate::transport::movement_orders::{
-    MovementOrderAction, MovementOrderLocation, MovementOrders,
-};
+use crate::transport::movement_orders::{MovementOrderLocation, MovementOrders};
 use crate::transport::progress_within_tile::ProgressWithinTile;
-use crate::transport::track_pathfinding::find_route_to_station;
+use crate::transport::track_pathfinding::{find_location_tile_tracks, find_route_to};
 use crate::transport::transport_location::TransportLocation;
 use crate::transport::transport_type::TransportType;
 use crate::transport::transport_velocity::TransportVelocity;
@@ -121,10 +119,9 @@ impl TransportInfo {
 
         let transport_type = self.transport_type().clone();
         let current_order = self.movement_orders().current_order();
-        let MovementOrderLocation::StationId(target_station) = current_order.go_to;
-        let route = find_route_to_station(
+        let route = find_route_to(
             self.dynamic_info.location.tile_path[0],
-            target_station,
+            current_order.go_to,
             building_state,
         );
 
@@ -134,31 +131,16 @@ impl TransportInfo {
                     ProgressWithinTile::about_to_exit();
                 self.dynamic_info.movement_orders.force_stop();
                 warn!(
-                    "No route found to station {target_station:?} for transport {:?}, stopping: {self:?}",
+                    "No route found for orders {current_order:?} for transport {:?}, stopping: {self:?}",
                     self.transport_id()
                 );
             },
             Some(found) => {
-                if found.is_empty() {
+                if found.len() <= 1 {
                     error!(
                         "Found empty route to station for transport {self:?}, this should never happen!",
                     );
                     self.dynamic_info.movement_orders.force_stop();
-                } else if found.len() == 1 {
-                    // We are at the right station already
-                    // TODO HIGH: Implement acceleration/deceleration to stop at the right tile, gradually, like trains do
-                    match current_order.action {
-                        MovementOrderAction::LoadAndUnload(..) => {
-                            // TODO HIGH: Implement station stopping and loading/unloading logic
-                            self.dynamic_info.movement_orders.advance_to_next_order();
-                            self.jump_tile(building_state);
-                            // TODO HIGH: Replace 2 lines above
-                        },
-                        MovementOrderAction::PassingThrough => {
-                            self.dynamic_info.movement_orders.advance_to_next_order();
-                            self.jump_tile(building_state);
-                        },
-                    }
                 } else {
                     // The first one is the current tile, so we take the second one
                     let next_tile_track = found[1];
@@ -171,11 +153,42 @@ impl TransportInfo {
         };
     }
 
+    fn at_location(&self, target: MovementOrderLocation, building_state: &BuildingState) -> bool {
+        let current_tile_path = self.dynamic_info.location.tile_path[0];
+        find_location_tile_tracks(target, building_state).is_some_and(|targets| {
+            targets
+                .into_iter()
+                .any(|target| target == current_tile_path)
+        })
+    }
+
     pub fn advance(&mut self, diff: GameTimeDiff, building_state: &BuildingState) {
         if self.dynamic_info.movement_orders.is_force_stopped() {
             return;
         }
 
+        let progress_within_tile = self.dynamic_info.location.progress_within_tile();
+        if progress_within_tile == ProgressWithinTile::about_to_exit() {
+            let current_orders = self.dynamic_info.movement_orders.current_order();
+            let at_location = self.at_location(current_orders.go_to, building_state);
+
+            if at_location {
+                // TODO: Load and unload
+                info!(
+                    "At location: {current_orders:?}, simulate load and unload {:?}",
+                    self.dynamic_info()
+                );
+                self.dynamic_info.movement_orders.advance_to_next_order();
+            }
+
+            self.jump_tile(building_state);
+            self.advance_within_tile(diff, building_state);
+        } else {
+            self.advance_within_tile(diff, building_state);
+        }
+    }
+
+    fn advance_within_tile(&mut self, diff: GameTimeDiff, building_state: &BuildingState) {
         let track_length = self.location().tile_path[0].track_type.length();
         let distance_covered_this_tick = self.velocity() * diff;
         let location = &mut self.dynamic_info.location;
@@ -184,17 +197,11 @@ impl TransportInfo {
 
         if distance_covered_this_tick >= distance_remaining_in_tile {
             // We jump tiles and use the remainder of our time for more actions (recursively)
-            self.jump_tile(building_state);
+            location.progress_within_tile = ProgressWithinTile::about_to_exit();
             let time_used = distance_remaining_in_tile / self.velocity();
             self.advance(diff - time_used, building_state);
         } else {
             location.progress_within_tile += distance_covered_this_tick / track_length;
-        }
-
-        if distance_covered_this_tick < distance_remaining_in_tile {
-            // We set the new progress_in_tile and exit
-        } else {
-            // We jump tiles and use the remainder of our time for more actions (recursively)
         }
     }
 }
