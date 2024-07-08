@@ -49,3 +49,11 @@ impl Sub for GameTime {
         GameTimeDiff(self.0 - rhs.0)
     }
 }
+
+impl Sub for GameTimeDiff {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0)
+    }
+}

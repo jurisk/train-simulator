@@ -121,7 +121,7 @@ impl MovementOrders {
     }
 
     #[must_use]
-    pub fn is_stopped(&self) -> bool {
+    pub fn is_force_stopped(&self) -> bool {
         self.force_stop
     }
 

@@ -10,6 +10,7 @@ use crate::edge_xz::EdgeXZ;
 use crate::map_level::MapLevel;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_track::TileTrack;
+use crate::track_length::TrackLength;
 use crate::track_type::TrackType;
 use crate::{BuildingId, PlayerId};
 
@@ -28,12 +29,12 @@ fn successors(
     building_state: &BuildingState,
     player_id: PlayerId,
     map_level: &MapLevel,
-) -> Vec<(EdgeXZ, u32)> {
+) -> Vec<(EdgeXZ, TrackLength)> {
     let mut results = vec![];
 
     for tile in edge.ordered_tiles() {
         for neighbour in EdgeXZ::for_tile(tile) {
-            const NON_PREFERRED_TILE_MALUS: u32 = 16; // How much shorter "length" do we assign to going through a preferred tile
+            const NON_PREFERRED_TILE_MALUS: f32 = 16f32; // How much shorter "length" do we assign to going through a preferred tile
 
             for tile_track in track_types_that_fit(edge, neighbour) {
                 let building = BuildingInfo::new(
@@ -44,7 +45,7 @@ fn successors(
                 );
 
                 let malus = if preferred_tiles.contains(&tile) {
-                    1
+                    1f32
                 } else {
                     NON_PREFERRED_TILE_MALUS
                 };
@@ -55,10 +56,7 @@ fn successors(
                     building_state.can_build_building(player_id, &building, map_level),
                     CanBuildResponse::Ok | CanBuildResponse::AlreadyExists
                 ) {
-                    results.push((
-                        neighbour,
-                        tile_track.track_type.length_in_tiles_for_pathfinding() * malus,
-                    ));
+                    results.push((neighbour, tile_track.track_type.length() * malus));
                 }
             }
         }
@@ -83,7 +81,7 @@ pub fn plan_tracks(
 
     // Later: If `tail` is under water, no sense to plan?
     // Later: Consider switching to `a_star` or `dijkstra_all`
-    let path: Option<(Vec<EdgeXZ>, u32)> = dijkstra(
+    let path: Option<(Vec<EdgeXZ>, TrackLength)> = dijkstra(
         &head,
         |edge| {
             successors(

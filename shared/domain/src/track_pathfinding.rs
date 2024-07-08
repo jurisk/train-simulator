@@ -4,10 +4,14 @@ use pathfinding::prelude::dijkstra;
 use crate::building_state::BuildingState;
 use crate::building_type::BuildingType;
 use crate::tile_track::TileTrack;
+use crate::track_length::TrackLength;
 use crate::track_type::TrackType;
 use crate::BuildingId;
 
-fn successors(tile_track: TileTrack, building_state: &BuildingState) -> Vec<(TileTrack, u32)> {
+fn successors(
+    tile_track: TileTrack,
+    building_state: &BuildingState,
+) -> Vec<(TileTrack, TrackLength)> {
     let next_tile_coords = tile_track.tile_coords_xz + tile_track.pointing_in;
     let tracks_at_next_tile: Vec<TrackType> = building_state.track_types_at(next_tile_coords);
 
@@ -28,7 +32,7 @@ fn successors(tile_track: TileTrack, building_state: &BuildingState) -> Vec<(Til
                 track_type,
                 pointing_in: track_type.other_end(tile_track.pointing_in.reverse()),
             };
-            (tile_track, track_type.length_in_tiles_for_pathfinding())
+            (tile_track, track_type.length())
         })
         .collect::<Vec<_>>()
 }

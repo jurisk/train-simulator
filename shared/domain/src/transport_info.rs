@@ -1,141 +1,18 @@
-use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter};
 
-use bevy_math::Vec3;
 use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
-use shared_util::direction_xz::DirectionXZ;
 
 use crate::building_state::BuildingState;
 use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
 use crate::movement_orders::{MovementOrderAction, MovementOrderLocation, MovementOrders};
-use crate::tile_track::TileTrack;
 use crate::track_pathfinding::find_route_to_station;
+use crate::transport::progress_within_tile::ProgressWithinTile;
+use crate::transport::transport_location::TransportLocation;
+use crate::transport::transport_velocity::TransportVelocity;
 use crate::transport_type::TransportType;
 use crate::{PlayerId, TransportId};
-
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
-pub struct ProgressWithinTile(f32);
-
-impl Debug for ProgressWithinTile {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.2}", self.0)
-    }
-}
-
-impl Eq for ProgressWithinTile {}
-
-impl PartialOrd for ProgressWithinTile {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for ProgressWithinTile {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.0
-            .partial_cmp(&other.0)
-            .unwrap_or_else(|| panic!("Failed to compare {self:?} and {other:?}"))
-    }
-}
-
-impl ProgressWithinTile {
-    #[must_use]
-    #[allow(clippy::missing_panics_doc)]
-    pub fn new(progress: f32) -> Self {
-        assert!(
-            (0.0 ..= 1.0).contains(&progress),
-            "Progress must be between 0.0 and 1.0, but was {progress}"
-        );
-        Self(progress)
-    }
-
-    #[must_use]
-    pub fn from_point_between_two_points(start_end: (Vec3, Vec3), point: Vec3) -> Self {
-        let (start, end) = start_end;
-        let value = (point - start).length() / (end - start).length();
-        Self::new(value)
-    }
-
-    #[must_use]
-    pub fn just_entering() -> Self {
-        Self(0.0)
-    }
-
-    #[must_use]
-    pub fn about_to_exit() -> Self {
-        Self(1.0)
-    }
-
-    #[must_use]
-    pub fn out_of_bounds(self) -> bool {
-        self.progress() >= 1.0
-    }
-
-    #[must_use]
-    pub fn progress(self) -> f32 {
-        self.0
-    }
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct TransportLocation {
-    tile_path:            Vec<TileTrack>, /* Which tile is it on now, and which tiles has it been on - only as much as to cover the vehicle's length */
-    progress_within_tile: ProgressWithinTile,
-}
-
-impl Debug for TransportLocation {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}-{:?}", self.tile_path[0], self.progress_within_tile)
-    }
-}
-
-impl TransportLocation {
-    #[must_use]
-    pub fn new(tile_path: Vec<TileTrack>, progress_within_tile: ProgressWithinTile) -> Self {
-        Self {
-            tile_path,
-            progress_within_tile,
-        }
-    }
-
-    #[must_use]
-    pub fn entering_from(&self) -> DirectionXZ {
-        let current_tile_track = self.tile_path[0];
-        current_tile_track
-            .track_type
-            .other_end(current_tile_track.pointing_in)
-    }
-
-    #[must_use]
-    pub fn progress_within_tile(&self) -> ProgressWithinTile {
-        self.progress_within_tile
-    }
-
-    #[must_use]
-    pub fn tile_path(&self) -> Vec<TileTrack> {
-        self.tile_path.clone()
-    }
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
-pub struct TransportVelocity {
-    tiles_per_second: f32,
-}
-
-impl Debug for TransportVelocity {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.2}", self.tiles_per_second)
-    }
-}
-
-impl TransportVelocity {
-    #[must_use]
-    pub fn new(tiles_per_second: f32) -> Self {
-        Self { tiles_per_second }
-    }
-}
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportStaticInfo {
@@ -283,67 +160,39 @@ impl TransportInfo {
                 } else {
                     // The first one is the current tile, so we take the second one
                     let next_tile_track = found[1];
-                    Self::perform_jump(
-                        &mut self.dynamic_info.location,
-                        &transport_type,
-                        next_tile_track,
-                    );
+                    self.dynamic_info
+                        .location
+                        .perform_jump(&transport_type, next_tile_track);
                     debug!("Finished jump: {:?}", self);
                 }
             },
         };
     }
 
-    #[allow(
-        clippy::cast_possible_truncation,
-        clippy::cast_sign_loss,
-        clippy::items_after_statements
-    )]
-    fn perform_jump(
-        location: &mut TransportLocation,
-        transport_type: &TransportType,
-        next_tile_track: TileTrack,
-    ) {
-        location.tile_path.insert(0, next_tile_track);
-
-        // Later: We are rather crudely sometimes removing the last element when we are inserting an
-        // element.
-        // This means - depending on `HEURISTIC_COEF` - that sometimes we will be carrying around
-        // "too many tiles", or it could lead to running out of tiles if it is too short.
-        // The alternative is to use `calculate_train_component_head_tails_and_final_tail_position`
-        // to calculate the tail position, and then remove the last tiles if they are not needed,
-        // but that introduces more complexity.
-        const HEURISTIC_COEF: f32 = 2.0;
-        if location.tile_path.len() > (HEURISTIC_COEF * transport_type.length_in_tiles()) as usize {
-            let _ = location.tile_path.pop();
-        }
-
-        location.progress_within_tile.0 -= 1.0;
-    }
-
-    fn normalise_progress_jumping_tiles(&mut self, building_state: &BuildingState) {
-        while self.location().progress_within_tile.out_of_bounds()
-            && !self.dynamic_info.movement_orders.is_stopped()
-        {
-            self.jump_tile(building_state);
-        }
-    }
-
     pub fn advance(&mut self, diff: GameTimeDiff, building_state: &BuildingState) {
-        if self.dynamic_info.movement_orders.is_stopped() {
+        if self.dynamic_info.movement_orders.is_force_stopped() {
             return;
         }
 
-        let seconds = diff.to_seconds();
-        let TransportVelocity { tiles_per_second } = self.velocity();
-        let track_type = self.location().tile_path[0].track_type;
+        let track_length = self.location().tile_path[0].track_type.length();
+        let distance_covered_this_tick = self.velocity() * diff;
         let location = &mut self.dynamic_info.location;
-        let track_length = track_type.length_in_tiles();
-        let ProgressWithinTile(progress_within_tile) = location.progress_within_tile;
-        let effective_speed = tiles_per_second / track_length;
-        let new_progress = progress_within_tile + effective_speed * seconds;
-        let new_progress = ProgressWithinTile(new_progress);
-        location.progress_within_tile = new_progress;
-        self.normalise_progress_jumping_tiles(building_state);
+        let distance_remaining_in_tile = track_length
+            * (ProgressWithinTile::about_to_exit() - location.progress_within_tile).as_f32();
+
+        if distance_covered_this_tick >= distance_remaining_in_tile {
+            // We jump tiles and use the remainder of our time for more actions (recursively)
+            self.jump_tile(building_state);
+            let time_used = distance_remaining_in_tile / self.velocity();
+            self.advance(diff - time_used, building_state);
+        } else {
+            location.progress_within_tile += distance_covered_this_tick / track_length;
+        }
+
+        if distance_covered_this_tick < distance_remaining_in_tile {
+            // We set the new progress_in_tile and exit
+        } else {
+            // We jump tiles and use the remainder of our time for more actions (recursively)
+        }
     }
 }

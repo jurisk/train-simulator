@@ -7,7 +7,7 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::terrain::Terrain;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::track_type::TrackType;
-use crate::transport_info::ProgressWithinTile;
+use crate::transport::progress_within_tile::ProgressWithinTile;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct TileTrack {
@@ -36,6 +36,6 @@ impl TileTrack {
         let (entry, exit) = terrain.entry_and_exit(self);
         let track_length = (exit - entry).length();
         let direction = (exit - entry).normalize();
-        entry + direction * progress_within_tile.progress() * track_length
+        entry + direction * progress_within_tile.as_f32() * track_length
     }
 }

@@ -7,6 +7,7 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
+use crate::track_length::TrackLength;
 
 // Later: Possibly rename to `ConnectionType` or something. And `TrackType` thus has multiple of these `ConnectionType`-s.
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
@@ -93,19 +94,14 @@ impl TrackType {
     }
 
     #[must_use]
-    pub const fn length_in_tiles(self) -> f32 {
-        match self {
+    pub const fn length(self) -> TrackLength {
+        let result = match self {
             TrackType::NorthSouth | TrackType::EastWest => 1.0,
             TrackType::NorthEast
             | TrackType::NorthWest
             | TrackType::SouthEast
             | TrackType::SouthWest => Self::SQRT_2_DIV_2,
-        }
-    }
-
-    #[must_use]
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    pub fn length_in_tiles_for_pathfinding(self) -> u32 {
-        (self.length_in_tiles() * 10_000.0).round() as u32
+        };
+        TrackLength::new(result)
     }
 }

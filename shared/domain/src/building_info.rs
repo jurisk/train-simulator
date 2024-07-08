@@ -13,7 +13,8 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::tile_track::TileTrack;
 use crate::track_type::TrackType;
-use crate::transport_info::{ProgressWithinTile, TransportLocation};
+use crate::transport::progress_within_tile::ProgressWithinTile;
+use crate::transport::transport_location::TransportLocation;
 use crate::{BuildingId, PlayerId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]

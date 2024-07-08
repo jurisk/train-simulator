@@ -7,7 +7,7 @@ use bevy::prelude::{
 };
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
-use shared_domain::transport_info::TransportLocation;
+use shared_domain::transport::transport_location::TransportLocation;
 use shared_domain::transport_type::TrainComponentType;
 use shared_domain::TransportId;
 
