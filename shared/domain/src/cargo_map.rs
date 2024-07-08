@@ -5,7 +5,7 @@ use std::ops::Neg;
 use serde::{Deserialize, Serialize};
 
 use crate::resource_type::ResourceType;
-use crate::transport_type::CargoAmount;
+use crate::transport::transport_type::CargoAmount;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct CargoMap {

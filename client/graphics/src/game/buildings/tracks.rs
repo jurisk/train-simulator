@@ -16,8 +16,8 @@ use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
 use shared_domain::terrain::DEFAULT_Y_COEF;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
-use shared_domain::track_planner::plan_tracks;
-use shared_domain::track_type::TrackType;
+use shared_domain::transport::track_planner::plan_tracks;
+use shared_domain::transport::track_type::TrackType;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};

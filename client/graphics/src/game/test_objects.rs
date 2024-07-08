@@ -5,14 +5,14 @@ use shared_domain::building_type::BuildingType;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
-use shared_domain::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::production_type::ProductionType;
 use shared_domain::station_type::{PlatformIndex, StationType};
 use shared_domain::tile_coords_xz::TileCoordsXZ;
-use shared_domain::track_planner::plan_tracks;
+use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
+use shared_domain::transport::track_planner::plan_tracks;
+use shared_domain::transport::transport_info::TransportInfo;
+use shared_domain::transport::transport_type::TransportType;
 use shared_domain::transport::transport_velocity::TransportVelocity;
-use shared_domain::transport_info::TransportInfo;
-use shared_domain::transport_type::TransportType;
 use shared_domain::{BuildingId, PlayerId, TransportId};
 use shared_util::direction_xz::DirectionXZ;
 

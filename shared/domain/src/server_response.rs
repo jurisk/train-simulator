@@ -9,7 +9,7 @@ use uuid::Uuid;
 use crate::building_info::{BuildingDynamicInfo, BuildingInfo};
 use crate::game_state::GameState;
 use crate::game_time::GameTime;
-use crate::transport_info::{TransportDynamicInfo, TransportInfo};
+use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::{BuildingId, ClientId, GameId, PlayerId, PlayerName, TransportId};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

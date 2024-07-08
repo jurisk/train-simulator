@@ -6,8 +6,8 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::terrain::Terrain;
 use crate::tile_coords_xz::TileCoordsXZ;
-use crate::track_type::TrackType;
 use crate::transport::progress_within_tile::ProgressWithinTile;
+use crate::transport::track_type::TrackType;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct TileTrack {

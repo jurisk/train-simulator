@@ -8,7 +8,7 @@ use bevy::prelude::{
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::PlayerInfo;
 use shared_domain::transport::transport_location::TransportLocation;
-use shared_domain::transport_type::TrainComponentType;
+use shared_domain::transport::transport_type::TrainComponentType;
 use shared_domain::TransportId;
 
 use crate::game::transport::train_layout::calculate_train_component_head_tails_and_final_tail_position;

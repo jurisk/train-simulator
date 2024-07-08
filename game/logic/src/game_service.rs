@@ -7,7 +7,7 @@ use shared_domain::game_time::GameTime;
 use shared_domain::server_response::{
     AddressEnvelope, GameError, GameInfo, GameResponse, PlayerInfo,
 };
-use shared_domain::transport_info::TransportInfo;
+use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::{GameId, PlayerId};
 
 #[derive(Clone)]

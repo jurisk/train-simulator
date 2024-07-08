@@ -8,7 +8,7 @@ use egui::{Color32, TextFormat, Ui};
 use shared_domain::building_state::BuildingState;
 use shared_domain::building_type::BuildingType;
 use shared_domain::server_response::PlayerInfo;
-use shared_domain::transport_info::TransportInfo;
+use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::PlayerId;
 
 use crate::game::GameStateResource;

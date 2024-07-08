@@ -10,8 +10,8 @@ use crate::building_state::BuildingState;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::MapLevel;
 use crate::server_response::{GameInfo, PlayerInfo};
-use crate::transport_info::{TransportDynamicInfo, TransportInfo};
-use crate::transport_state::TransportState;
+use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
+use crate::transport::transport_state::TransportState;
 use crate::{BuildingId, GameId, PlayerId, TransportId};
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).

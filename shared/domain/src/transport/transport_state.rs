@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
-use crate::transport_info::{TransportDynamicInfo, TransportInfo};
+use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::TransportId;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]

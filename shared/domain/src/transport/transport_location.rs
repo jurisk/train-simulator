@@ -3,9 +3,9 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
-use crate::tile_track::TileTrack;
 use crate::transport::progress_within_tile::ProgressWithinTile;
-use crate::transport_type::TransportType;
+use crate::transport::tile_track::TileTrack;
+use crate::transport::transport_type::TransportType;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportLocation {

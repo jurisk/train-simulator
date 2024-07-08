@@ -5,8 +5,8 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
-use crate::tile_track::TileTrack;
-use crate::track_type::TrackType;
+use crate::transport::tile_track::TileTrack;
+use crate::transport::track_type::TrackType;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct PlatformIndex(usize);
@@ -155,8 +155,8 @@ mod tests {
 
     use crate::station_type::{StationOrientation, StationType};
     use crate::tile_coords_xz::TileCoordsXZ;
-    use crate::tile_track::TileTrack;
-    use crate::track_type::TrackType;
+    use crate::transport::tile_track::TileTrack;
+    use crate::transport::track_type::TrackType;
 
     #[test]
     fn exit_tile_tracks() {

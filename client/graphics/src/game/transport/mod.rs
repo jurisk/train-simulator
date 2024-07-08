@@ -12,8 +12,8 @@ use bevy::prelude::{
 };
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
-use shared_domain::transport_info::TransportInfo;
-use shared_domain::transport_type::TransportType;
+use shared_domain::transport::transport_info::TransportInfo;
+use shared_domain::transport::transport_type::TransportType;
 use shared_domain::{PlayerId, TransportId};
 
 use crate::communication::domain::ServerMessageEvent;

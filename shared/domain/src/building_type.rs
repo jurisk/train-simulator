@@ -6,7 +6,7 @@ use crate::production_type::ProductionType;
 use crate::station_type::StationType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
-use crate::track_type::TrackType;
+use crate::transport::track_type::TrackType;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub enum BuildingType {

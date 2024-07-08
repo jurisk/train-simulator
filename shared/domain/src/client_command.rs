@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::building_info::BuildingInfo;
-use crate::transport_info::TransportInfo;
+use crate::transport::transport_info::TransportInfo;
 use crate::{ClientId, GameId, PlayerId};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

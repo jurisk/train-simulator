@@ -11,9 +11,9 @@ use crate::production_type::ProductionType;
 use crate::station_type::PlatformIndex;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
-use crate::tile_track::TileTrack;
-use crate::track_type::TrackType;
 use crate::transport::progress_within_tile::ProgressWithinTile;
+use crate::transport::tile_track::TileTrack;
+use crate::transport::track_type::TrackType;
 use crate::transport::transport_location::TransportLocation;
 use crate::{BuildingId, PlayerId};
 

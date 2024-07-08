@@ -3,9 +3,9 @@ use pathfinding::prelude::dijkstra;
 
 use crate::building_state::BuildingState;
 use crate::building_type::BuildingType;
-use crate::tile_track::TileTrack;
-use crate::track_length::TrackLength;
-use crate::track_type::TrackType;
+use crate::transport::tile_track::TileTrack;
+use crate::transport::track_length::TrackLength;
+use crate::transport::track_type::TrackType;
 use crate::BuildingId;
 
 fn successors(

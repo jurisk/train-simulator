@@ -9,9 +9,9 @@ use crate::building_type::BuildingType;
 use crate::edge_xz::EdgeXZ;
 use crate::map_level::MapLevel;
 use crate::tile_coords_xz::TileCoordsXZ;
-use crate::tile_track::TileTrack;
-use crate::track_length::TrackLength;
-use crate::track_type::TrackType;
+use crate::transport::tile_track::TileTrack;
+use crate::transport::track_length::TrackLength;
+use crate::transport::track_type::TrackType;
 use crate::{BuildingId, PlayerId};
 
 // Later:   This actually allows turns that the trains cannot actually make (e.g. crossing rails),

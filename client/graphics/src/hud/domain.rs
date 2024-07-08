@@ -4,7 +4,7 @@ use shared_domain::production_type::ProductionType;
 use shared_domain::station_type::StationType;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
-use shared_domain::transport_type::TransportType;
+use shared_domain::transport::transport_type::TransportType;
 
 #[derive(Resource, Eq, PartialEq, Debug, Clone)]
 pub enum SelectedMode {

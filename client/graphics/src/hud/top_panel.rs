@@ -3,7 +3,7 @@ use bevy_egui::EguiContexts;
 use egui::{menu, Ui};
 use shared_domain::production_type::ProductionType;
 use shared_domain::station_type::{StationOrientation, StationType};
-use shared_domain::transport_type::TransportType;
+use shared_domain::transport::transport_type::TransportType;
 
 use crate::hud::domain::SelectedMode;
 

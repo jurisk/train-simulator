@@ -7,7 +7,7 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
-use crate::track_length::TrackLength;
+use crate::transport::track_length::TrackLength;
 
 // Later: Possibly rename to `ConnectionType` or something. And `TrackType` thus has multiple of these `ConnectionType`-s.
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
