@@ -69,7 +69,7 @@ impl GameState {
     fn advance_time_diff_internal(&mut self, diff: GameTimeDiff) {
         // Later: If game is paused then no need to advance anything
         self.buildings.advance_time_diff(diff);
-        self.transports.advance_time_diff(diff, &self.buildings);
+        self.transports.advance_time_diff(diff, &mut self.buildings);
     }
 
     pub fn advance_time(&mut self, time: GameTime) {

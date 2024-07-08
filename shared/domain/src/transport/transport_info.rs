@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 
-use log::{debug, error, info, warn};
+use log::{debug, error, warn};
 use serde::{Deserialize, Serialize};
 
 use crate::building_state::BuildingState;
@@ -24,7 +24,7 @@ pub struct TransportStaticInfo {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportDynamicInfo {
     location:        TransportLocation,
-    velocity:        TransportVelocity,
+    velocity:        TransportVelocity, /* TODO HIGH: Acceleration and deceleration should be gradual */
     movement_orders: MovementOrders,
     cargo_loaded:    CargoMap,
 }
@@ -162,7 +162,16 @@ impl TransportInfo {
         })
     }
 
-    pub fn advance(&mut self, diff: GameTimeDiff, building_state: &BuildingState) {
+    fn load_and_unload(
+        &mut self,
+        diff: GameTimeDiff,
+        building_state: &mut BuildingState,
+    ) -> GameTimeDiff {
+        // TODO HIGH: Do it
+        diff
+    }
+
+    pub fn advance(&mut self, diff: GameTimeDiff, building_state: &mut BuildingState) {
         if self.dynamic_info.movement_orders.is_force_stopped() {
             return;
         }
@@ -173,22 +182,22 @@ impl TransportInfo {
             let at_location = self.at_location(current_orders.go_to, building_state);
 
             if at_location {
-                // TODO: Load and unload
-                info!(
-                    "At location: {current_orders:?}, simulate load and unload {:?}",
-                    self.dynamic_info()
-                );
-                self.dynamic_info.movement_orders.advance_to_next_order();
+                let remaining = self.load_and_unload(diff, building_state);
+                if remaining > GameTimeDiff::ZERO {
+                    self.dynamic_info.movement_orders.advance_to_next_order();
+                    self.jump_tile(building_state);
+                    self.advance_within_tile(remaining, building_state);
+                }
+            } else {
+                self.jump_tile(building_state);
+                self.advance_within_tile(diff, building_state);
             }
-
-            self.jump_tile(building_state);
-            self.advance_within_tile(diff, building_state);
         } else {
             self.advance_within_tile(diff, building_state);
         }
     }
 
-    fn advance_within_tile(&mut self, diff: GameTimeDiff, building_state: &BuildingState) {
+    fn advance_within_tile(&mut self, diff: GameTimeDiff, building_state: &mut BuildingState) {
         let track_length = self.location().tile_path[0].track_type.length();
         let distance_covered_this_tick = self.velocity() * diff;
         let location = &mut self.dynamic_info.location;

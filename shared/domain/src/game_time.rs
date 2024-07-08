@@ -4,10 +4,12 @@ use std::ops::{Add, Sub};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, PartialEq, PartialOrd)]
 pub struct GameTimeDiff(f32);
 
 impl GameTimeDiff {
+    pub const ZERO: Self = Self(0.0);
+
     #[must_use]
     pub fn from_seconds(seconds: f32) -> Self {
         Self(seconds)

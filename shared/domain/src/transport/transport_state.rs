@@ -23,7 +23,7 @@ impl TransportState {
         self.transports.clone()
     }
 
-    pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff, buildings: &BuildingState) {
+    pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff, buildings: &mut BuildingState) {
         for transport in &mut self.transports {
             transport.advance(diff, buildings);
         }
