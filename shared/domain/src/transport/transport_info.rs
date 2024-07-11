@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 
-use log::{debug, error, warn};
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 
 use crate::building_state::BuildingState;
@@ -22,10 +22,65 @@ pub struct TransportStaticInfo {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+enum CargoLoading {
+    NotStarted,
+    Unloading { time_left: GameTimeDiff },
+    Loading { time_left: GameTimeDiff },
+    Finished,
+}
+
+impl CargoLoading {
+    // TODO HIGH: Actually do loading/unloading, considering the loading/unloading instructions. And the times differ based on that.
+    fn advance(&mut self, building_state: &mut BuildingState, diff: GameTimeDiff) -> GameTimeDiff {
+        debug!(
+            "Advancing cargo loading: {:?} {:?} {:?}",
+            self, diff, building_state
+        );
+
+        match self {
+            CargoLoading::NotStarted => {
+                *self = CargoLoading::Unloading {
+                    time_left: GameTimeDiff::from_seconds(1.0),
+                };
+                self.advance(building_state, diff)
+            },
+            CargoLoading::Unloading { time_left } => {
+                let time_left = *time_left;
+                if time_left <= diff {
+                    *self = CargoLoading::Loading {
+                        time_left: GameTimeDiff::from_seconds(1.0),
+                    };
+                    self.advance(building_state, diff - time_left)
+                } else {
+                    *self = CargoLoading::Unloading {
+                        time_left: time_left - diff,
+                    };
+                    GameTimeDiff::ZERO
+                }
+            },
+            CargoLoading::Loading { time_left } => {
+                let time_left = *time_left;
+                if time_left <= diff {
+                    *self = CargoLoading::Finished;
+                    diff - time_left
+                } else {
+                    *self = CargoLoading::Loading {
+                        time_left: time_left - diff,
+                    };
+                    GameTimeDiff::ZERO
+                }
+            },
+            CargoLoading::Finished => GameTimeDiff::ZERO,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportDynamicInfo {
     location:        TransportLocation,
     velocity:        TransportVelocity, /* TODO HIGH: Acceleration and deceleration should be gradual */
     movement_orders: MovementOrders,
+    cargo_loading:   CargoLoading,
     cargo_loaded:    CargoMap,
 }
 
@@ -71,6 +126,7 @@ impl TransportInfo {
                 velocity,
                 movement_orders,
                 cargo_loaded: CargoMap::new(),
+                cargo_loading: CargoLoading::NotStarted,
             },
         }
     }
@@ -120,41 +176,31 @@ impl TransportInfo {
         let transport_type = self.transport_type().clone();
         let current_order = self.movement_orders().current_order();
         let route = find_route_to(
-            self.dynamic_info.location.tile_path[0],
+            self.dynamic_info.location.next_tile_in_path(),
             current_order.go_to,
             building_state,
         );
 
-        match route {
+        // The first one is the current tile, so we take the second one
+        match route.unwrap_or_default().get(1) {
             None => {
-                self.dynamic_info.location.progress_within_tile =
-                    ProgressWithinTile::about_to_exit();
                 self.dynamic_info.movement_orders.force_stop();
                 warn!(
                     "No route found for orders {current_order:?} for transport {:?}, stopping: {self:?}",
                     self.transport_id()
                 );
             },
-            Some(found) => {
-                if found.len() <= 1 {
-                    error!(
-                        "Found empty route to station for transport {self:?}, this should never happen!",
-                    );
-                    self.dynamic_info.movement_orders.force_stop();
-                } else {
-                    // The first one is the current tile, so we take the second one
-                    let next_tile_track = found[1];
-                    self.dynamic_info
-                        .location
-                        .perform_jump(&transport_type, next_tile_track);
-                    debug!("Finished jump: {:?}", self);
-                }
+            Some(next_tile_track) => {
+                self.dynamic_info
+                    .location
+                    .perform_jump(&transport_type, *next_tile_track);
+                debug!("Finished jump: {:?}", self);
             },
         };
     }
 
     fn at_location(&self, target: MovementOrderLocation, building_state: &BuildingState) -> bool {
-        let current_tile_path = self.dynamic_info.location.tile_path[0];
+        let current_tile_path = self.dynamic_info.location.next_tile_in_path();
         find_location_tile_tracks(target, building_state).is_some_and(|targets| {
             targets
                 .into_iter()
@@ -162,15 +208,9 @@ impl TransportInfo {
         })
     }
 
-    fn load_and_unload(
-        &mut self,
-        diff: GameTimeDiff,
-        building_state: &mut BuildingState,
-    ) -> GameTimeDiff {
-        // TODO HIGH: Do it
-        diff
-    }
-
+    // TODO HIGH:   We should have some loop in `advance_internal` that advances the
+    //              state machine and returns the remainder of the time, instead of this fully
+    //              recursive all-at-once approach.
     pub fn advance(&mut self, diff: GameTimeDiff, building_state: &mut BuildingState) {
         if self.dynamic_info.movement_orders.is_force_stopped() {
             return;
@@ -182,11 +222,20 @@ impl TransportInfo {
             let at_location = self.at_location(current_orders.go_to, building_state);
 
             if at_location {
-                let remaining = self.load_and_unload(diff, building_state);
-                if remaining > GameTimeDiff::ZERO {
+                if self.dynamic_info.cargo_loading == CargoLoading::Finished {
+                    info!("Finished loading/unloading, advancing to next orders: {self:?}");
                     self.dynamic_info.movement_orders.advance_to_next_order();
                     self.jump_tile(building_state);
-                    self.advance_within_tile(remaining, building_state);
+                    self.advance_within_tile(diff, building_state);
+                    self.dynamic_info.cargo_loading = CargoLoading::NotStarted;
+                } else {
+                    let remaining = self
+                        .dynamic_info
+                        .cargo_loading
+                        .advance(building_state, diff);
+                    if remaining > GameTimeDiff::ZERO {
+                        self.advance(remaining, building_state);
+                    }
                 }
             } else {
                 self.jump_tile(building_state);

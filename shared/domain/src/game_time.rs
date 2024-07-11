@@ -1,6 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 
-use std::ops::{Add, Sub};
+use std::ops::{Add, Sub, SubAssign};
 
 use serde::{Deserialize, Serialize};
 
@@ -57,5 +57,11 @@ impl Sub for GameTimeDiff {
 
     fn sub(self, rhs: Self) -> Self::Output {
         Self(self.0 - rhs.0)
+    }
+}
+
+impl SubAssign for GameTimeDiff {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.0 -= rhs.0;
     }
 }

@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
@@ -15,11 +16,17 @@ pub enum CanBuildResponse {
 }
 
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
     buildings:              Vec<BuildingInfo>,
     // Link from each production building to the closest station
     cargo_forwarding_links: HashMap<BuildingId, BuildingId>,
+}
+
+impl Debug for BuildingState {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BuildingState").finish()
+    }
 }
 
 impl BuildingState {

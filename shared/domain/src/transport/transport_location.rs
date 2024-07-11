@@ -46,6 +46,11 @@ impl TransportLocation {
         self.tile_path.clone()
     }
 
+    #[must_use]
+    pub fn next_tile_in_path(&self) -> TileTrack {
+        self.tile_path[0]
+    }
+
     // TODO HIGH: Make private
     #[allow(
         clippy::cast_possible_truncation,
