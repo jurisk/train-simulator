@@ -81,7 +81,7 @@ impl CargoLoading {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportDynamicInfo {
     pub location:        TransportLocation,
-    pub velocity:        TransportVelocity, /* TODO HIGH: Acceleration and deceleration should be gradual */
+    pub velocity:        TransportVelocity, /* TODO: Acceleration and deceleration should be gradual */
     pub movement_orders: MovementOrders,
     pub cargo_loading:   CargoLoading,
     pub cargo_loaded:    CargoMap,
