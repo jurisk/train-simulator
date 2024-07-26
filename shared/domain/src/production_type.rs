@@ -20,9 +20,9 @@ pub enum ProductionType {
 impl Debug for ProductionType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ProductionType::CoalMine => write!(f, "CM"),
-            ProductionType::IronMine => write!(f, "IM"),
-            ProductionType::IronWorks => write!(f, "IW"),
+            ProductionType::CoalMine => write!(f, "CoalMine"),
+            ProductionType::IronMine => write!(f, "IronMine"),
+            ProductionType::IronWorks => write!(f, "IronWorks"),
         }
     }
 }
