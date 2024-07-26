@@ -1,4 +1,5 @@
 #![allow(clippy::module_name_repetitions)]
+pub mod advancement;
 pub mod movement_orders;
 pub mod progress_within_tile;
 pub mod tile_track;

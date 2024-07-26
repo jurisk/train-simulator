@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
+use crate::transport::advancement::advance;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::TransportId;
 
@@ -25,7 +26,7 @@ impl TransportState {
 
     pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff, buildings: &mut BuildingState) {
         for transport in &mut self.transports {
-            transport.advance(diff, buildings);
+            advance(transport, diff, buildings);
         }
     }
 

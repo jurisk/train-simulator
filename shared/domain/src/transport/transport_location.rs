@@ -5,7 +5,6 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::transport::progress_within_tile::ProgressWithinTile;
 use crate::transport::tile_track::TileTrack;
-use crate::transport::transport_type::TransportType;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportLocation {
@@ -49,33 +48,5 @@ impl TransportLocation {
     #[must_use]
     pub fn next_tile_in_path(&self) -> TileTrack {
         self.tile_path[0]
-    }
-
-    // TODO HIGH: Make private
-    #[allow(
-        clippy::cast_possible_truncation,
-        clippy::cast_sign_loss,
-        clippy::items_after_statements
-    )]
-    pub(crate) fn perform_jump(
-        &mut self,
-        transport_type: &TransportType,
-        next_tile_track: TileTrack,
-    ) {
-        self.tile_path.insert(0, next_tile_track);
-
-        // Later: We are rather crudely sometimes removing the last element when we are inserting an
-        // element.
-        // This means - depending on `HEURISTIC_COEF` - that sometimes we will be carrying around
-        // "too many tiles", or it could lead to running out of tiles if it is too short.
-        // The alternative is to use `calculate_train_component_head_tails_and_final_tail_position`
-        // to calculate the tail position, and then remove the last tiles if they are not needed,
-        // but that introduces more complexity.
-        const HEURISTIC_COEF: f32 = 2.0;
-        if self.tile_path.len() > (HEURISTIC_COEF * transport_type.length_in_tiles()) as usize {
-            let _ = self.tile_path.pop();
-        }
-
-        self.progress_within_tile = ProgressWithinTile::just_entering();
     }
 }
