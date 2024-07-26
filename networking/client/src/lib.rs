@@ -1,5 +1,6 @@
 use bevy::prelude::{
-    error, info, trace, warn, App, EventReader, EventWriter, FixedUpdate, NextState, Plugin, ResMut,
+    default, error, info, trace, warn, App, EventReader, EventWriter, FixedUpdate, NextState,
+    Plugin, ResMut,
 };
 use bevy_simplenet::{
     AuthRequest, Client, ClientConfig, ClientEventFrom, ClientFactory, ClientReport,
@@ -28,7 +29,7 @@ impl Plugin for MultiplayerSimpleNetClientPlugin {
             ClientConfig {
                 reconnect_on_disconnect: true,
                 reconnect_on_server_close: true,
-                ..Default::default()
+                ..default()
             },
             (),
         );

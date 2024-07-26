@@ -1,7 +1,7 @@
 #![allow(clippy::needless_pass_by_value, clippy::collapsible_match)]
 
 pub mod assets;
-mod building;
+pub mod building;
 pub mod tracks;
 
 use std::collections::HashMap;
@@ -116,7 +116,7 @@ fn create_building(
                         .building_assets
                         .production_mesh_for(*production_type);
                     create_building_entity(
-                        building_info.covers_tiles(),
+                        building_info,
                         format!("{production_type:?}"),
                         player_info.colour,
                         mesh,
@@ -128,7 +128,7 @@ fn create_building(
                 BuildingType::Station(station_type) => {
                     let mesh = game_assets.building_assets.station_mesh_for(*station_type);
                     create_building_entity(
-                        building_info.covers_tiles(),
+                        building_info,
                         format!("{station_type:?}"),
                         STATION_BASE_COLOUR,
                         mesh,

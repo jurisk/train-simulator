@@ -40,10 +40,16 @@ impl Debug for CargoMap {
         let mut results = vec![];
         for resource in ResourceType::all() {
             let amount = self.get(resource);
-            let as_string = format!("{resource:?} {amount:?}");
-            results.push(as_string);
+            if amount != CargoAmount::ZERO {
+                let as_string = format!("{resource:?} {amount:?}");
+                results.push(as_string);
+            }
         }
-        write!(f, "{}", results.join(", "))
+        if results.is_empty() {
+            write!(f, "Empty")
+        } else {
+            write!(f, "{}", results.join(", "))
+        }
     }
 }
 

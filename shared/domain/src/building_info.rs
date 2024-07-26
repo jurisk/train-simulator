@@ -58,6 +58,11 @@ impl BuildingInfo {
         }
     }
 
+    #[must_use]
+    pub fn id(&self) -> BuildingId {
+        self.static_info.building_id
+    }
+
     pub fn add_cargo(&mut self, cargo: &CargoMap) {
         self.dynamic_info.cargo.add_all(cargo);
     }

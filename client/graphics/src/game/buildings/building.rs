@@ -1,7 +1,8 @@
 use bevy::prelude::{
     Assets, ButtonInput, Color, Commands, EventWriter, Handle, Mesh, MouseButton, Name, PbrBundle,
-    Res, ResMut, StandardMaterial, Transform,
+    Res, ResMut, StandardMaterial, Transform, Vec3,
 };
+use bevy::utils::default;
 use bevy_egui::EguiContexts;
 use shared_domain::building_info::BuildingInfo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
@@ -58,19 +59,12 @@ pub(crate) fn build_building_when_mouse_released(
     }
 }
 
-#[allow(clippy::too_many_arguments, clippy::similar_names)]
-pub(crate) fn create_building_entity(
-    tile_coverage: TileCoverage,
-    label: String,
-    colour: Colour,
-    mesh: Handle<Mesh>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    commands: &mut Commands,
-    map_level: &MapLevel,
-) {
-    let terrain = &map_level.terrain();
-    let (nw, se) = match tile_coverage {
-        TileCoverage::Empty => panic!("Cannot create a building with no tiles"),
+#[must_use]
+#[allow(clippy::missing_panics_doc)]
+pub fn center_vec3(building_info: &BuildingInfo, map_level: &MapLevel) -> Vec3 {
+    let terrain = map_level.terrain();
+    let (nw, se) = match building_info.covers_tiles() {
+        TileCoverage::Empty => panic!("Building has no tiles"),
         TileCoverage::Single(tile) => (tile, tile),
         TileCoverage::Rectangular {
             north_west_inclusive,
@@ -82,22 +76,35 @@ pub(crate) fn create_building_entity(
     let nw = terrain.logical_to_world(nw);
     let se = terrain.logical_to_world(se);
 
+    (se + nw) / 2.0
+}
+
+#[allow(clippy::too_many_arguments, clippy::similar_names)]
+pub(crate) fn create_building_entity(
+    building_info: &BuildingInfo,
+    label: String,
+    colour: Colour,
+    mesh: Handle<Mesh>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    commands: &mut Commands,
+    map_level: &MapLevel,
+) {
+    let center = center_vec3(building_info, map_level);
     let color = Color::srgb_u8(colour.r, colour.g, colour.b);
     let material = materials.add(color);
-    let center = (se + nw) / 2.0;
 
-    // TODO HIGH: Use `label` to also draw text on the sides / roof of the building
+    // TODO: Make buildings distinguishable from each other - e.g. use `label` to also draw text on the sides / roof of the building
 
     commands.spawn((
         PbrBundle {
             transform: Transform {
                 translation: center,
-                ..Default::default()
+                ..default()
             },
             material,
             mesh,
-            ..Default::default()
+            ..default()
         },
-        Name::new(label),
+        Name::new(label.clone()),
     ));
 }

@@ -10,10 +10,7 @@ use crate::resource_type::ResourceType;
 pub struct CargoAmount(f32);
 
 impl CargoAmount {
-    #[must_use]
-    pub fn empty() -> Self {
-        Self(0.0)
-    }
+    pub const ZERO: Self = Self(0.0);
 
     #[must_use]
     pub fn new(amount: f32) -> Self {

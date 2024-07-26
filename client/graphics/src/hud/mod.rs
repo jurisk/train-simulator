@@ -3,9 +3,11 @@ use bevy::prelude::IntoSystemConfigs;
 use bevy_egui::EguiPlugin;
 
 use crate::hud::domain::SelectedMode;
+use crate::hud::labels::draw_labels;
 
 pub mod bottom_panel;
 pub mod domain;
+pub mod labels;
 pub mod left_panel;
 pub mod top_panel;
 
@@ -27,5 +29,6 @@ impl Plugin for HudPlugin {
             Update,
             left_panel::show_left_panel.after(top_panel::show_top_panel),
         );
+        app.add_systems(Update, draw_labels.after(left_panel::show_left_panel));
     }
 }
