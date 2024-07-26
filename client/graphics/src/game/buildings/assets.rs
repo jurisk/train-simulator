@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 
-use bevy::prelude::{Assets, Cuboid, Handle, Mesh, Sphere};
+use bevy::prelude::{Assets, Cuboid, Handle, Mesh, Sphere, Vec3};
 use shared_domain::production_type::ProductionType;
 use shared_domain::station_type::{StationOrientation, StationType};
+
+use crate::util::shift_mesh;
 
 const PRODUCTION_HEIGHT: f32 = 0.5;
 const STATION_HEIGHT: f32 = 0.01;
@@ -22,8 +24,9 @@ impl BuildingAssets {
         let mut production_meshes = HashMap::new();
 
         for production_type in ProductionType::all() {
-            // TODO: Use `shift_mesh` to actually avoid creating double-height meshes, just shift them
-            let mesh = meshes.add(Mesh::from(Cuboid::new(3.0, PRODUCTION_HEIGHT * 2.0, 3.0)));
+            let mut mesh = Mesh::from(Cuboid::new(3.0, PRODUCTION_HEIGHT, 3.0));
+            shift_mesh(&mut mesh, Vec3::new(0.0, PRODUCTION_HEIGHT / 2.0, 0.0));
+            let mesh = meshes.add(mesh);
             production_meshes.insert(production_type, mesh);
         }
 
