@@ -26,7 +26,7 @@ impl TransportState {
 
     pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff, buildings: &mut BuildingState) {
         for transport in &mut self.transports {
-            advance(transport, diff, buildings);
+            advance(transport, buildings, diff);
         }
     }
 

@@ -54,20 +54,17 @@ fn at_location(
     })
 }
 
-// TODO HIGH:   We should have some loop in `advance_internal` that advances the
-//              state machine and returns the remainder of the time, instead of this fully
-//              recursive all-at-once approach.
-pub fn advance(
+fn advance_internal(
     transport_info: &mut TransportInfo,
-    diff: GameTimeDiff,
     building_state: &mut BuildingState,
-) {
+    diff: GameTimeDiff,
+) -> GameTimeDiff {
     if transport_info
         .dynamic_info
         .movement_orders
         .is_force_stopped()
     {
-        return;
+        return GameTimeDiff::ZERO;
     }
 
     let progress_within_tile = transport_info.dynamic_info.location.progress_within_tile();
@@ -87,31 +84,37 @@ pub fn advance(
                     .movement_orders
                     .advance_to_next_order();
                 jump_tile(transport_info, building_state);
-                advance_within_tile(transport_info, diff, building_state);
                 transport_info.dynamic_info.cargo_loading = CargoLoading::NotStarted;
+                diff
             } else {
-                let remaining = transport_info
+                transport_info
                     .dynamic_info
                     .cargo_loading
-                    .advance(building_state, diff);
-                if remaining > GameTimeDiff::ZERO {
-                    advance(transport_info, remaining, building_state);
-                }
+                    .advance(building_state, diff)
             }
         } else {
             jump_tile(transport_info, building_state);
-            advance_within_tile(transport_info, diff, building_state);
+            diff
         }
     } else {
-        advance_within_tile(transport_info, diff, building_state);
+        advance_within_tile(transport_info, diff)
     }
 }
 
-fn advance_within_tile(
+pub fn advance(
     transport_info: &mut TransportInfo,
-    diff: GameTimeDiff,
     building_state: &mut BuildingState,
+    diff: GameTimeDiff,
 ) {
+    loop {
+        let remaining = advance_internal(transport_info, building_state, diff);
+        if remaining == GameTimeDiff::ZERO {
+            break;
+        }
+    }
+}
+
+fn advance_within_tile(transport_info: &mut TransportInfo, diff: GameTimeDiff) -> GameTimeDiff {
     let track_length = transport_info.dynamic_info.location.tile_path[0]
         .track_type
         .length();
@@ -124,9 +127,10 @@ fn advance_within_tile(
         // We jump tiles and use the remainder of our time for more actions (recursively)
         location.progress_within_tile = ProgressWithinTile::about_to_exit();
         let time_used = distance_remaining_in_tile / transport_info.dynamic_info.velocity;
-        advance(transport_info, diff - time_used, building_state);
+        diff - time_used
     } else {
         location.progress_within_tile += distance_covered_this_tick / track_length;
+        GameTimeDiff::ZERO
     }
 }
 
