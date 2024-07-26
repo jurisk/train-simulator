@@ -101,7 +101,6 @@ impl ResourceTransformItem {
     }
 }
 
-// TODO HIGH: What about money here? Positive and negative? Because the port is strange otherwise.
 pub struct ResourceTransform {
     pub inputs:  Vec<ResourceTransformItem>,
     pub outputs: Vec<ResourceTransformItem>,
