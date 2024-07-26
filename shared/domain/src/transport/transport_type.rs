@@ -59,7 +59,7 @@ impl Neg for CargoAmount {
     }
 }
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum TrainComponentType {
     Engine,
     Car(ResourceType),

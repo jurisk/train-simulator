@@ -23,7 +23,7 @@ use crate::states::ClientState;
 pub mod buildings;
 pub mod map_level;
 mod test_objects;
-mod transport;
+pub mod transport;
 
 #[derive(Resource)]
 pub struct GameStateResource(pub GameState);

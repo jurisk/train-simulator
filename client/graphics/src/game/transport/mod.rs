@@ -1,3 +1,4 @@
+pub mod assets;
 mod train;
 pub mod train_layout;
 
@@ -8,7 +9,7 @@ use bevy::asset::Assets;
 use bevy::pbr::StandardMaterial;
 use bevy::prelude::{
     error, in_state, warn, Children, Commands, Component, Entity, EventReader, FixedUpdate,
-    IntoSystemConfigs, Mesh, Plugin, Query, Res, ResMut, SpatialBundle, Transform, Update,
+    IntoSystemConfigs, Plugin, Query, Res, ResMut, SpatialBundle, Transform, Update,
 };
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
@@ -16,7 +17,9 @@ use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
 use shared_domain::{PlayerId, TransportId};
 
+use crate::assets::GameAssets;
 use crate::communication::domain::ServerMessageEvent;
+use crate::game::transport::assets::TransportAssets;
 use crate::game::transport::train::{calculate_train_component_transforms, create_train};
 use crate::game::GameStateResource;
 use crate::states::ClientState;
@@ -107,7 +110,7 @@ fn handle_transports_sync(
 fn handle_transport_created(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
+    game_assets: Res<GameAssets>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut game_state_resource: ResMut<GameStateResource>,
 ) {
@@ -122,7 +125,7 @@ fn handle_transport_created(
                     let entity = create_transport(
                         transport_info,
                         &mut commands,
-                        &mut meshes,
+                        &game_assets.transport_assets,
                         &mut materials,
                         &map_level,
                         game_state.players(),
@@ -145,7 +148,7 @@ fn handle_transport_created(
 fn create_transport(
     transport_info: &TransportInfo,
     commands: &mut Commands,
-    meshes: &mut ResMut<Assets<Mesh>>,
+    transport_assets: &TransportAssets,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
     players_info: &HashMap<PlayerId, PlayerInfo>,
@@ -164,7 +167,7 @@ fn create_transport(
                         transport_info.location(),
                         train_components,
                         commands,
-                        meshes,
+                        transport_assets,
                         materials,
                         map_level,
                     ))

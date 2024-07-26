@@ -61,6 +61,7 @@ impl AuthenticationService {
                 PlayerInfo {
                     id:     player_id,
                     name:   PlayerName::random(player_id.hash_to_u64()),
+                    // TODO HIGH: Have a pool of supported colors and pass the material through Assets.
                     colour: Colour::random(player_id.hash_to_u64()),
                 }
             },

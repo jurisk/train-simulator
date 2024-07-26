@@ -17,12 +17,12 @@ impl BuildingAssets {
     #[must_use]
     #[allow(clippy::cast_precision_loss)]
     pub fn new(meshes: &mut Assets<Mesh>) -> Self {
-        // TODO: Use `shift_mesh` to actually avoid creating double-height meshes, just shift them
         let fallback = meshes.add(Mesh::from(Sphere::default()));
 
         let mut production_meshes = HashMap::new();
 
         for production_type in ProductionType::all() {
+            // TODO: Use `shift_mesh` to actually avoid creating double-height meshes, just shift them
             let mesh = meshes.add(Mesh::from(Cuboid::new(3.0, PRODUCTION_HEIGHT * 2.0, 3.0)));
             production_meshes.insert(production_type, mesh);
         }
