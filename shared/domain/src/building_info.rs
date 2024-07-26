@@ -17,6 +17,25 @@ use crate::transport::track_type::TrackType;
 use crate::transport::transport_location::TransportLocation;
 use crate::{BuildingId, PlayerId};
 
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+pub struct BuildingStaticInfo {
+    owner_id:       PlayerId,
+    building_id:    BuildingId,
+    reference_tile: TileCoordsXZ,
+    building_type:  BuildingType,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
+pub struct BuildingDynamicInfo {
+    cargo: CargoMap,
+}
+
+impl Debug for BuildingDynamicInfo {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.cargo)
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct BuildingInfo {
     static_info:  BuildingStaticInfo,
@@ -56,11 +75,6 @@ impl BuildingInfo {
                 cargo: CargoMap::new(),
             },
         }
-    }
-
-    #[must_use]
-    pub fn id(&self) -> BuildingId {
-        self.static_info.building_id
     }
 
     pub fn add_cargo(&mut self, cargo: &CargoMap) {
@@ -105,28 +119,7 @@ impl BuildingInfo {
         let progress_within_tile = ProgressWithinTile::about_to_exit();
         Some(TransportLocation::new(tile_path, progress_within_tile))
     }
-}
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
-pub struct BuildingStaticInfo {
-    owner_id:       PlayerId,
-    building_id:    BuildingId,
-    reference_tile: TileCoordsXZ,
-    building_type:  BuildingType,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct BuildingDynamicInfo {
-    cargo: CargoMap,
-}
-
-impl Debug for BuildingDynamicInfo {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.cargo)
-    }
-}
-
-impl BuildingInfo {
     #[must_use]
     pub fn owner_id(&self) -> PlayerId {
         self.static_info.owner_id

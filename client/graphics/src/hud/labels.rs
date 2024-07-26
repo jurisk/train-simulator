@@ -1,6 +1,6 @@
 use bevy::prelude::{Camera, GlobalTransform, Query, Res, Vec3};
 use bevy_egui::EguiContexts;
-use egui::{Id, Pos2};
+use egui::{Context, Id, Pos2};
 use shared_domain::building_type::BuildingType;
 
 use crate::game::buildings::building::center_vec3;
@@ -21,21 +21,74 @@ pub fn draw_labels(
             let context = contexts.ctx_mut();
             let buildings = game_state.building_state();
             for building in buildings.to_vec() {
-                if let BuildingType::Production(production_type) = building.building_type() {
-                    let label = format!("{production_type:?} {:?}", building.dynamic_info());
-                    let building_position_3d = center_vec3(&building, game_state.map_level());
-                    let label_position =
-                        project_to_screen(building_position_3d, camera, camera_transform, context);
-
-                    egui::Area::new(Id::from(format!("{:?}", building.id())))
-                        .fixed_pos(label_position)
-                        .show(context, |ui| {
-                            ui.label(label);
-                        });
+                match building.building_type() {
+                    BuildingType::Track(_) => {},
+                    BuildingType::Station(_) => {
+                        let label = format!("{:?}", building.dynamic_info());
+                        let id = format!("{:?}", building.building_id());
+                        let building_position_3d = center_vec3(&building, game_state.map_level());
+                        draw_label(
+                            building_position_3d,
+                            label,
+                            id,
+                            context,
+                            camera,
+                            camera_transform,
+                        );
+                    },
+                    BuildingType::Production(production_type) => {
+                        let label = format!("{production_type:?} {:?}", building.dynamic_info());
+                        let id = format!("{:?}", building.building_id());
+                        let building_position_3d = center_vec3(&building, game_state.map_level());
+                        draw_label(
+                            building_position_3d,
+                            label,
+                            id,
+                            context,
+                            camera,
+                            camera_transform,
+                        );
+                    },
                 }
+            }
+
+            let transports = game_state.transport_infos();
+            for transport in transports {
+                let label = format!("{:?}", transport.dynamic_info.cargo_loaded);
+                let id = format!("{:?}", transport.transport_id());
+                let transport_location = transport.location();
+                let transport_position_3d = transport_location.tile_path[0].progress_coordinates(
+                    transport_location.progress_within_tile,
+                    game_state.map_level().terrain(),
+                );
+                draw_label(
+                    transport_position_3d,
+                    label,
+                    id,
+                    context,
+                    camera,
+                    camera_transform,
+                );
             }
         }
     }
+}
+
+fn draw_label(
+    position: Vec3,
+    label: String,
+    id: String,
+    context: &mut Context,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+) {
+    let label_position = project_to_screen(position, camera, camera_transform, context);
+
+    egui::Area::new(Id::from(id))
+        .fixed_pos(label_position)
+        .show(context, |ui| {
+            ui.colored_label(egui::Color32::WHITE, label);
+        });
 }
 
 #[allow(clippy::let_and_return)]
