@@ -2,7 +2,6 @@ use log::{debug, info, warn};
 
 use crate::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
-use crate::transport::cargo_loading::CargoLoading;
 use crate::transport::movement_orders::MovementOrderLocation;
 use crate::transport::progress_within_tile::ProgressWithinTile;
 use crate::transport::tile_track::TileTrack;
@@ -78,26 +77,23 @@ fn advance_internal(
         );
 
         if at_location {
-            if transport_info.dynamic_info.cargo_loading == CargoLoading::Finished {
+            let (remaining, is_finished) = transport_info.dynamic_info.cargo_loading.advance(
+                building_state,
+                transport_info
+                    .dynamic_info
+                    .movement_orders
+                    .current_order()
+                    .action,
+                diff,
+            );
+            if is_finished {
                 info!("Finished loading/unloading, advancing to next orders: {transport_info:?}");
                 transport_info
                     .dynamic_info
                     .movement_orders
                     .advance_to_next_order();
-                jump_tile(transport_info, building_state);
-                transport_info.dynamic_info.cargo_loading = CargoLoading::NotStarted;
-                diff
-            } else {
-                transport_info.dynamic_info.cargo_loading.advance(
-                    building_state,
-                    transport_info
-                        .dynamic_info
-                        .movement_orders
-                        .current_order()
-                        .action,
-                    diff,
-                )
             }
+            remaining
         } else {
             jump_tile(transport_info, building_state);
             diff

@@ -20,7 +20,7 @@ impl CargoLoading {
         building_state: &mut BuildingState,
         movement_order_action: MovementOrderAction,
         diff: GameTimeDiff,
-    ) -> GameTimeDiff {
+    ) -> (GameTimeDiff, bool) {
         debug!(
             "Advancing cargo loading: {:?} {:?} {:?}",
             self, diff, building_state
@@ -31,7 +31,7 @@ impl CargoLoading {
                 *self = CargoLoading::Unloading {
                     time_left: GameTimeDiff::from_seconds(1.0),
                 };
-                diff
+                (diff, false)
             },
             CargoLoading::Unloading { time_left } => {
                 let time_left = *time_left;
@@ -39,27 +39,30 @@ impl CargoLoading {
                     *self = CargoLoading::Loading {
                         time_left: GameTimeDiff::from_seconds(1.0),
                     };
-                    diff - time_left
+                    (diff - time_left, false)
                 } else {
                     *self = CargoLoading::Unloading {
                         time_left: time_left - diff,
                     };
-                    GameTimeDiff::ZERO
+                    (GameTimeDiff::ZERO, false)
                 }
             },
             CargoLoading::Loading { time_left } => {
                 let time_left = *time_left;
                 if time_left <= diff {
                     *self = CargoLoading::Finished;
-                    diff - time_left
+                    (diff - time_left, false)
                 } else {
                     *self = CargoLoading::Loading {
                         time_left: time_left - diff,
                     };
-                    GameTimeDiff::ZERO
+                    (GameTimeDiff::ZERO, false)
                 }
             },
-            CargoLoading::Finished => GameTimeDiff::ZERO,
+            CargoLoading::Finished => {
+                *self = CargoLoading::NotStarted;
+                (GameTimeDiff::ZERO, true)
+            },
         }
     }
 }
