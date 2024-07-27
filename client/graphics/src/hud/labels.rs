@@ -102,7 +102,7 @@ fn project_to_screen(
     position: Vec3,
     camera: &Camera,
     camera_transform: &GlobalTransform,
-    context: &egui::Context,
+    context: &Context,
 ) -> Pos2 {
     if let Some(ndc_space_coords) = camera.world_to_ndc(camera_transform, position) {
         let screen_size = context.screen_rect().size();

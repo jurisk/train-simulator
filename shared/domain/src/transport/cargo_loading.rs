@@ -24,16 +24,16 @@ pub enum CargoLoading {
 impl Debug for CargoLoading {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            CargoLoading::NotStarted => write!(f, "∅"),
+            CargoLoading::NotStarted => write!(f, " "),
             CargoLoading::Unloading {
                 time_needed,
                 time_spent,
-            } => write!(f, "▲ {:.0?}%", 100.0 * (*time_spent / *time_needed)),
+            } => write!(f, "⏫ {:.0?}%", 100.0 * (*time_spent / *time_needed)),
             CargoLoading::Loading {
                 time_needed,
                 time_spent,
-            } => write!(f, "▼ {:.0?}%", 100.0 * (*time_spent / *time_needed)),
-            CargoLoading::Finished => write!(f, "✓"),
+            } => write!(f, "⏬ {:.0?}%", 100.0 * (*time_spent / *time_needed)),
+            CargoLoading::Finished => write!(f, "☑"),
         }
     }
 }
