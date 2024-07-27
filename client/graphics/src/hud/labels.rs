@@ -55,7 +55,10 @@ pub fn draw_labels(
             let transports = game_state.transport_infos();
             for transport in transports {
                 // TODO: The cargo label could actually be "I 1.0 of 2.0" or similar
-                let label = format!("{:?}", transport.dynamic_info.cargo_loaded);
+                let label = format!(
+                    "{:?} {:?}",
+                    transport.dynamic_info.cargo_loaded, transport.dynamic_info.cargo_loading
+                );
                 let id = format!("{:?}", transport.transport_id());
                 let transport_location = transport.location();
                 let transport_position_3d = transport_location.tile_path[0].progress_coordinates(

@@ -56,14 +56,12 @@ impl Debug for UnloadAction {
 
 #[derive(Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub enum MovementOrderAction {
-    PassingThrough,
     UnloadAndLoad(UnloadAction, LoadAction),
 }
 
 impl Debug for MovementOrderAction {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::PassingThrough => write!(f, "PT"),
             Self::UnloadAndLoad(unload_action, load_action) => {
                 write!(f, "{unload_action:?}-{load_action:?}")
             },
