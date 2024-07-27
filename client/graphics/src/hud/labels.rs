@@ -1,6 +1,6 @@
 use bevy::prelude::{Camera, GlobalTransform, Query, Res, Vec3};
 use bevy_egui::EguiContexts;
-use egui::{Context, Id, Pos2};
+use egui::{Align2, Context, Id, Pos2};
 use shared_domain::building_type::BuildingType;
 
 use crate::game::buildings::building::center_vec3;
@@ -54,6 +54,7 @@ pub fn draw_labels(
 
             let transports = game_state.transport_infos();
             for transport in transports {
+                // TODO: The cargo label could actually be "I 1.0 of 2.0" or similar
                 let label = format!("{:?}", transport.dynamic_info.cargo_loaded);
                 let id = format!("{:?}", transport.transport_id());
                 let transport_location = transport.location();
@@ -86,6 +87,8 @@ fn draw_label(
 
     egui::Area::new(Id::from(id))
         .fixed_pos(label_position)
+        .pivot(Align2::CENTER_CENTER)
+        .constrain(false)
         .show(context, |ui| {
             ui.colored_label(egui::Color32::WHITE, label);
         });

@@ -1,11 +1,9 @@
 use std::fmt::{Debug, Formatter};
 
-use log::debug;
 use serde::{Deserialize, Serialize};
 
-use crate::building_state::BuildingState;
 use crate::cargo_map::CargoMap;
-use crate::game_time::GameTimeDiff;
+use crate::transport::cargo_loading::CargoLoading;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_location::TransportLocation;
 use crate::transport::transport_type::TransportType;
@@ -17,64 +15,6 @@ pub struct TransportStaticInfo {
     transport_id:   TransportId,
     owner_id:       PlayerId,
     transport_type: TransportType,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-pub enum CargoLoading {
-    NotStarted,
-    Unloading { time_left: GameTimeDiff },
-    Loading { time_left: GameTimeDiff },
-    Finished,
-}
-
-impl CargoLoading {
-    // TODO HIGH: Actually do loading/unloading, considering the loading/unloading instructions. And the times differ based on that.
-    pub fn advance(
-        &mut self,
-        building_state: &mut BuildingState,
-        diff: GameTimeDiff,
-    ) -> GameTimeDiff {
-        debug!(
-            "Advancing cargo loading: {:?} {:?} {:?}",
-            self, diff, building_state
-        );
-
-        match self {
-            CargoLoading::NotStarted => {
-                *self = CargoLoading::Unloading {
-                    time_left: GameTimeDiff::from_seconds(1.0),
-                };
-                self.advance(building_state, diff)
-            },
-            CargoLoading::Unloading { time_left } => {
-                let time_left = *time_left;
-                if time_left <= diff {
-                    *self = CargoLoading::Loading {
-                        time_left: GameTimeDiff::from_seconds(1.0),
-                    };
-                    self.advance(building_state, diff - time_left)
-                } else {
-                    *self = CargoLoading::Unloading {
-                        time_left: time_left - diff,
-                    };
-                    GameTimeDiff::ZERO
-                }
-            },
-            CargoLoading::Loading { time_left } => {
-                let time_left = *time_left;
-                if time_left <= diff {
-                    *self = CargoLoading::Finished;
-                    diff - time_left
-                } else {
-                    *self = CargoLoading::Loading {
-                        time_left: time_left - diff,
-                    };
-                    GameTimeDiff::ZERO
-                }
-            },
-            CargoLoading::Finished => GameTimeDiff::ZERO,
-        }
-    }
 }
 
 // TODO: Make fields `private`?

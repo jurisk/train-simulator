@@ -57,15 +57,15 @@ impl Debug for UnloadAction {
 #[derive(Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub enum MovementOrderAction {
     PassingThrough,
-    LoadAndUnload(LoadAction, UnloadAction),
+    UnloadAndLoad(UnloadAction, LoadAction),
 }
 
 impl Debug for MovementOrderAction {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::PassingThrough => write!(f, "PT"),
-            Self::LoadAndUnload(load_action, unload_action) => {
-                write!(f, "{load_action:?}-{unload_action:?}")
+            Self::UnloadAndLoad(unload_action, load_action) => {
+                write!(f, "{unload_action:?}-{load_action:?}")
             },
         }
     }
@@ -88,9 +88,9 @@ impl MovementOrder {
     pub fn stop_at_station(building_id: BuildingId) -> Self {
         Self {
             go_to:  MovementOrderLocation::StationId(building_id),
-            action: MovementOrderAction::LoadAndUnload(
-                LoadAction::LoadAvailable,
+            action: MovementOrderAction::UnloadAndLoad(
                 UnloadAction::UnloadAvailable,
+                LoadAction::LoadAvailable,
             ),
         }
     }
