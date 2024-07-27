@@ -18,9 +18,9 @@ pub enum CanBuildResponse {
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
-    buildings:              Vec<BuildingInfo>,
+    buildings:            Vec<BuildingInfo>,
     // Link from each production building to the closest station
-    cargo_forwarding_links: HashMap<BuildingId, BuildingId>,
+    closest_station_link: HashMap<BuildingId, BuildingId>,
 }
 
 impl Debug for BuildingState {
@@ -33,8 +33,8 @@ impl BuildingState {
     #[must_use]
     pub fn empty() -> Self {
         Self {
-            buildings:              Vec::new(),
-            cargo_forwarding_links: HashMap::new(),
+            buildings:            Vec::new(),
+            closest_station_link: HashMap::new(),
         }
     }
 
@@ -66,7 +66,7 @@ impl BuildingState {
 
     #[allow(clippy::items_after_statements)]
     fn recalculate_cargo_forwarding_links(&mut self) {
-        self.cargo_forwarding_links.clear();
+        self.closest_station_link.clear();
         for building in &self.buildings {
             if let BuildingType::Production(_) = building.building_type() {
                 let closest_station = self.find_closest_station(building);
@@ -78,7 +78,7 @@ impl BuildingState {
                     );
                     const CARGO_FORWARDING_DISTANCE_THRESHOLD: i32 = 2;
                     if distance <= CARGO_FORWARDING_DISTANCE_THRESHOLD {
-                        self.cargo_forwarding_links
+                        self.closest_station_link
                             .insert(building.building_id(), closest_station.building_id());
                     }
                 }
@@ -274,9 +274,10 @@ impl BuildingState {
         for building in &mut self.buildings {
             building.advance(diff);
         }
-        for (building_id, station_id) in self.cargo_forwarding_links.clone() {
+        for (building_id, station_id) in self.closest_station_link.clone() {
             self.send_cargo_to_station(building_id, station_id);
         }
+        // TODO HIGH: What about sending from station to building?
     }
 
     #[allow(clippy::unwrap_used)]
