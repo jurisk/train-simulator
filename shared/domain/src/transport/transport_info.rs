@@ -74,6 +74,11 @@ impl TransportInfo {
         }
     }
 
+    #[must_use]
+    pub fn remaining_cargo_capacity(&self) -> CargoMap {
+        self.static_info.transport_type.cargo_capacity() - self.dynamic_info.cargo_loaded.clone()
+    }
+
     pub fn update_dynamic_info(&mut self, dynamic_info: &TransportDynamicInfo) {
         self.dynamic_info = dynamic_info.clone();
     }

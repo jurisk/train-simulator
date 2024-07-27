@@ -1,10 +1,13 @@
+use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 
 use log::debug;
 use serde::{Deserialize, Serialize};
 
 use crate::building_info::BuildingInfo;
+use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
+use crate::resource_type::ResourceType;
 use crate::transport::movement_orders::MovementOrderAction;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -39,10 +42,13 @@ impl Debug for CargoLoading {
 }
 
 impl CargoLoading {
-    // TODO HIGH: Actually do loading/unloading, considering the loading/unloading instructions. And the times differ based on that.
+    // TODO HIGH:   Actually do loading/unloading, considering the loading/unloading instructions. And the times differ based on that.
+    //              Use BuildingState resource_types_accepted to figure out which ones can get unloaded and loaded.
     pub fn advance(
         &mut self,
         building: &mut BuildingInfo,
+        resources_to_unload: HashSet<ResourceType>,
+        remaining_cargo_capacity: CargoMap,
         movement_order_action: MovementOrderAction,
         diff: GameTimeDiff,
     ) -> (GameTimeDiff, bool) {
@@ -50,6 +56,14 @@ impl CargoLoading {
             "Advancing cargo loading: {:?} {:?} {:?}",
             self, diff, building
         );
+
+        // We will only load the cargo that we are not also unloading, as otherwise we may be unloading and instantly loading the same cargo
+        let cargo_to_load: CargoMap = building
+            .shippable_cargo()
+            .filter(|(resource, _)| !resources_to_unload.contains(&resource));
+
+        // TODO HIGH: Filter the `cargo_to_load` to match the `remaining_cargo_capacity`
+        println!("{resources_to_unload:?} {cargo_to_load:?}");
 
         match self {
             CargoLoading::NotStarted => {

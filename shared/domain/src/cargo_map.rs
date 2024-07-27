@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-use std::ops::Neg;
+use std::ops::{Neg, Sub};
 
 use serde::{Deserialize, Serialize};
 
@@ -33,6 +33,18 @@ impl CargoMap {
     pub(crate) fn get(&self, resource: ResourceType) -> CargoAmount {
         self.map.get(&resource).copied().unwrap_or_default()
     }
+
+    pub fn filter<F>(self, f: F) -> Self
+    where
+        F: Fn((ResourceType, CargoAmount)) -> bool,
+    {
+        let map = self
+            .map
+            .into_iter()
+            .filter(|(resource_type, cargo_amount)| f((*resource_type, *cargo_amount)))
+            .collect();
+        Self { map }
+    }
 }
 
 impl Debug for CargoMap {
@@ -60,6 +72,18 @@ impl Neg for CargoMap {
         let mut result = CargoMap::new();
         for (&resource, &amount) in &self.map {
             result.add(resource, -amount);
+        }
+        result
+    }
+}
+
+impl Sub for CargoMap {
+    type Output = CargoMap;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let mut result = CargoMap::new();
+        for (&resource, &amount) in &self.map {
+            result.add(resource, amount - rhs.get(resource));
         }
         result
     }

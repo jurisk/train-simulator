@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::building_info::{BuildingDynamicInfo, BuildingInfo};
 use crate::game_time::GameTimeDiff;
 use crate::map_level::MapLevel;
+use crate::resource_type::ResourceType;
 use crate::{BuildingId, BuildingType, PlayerId, TileCoordsXZ, TrackType};
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
@@ -52,6 +53,24 @@ impl BuildingState {
             .iter()
             .filter(|building| building.covers_tiles().contains(tile))
             .collect()
+    }
+
+    #[must_use]
+    pub fn resource_types_accepted(&self, station_id: BuildingId) -> HashSet<ResourceType> {
+        // Note - we are not checking that the building actually is a station here
+        let mut results = HashSet::new();
+        for (building_id, linked_station_id) in self.closest_station_link.clone() {
+            if station_id == linked_station_id {
+                if let Some(building) = self.find_building(building_id) {
+                    if let BuildingType::Production(production_type) = building.building_type() {
+                        for resource_type in production_type.resources_accepted() {
+                            results.insert(resource_type);
+                        }
+                    }
+                }
+            }
+        }
+        results
     }
 
     #[must_use]

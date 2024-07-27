@@ -46,6 +46,15 @@ impl ProductionType {
     }
 
     #[must_use]
+    pub fn resources_accepted(self) -> Vec<ResourceType> {
+        match self {
+            ProductionType::CoalMine => vec![],
+            ProductionType::IronMine => vec![],
+            ProductionType::IronWorks => vec![ResourceType::Iron, ResourceType::Coal],
+        }
+    }
+
+    #[must_use]
     pub fn transform_per_second(self) -> ResourceTransform {
         const CARGO_PER_SECOND: f32 = 0.1f32;
         match self {

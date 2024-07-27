@@ -1,5 +1,5 @@
 use std::fmt::{Debug, Formatter};
-use std::ops::{Add, AddAssign, Div, Mul, Neg};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 use serde::{Deserialize, Serialize};
 
@@ -21,6 +21,14 @@ impl CargoAmount {
 impl Debug for CargoAmount {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:.2}", self.0)
+    }
+}
+
+impl Sub for CargoAmount {
+    type Output = CargoAmount;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0)
     }
 }
 

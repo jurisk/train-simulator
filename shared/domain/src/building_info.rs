@@ -188,7 +188,8 @@ impl BuildingInfo {
     #[must_use]
     pub fn shippable_cargo(&self) -> CargoMap {
         match self.building_type() {
-            BuildingType::Track(_) | BuildingType::Station(_) => CargoMap::new(),
+            BuildingType::Track(_) => CargoMap::new(),
+            BuildingType::Station(_) => self.dynamic_info().cargo.clone(),
             BuildingType::Production(production_type) => {
                 let transform = production_type.transform_per_second();
                 let mut result = CargoMap::new();
