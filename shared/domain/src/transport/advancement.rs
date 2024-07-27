@@ -1,4 +1,4 @@
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 
 use crate::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
@@ -77,23 +77,33 @@ fn advance_internal(
         );
 
         if at_location {
-            let (remaining, is_finished) = transport_info.dynamic_info.cargo_loading.advance(
-                building_state,
-                transport_info
-                    .dynamic_info
-                    .movement_orders
-                    .current_order()
-                    .action,
-                diff,
-            );
-            if is_finished {
-                info!("Finished loading/unloading, advancing to next orders: {transport_info:?}");
-                transport_info
-                    .dynamic_info
-                    .movement_orders
-                    .advance_to_next_order();
+            let MovementOrderLocation::StationId(station_id) = current_orders.go_to;
+            if let Some(building) = building_state.find_building_mut(station_id) {
+                let (remaining, is_finished) = transport_info.dynamic_info.cargo_loading.advance(
+                    building,
+                    transport_info
+                        .dynamic_info
+                        .movement_orders
+                        .current_order()
+                        .action,
+                    diff,
+                );
+                if is_finished {
+                    info!(
+                        "Finished loading/unloading, advancing to next orders: {transport_info:?}"
+                    );
+                    transport_info
+                        .dynamic_info
+                        .movement_orders
+                        .advance_to_next_order();
+                }
+                remaining
+            } else {
+                error!(
+                    "Could not find building with id {station_id:?} for transport {transport_info:?}"
+                );
+                GameTimeDiff::ZERO
             }
-            remaining
         } else {
             jump_tile(transport_info, building_state);
             diff

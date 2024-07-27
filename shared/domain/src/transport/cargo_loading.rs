@@ -1,7 +1,7 @@
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use crate::building_state::BuildingState;
+use crate::building_info::BuildingInfo;
 use crate::game_time::GameTimeDiff;
 use crate::transport::movement_orders::MovementOrderAction;
 
@@ -17,13 +17,13 @@ impl CargoLoading {
     // TODO HIGH: Actually do loading/unloading, considering the loading/unloading instructions. And the times differ based on that.
     pub fn advance(
         &mut self,
-        building_state: &mut BuildingState,
+        building: &mut BuildingInfo,
         movement_order_action: MovementOrderAction,
         diff: GameTimeDiff,
     ) -> (GameTimeDiff, bool) {
         debug!(
             "Advancing cargo loading: {:?} {:?} {:?}",
-            self, diff, building_state
+            self, diff, building
         );
 
         match self {

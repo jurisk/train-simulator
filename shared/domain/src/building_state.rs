@@ -250,7 +250,10 @@ impl BuildingState {
     }
 
     #[must_use]
-    fn find_building_mut(&mut self, building_id: BuildingId) -> Option<&mut BuildingInfo> {
+    pub(crate) fn find_building_mut(
+        &mut self,
+        building_id: BuildingId,
+    ) -> Option<&mut BuildingInfo> {
         self.buildings
             .iter_mut()
             .find(|building| building.building_id() == building_id)
