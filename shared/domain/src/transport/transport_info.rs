@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
-use crate::transport::cargo_loading::CargoProcessing;
+use crate::transport::cargo_processing::CargoProcessing;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_location::TransportLocation;
 use crate::transport::transport_type::TransportType;

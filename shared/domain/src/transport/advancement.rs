@@ -2,7 +2,7 @@ use log::{debug, error, info, warn};
 
 use crate::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
-use crate::transport::cargo_loading::cargo_processing_advance;
+use crate::transport::cargo_processing::cargo_processing_advance;
 use crate::transport::movement_orders::MovementOrderLocation;
 use crate::transport::progress_within_tile::ProgressWithinTile;
 use crate::transport::tile_track::TileTrack;
