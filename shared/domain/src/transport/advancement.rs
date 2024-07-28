@@ -83,6 +83,12 @@ fn advance_internal(
             if let Some(building) = building_state.find_building_mut(station_id) {
                 let cargo_loading_result =
                     cargo_processing_advance(transport_info, building, &resources_to_unload, diff);
+
+                if let Some(ref cargo_to_load) = cargo_loading_result.cargo_to_load {
+                    building.remove_cargo(cargo_to_load);
+                    transport_info.add_cargo(cargo_to_load);
+                }
+
                 transport_info.dynamic_info.cargo_loading = cargo_loading_result.new_state;
                 if cargo_loading_result.advance_to_next_order() {
                     info!(
