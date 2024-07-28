@@ -121,8 +121,9 @@ pub fn advance(
     building_state: &mut BuildingState,
     diff: GameTimeDiff,
 ) {
+    let mut remaining = diff;
     loop {
-        let remaining = advance_internal(transport_info, building_state, diff);
+        remaining = advance_internal(transport_info, building_state, remaining);
         if remaining == GameTimeDiff::ZERO {
             break;
         }
