@@ -134,20 +134,21 @@ pub(crate) fn cargo_processing_advance(
                     CargoProcessingResult::new(CargoProcessing::Finished, diff, None)
                 } else {
                     let time_needed = time_for_processing(&cargo_to_load);
-                    if time_needed <= diff {
-                        // We can load all the cargo
-                        CargoProcessingResult::new(
-                            CargoProcessing::Finished,
-                            diff - time_needed,
-                            Some(cargo_to_load),
-                        )
-                    } else {
+                    let remaining = diff - time_needed;
+                    if remaining <= GameTimeDiff::ZERO {
                         // We can only load some of the cargo
                         let proportion = diff / time_needed;
                         let cargo_to_load = cargo_to_load * proportion;
                         CargoProcessingResult::new(
                             CargoProcessing::Loading,
                             GameTimeDiff::ZERO,
+                            Some(cargo_to_load),
+                        )
+                    } else {
+                        // We can load all the cargo
+                        CargoProcessingResult::new(
+                            CargoProcessing::Finished,
+                            remaining,
                             Some(cargo_to_load),
                         )
                     }
