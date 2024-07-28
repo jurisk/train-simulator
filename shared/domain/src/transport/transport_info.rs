@@ -2,7 +2,9 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
+use crate::resource_type::ResourceType;
 use crate::transport::cargo_loading::CargoLoading;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_location::TransportLocation;
@@ -72,6 +74,29 @@ impl TransportInfo {
                 cargo_loading: CargoLoading::NotStarted,
             },
         }
+    }
+
+    #[must_use]
+    pub fn cargo_as_string(&self) -> String {
+        let mut results = vec![];
+        for resource in ResourceType::all() {
+            let amount = self.dynamic_info.cargo_loaded.get(resource);
+            let capacity = self
+                .static_info
+                .transport_type
+                .cargo_capacity()
+                .get(resource);
+            if capacity != CargoAmount::ZERO {
+                let amount_string = if amount == CargoAmount::ZERO {
+                    "-".to_string()
+                } else {
+                    format!("{amount:.2?}")
+                };
+                let as_string = format!("{resource:?}: {amount_string}/{capacity:.2?}");
+                results.push(as_string);
+            }
+        }
+        results.join(", ")
     }
 
     #[must_use]
