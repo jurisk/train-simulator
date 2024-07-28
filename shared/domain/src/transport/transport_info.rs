@@ -88,15 +88,15 @@ impl TransportInfo {
                 .get(resource);
             if capacity != CargoAmount::ZERO {
                 let amount_string = if amount == CargoAmount::ZERO {
-                    "-".to_string()
+                    "―".to_string()
                 } else {
                     format!("{amount:.2?}")
                 };
-                let as_string = format!("{resource:?}: {amount_string}/{capacity:.2?}");
+                let as_string = format!("{resource:?} {amount_string}/{capacity:.2?}");
                 results.push(as_string);
             }
         }
-        results.join(", ")
+        results.join("  ")
     }
 
     #[must_use]
