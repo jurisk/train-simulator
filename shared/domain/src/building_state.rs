@@ -56,7 +56,10 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn resource_types_accepted(&self, station_id: BuildingId) -> HashSet<ResourceType> {
+    pub fn resource_types_accepted_by_station(
+        &self,
+        station_id: BuildingId,
+    ) -> HashSet<ResourceType> {
         // Note - we are not checking that the building actually is a station here
         let mut results = HashSet::new();
         for (building_id, linked_station_id) in self.closest_station_link.clone() {
@@ -294,19 +297,28 @@ impl BuildingState {
             building.advance(diff);
         }
         for (building_id, station_id) in self.closest_station_link.clone() {
-            self.send_cargo_to_station(building_id, station_id);
+            self.exchange_cargo(building_id, station_id);
         }
-        // TODO HIGH: What about sending from station to building?
     }
 
     #[allow(clippy::unwrap_used)]
-    fn send_cargo_to_station(&mut self, building_id: BuildingId, station_id: BuildingId) {
-        let building = self.find_building_mut(building_id).unwrap();
-        let cargo = building.shippable_cargo();
-        building.remove_cargo(&cargo);
+    fn exchange_cargo(&mut self, building_id: BuildingId, station_id: BuildingId) {
+        let building = self.find_building(building_id).unwrap();
+        let building_inputs = building.accepted_inputs();
+        let cargo_from_building_to_station = building.shippable_cargo();
 
-        let station = self.find_building_mut(station_id).unwrap();
-        station.add_cargo(&cargo);
+        let station = self.find_building(station_id).unwrap();
+        let cargo_from_station_to_building = station
+            .shippable_cargo()
+            .filter(|(resource_type, _cargo_amount)| building_inputs.contains(&resource_type));
+
+        let building_mut = self.find_building_mut(building_id).unwrap();
+        building_mut.remove_cargo(&cargo_from_building_to_station);
+        building_mut.add_cargo(&cargo_from_station_to_building);
+
+        let station_mut = self.find_building_mut(station_id).unwrap();
+        station_mut.add_cargo(&cargo_from_building_to_station);
+        station_mut.remove_cargo(&cargo_from_station_to_building);
     }
 
     pub(crate) fn update_dynamic_info(

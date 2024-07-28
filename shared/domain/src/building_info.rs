@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
@@ -8,6 +9,7 @@ use crate::building_type::BuildingType;
 use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
 use crate::production_type::ProductionType;
+use crate::resource_type::ResourceType;
 use crate::station_type::PlatformIndex;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
@@ -185,6 +187,22 @@ impl BuildingInfo {
             BuildingType::Track(_) | BuildingType::Station(_) => {},
             BuildingType::Production(production_type) => {
                 self.advance_production(seconds, production_type);
+            },
+        }
+    }
+
+    #[must_use]
+    #[allow(clippy::match_same_arms)]
+    pub fn accepted_inputs(&self) -> HashSet<ResourceType> {
+        match self.building_type() {
+            BuildingType::Track(_) => HashSet::new(),
+            BuildingType::Station(_) => HashSet::new(),
+            BuildingType::Production(production_type) => {
+                let mut result = HashSet::new();
+                for input in production_type.transform_per_second().inputs {
+                    result.insert(input.resource);
+                }
+                result
             },
         }
     }
