@@ -78,7 +78,12 @@ impl BuildingInfo {
     }
 
     pub fn add_cargo(&mut self, cargo: &CargoMap) {
-        self.dynamic_info.cargo.add_all(cargo);
+        self.dynamic_info.cargo += cargo;
+    }
+
+    pub fn remove_cargo(&mut self, cargo: &CargoMap) {
+        let reversed = -cargo.clone();
+        self.add_cargo(&reversed);
     }
 
     pub fn update_dynamic_info(&mut self, dynamic_info: &BuildingDynamicInfo) {

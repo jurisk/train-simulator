@@ -303,8 +303,7 @@ impl BuildingState {
     fn send_cargo_to_station(&mut self, building_id: BuildingId, station_id: BuildingId) {
         let building = self.find_building_mut(building_id).unwrap();
         let cargo = building.shippable_cargo();
-        let reverse = -cargo.clone();
-        building.add_cargo(&reverse);
+        building.remove_cargo(&cargo);
 
         let station = self.find_building_mut(station_id).unwrap();
         station.add_cargo(&cargo);

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
-use crate::transport::cargo_loading::CargoLoading;
+use crate::transport::cargo_loading::CargoProcessing;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_location::TransportLocation;
 use crate::transport::transport_type::TransportType;
@@ -25,7 +25,7 @@ pub struct TransportDynamicInfo {
     pub location:        TransportLocation,
     pub velocity:        TransportVelocity, /* TODO: Acceleration and deceleration should be gradual */
     pub movement_orders: MovementOrders,
-    pub cargo_loading:   CargoLoading,
+    pub cargo_loading:   CargoProcessing,
     pub cargo_loaded:    CargoMap,
 }
 
@@ -71,7 +71,7 @@ impl TransportInfo {
                 velocity,
                 movement_orders,
                 cargo_loaded: CargoMap::new(),
-                cargo_loading: CargoLoading::NotStarted,
+                cargo_loading: CargoProcessing::NotStarted,
             },
         }
     }
@@ -136,5 +136,9 @@ impl TransportInfo {
     #[must_use]
     pub fn transport_type(&self) -> &TransportType {
         &self.static_info.transport_type
+    }
+
+    pub fn add_cargo(&mut self, cargo: &CargoMap) {
+        self.dynamic_info.cargo_loaded += cargo;
     }
 }

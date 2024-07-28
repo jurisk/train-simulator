@@ -23,16 +23,14 @@ impl Debug for MovementOrderLocation {
 #[derive(Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub enum LoadAction {
     NoLoad,
-    LoadAvailable,
-    LoadUntilFull,
+    Load,
 }
 
 impl Debug for LoadAction {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::NoLoad => write!(f, "NL"),
-            Self::LoadAvailable => write!(f, "LA"),
-            Self::LoadUntilFull => write!(f, "LF"),
+            Self::NoLoad => write!(f, "No Load"),
+            Self::Load => write!(f, "Load"),
         }
     }
 }
@@ -40,16 +38,14 @@ impl Debug for LoadAction {
 #[derive(Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub enum UnloadAction {
     NoUnload,
-    UnloadAvailable,
-    UnloadUntilEmpty,
+    Unload,
 }
 
 impl Debug for UnloadAction {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::NoUnload => write!(f, "NU"),
-            Self::UnloadAvailable => write!(f, "UA"),
-            Self::UnloadUntilEmpty => write!(f, "UE"),
+            Self::NoUnload => write!(f, "No Unload"),
+            Self::Unload => write!(f, "Unload"),
         }
     }
 }
@@ -86,10 +82,7 @@ impl MovementOrder {
     pub fn stop_at_station(building_id: BuildingId) -> Self {
         Self {
             go_to:  MovementOrderLocation::StationId(building_id),
-            action: MovementOrderAction::UnloadAndLoad(
-                UnloadAction::UnloadAvailable,
-                LoadAction::LoadAvailable,
-            ),
+            action: MovementOrderAction::UnloadAndLoad(UnloadAction::Unload, LoadAction::Load),
         }
     }
 }

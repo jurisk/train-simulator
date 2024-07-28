@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-use std::ops::{Neg, Sub};
+use std::ops::{AddAssign, Mul, Neg, Sub};
 
 use serde::{Deserialize, Serialize};
 
@@ -20,18 +20,20 @@ impl CargoMap {
         }
     }
 
-    pub(crate) fn add_all(&mut self, other: &Self) {
-        for (resource, amount) in &other.map {
-            *self.map.entry(*resource).or_default() += *amount;
-        }
-    }
-
     pub(crate) fn add(&mut self, resource: ResourceType, amount: CargoAmount) {
         *self.map.entry(resource).or_default() += amount;
     }
 
     pub(crate) fn get(&self, resource: ResourceType) -> CargoAmount {
         self.map.get(&resource).copied().unwrap_or_default()
+    }
+
+    pub(crate) fn total_amount(&self) -> CargoAmount {
+        let mut result = CargoAmount::ZERO;
+        for &amount in self.map.values() {
+            result += amount;
+        }
+        result
     }
 
     #[must_use]
@@ -99,5 +101,25 @@ impl Sub for CargoMap {
             result.add(resource, amount - rhs.get(resource));
         }
         result
+    }
+}
+
+impl Mul<f32> for CargoMap {
+    type Output = CargoMap;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        let mut result = CargoMap::new();
+        for (&resource, &amount) in &self.map {
+            result.add(resource, amount * rhs);
+        }
+        result
+    }
+}
+
+impl AddAssign<&Self> for CargoMap {
+    fn add_assign(&mut self, rhs: &Self) {
+        for (resource, amount) in &rhs.map {
+            self.add(*resource, *amount);
+        }
     }
 }

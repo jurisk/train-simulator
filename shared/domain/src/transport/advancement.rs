@@ -2,6 +2,7 @@ use log::{debug, error, info, warn};
 
 use crate::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
+use crate::transport::cargo_loading::cargo_processing_advance;
 use crate::transport::movement_orders::MovementOrderLocation;
 use crate::transport::progress_within_tile::ProgressWithinTile;
 use crate::transport::tile_track::TileTrack;
@@ -80,18 +81,10 @@ fn advance_internal(
             let MovementOrderLocation::StationId(station_id) = current_orders.go_to;
             let resources_to_unload = building_state.resource_types_accepted(station_id);
             if let Some(building) = building_state.find_building_mut(station_id) {
-                let (remaining, is_finished) = transport_info.dynamic_info.cargo_loading.advance(
-                    building,
-                    resources_to_unload,
-                    &transport_info.remaining_cargo_capacity(),
-                    transport_info
-                        .dynamic_info
-                        .movement_orders
-                        .current_order()
-                        .action,
-                    diff,
-                );
-                if is_finished {
+                let cargo_loading_result =
+                    cargo_processing_advance(transport_info, building, &resources_to_unload, diff);
+                transport_info.dynamic_info.cargo_loading = cargo_loading_result.new_state;
+                if cargo_loading_result.is_finished {
                     info!(
                         "Finished loading/unloading, advancing to next orders: {transport_info:?}"
                     );
@@ -100,7 +93,7 @@ fn advance_internal(
                         .movement_orders
                         .advance_to_next_order();
                 }
-                remaining
+                cargo_loading_result.remaining
             } else {
                 error!(
                     "Could not find building with id {station_id:?} for transport {transport_info:?}"

@@ -14,6 +14,11 @@ impl CargoAmount {
     pub fn new(amount: f32) -> Self {
         Self(amount)
     }
+
+    #[must_use]
+    pub fn as_f32(self) -> f32 {
+        self.0
+    }
 }
 
 impl Debug for CargoAmount {
