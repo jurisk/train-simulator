@@ -14,6 +14,7 @@ use crate::tile_coords_xz::TileCoordsXZ;
 pub mod building_info;
 pub mod building_state;
 pub mod building_type;
+mod cargo_amount;
 pub mod cargo_map;
 pub mod client_command;
 pub mod edge_xz;

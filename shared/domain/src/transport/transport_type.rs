@@ -1,68 +1,10 @@
 use std::fmt::{Debug, Formatter};
-use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 use serde::{Deserialize, Serialize};
 
+use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
-
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Default)]
-pub struct CargoAmount(f32);
-
-impl CargoAmount {
-    pub const ZERO: Self = Self(0.0);
-
-    #[must_use]
-    pub fn new(amount: f32) -> Self {
-        Self(amount)
-    }
-}
-
-impl Debug for CargoAmount {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.2}", self.0)
-    }
-}
-
-impl Sub for CargoAmount {
-    type Output = CargoAmount;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self(self.0 - rhs.0)
-    }
-}
-
-impl Add for CargoAmount {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self {
-        Self(self.0 + other.0)
-    }
-}
-
-impl Mul<f32> for CargoAmount {
-    type Output = Self;
-
-    fn mul(self, rhs: f32) -> Self::Output {
-        Self(self.0 * rhs)
-    }
-}
-
-impl Div for CargoAmount {
-    type Output = f32;
-
-    fn div(self, rhs: Self) -> Self::Output {
-        self.0 / rhs.0
-    }
-}
-
-impl Neg for CargoAmount {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        Self(-self.0)
-    }
-}
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum TrainComponentType {
@@ -117,12 +59,6 @@ impl Debug for TransportType {
     }
 }
 
-impl AddAssign for CargoAmount {
-    fn add_assign(&mut self, rhs: Self) {
-        self.0 += rhs.0;
-    }
-}
-
 impl TransportType {
     #[must_use]
     pub fn length_in_tiles(&self) -> f32 {
@@ -163,16 +99,16 @@ impl TransportType {
                     match component {
                         TrainComponentType::Engine => {},
                         TrainComponentType::Car(resource_type) => {
-                            result.add(*resource_type, CargoAmount(1.0));
+                            result.add(*resource_type, CargoAmount::new(1.0));
                         },
                     }
                 }
             },
             TransportType::RoadVehicle(resource_type) => {
-                result.add(*resource_type, CargoAmount(0.5));
+                result.add(*resource_type, CargoAmount::new(0.5));
             },
             TransportType::Ship(resource_type) => {
-                result.add(*resource_type, CargoAmount(10.0));
+                result.add(*resource_type, CargoAmount::new(10.0));
             },
         }
         result

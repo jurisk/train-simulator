@@ -48,7 +48,7 @@ impl CargoLoading {
         &mut self,
         building: &mut BuildingInfo,
         resources_to_unload: HashSet<ResourceType>,
-        remaining_cargo_capacity: CargoMap,
+        remaining_cargo_capacity: &CargoMap,
         movement_order_action: MovementOrderAction,
         diff: GameTimeDiff,
     ) -> (GameTimeDiff, bool) {
@@ -62,7 +62,8 @@ impl CargoLoading {
             .shippable_cargo()
             .filter(|(resource, _)| !resources_to_unload.contains(&resource));
 
-        // TODO HIGH: Filter the `cargo_to_load` to match the `remaining_cargo_capacity`
+        let cargo_to_load = cargo_to_load.cap_at(remaining_cargo_capacity);
+
         println!("{resources_to_unload:?} {cargo_to_load:?}");
 
         match self {

@@ -83,7 +83,7 @@ fn advance_internal(
                 let (remaining, is_finished) = transport_info.dynamic_info.cargo_loading.advance(
                     building,
                     resources_to_unload,
-                    transport_info.remaining_cargo_capacity(),
+                    &transport_info.remaining_cargo_capacity(),
                     transport_info
                         .dynamic_info
                         .movement_orders

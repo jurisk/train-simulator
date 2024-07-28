@@ -4,8 +4,8 @@ use std::ops::{Neg, Sub};
 
 use serde::{Deserialize, Serialize};
 
+use crate::cargo_amount::CargoAmount;
 use crate::resource_type::ResourceType;
-use crate::transport::transport_type::CargoAmount;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct CargoMap {
@@ -34,6 +34,7 @@ impl CargoMap {
         self.map.get(&resource).copied().unwrap_or_default()
     }
 
+    #[must_use]
     pub fn filter<F>(self, f: F) -> Self
     where
         F: Fn((ResourceType, CargoAmount)) -> bool,
@@ -42,6 +43,18 @@ impl CargoMap {
             .map
             .into_iter()
             .filter(|(resource_type, cargo_amount)| f((*resource_type, *cargo_amount)))
+            .collect();
+        Self { map }
+    }
+
+    #[must_use]
+    pub fn cap_at(self, cap: &Self) -> Self {
+        let map = self
+            .map
+            .into_iter()
+            .map(|(resource_type, cargo_amount)| {
+                (resource_type, cargo_amount.min(cap.get(resource_type)))
+            })
             .collect();
         Self { map }
     }

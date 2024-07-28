@@ -4,11 +4,11 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
-use crate::transport::transport_type::CargoAmount;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum ProductionType {
