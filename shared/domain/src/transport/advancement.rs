@@ -84,7 +84,7 @@ fn advance_internal(
                 let cargo_loading_result =
                     cargo_processing_advance(transport_info, building, &resources_to_unload, diff);
                 transport_info.dynamic_info.cargo_loading = cargo_loading_result.new_state;
-                if cargo_loading_result.is_finished {
+                if cargo_loading_result.advance_to_next_order() {
                     info!(
                         "Finished loading/unloading, advancing to next orders: {transport_info:?}"
                     );

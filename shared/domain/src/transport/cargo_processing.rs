@@ -12,7 +12,7 @@ use crate::transport::movement_orders::MovementOrderAction::UnloadAndLoad;
 use crate::transport::movement_orders::{LoadAction, UnloadAction};
 use crate::transport::transport_info::TransportInfo;
 
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub enum CargoProcessing {
     NotStarted,
     Unloading {
@@ -38,38 +38,40 @@ impl Debug for CargoProcessing {
 }
 
 pub(crate) struct CargoProcessingResult {
-    pub new_state:   CargoProcessing,
-    pub remaining:   GameTimeDiff,
-    pub is_finished: bool,
+    pub new_state: CargoProcessing,
+    pub remaining: GameTimeDiff,
 }
 
 impl CargoProcessingResult {
-    pub fn new(new_state: CargoProcessing, remaining: GameTimeDiff, is_finished: bool) -> Self {
+    pub fn new(new_state: CargoProcessing, remaining: GameTimeDiff) -> Self {
         Self {
             new_state,
             remaining,
-            is_finished,
         }
+    }
+
+    pub fn advance_to_next_order(&self) -> bool {
+        self.new_state == CargoProcessing::NotStarted
     }
 }
 
 pub(crate) fn cargo_processing_advance(
     transport_info: &mut TransportInfo,
     building: &mut BuildingInfo,
-    resources_to_unload: &HashSet<ResourceType>,
+    resources_accepted_for_unloading: &HashSet<ResourceType>,
     diff: GameTimeDiff,
 ) -> CargoProcessingResult {
+    debug!(
+        "Advancing cargo loading: {:?} {:?} {:?}",
+        transport_info, building, diff
+    );
+
     let movement_order_action = transport_info
         .dynamic_info
         .movement_orders
         .current_order()
         .action;
     let UnloadAndLoad(unload_action, load_action) = movement_order_action;
-
-    debug!(
-        "Advancing cargo loading: {:?} {:?} {:?}",
-        transport_info, building, diff
-    );
 
     match transport_info.dynamic_info.cargo_loading {
         CargoProcessing::NotStarted => {
@@ -79,7 +81,6 @@ pub(crate) fn cargo_processing_advance(
                     time_spent:  GameTimeDiff::ZERO,
                 },
                 diff,
-                false,
             )
         },
         CargoProcessing::Unloading {
@@ -87,12 +88,16 @@ pub(crate) fn cargo_processing_advance(
             time_spent,
         } => {
             if unload_action == UnloadAction::NoUnload {
-                CargoProcessingResult::new(CargoProcessing::Loading, diff, false)
+                CargoProcessingResult::new(CargoProcessing::Loading, diff)
             } else {
+                let cargo_to_unload = transport_info
+                    .cargo_loaded()
+                    .filter(|(resource, _)| resources_accepted_for_unloading.contains(&resource));
+
                 // TODO HIGH: Do unloading!
                 let time_left = time_needed - time_spent;
                 if time_left <= diff {
-                    CargoProcessingResult::new(CargoProcessing::Loading, diff - time_left, false)
+                    CargoProcessingResult::new(CargoProcessing::Loading, diff - time_left)
                 } else {
                     CargoProcessingResult::new(
                         CargoProcessing::Unloading {
@@ -100,54 +105,45 @@ pub(crate) fn cargo_processing_advance(
                             time_spent: time_spent + diff,
                         },
                         GameTimeDiff::ZERO,
-                        false,
                     )
                 }
             }
         },
         CargoProcessing::Loading => {
             if load_action == LoadAction::NoLoad {
-                CargoProcessingResult::new(CargoProcessing::Finished, diff, false)
+                CargoProcessingResult::new(CargoProcessing::Finished, diff)
             } else {
                 // We will only load the cargo that we are not also unloading, as otherwise we may be unloading and instantly loading the same cargo
                 let cargo_to_load: CargoMap = building
                     .shippable_cargo()
-                    .filter(|(resource, _)| !resources_to_unload.contains(&resource));
+                    .filter(|(resource, _)| !resources_accepted_for_unloading.contains(&resource));
 
                 let cargo_to_load =
                     cargo_to_load.cap_at(&transport_info.remaining_cargo_capacity());
 
                 if cargo_to_load == CargoMap::new() {
                     // Nothing to load
-                    CargoProcessingResult::new(CargoProcessing::Finished, diff, false)
+                    CargoProcessingResult::new(CargoProcessing::Finished, diff)
                 } else {
                     let time_needed = time_for_processing(&cargo_to_load);
                     if time_needed <= diff {
                         // We can load all the cargo
                         building.remove_cargo(&cargo_to_load);
                         transport_info.add_cargo(&cargo_to_load);
-                        CargoProcessingResult::new(
-                            CargoProcessing::Finished,
-                            diff - time_needed,
-                            false,
-                        )
+                        CargoProcessingResult::new(CargoProcessing::Finished, diff - time_needed)
                     } else {
                         // We can only load some of the cargo
                         let proportion = diff / time_needed;
                         let cargo_to_load = cargo_to_load * proportion;
                         building.remove_cargo(&cargo_to_load);
                         transport_info.add_cargo(&cargo_to_load);
-                        CargoProcessingResult::new(
-                            CargoProcessing::Loading,
-                            GameTimeDiff::ZERO,
-                            false,
-                        )
+                        CargoProcessingResult::new(CargoProcessing::Loading, GameTimeDiff::ZERO)
                     }
                 }
             }
         },
         CargoProcessing::Finished => {
-            CargoProcessingResult::new(CargoProcessing::NotStarted, GameTimeDiff::ZERO, true)
+            CargoProcessingResult::new(CargoProcessing::NotStarted, GameTimeDiff::ZERO)
         },
     }
 }
