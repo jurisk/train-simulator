@@ -89,6 +89,11 @@ fn advance_internal(
                     transport_info.add_cargo(cargo_to_load);
                 }
 
+                if let Some(ref cargo_to_unload) = cargo_loading_result.cargo_to_unload {
+                    building.add_cargo(cargo_to_unload);
+                    transport_info.remove_cargo(cargo_to_unload);
+                }
+
                 transport_info.dynamic_info.cargo_loading = cargo_loading_result.new_state;
                 if cargo_loading_result.advance_to_next_order() {
                     info!(

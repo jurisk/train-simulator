@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
-use std::ops::{AddAssign, Mul, Neg, Sub};
+use std::ops::{AddAssign, Mul, Neg, Sub, SubAssign};
 
 use serde::{Deserialize, Serialize};
 
@@ -120,6 +120,14 @@ impl AddAssign<&Self> for CargoMap {
     fn add_assign(&mut self, rhs: &Self) {
         for (resource, amount) in &rhs.map {
             self.add(*resource, *amount);
+        }
+    }
+}
+
+impl SubAssign<&Self> for CargoMap {
+    fn sub_assign(&mut self, rhs: &Self) {
+        for (resource, amount) in &rhs.map {
+            self.add(*resource, -*amount);
         }
     }
 }

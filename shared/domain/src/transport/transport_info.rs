@@ -146,4 +146,8 @@ impl TransportInfo {
     pub fn add_cargo(&mut self, cargo: &CargoMap) {
         self.dynamic_info.cargo_loaded += cargo;
     }
+
+    pub fn remove_cargo(&mut self, cargo: &CargoMap) {
+        self.dynamic_info.cargo_loaded -= cargo;
+    }
 }

@@ -15,10 +15,7 @@ use crate::transport::transport_info::TransportInfo;
 #[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub enum CargoProcessing {
     NotStarted,
-    Unloading {
-        time_needed: GameTimeDiff,
-        time_spent:  GameTimeDiff,
-    },
+    Unloading,
     Loading,
     Finished,
 }
@@ -27,10 +24,7 @@ impl Debug for CargoProcessing {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             CargoProcessing::NotStarted => write!(f, " "),
-            CargoProcessing::Unloading {
-                time_needed: _,
-                time_spent: _,
-            } => write!(f, "⏫"),
+            CargoProcessing::Unloading => write!(f, "⏫"),
             CargoProcessing::Loading => write!(f, "⏬"),
             CargoProcessing::Finished => write!(f, "☑"),
         }
@@ -38,20 +32,23 @@ impl Debug for CargoProcessing {
 }
 
 pub(crate) struct CargoProcessingResult {
-    pub new_state:     CargoProcessing,
-    pub remaining:     GameTimeDiff,
-    pub cargo_to_load: Option<CargoMap>,
+    pub new_state:       CargoProcessing,
+    pub remaining:       GameTimeDiff,
+    pub cargo_to_unload: Option<CargoMap>,
+    pub cargo_to_load:   Option<CargoMap>,
 }
 
 impl CargoProcessingResult {
     pub fn new(
         new_state: CargoProcessing,
         remaining: GameTimeDiff,
+        cargo_to_unload: Option<CargoMap>,
         cargo_to_load: Option<CargoMap>,
     ) -> Self {
         Self {
             new_state,
             remaining,
+            cargo_to_unload,
             cargo_to_load,
         }
     }
@@ -81,45 +78,28 @@ pub(crate) fn cargo_processing_advance(
 
     match transport_info.dynamic_info.cargo_loading {
         CargoProcessing::NotStarted => {
-            CargoProcessingResult::new(
-                CargoProcessing::Unloading {
-                    time_needed: GameTimeDiff::from_seconds(1.0),
-                    time_spent:  GameTimeDiff::ZERO,
-                },
-                diff,
-                None,
-            )
+            CargoProcessingResult::new(CargoProcessing::Unloading, diff, None, None)
         },
-        CargoProcessing::Unloading {
-            time_needed,
-            time_spent,
-        } => {
+        CargoProcessing::Unloading => {
             if unload_action == UnloadAction::NoUnload {
-                CargoProcessingResult::new(CargoProcessing::Loading, diff, None)
+                CargoProcessingResult::new(CargoProcessing::Loading, diff, None, None)
             } else {
                 let cargo_to_unload = transport_info
                     .cargo_loaded()
                     .filter(|(resource, _)| resources_accepted_for_unloading.contains(&resource));
 
-                // TODO HIGH: Do unloading!
-                let time_left = time_needed - time_spent;
-                if time_left <= diff {
-                    CargoProcessingResult::new(CargoProcessing::Loading, diff - time_left, None)
+                let (is_finished, remaining, cargo_to_unload) = time_helper(diff, cargo_to_unload);
+                let next_state = if is_finished {
+                    CargoProcessing::Loading
                 } else {
-                    CargoProcessingResult::new(
-                        CargoProcessing::Unloading {
-                            time_needed,
-                            time_spent: time_spent + diff,
-                        },
-                        GameTimeDiff::ZERO,
-                        None,
-                    )
-                }
+                    CargoProcessing::Unloading
+                };
+                CargoProcessingResult::new(next_state, remaining, cargo_to_unload, None)
             }
         },
         CargoProcessing::Loading => {
             if load_action == LoadAction::NoLoad {
-                CargoProcessingResult::new(CargoProcessing::Finished, diff, None)
+                CargoProcessingResult::new(CargoProcessing::Finished, diff, None, None)
             } else {
                 // We will only load the cargo that we are not also unloading, as otherwise we may be unloading and instantly loading the same cargo
                 let cargo_to_load: CargoMap = building
@@ -129,39 +109,44 @@ pub(crate) fn cargo_processing_advance(
                 let cargo_to_load =
                     cargo_to_load.cap_at(&transport_info.remaining_cargo_capacity());
 
-                if cargo_to_load == CargoMap::new() {
-                    // Nothing to load
-                    CargoProcessingResult::new(CargoProcessing::Finished, diff, None)
+                let (is_finished, remaining, cargo_to_load) = time_helper(diff, cargo_to_load);
+                let next_state = if is_finished {
+                    CargoProcessing::Finished
                 } else {
-                    let time_needed = time_for_processing(&cargo_to_load);
-                    let remaining = diff - time_needed;
-                    if remaining <= GameTimeDiff::ZERO {
-                        // We can only load some of the cargo
-                        let proportion = diff / time_needed;
-                        let cargo_to_load = cargo_to_load * proportion;
-                        CargoProcessingResult::new(
-                            CargoProcessing::Loading,
-                            GameTimeDiff::ZERO,
-                            Some(cargo_to_load),
-                        )
-                    } else {
-                        // We can load all the cargo
-                        CargoProcessingResult::new(
-                            CargoProcessing::Finished,
-                            remaining,
-                            Some(cargo_to_load),
-                        )
-                    }
-                }
+                    CargoProcessing::Loading
+                };
+                CargoProcessingResult::new(next_state, remaining, None, cargo_to_load)
             }
         },
         CargoProcessing::Finished => {
-            CargoProcessingResult::new(CargoProcessing::NotStarted, GameTimeDiff::ZERO, None)
+            CargoProcessingResult::new(CargoProcessing::NotStarted, GameTimeDiff::ZERO, None, None)
         },
     }
 }
 
-const CARGO_PROCESSED_PER_SECOND: f32 = 0.1;
+fn time_helper(
+    diff: GameTimeDiff,
+    cargo_to_load: CargoMap,
+) -> (bool, GameTimeDiff, Option<CargoMap>) {
+    if cargo_to_load == CargoMap::new() {
+        // Nothing to load
+        (true, diff, None)
+    } else {
+        let time_needed = time_for_processing(&cargo_to_load);
+        let remaining = diff - time_needed;
+        if remaining <= GameTimeDiff::ZERO {
+            // We can only load some of the cargo
+            let proportion = diff / time_needed;
+            let cargo_to_load = cargo_to_load * proportion;
+            (false, GameTimeDiff::ZERO, Some(cargo_to_load))
+        } else {
+            // We can load all the cargo
+            (true, remaining, Some(cargo_to_load))
+        }
+    }
+}
+
+const CARGO_PROCESSED_PER_SECOND: f32 = 1.0f32;
 fn time_for_processing(cargo: &CargoMap) -> GameTimeDiff {
-    GameTimeDiff::from_seconds(CARGO_PROCESSED_PER_SECOND * cargo.total_amount().as_f32())
+    GameTimeDiff::from_seconds(cargo.total_amount().as_f32() / CARGO_PROCESSED_PER_SECOND)
 }
