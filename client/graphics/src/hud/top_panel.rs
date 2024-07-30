@@ -2,6 +2,7 @@ use bevy::prelude::ResMut;
 use bevy_egui::EguiContexts;
 use egui::{menu, Ui};
 use shared_domain::production_type::ProductionType;
+use shared_domain::resource_type::ResourceType;
 use shared_domain::station_type::{StationOrientation, StationType};
 use shared_domain::transport::transport_type::TransportType;
 
@@ -145,19 +146,23 @@ fn trains_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     // Later: More types of trains
     menu::menu_button(ui, "🚆 Trains", |ui| {
         set_font_size(ui, 24.0);
-        if ui
-            .add(
-                egui::Button::new("🚆 Mixed Train")
-                    .selected(matches!(
-                        *selected_mode.as_ref(),
-                        SelectedMode::Transport(_)
-                    ))
-                    .min_size(egui::vec2(MIN_X, MIN_Y)),
-            )
-            .clicked()
-        {
-            *selected_mode.as_mut() = SelectedMode::Transport(TransportType::mixed_train());
-            ui.close_menu();
+
+        for resource_type in ResourceType::all() {
+            if ui
+                .add(
+                    egui::Button::new(format!("🚆 {resource_type:?} Train"))
+                        .selected(matches!(
+                            *selected_mode.as_ref(),
+                            SelectedMode::Transport(_)
+                        ))
+                        .min_size(egui::vec2(MIN_X, MIN_Y)),
+                )
+                .clicked()
+            {
+                *selected_mode.as_mut() =
+                    SelectedMode::Transport(TransportType::cargo_train(resource_type));
+                ui.close_menu();
+            }
         }
     });
 }

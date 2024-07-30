@@ -12,6 +12,7 @@ digraph G {
     { rank = same; CoalMine; IronMine; Forestry; SulfurMine; NitrateMine; OilWell; LimestoneMine; ClayMining; SandAndGravelMine; }
 
     node [shape = ellipse, style = filled];
+    # https://en.wikipedia.org/wiki/Basic_oxygen_steelmaking
     IronWorks [label = "Iron Works"];
     WeaponsFactory [label = "Weapons Factory"];
     LumberMill [label = "Lumber Mill"];

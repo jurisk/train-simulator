@@ -6,6 +6,7 @@ use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
 use shared_domain::production_type::ProductionType;
+use shared_domain::resource_type::ResourceType;
 use shared_domain::station_type::{PlatformIndex, StationType};
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
@@ -19,29 +20,29 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
 
-const STATION_A: TileCoordsXZ = TileCoordsXZ::from_usizes(43, 30);
-const STATION_B: TileCoordsXZ = TileCoordsXZ::from_usizes(10, 84);
-const STATION_C: TileCoordsXZ = TileCoordsXZ::from_usizes(7, 41);
-const STATION_D: TileCoordsXZ = TileCoordsXZ::from_usizes(53, 35);
+const IRON_MINE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(43, 30);
+const IRON_MINE_B: TileCoordsXZ = TileCoordsXZ::from_usizes(53, 35);
+const COAL_MINE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(10, 84);
+const IRON_WORKS_A: TileCoordsXZ = TileCoordsXZ::from_usizes(7, 41);
 
 #[allow(clippy::vec_init_then_push)]
 fn build_test_buildings(player_id: PlayerId) -> GameCommand {
     let buildings = [
-        (STATION_A, BuildingType::Station(StationType::all()[0])),
-        (STATION_B, BuildingType::Station(StationType::all()[1])),
-        (STATION_C, BuildingType::Station(StationType::all()[1])),
-        (STATION_D, BuildingType::Station(StationType::all()[0])),
+        (IRON_MINE_A, BuildingType::Station(StationType::all()[0])),
+        (IRON_MINE_B, BuildingType::Station(StationType::all()[0])),
+        (COAL_MINE_A, BuildingType::Station(StationType::all()[1])),
+        (IRON_WORKS_A, BuildingType::Station(StationType::all()[1])),
         (
             TileCoordsXZ::from_usizes(40, 31),
-            BuildingType::Production(ProductionType::CoalMine),
+            BuildingType::Production(ProductionType::IronMine),
         ),
         (
             TileCoordsXZ::from_usizes(55, 36),
-            BuildingType::Production(ProductionType::CoalMine),
+            BuildingType::Production(ProductionType::IronMine),
         ),
         (
             TileCoordsXZ::from_usizes(7, 39),
-            BuildingType::Production(ProductionType::IronMine),
+            BuildingType::Production(ProductionType::CoalMine),
         ),
         (
             TileCoordsXZ::from_usizes(12, 82),
@@ -92,50 +93,58 @@ fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCom
 #[allow(clippy::unwrap_used)]
 fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Vec<GameCommand> {
     let building_state = game_state.building_state();
-    let station_a = building_state
-        .filter_buildings_by_reference_tile(STATION_A)
+    let iron_mine_a = building_state
+        .filter_buildings_by_reference_tile(IRON_MINE_A)
         .first()
         .copied()
         .unwrap();
-    let station_b = building_state
-        .filter_buildings_by_reference_tile(STATION_B)
+    let iron_mine_b = building_state
+        .filter_buildings_by_reference_tile(IRON_MINE_B)
         .first()
         .copied()
         .unwrap();
-    let station_c = building_state
-        .filter_buildings_by_reference_tile(STATION_C)
+    let coal_mine_a = building_state
+        .filter_buildings_by_reference_tile(COAL_MINE_A)
         .first()
         .copied()
         .unwrap();
-    let station_d = building_state
-        .filter_buildings_by_reference_tile(STATION_D)
+    let iron_works_a = building_state
+        .filter_buildings_by_reference_tile(IRON_WORKS_A)
         .first()
         .copied()
         .unwrap();
-    let mut movement_orders =
-        MovementOrders::one(MovementOrder::stop_at_station(station_d.building_id()));
-    movement_orders.push(MovementOrder::stop_at_station(station_a.building_id()));
-    movement_orders.push(MovementOrder::stop_at_station(station_b.building_id()));
-    movement_orders.push(MovementOrder::stop_at_station(station_c.building_id()));
-    movement_orders.push(MovementOrder::stop_at_station(station_a.building_id()));
-
     let mut results = vec![];
-    for (station, direction) in [
-        (station_a, DirectionXZ::North),
-        (station_b, DirectionXZ::East),
-        (station_c, DirectionXZ::West),
-        (station_d, DirectionXZ::South),
+    for (station_1, station_2, direction, resource_type) in [
+        (
+            iron_mine_a,
+            iron_works_a,
+            DirectionXZ::North,
+            ResourceType::Iron,
+        ),
+        (
+            iron_mine_b,
+            iron_works_a,
+            DirectionXZ::South,
+            ResourceType::Iron,
+        ),
+        (
+            coal_mine_a,
+            iron_works_a,
+            DirectionXZ::West,
+            ResourceType::Coal,
+        ),
     ] {
-        let movement_orders = movement_orders.clone();
-        // Later: We could adjust the movement orders to be right depending on the spawn station
+        let mut movement_orders =
+            MovementOrders::one(MovementOrder::stop_at_station(station_1.building_id()));
+        movement_orders.push(MovementOrder::stop_at_station(station_2.building_id()));
 
-        let transport_location = station
+        let transport_location = station_1
             .transport_location_at_station(PlatformIndex::new(0), direction)
             .unwrap();
         let command = GameCommand::PurchaseTransport(TransportInfo::new(
             TransportId::random(),
             player_id,
-            TransportType::mixed_train(),
+            TransportType::cargo_train(resource_type),
             transport_location,
             TransportVelocity::new(2.0),
             movement_orders,

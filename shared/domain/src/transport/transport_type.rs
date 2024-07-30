@@ -74,19 +74,18 @@ impl TransportType {
         }
     }
 
-    // TODO: Make more elegant
     #[must_use]
-    pub fn mixed_train() -> Self {
+    pub fn cargo_train(resource_type: ResourceType) -> Self {
         TransportType::Train(vec![
             TrainComponentType::Engine,
-            TrainComponentType::Car(ResourceType::Coal),
-            TrainComponentType::Car(ResourceType::Coal),
-            TrainComponentType::Car(ResourceType::Coal),
-            TrainComponentType::Car(ResourceType::Iron),
-            TrainComponentType::Car(ResourceType::Iron),
-            TrainComponentType::Car(ResourceType::Iron),
-            TrainComponentType::Car(ResourceType::Steel),
-            TrainComponentType::Car(ResourceType::Steel),
+            TrainComponentType::Car(resource_type),
+            TrainComponentType::Car(resource_type),
+            TrainComponentType::Car(resource_type),
+            TrainComponentType::Car(resource_type),
+            TrainComponentType::Car(resource_type),
+            TrainComponentType::Car(resource_type),
+            TrainComponentType::Car(resource_type),
+            TrainComponentType::Car(resource_type),
         ])
     }
 

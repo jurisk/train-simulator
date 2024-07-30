@@ -77,11 +77,12 @@ impl ProductionType {
                 )
             },
             ProductionType::IronWorks => {
+                // https://marketrealist.com/2015/01/coke-fit-steelmaking-process/
                 ResourceTransform::new(
                     vec![
                         ResourceTransformItem::new(
                             ResourceType::Iron,
-                            CargoAmount::new(CARGO_PER_SECOND),
+                            CargoAmount::new(CARGO_PER_SECOND * 2.0),
                         ),
                         ResourceTransformItem::new(
                             ResourceType::Coal,
