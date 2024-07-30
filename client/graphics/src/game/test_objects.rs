@@ -22,8 +22,8 @@ use crate::game::{GameStateResource, PlayerIdResource};
 
 const IRON_MINE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(43, 30);
 const IRON_MINE_B: TileCoordsXZ = TileCoordsXZ::from_usizes(53, 35);
-const COAL_MINE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(10, 84);
-const IRON_WORKS_A: TileCoordsXZ = TileCoordsXZ::from_usizes(7, 41);
+const COAL_MINE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(7, 41);
+const IRON_WORKS_A: TileCoordsXZ = TileCoordsXZ::from_usizes(10, 84);
 
 #[allow(clippy::vec_init_then_push)]
 fn build_test_buildings(player_id: PlayerId) -> GameCommand {
