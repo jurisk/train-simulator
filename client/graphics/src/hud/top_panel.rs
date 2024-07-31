@@ -142,25 +142,23 @@ fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
-fn trains_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
+fn trains_menu(selected_mode_res: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     // Later: More types of trains
     menu::menu_button(ui, "🚆 Trains", |ui| {
         set_font_size(ui, 24.0);
 
         for resource_type in ResourceType::all() {
+            let transport_type = TransportType::cargo_train(resource_type);
+            let selected_mode = selected_mode_res.as_ref();
             if ui
                 .add(
                     egui::Button::new(format!("🚆 {resource_type:?} Train"))
-                        .selected(matches!(
-                            *selected_mode.as_ref(),
-                            SelectedMode::Transport(_)
-                        ))
+                        .selected(*selected_mode == SelectedMode::Transport(transport_type.clone()))
                         .min_size(egui::vec2(MIN_X, MIN_Y)),
                 )
                 .clicked()
             {
-                *selected_mode.as_mut() =
-                    SelectedMode::Transport(TransportType::cargo_train(resource_type));
+                *selected_mode_res.as_mut() = SelectedMode::Transport(transport_type);
                 ui.close_menu();
             }
         }

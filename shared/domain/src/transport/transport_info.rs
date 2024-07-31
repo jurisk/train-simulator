@@ -57,9 +57,9 @@ impl TransportInfo {
         owner_id: PlayerId,
         transport_type: TransportType,
         location: TransportLocation,
-        velocity: TransportVelocity,
         movement_orders: MovementOrders,
     ) -> Self {
+        let velocity = transport_type.max_velocity();
         Self {
             static_info:  TransportStaticInfo {
                 transport_id,

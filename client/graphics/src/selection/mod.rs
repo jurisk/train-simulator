@@ -137,13 +137,15 @@ fn debug_draw_edge(
     tiles: &GridXZ<TileCoordsXZ, Tile>,
     color: Srgba,
 ) {
-    let (tile, direction) = edge.to_tile_and_direction();
-    if tiles.in_bounds(tile) {
-        // Later:   Actually, we cannot select the edges on some corners of the map (e.g. left side of the map)
-        //          because of the way we represent the edges. We can fix this later, probably by avoiding `to_tile_and_direction`.
-        let (a, b) = tiles[tile].quad.vertex_coordinates_clockwise(direction);
-        gizmos.sphere(a.position, Quat::default(), 0.1, color);
-        gizmos.sphere(b.position, Quat::default(), 0.1, color);
+    // Later: We are often drawing twice, this should be improved
+    for (tile, direction) in edge.both_tiles_and_directions() {
+        if tiles.in_bounds(tile) {
+            // Later:   Actually, we cannot select the edges on some corners of the map (e.g. left side of the map)
+            //          because of the way we represent the edges. We can fix this later, probably by avoiding `to_tile_and_direction`.
+            let (a, b) = tiles[tile].quad.vertex_coordinates_clockwise(direction);
+            gizmos.sphere(a.position, Quat::default(), 0.1, color);
+            gizmos.sphere(b.position, Quat::default(), 0.1, color);
+        }
     }
 }
 

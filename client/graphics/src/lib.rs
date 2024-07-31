@@ -91,3 +91,8 @@ impl Plugin for ClientGraphicsPlugin {
         info!("Current dir: {:?}", std::env::current_dir());
     }
 }
+
+fn on_ui(egui_context: &mut egui::Context) -> bool {
+    // Later: Actually, our labels are also Egui areas, so this may need improvement.
+    egui_context.is_pointer_over_area()
+}

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use bevy::prelude::Res;
+use bevy::prelude::{Res, ResMut};
 use bevy::utils::default;
 use bevy_egui::EguiContexts;
 use egui::text::LayoutJob;
@@ -11,11 +11,13 @@ use shared_domain::server_response::PlayerInfo;
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::PlayerId;
 
+use crate::game::transport::ui::TransportsToShow;
 use crate::game::GameStateResource;
 
 pub(crate) fn show_left_panel(
     mut contexts: EguiContexts,
     game_state_resource: Option<Res<GameStateResource>>,
+    mut transport_to_show: ResMut<TransportsToShow>,
 ) {
     if let Some(game_state_resource) = game_state_resource {
         let GameStateResource(game_state) = game_state_resource.as_ref();
@@ -23,7 +25,7 @@ pub(crate) fn show_left_panel(
         egui::SidePanel::left("hud_left_panel").show(contexts.ctx_mut(), |ui| {
             players_info_panel(ui, game_state.players());
             buildings_info_panel(ui, game_state.building_state());
-            transport_info_panel(ui, &game_state.transport_infos());
+            transport_info_panel(ui, &game_state.transport_infos(), &mut transport_to_show);
         });
     }
 }
@@ -44,10 +46,26 @@ fn buildings_info_panel(ui: &mut Ui, buildings: &BuildingState) {
     }
 }
 
-fn transport_info_panel(ui: &mut Ui, transport_infos: &Vec<TransportInfo>) {
+fn transport_info_panel(
+    ui: &mut Ui,
+    transport_infos: &Vec<TransportInfo>,
+    transports_to_show: &mut ResMut<TransportsToShow>,
+) {
     ui.heading("Transports");
     for transport_info in transport_infos {
-        ui.label(format!("{transport_info:?}"));
+        let id = transport_info.transport_id();
+        let selected = transports_to_show.contains(id);
+
+        if ui
+            .add(egui::Button::new(format!("{transport_info:?}")).selected(selected))
+            .clicked()
+        {
+            if selected {
+                transports_to_show.remove(id);
+            } else {
+                transports_to_show.insert(id);
+            }
+        }
     }
 }
 

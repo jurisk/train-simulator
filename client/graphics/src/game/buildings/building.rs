@@ -14,6 +14,7 @@ use shared_domain::BuildingId;
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
+use crate::on_ui;
 use crate::selection::HoveredTile;
 
 pub(crate) fn build_building_when_mouse_released(
@@ -25,7 +26,7 @@ pub(crate) fn build_building_when_mouse_released(
     hovered_tile: Res<HoveredTile>,
     mut egui_contexts: EguiContexts,
 ) {
-    if egui_contexts.ctx_mut().is_pointer_over_area() {
+    if on_ui(egui_contexts.ctx_mut()) {
         return;
     }
 

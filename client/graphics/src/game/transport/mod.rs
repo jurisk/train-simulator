@@ -1,6 +1,8 @@
 pub mod assets;
+pub mod building;
 mod train;
 pub mod train_layout;
+pub mod ui;
 
 use std::collections::HashMap;
 
@@ -20,7 +22,9 @@ use shared_domain::{PlayerId, TransportId};
 use crate::assets::GameAssets;
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::transport::assets::TransportAssets;
+use crate::game::transport::building::build_transport_when_mouse_released;
 use crate::game::transport::train::{calculate_train_component_transforms, create_train};
+use crate::game::transport::ui::{show_transport_details, TransportsToShow};
 use crate::game::GameStateResource;
 use crate::states::ClientState;
 
@@ -46,8 +50,18 @@ impl Plugin for TransportPlugin {
             Update,
             move_transports.run_if(in_state(ClientState::Playing)),
         );
-        // TODO HIGH: Spawn transports when in Transport building mode
-        // TODO HIGH: When a transport is clicked, allow to adjust MovementOrders
+
+        app.add_systems(
+            Update,
+            build_transport_when_mouse_released.run_if(in_state(ClientState::Playing)),
+        );
+
+        app.insert_resource(TransportsToShow::default());
+
+        app.add_systems(
+            Update,
+            show_transport_details.run_if(in_state(ClientState::Playing)),
+        );
     }
 }
 

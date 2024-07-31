@@ -22,6 +22,7 @@ use shared_domain::transport::track_type::TrackType;
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
+use crate::on_ui;
 use crate::selection::{SelectedEdges, SelectedTiles};
 
 const RAIL_DIAMETER: f32 = 0.025;
@@ -211,7 +212,7 @@ pub(crate) fn build_tracks_when_mouse_released(
     selected_mode_resource: Res<SelectedMode>,
     mut egui_contexts: EguiContexts,
 ) {
-    if egui_contexts.ctx_mut().is_pointer_over_area() {
+    if on_ui(egui_contexts.ctx_mut()) {
         return;
     }
 

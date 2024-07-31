@@ -10,7 +10,6 @@ use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
 use crate::production_type::ProductionType;
 use crate::resource_type::ResourceType;
-use crate::station_type::PlatformIndex;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::progress_within_tile::ProgressWithinTile;
@@ -96,8 +95,8 @@ impl BuildingInfo {
     #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
     pub fn transport_location_at_station(
         &self,
-        platform: PlatformIndex,
-        pointing_in: DirectionXZ,
+        tile: TileCoordsXZ,
+        direction: DirectionXZ,
     ) -> Option<TransportLocation> {
         let station_type = match self.building_type() {
             BuildingType::Track(_) | BuildingType::Production(_) => None,
@@ -106,8 +105,8 @@ impl BuildingInfo {
         let (_, _, exit_track) = station_type
             .exit_tile_tracks(self.reference_tile())
             .into_iter()
-            .find(|(this_platform, this_pointing_in, _track)| {
-                *this_platform == platform && *this_pointing_in == pointing_in
+            .find(|(_platform, _pointing_in, track)| {
+                track.tile_coords_xz == tile && track.pointing_in == direction
             })?;
         let diff: CoordsXZ = exit_track.pointing_in.reverse().into();
         let mut tile_path = vec![];

@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
 
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 use crate::building_info::{BuildingDynamicInfo, BuildingInfo};
@@ -53,6 +54,22 @@ impl BuildingState {
             .iter()
             .filter(|building| building.covers_tiles().contains(tile))
             .collect()
+    }
+
+    #[must_use]
+    pub fn station_at(&self, tile: TileCoordsXZ) -> Option<&BuildingInfo> {
+        let results: Vec<_> = self
+            .buildings_at(tile)
+            .into_iter()
+            .filter(|building| matches!(building.building_type(), BuildingType::Station(_)))
+            .collect();
+
+        if results.len() > 1 {
+            warn!("Found multiple stations at tile {:?}: {:?}", tile, results);
+            None
+        } else {
+            results.first().copied()
+        }
     }
 
     #[must_use]

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
+use crate::transport::transport_velocity::TransportVelocity;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum TrainComponentType {
@@ -111,5 +112,10 @@ impl TransportType {
             },
         }
         result
+    }
+
+    #[must_use]
+    pub fn max_velocity(&self) -> TransportVelocity {
+        TransportVelocity::new(2.0)
     }
 }

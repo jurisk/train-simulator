@@ -25,7 +25,7 @@ impl SelectedMode {
 
     #[must_use]
     pub fn show_hovered_edge(&self) -> bool {
-        matches!(self, SelectedMode::Tracks)
+        matches!(self, SelectedMode::Tracks) || matches!(self, SelectedMode::Transport(_))
     }
 
     #[must_use]
