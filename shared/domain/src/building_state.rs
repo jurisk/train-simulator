@@ -48,7 +48,7 @@ impl BuildingState {
     }
 
     #[must_use]
-    fn buildings_at(&self, tile: TileCoordsXZ) -> Vec<&BuildingInfo> {
+    pub fn buildings_at(&self, tile: TileCoordsXZ) -> Vec<&BuildingInfo> {
         self.buildings
             .iter()
             .filter(|building| building.covers_tiles().contains(tile))
@@ -279,17 +279,6 @@ impl BuildingState {
         self.buildings
             .iter_mut()
             .find(|building| building.building_id() == building_id)
-    }
-
-    #[must_use]
-    pub fn filter_buildings_by_reference_tile(
-        &self,
-        reference_tile: TileCoordsXZ,
-    ) -> Vec<&BuildingInfo> {
-        self.buildings
-            .iter()
-            .filter(|building| building.reference_tile() == reference_tile)
-            .collect()
     }
 
     pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff) {

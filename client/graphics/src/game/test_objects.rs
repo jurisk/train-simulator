@@ -1,6 +1,7 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, KeyCode, Res};
 use shared_domain::building_info::BuildingInfo;
+use shared_domain::building_state::BuildingState;
 use shared_domain::building_type::BuildingType;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::edge_xz::EdgeXZ;
@@ -90,29 +91,25 @@ fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCom
     vec![GameCommand::BuildBuildings(buildings)]
 }
 
+fn find_station_id(building_state: &BuildingState, tile: TileCoordsXZ) -> BuildingId {
+    let results: Vec<_> = building_state
+        .buildings_at(tile)
+        .into_iter()
+        .filter(|building| matches!(building.building_type(), BuildingType::Station(_)))
+        .collect();
+
+    assert_eq!(results.len(), 1);
+
+    results[0].building_id()
+}
+
 #[allow(clippy::unwrap_used)]
 fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Vec<GameCommand> {
     let building_state = game_state.building_state();
-    let iron_mine_a = building_state
-        .filter_buildings_by_reference_tile(IRON_MINE_A)
-        .first()
-        .copied()
-        .unwrap();
-    let iron_mine_b = building_state
-        .filter_buildings_by_reference_tile(IRON_MINE_B)
-        .first()
-        .copied()
-        .unwrap();
-    let coal_mine_a = building_state
-        .filter_buildings_by_reference_tile(COAL_MINE_A)
-        .first()
-        .copied()
-        .unwrap();
-    let iron_works_a = building_state
-        .filter_buildings_by_reference_tile(IRON_WORKS_A)
-        .first()
-        .copied()
-        .unwrap();
+    let iron_mine_a = find_station_id(building_state, IRON_MINE_A);
+    let iron_mine_b = find_station_id(building_state, IRON_MINE_B);
+    let coal_mine_a = find_station_id(building_state, COAL_MINE_A);
+    let iron_works_a = find_station_id(building_state, IRON_WORKS_A);
     let mut results = vec![];
     for (station_1, station_2, direction, resource_type) in [
         (
@@ -134,11 +131,12 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Vec<Gam
             ResourceType::Coal,
         ),
     ] {
-        let mut movement_orders =
-            MovementOrders::one(MovementOrder::stop_at_station(station_1.building_id()));
-        movement_orders.push(MovementOrder::stop_at_station(station_2.building_id()));
+        let mut movement_orders = MovementOrders::one(MovementOrder::stop_at_station(station_1));
+        movement_orders.push(MovementOrder::stop_at_station(station_2));
 
-        let transport_location = station_1
+        let transport_location = building_state
+            .find_building(station_1)
+            .unwrap()
             .transport_location_at_station(PlatformIndex::new(0), direction)
             .unwrap();
         let command = GameCommand::PurchaseTransport(TransportInfo::new(
