@@ -90,6 +90,19 @@ impl BuildingInfo {
         self.dynamic_info = dynamic_info.clone();
     }
 
+    #[must_use]
+    pub fn station_exit_tile_tracks(&self) -> Vec<TileTrack> {
+        if let BuildingType::Station(station_type) = self.building_type() {
+            station_type
+                .exit_tile_tracks(self.reference_tile())
+                .into_iter()
+                .map(|(_, track)| track)
+                .collect()
+        } else {
+            vec![]
+        }
+    }
+
     // TODO: Refactor this as this is really station specific, not building specific
     #[must_use]
     #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
@@ -102,12 +115,10 @@ impl BuildingInfo {
             BuildingType::Track(_) | BuildingType::Production(_) => None,
             BuildingType::Station(station_type) => Some(station_type),
         }?;
-        let (_, _, exit_track) = station_type
-            .exit_tile_tracks(self.reference_tile())
+        let exit_track = self
+            .station_exit_tile_tracks()
             .into_iter()
-            .find(|(_platform, _pointing_in, track)| {
-                track.tile_coords_xz == tile && track.pointing_in == direction
-            })?;
+            .find(|track| track.tile_coords_xz == tile && track.pointing_in == direction)?;
         let diff: CoordsXZ = exit_track.pointing_in.reverse().into();
         let mut tile_path = vec![];
         for i in 0 .. station_type.length_in_tiles {

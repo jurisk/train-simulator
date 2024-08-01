@@ -1,4 +1,4 @@
-use log::{debug, error, info, warn};
+use log::{debug, error, warn};
 
 use crate::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
@@ -101,7 +101,7 @@ fn advance_internal(
 
                 transport_info.dynamic_info.cargo_loading = cargo_loading_result.new_state;
                 if cargo_loading_result.advance_to_next_order() {
-                    info!(
+                    debug!(
                         "Finished loading/unloading, advancing to next orders: {transport_info:?}"
                     );
                     transport_info

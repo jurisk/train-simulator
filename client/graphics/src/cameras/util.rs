@@ -1,7 +1,7 @@
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::input::ButtonInput;
 use bevy::math::{Dir3, Vec3};
-use bevy::prelude::{debug, EventReader, KeyCode, Mat3, Mut, Res, Transform};
+use bevy::prelude::{info, warn, EventReader, KeyCode, Mat3, Mut, Res, Transform};
 
 fn zx_movement(keyboard_input: &Res<ButtonInput<KeyCode>>, transform: &Transform) -> Vec3 {
     let zx_direction = zx_direction(keyboard_input);
@@ -55,6 +55,7 @@ pub(crate) fn zoom_value(
     }
 
     for ev in mouse_wheel.read() {
+        info!("Mouse zoom: {ev:?} {result}"); // TODO: This results in very weird and choppy scrolling sometimes, needs to be rethought.
         match ev.unit {
             MouseScrollUnit::Line => {
                 const MOUSE_SCROLL_UNIT_LINE_COEF: f32 = 100.0;
@@ -62,7 +63,7 @@ pub(crate) fn zoom_value(
                 result += ev.y * MOUSE_SCROLL_UNIT_LINE_COEF;
             },
             MouseScrollUnit::Pixel => {
-                debug!(
+                warn!(
                     "Scroll (pixel units): vertical: {}, horizontal: {}",
                     ev.y, ev.x
                 );

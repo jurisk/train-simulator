@@ -26,6 +26,14 @@ const COAL_MINE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(7, 41);
 const IRON_WORKS_A: TileCoordsXZ = TileCoordsXZ::from_usizes(10, 84);
 const WAREHOUSE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(26, 92);
 
+const ALL: [TileCoordsXZ; 5] = [
+    IRON_MINE_A,
+    IRON_MINE_B,
+    COAL_MINE_A,
+    IRON_WORKS_A,
+    WAREHOUSE_A,
+];
+
 #[allow(clippy::vec_init_then_push)]
 fn build_test_buildings(player_id: PlayerId) -> GameCommand {
     let buildings = [
@@ -70,22 +78,31 @@ fn build_test_buildings(player_id: PlayerId) -> GameCommand {
 fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCommand> {
     // Later: Could automatically generate these connections from the station exits
 
+    let building_state = game_state.building_state();
+    let mut connections = vec![];
+    for (a_idx, a) in ALL.into_iter().enumerate() {
+        for (b_idx, b) in ALL.into_iter().enumerate() {
+            if a_idx < b_idx {
+                let a = find_station(building_state, a);
+                let b = find_station(building_state, b);
+
+                for a in a.station_exit_tile_tracks() {
+                    for b in b.station_exit_tile_tracks() {
+                        connections.push((a, b));
+                    }
+                }
+            }
+        }
+    }
+
     let mut buildings = vec![];
-    let connections = [
-        ((42, 33, DirectionXZ::South), (13, 84, DirectionXZ::East)),
-        ((10, 84, DirectionXZ::West), (7, 41, DirectionXZ::West)),
-        ((10, 41, DirectionXZ::East), (42, 30, DirectionXZ::North)),
-        ((42, 33, DirectionXZ::South), (53, 38, DirectionXZ::South)),
-        ((53, 35, DirectionXZ::North), (42, 30, DirectionXZ::North)),
-        // TODO HIGH: Connect WAREHOUSE_A to IRON_WORKS_A
-    ];
-    for ((ax, az, ad), (bx, bz, bd)) in connections {
+    for (a, b) in connections {
         if let Some(route) = plan_tracks(
             player_id,
             &[],
             &[
-                EdgeXZ::from_tile_and_direction(TileCoordsXZ::from_usizes(ax, az), ad),
-                EdgeXZ::from_tile_and_direction(TileCoordsXZ::from_usizes(bx, bz), bd),
+                EdgeXZ::from_tile_and_direction(a.tile_coords_xz, a.pointing_in),
+                EdgeXZ::from_tile_and_direction(b.tile_coords_xz, b.pointing_in),
             ],
             game_state.building_state(),
             game_state.map_level(),
@@ -97,9 +114,13 @@ fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCom
     vec![GameCommand::BuildBuildings(buildings)]
 }
 
-#[allow(clippy::unwrap_used)]
 fn find_station_id(building_state: &BuildingState, tile: TileCoordsXZ) -> BuildingId {
-    building_state.station_at(tile).unwrap().building_id()
+    find_station(building_state, tile).building_id()
+}
+
+#[allow(clippy::unwrap_used)]
+fn find_station(building_state: &BuildingState, tile: TileCoordsXZ) -> &BuildingInfo {
+    building_state.station_at(tile).unwrap()
 }
 
 #[allow(clippy::unwrap_used)]
@@ -125,7 +146,12 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Vec<Gam
             DirectionXZ::West,
             ResourceType::Coal,
         ),
-        // TODO HIGH: Transport for Steel from IRON_WORKS_A to WAREHOUSE_A
+        (
+            WAREHOUSE_A,
+            IRON_WORKS_A,
+            DirectionXZ::West,
+            ResourceType::Steel,
+        ),
     ] {
         let station_1 = find_station_id(building_state, tile_1);
         let station_2 = find_station_id(building_state, tile_2);

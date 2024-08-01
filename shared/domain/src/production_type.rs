@@ -15,7 +15,6 @@ pub enum ProductionType {
     CoalMine,
     IronMine,
     IronWorks,
-    // TODO HIGH: Test that Warehouse works properly, accepts Steel
     Warehouse,
 }
 
@@ -100,7 +99,15 @@ impl ProductionType {
                     )],
                 )
             },
-            ProductionType::Warehouse => ResourceTransform::new(vec![], vec![]),
+            ProductionType::Warehouse => {
+                ResourceTransform::new(
+                    vec![ResourceTransformItem::new(
+                        ResourceType::Steel,
+                        CargoAmount::ZERO,
+                    )],
+                    vec![],
+                )
+            },
         }
     }
 }

@@ -2,7 +2,6 @@ use log::debug;
 use pathfinding::prelude::dijkstra;
 
 use crate::building_state::BuildingState;
-use crate::building_type::BuildingType;
 use crate::transport::movement_orders::MovementOrderLocation;
 use crate::transport::tile_track::TileTrack;
 use crate::transport::track_length::TrackLength;
@@ -44,14 +43,9 @@ pub fn find_location_tile_tracks(
 ) -> Option<Vec<TileTrack>> {
     let MovementOrderLocation::StationId(station_id) = location;
     let building = building_state.find_building(station_id)?;
-    let station_type = match building.building_type() {
-        BuildingType::Station(station_type) => Some(station_type),
-        BuildingType::Production(_) | BuildingType::Track(_) => None,
-    }?;
-    let targets = station_type
-        .exit_tile_tracks(building.reference_tile())
+    let targets = building
+        .station_exit_tile_tracks()
         .into_iter()
-        .map(|(_, _, track)| track)
         .collect::<Vec<_>>();
     Some(targets)
 }

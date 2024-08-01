@@ -71,10 +71,7 @@ impl StationType {
     /// one of these, it is properly parked at the station using all of its length.
     /// Think about how to return the directions and platforms in a more structured way.
     #[must_use]
-    pub fn exit_tile_tracks(
-        self,
-        reference_tile: TileCoordsXZ,
-    ) -> Vec<(PlatformIndex, DirectionXZ, TileTrack)> {
+    pub fn exit_tile_tracks(self, reference_tile: TileCoordsXZ) -> Vec<(PlatformIndex, TileTrack)> {
         let mut results = vec![];
         for platform in 0 .. self.platforms {
             let platform_index = PlatformIndex(platform);
@@ -91,8 +88,8 @@ impl StationType {
                         track_type:     TrackType::NorthSouth,
                         pointing_in:    DirectionXZ::South,
                     };
-                    results.push((platform_index, DirectionXZ::North, a));
-                    results.push((platform_index, DirectionXZ::South, b));
+                    results.push((platform_index, a));
+                    results.push((platform_index, b));
                 },
                 StationOrientation::EastToWest => {
                     let a = TileTrack {
@@ -106,8 +103,8 @@ impl StationType {
                         track_type:     TrackType::EastWest,
                         pointing_in:    DirectionXZ::East,
                     };
-                    results.push((platform_index, DirectionXZ::West, a));
-                    results.push((platform_index, DirectionXZ::East, b));
+                    results.push((platform_index, a));
+                    results.push((platform_index, b));
                 },
             }
         }
@@ -169,7 +166,7 @@ mod tests {
         let actual = station_type
             .exit_tile_tracks(reference_tile)
             .into_iter()
-            .map(|(_, _, tile_track)| tile_track)
+            .map(|(_, tile_track)| tile_track)
             .collect::<HashSet<_>>();
         let expected: HashSet<TileTrack> = [
             TileTrack {
