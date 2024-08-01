@@ -15,6 +15,8 @@ pub enum ProductionType {
     CoalMine,
     IronMine,
     IronWorks,
+    // TODO HIGH: Test that Warehouse works properly, accepts Steel
+    Warehouse,
 }
 
 impl Debug for ProductionType {
@@ -23,17 +25,19 @@ impl Debug for ProductionType {
             ProductionType::CoalMine => write!(f, "CoalMine"),
             ProductionType::IronMine => write!(f, "IronMine"),
             ProductionType::IronWorks => write!(f, "IronWorks"),
+            ProductionType::Warehouse => write!(f, "Warehouse"),
         }
     }
 }
 
 impl ProductionType {
     #[must_use]
-    pub const fn all() -> [Self; 3] {
+    pub const fn all() -> [Self; 4] {
         [
             ProductionType::CoalMine,
             ProductionType::IronMine,
             ProductionType::IronWorks,
+            ProductionType::Warehouse,
         ]
     }
 
@@ -51,6 +55,7 @@ impl ProductionType {
             ProductionType::CoalMine => vec![],
             ProductionType::IronMine => vec![],
             ProductionType::IronWorks => vec![ResourceType::Iron, ResourceType::Coal],
+            ProductionType::Warehouse => vec![ResourceType::Steel],
         }
     }
 
@@ -95,6 +100,7 @@ impl ProductionType {
                     )],
                 )
             },
+            ProductionType::Warehouse => ResourceTransform::new(vec![], vec![]),
         }
     }
 }
@@ -140,10 +146,10 @@ impl ResourceTransform {
 
 #[cfg(test)]
 mod tests {
+    use crate::cargo_amount::CargoAmount;
     use crate::cargo_map::CargoMap;
     use crate::production_type::ProductionType;
     use crate::resource_type::ResourceType;
-    use crate::transport::transport_type::CargoAmount;
 
     #[test]
     fn test_coal_mine() {

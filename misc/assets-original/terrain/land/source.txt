@@ -1,5 +1,5 @@
 Source:
-https://github.com/NickToony/gd-retroterrain
+https://github.com/NickToony/gd-retroterrain - MIT License
 
 Steps:
 * Install: https://github.com/KhronosGroup/KTX-Software/releases

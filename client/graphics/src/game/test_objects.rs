@@ -20,10 +20,11 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
 
-const IRON_MINE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(43, 30);
+const IRON_MINE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(42, 30);
 const IRON_MINE_B: TileCoordsXZ = TileCoordsXZ::from_usizes(53, 35);
 const COAL_MINE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(7, 41);
 const IRON_WORKS_A: TileCoordsXZ = TileCoordsXZ::from_usizes(10, 84);
+const WAREHOUSE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(26, 92);
 
 #[allow(clippy::vec_init_then_push)]
 fn build_test_buildings(player_id: PlayerId) -> GameCommand {
@@ -32,6 +33,7 @@ fn build_test_buildings(player_id: PlayerId) -> GameCommand {
         (IRON_MINE_B, BuildingType::Station(StationType::all()[0])),
         (COAL_MINE_A, BuildingType::Station(StationType::all()[1])),
         (IRON_WORKS_A, BuildingType::Station(StationType::all()[1])),
+        (WAREHOUSE_A, BuildingType::Station(StationType::all()[1])),
         (
             TileCoordsXZ::from_usizes(40, 31),
             BuildingType::Production(ProductionType::IronMine),
@@ -47,6 +49,10 @@ fn build_test_buildings(player_id: PlayerId) -> GameCommand {
         (
             TileCoordsXZ::from_usizes(12, 82),
             BuildingType::Production(ProductionType::IronWorks),
+        ),
+        (
+            TileCoordsXZ::from_usizes(28, 94),
+            BuildingType::Production(ProductionType::Warehouse),
         ),
     ];
 
@@ -66,11 +72,12 @@ fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCom
 
     let mut buildings = vec![];
     let connections = [
-        ((43, 33, DirectionXZ::South), (13, 84, DirectionXZ::East)),
+        ((42, 33, DirectionXZ::South), (13, 84, DirectionXZ::East)),
         ((10, 84, DirectionXZ::West), (7, 41, DirectionXZ::West)),
-        ((10, 41, DirectionXZ::East), (43, 30, DirectionXZ::North)),
-        ((43, 33, DirectionXZ::South), (53, 38, DirectionXZ::South)),
-        ((53, 35, DirectionXZ::North), (43, 30, DirectionXZ::North)),
+        ((10, 41, DirectionXZ::East), (42, 30, DirectionXZ::North)),
+        ((42, 33, DirectionXZ::South), (53, 38, DirectionXZ::South)),
+        ((53, 35, DirectionXZ::North), (42, 30, DirectionXZ::North)),
+        // TODO HIGH: Connect WAREHOUSE_A to IRON_WORKS_A
     ];
     for ((ax, az, ad), (bx, bz, bd)) in connections {
         if let Some(route) = plan_tracks(
@@ -118,6 +125,7 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Vec<Gam
             DirectionXZ::West,
             ResourceType::Coal,
         ),
+        // TODO HIGH: Transport for Steel from IRON_WORKS_A to WAREHOUSE_A
     ] {
         let station_1 = find_station_id(building_state, tile_1);
         let station_2 = find_station_id(building_state, tile_2);

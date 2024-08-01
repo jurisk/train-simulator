@@ -103,9 +103,10 @@ fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 
         for production_type in ProductionType::all() {
             let symbol = match production_type {
-                ProductionType::IronMine => "⛏",
+                ProductionType::IronMine => "⚒",
                 ProductionType::CoalMine => "⛏",
-                ProductionType::IronWorks => "⚒",
+                ProductionType::IronWorks => "🏭",
+                ProductionType::Warehouse => "📦",
             };
             if ui
                 .add(

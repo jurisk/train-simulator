@@ -10,9 +10,10 @@ digraph G {
     NitrateMine [label = "Nitrate Mine"];
     OilWell [label = "Oil Well"];
     LimestoneMine [label = "Limestone Mine"];
-    ClayMine [label = "Clay Mine"];
-    SandAndGravelMine [label = "Sand & Gravel Mine"];
-    { rank = same; CoalMine; IronMine; Forestry; SulfurMine; NitrateMine; OilWell; LimestoneMine; ClayMine; SandAndGravelMine; }
+    ClayPit [label = "Clay Pit"];
+    SandAndGravelQuarry [label = "Sand & Gravel Quarry"];
+    Farm [label = "Farm"];
+    { rank = same; CoalMine; IronMine; Forestry; SulfurMine; NitrateMine; OilWell; LimestoneMine; ClayPit; SandAndGravelQuarry; Farm; }
 
     node [shape = box, color = "#a04000"];
     # https://en.wikipedia.org/wiki/Basic_oxygen_steelmaking
@@ -23,6 +24,7 @@ digraph G {
     OilRefinery [label = "Oil Refinery"];
     CementPlant [label = "Cement Plant"];
     ConcretePlant [label = "Concrete Plant"];
+    FoodProcessingPlant [label = "Food Processing Plant"];
 
     subgraph cluster_ExplosivesPlant {
         # This is being built together as otherwise it becomes too much micro-management
@@ -47,7 +49,8 @@ digraph G {
     Military [label = "Military"];
     CoalUsageByTrains [label = "Coal Usage by Trains"]
     PowerPlant [label = "Power Plant"];
-    { rank = same; Construction; Military; CoalUsageByTrains; PowerPlant; }
+    City [label = "City"];
+    { rank = same; Construction; Military; CoalUsageByTrains; PowerPlant; City; }
 
     node [shape = ellipse, color = "#D8DBE2", fontcolor = black];
     Coal [label = "Coal"];
@@ -67,6 +70,8 @@ digraph G {
     Weapons [label = "Weapons"];
     Ammunition [label = "Ammunition"];
     Steel [label = "Steel"];
+    FarmProducts [label = "Farm Products"];
+    Food [label = "Food"];
 
     CoalMine -> Coal;
     Coal -> IronWorks;
@@ -116,15 +121,21 @@ digraph G {
     LimestoneMine -> Limestone;
     Limestone -> CementPlant;
 
-    ClayMine -> Clay;
+    ClayPit -> Clay;
     Clay -> CementPlant;
 
     CementPlant -> Cement;
     Cement -> ConcretePlant;
 
-    SandAndGravelMine -> SandAndGravel;
+    SandAndGravelQuarry -> SandAndGravel;
     SandAndGravel -> ConcretePlant;
 
     ConcretePlant -> Concrete;
     Concrete -> Construction;
+
+    Farm -> FarmProducts;
+    FarmProducts -> FoodProcessingPlant;
+    FoodProcessingPlant -> Food;
+    Food -> Military;
+    Food -> City;
 }

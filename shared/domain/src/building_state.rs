@@ -22,6 +22,7 @@ pub enum CanBuildResponse {
 pub struct BuildingState {
     buildings:            Vec<BuildingInfo>,
     // Link from each production building to the closest station
+    // TODO HIGH: Consider to move these to 1:1 correspondences between stations & industry buildings? Otherwise solving the issue that a station can accept & provide the same good is tricky.
     closest_station_link: HashMap<BuildingId, BuildingId>,
 }
 
