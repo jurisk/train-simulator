@@ -12,8 +12,7 @@ use crate::transport::track_type::TrackType;
 pub enum BuildingType {
     Track(TrackType),
     Station(StationType),
-    // TODO HIGH: Is `Industry` a better name?
-    Production(ProductionType),
+    Production(ProductionType), // It's not really production, but is it `Industry`? Or something else?
 }
 
 impl Debug for BuildingType {
