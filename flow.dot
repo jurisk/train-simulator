@@ -1,5 +1,8 @@
 digraph G {
-    node [shape = box, style = filled];
+    node [style = filled, fontcolor = white];
+
+    # Raw materials extraction
+    node [shape = box, color = green];
     CoalMine [label = "Coal Mine"];
     IronMine [label = "Iron Mine"];
     Forestry [label = "Forestry"];
@@ -7,11 +10,11 @@ digraph G {
     NitrateMine [label = "Nitrate Mine"];
     OilWell [label = "Oil Well"];
     LimestoneMine [label = "Limestone Mine"];
-    ClayMining [label = "Clay Mining"];
+    ClayMine [label = "Clay Mine"];
     SandAndGravelMine [label = "Sand & Gravel Mine"];
-    { rank = same; CoalMine; IronMine; Forestry; SulfurMine; NitrateMine; OilWell; LimestoneMine; ClayMining; SandAndGravelMine; }
+    { rank = same; CoalMine; IronMine; Forestry; SulfurMine; NitrateMine; OilWell; LimestoneMine; ClayMine; SandAndGravelMine; }
 
-    node [shape = ellipse, style = filled];
+    node [shape = box, color = "#a04000"];
     # https://en.wikipedia.org/wiki/Basic_oxygen_steelmaking
     IronWorks [label = "Iron Works"];
     WeaponsFactory [label = "Weapons Factory"];
@@ -22,42 +25,106 @@ digraph G {
     ConcretePlant [label = "Concrete Plant"];
 
     subgraph cluster_ExplosivesPlant {
+        # This is being built together as otherwise it becomes too much micro-management
+        style = filled;
+        color = "#a04000";
+        fontcolor = white;
         label = "Explosives Plant";
-        node [shape = ellipse];
+        node [shape = box, color = "#802000", fontcolor = white];
+
         NitricAcidPlant [label = "Nitric Acid Plant"];
         SulfuricAcidPlant [label = "Sulfuric Acid Plant"];
         NitrationPlant [label = "Nitration Plant"];
+
+        node [shape = ellipse, color = "#D8DBE2", fontcolor = black, style = filled];
+        NitricAcid [label = "Nitric Acid"];
+        SulfuricAcid [label = "Sulfuric Acid"];
     }
 
-    node [shape = doubleoctagon, style = filled];
+    # Final consumers
+    node [shape = box, color = "#4A5F6D"];
     Construction [label = "Construction"];
     Military [label = "Military"];
     CoalUsageByTrains [label = "Coal Usage by Trains"]
     PowerPlant [label = "Power Plant"];
     { rank = same; Construction; Military; CoalUsageByTrains; PowerPlant; }
 
-    CoalMine -> IronWorks [label = "Coal"];
-    IronMine -> IronWorks [label = "Iron"];
-    NitrateMine -> NitricAcidPlant [label = "Nitrates"];
-    SulfurMine -> SulfuricAcidPlant [label = "Sulfur"];
-    Forestry -> LumberMill [label = "Wood"];
-    LumberMill -> NitrationPlant [label = "Cellulose"];
-    NitricAcidPlant -> NitrationPlant [label = "Nitric Acid"];
-    SulfuricAcidPlant -> NitrationPlant [label = "Sulfuric Acid"];
-    NitrationPlant -> AmmunitionFactory [label = "Nitrocellulose"];
-    AmmunitionFactory -> Military [label = "Ammunition"];
-    IronWorks -> AmmunitionFactory [label = "Steel"];
-    WeaponsFactory -> Military [label = "Weapons"];
-    IronWorks -> WeaponsFactory [label = "Steel"];
-    IronWorks -> Construction [label = "Steel"];
-    LumberMill -> Construction [label = "Timber"];
-    CoalMine -> CoalUsageByTrains [label = "Coal"];
-    OilWell -> OilRefinery [label = "Oil"];
-    LimestoneMine -> CementPlant [label = "Limestone"];
-    ClayMining -> CementPlant [label = "Clay"];
-    CementPlant -> ConcretePlant [label = "Cement"];
-    SandAndGravelMine -> ConcretePlant [label = "Sand & Gravel"];
-    ConcretePlant -> Construction [label = "Concrete"];
-    OilRefinery -> Military [label = "Fuel"];
-    CoalMine -> PowerPlant [label = "Coal"];
+    node [shape = ellipse, color = "#D8DBE2", fontcolor = black];
+    Coal [label = "Coal"];
+    Iron [label = "Iron"];
+    Oil [label = "Oil"];
+    Fuel [label = "Fuel"];
+    Nitrates [label = "Nitrates"];
+    Sulfur [label = "Sulfur"];
+    Nitrocellulose [label = "Nitrocellulose"];
+    Timber [label = "Timber"];
+    Cellulose [label = "Cellulose"];
+    Concrete [label = "Concrete"];
+    Cement [label = "Cement"];
+    SandAndGravel [label = "Sand & Gravel"];
+    Clay [label = "Clay"];
+    Limestone [label = "Limestone"];
+    Weapons [label = "Weapons"];
+    Ammunition [label = "Ammunition"];
+    Steel [label = "Steel"];
+
+    CoalMine -> Coal;
+    Coal -> IronWorks;
+    Coal -> CoalUsageByTrains;
+    Coal -> PowerPlant;
+
+    IronMine -> Iron;
+    Iron -> IronWorks;
+
+    OilWell -> Oil;
+    Oil -> OilRefinery;
+    OilRefinery -> Fuel;
+    Fuel -> Military;
+
+    NitrateMine -> Nitrates;
+    Nitrates -> NitricAcidPlant;
+
+    SulfurMine -> Sulfur;
+    Sulfur -> SulfuricAcidPlant;
+
+    Forestry -> Wood;
+    Wood -> LumberMill;
+    LumberMill -> Cellulose;
+    Cellulose -> NitrationPlant;
+    LumberMill -> Timber;
+    Timber -> Construction;
+
+    NitricAcidPlant -> NitricAcid;
+    NitricAcid -> NitrationPlant;
+
+    SulfuricAcidPlant -> SulfuricAcid;
+    SulfuricAcid -> NitrationPlant;
+
+    NitrationPlant -> Nitrocellulose;
+    Nitrocellulose -> AmmunitionFactory;
+
+    AmmunitionFactory -> Ammunition;
+    Ammunition -> Military;
+    WeaponsFactory -> Weapons;
+    Weapons -> Military;
+
+    IronWorks -> Steel;
+    Steel -> AmmunitionFactory;
+    Steel -> WeaponsFactory;
+    Steel -> Construction;
+
+    LimestoneMine -> Limestone;
+    Limestone -> CementPlant;
+
+    ClayMine -> Clay;
+    Clay -> CementPlant;
+
+    CementPlant -> Cement;
+    Cement -> ConcretePlant;
+
+    SandAndGravelMine -> SandAndGravel;
+    SandAndGravel -> ConcretePlant;
+
+    ConcretePlant -> Concrete;
+    Concrete -> Construction;
 }
