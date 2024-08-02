@@ -75,6 +75,7 @@ pub fn draw_labels(
     }
 }
 
+// TODO HIGH: This looks ugly and often breaks. Consider using https://docs.rs/egui/latest/egui/struct.Painter.html instead? Or https://bevyengine.org/examples/2d-rendering/text2d/ or https://github.com/kulkalkul/bevy_mod_billboard?
 fn draw_label(
     position: Vec3,
     label: String,
