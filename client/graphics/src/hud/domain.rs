@@ -5,6 +5,7 @@ use shared_domain::station_type::StationType;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::transport::transport_type::TransportType;
+use shared_domain::TransportId;
 
 #[derive(Resource, Eq, PartialEq, Debug, Clone)]
 pub enum SelectedMode {
@@ -15,6 +16,8 @@ pub enum SelectedMode {
     Military,
     Transport(TransportType),
     Demolish,
+    // Later: This feels like a hack, this is very much not like the others
+    SelectStationToAppendToTransportMovementInstructions(TransportId),
 }
 
 impl SelectedMode {
@@ -51,6 +54,7 @@ impl SelectedMode {
             SelectedMode::Transport(_) => None,
             SelectedMode::Info => None,
             SelectedMode::Demolish => None,
+            SelectedMode::SelectStationToAppendToTransportMovementInstructions(_) => None,
         }
     }
 

@@ -1,12 +1,19 @@
 use std::collections::HashSet;
 
-use bevy::prelude::{info, EventWriter, Res, ResMut, Resource};
+use bevy::input::ButtonInput;
+use bevy::prelude::{info, EventWriter, MouseButton, Res, ResMut, Resource};
 use bevy_egui::EguiContexts;
 use shared_domain::client_command::{ClientCommand, GameCommand};
+use shared_domain::transport::movement_orders::{
+    LoadAction, MovementOrder, MovementOrderAction, MovementOrderLocation, UnloadAction,
+};
 use shared_domain::TransportId;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::GameStateResource;
+use crate::hud::domain::SelectedMode;
+use crate::on_ui;
+use crate::selection::HoveredTile;
 
 #[derive(Resource, Default)]
 pub struct TransportsToShow(HashSet<TransportId>);
@@ -27,11 +34,73 @@ impl TransportsToShow {
 }
 
 #[allow(clippy::needless_pass_by_value)]
+pub(crate) fn select_station_to_add_to_movement_orders(
+    mut egui_contexts: EguiContexts,
+    selected_mode: Res<SelectedMode>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
+    hovered_tile: Res<HoveredTile>,
+    mut client_messages: EventWriter<ClientMessageEvent>,
+    game_state_resource: Option<Res<GameStateResource>>,
+) {
+    // Later: When do we switch away from station appending mode?
+
+    if on_ui(&mut egui_contexts) {
+        return;
+    }
+
+    if let Some(game_state_resource) = game_state_resource {
+        if mouse_buttons.just_released(MouseButton::Left) {
+            if let SelectedMode::SelectStationToAppendToTransportMovementInstructions(
+                transport_id,
+            ) = *selected_mode
+            {
+                let HoveredTile(hovered_tile) = hovered_tile.as_ref();
+                if let Some(hovered_tile) = hovered_tile {
+                    let GameStateResource(game_state) = game_state_resource.as_ref();
+
+                    if let Some(transport_info) = game_state.get_transport_info(transport_id) {
+                        let mut new_movement_orders = transport_info.movement_orders().clone();
+
+                        if let Some(station) = game_state.building_state().station_at(*hovered_tile)
+                        {
+                            let station_id = station.building_id();
+
+                            let movement_order = MovementOrder {
+                                go_to:  MovementOrderLocation::StationId(station_id),
+                                action: MovementOrderAction::UnloadAndLoad(
+                                    UnloadAction::Unload,
+                                    LoadAction::Load,
+                                ),
+                            };
+
+                            new_movement_orders.push(movement_order);
+
+                            client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
+                                game_state.game_id(),
+                                GameCommand::UpdateTransportMovementOrders(
+                                    transport_id,
+                                    new_movement_orders,
+                                ),
+                            )));
+                        } else {
+                            info!("No station found at hovered tile {:?}", hovered_tile,);
+                        }
+                    } else {
+                        info!("Transport {:?} not found in game state", transport_id,);
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn show_transport_details(
     mut contexts: EguiContexts,
     game_state_resource: Option<Res<GameStateResource>>,
     mut show_transport_details: ResMut<TransportsToShow>,
     mut client_messages: EventWriter<ClientMessageEvent>,
+    mut selected_mode: ResMut<SelectedMode>,
 ) {
     if let Some(game_state_resource) = game_state_resource {
         let GameStateResource(game_state) = game_state_resource.as_ref();
@@ -112,11 +181,11 @@ pub(crate) fn show_transport_details(
                                     ui.end_row();
                                 }
                                 if ui.button("Add").clicked() {
-                                    // TODO HIGH: Allow selecting a station and Add movement order
                                     info!(
-                                        "Transport {:?}: Adding movement order",
-                                        transport.transport_id()
+                                        "Transport {:?}: Switching to station selection in order to add to movement orders",
+                                        transport.transport_id(),
                                     );
+                                    *selected_mode = SelectedMode::SelectStationToAppendToTransportMovementInstructions(transport.transport_id());
                                 };
                                 ui.end_row();
                             });

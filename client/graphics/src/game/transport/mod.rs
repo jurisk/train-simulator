@@ -24,7 +24,9 @@ use crate::communication::domain::ServerMessageEvent;
 use crate::game::transport::assets::TransportAssets;
 use crate::game::transport::building::build_transport_when_mouse_released;
 use crate::game::transport::train::{calculate_train_component_transforms, create_train};
-use crate::game::transport::ui::{show_transport_details, TransportsToShow};
+use crate::game::transport::ui::{
+    select_station_to_add_to_movement_orders, show_transport_details, TransportsToShow,
+};
 use crate::game::GameStateResource;
 use crate::states::ClientState;
 
@@ -61,6 +63,11 @@ impl Plugin for TransportPlugin {
         app.add_systems(
             Update,
             show_transport_details.run_if(in_state(ClientState::Playing)),
+        );
+
+        app.add_systems(
+            Update,
+            select_station_to_add_to_movement_orders.run_if(in_state(ClientState::Playing)),
         );
     }
 }
