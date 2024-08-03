@@ -1,9 +1,11 @@
+#![allow(clippy::module_name_repetitions, clippy::into_iter_without_iter)]
+
 use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
-pub struct NonEmptyCircularList<T: Clone> {
+pub struct NonEmptyCircularList<T> {
     next: usize,
     list: Vec<T>,
 }
@@ -53,5 +55,36 @@ impl<T: Clone> NonEmptyCircularList<T> {
 
     pub fn advance(&mut self) {
         self.next = (self.next + 1) % self.list.len();
+    }
+}
+
+pub struct NonEmptyCircularListIterator<'a, T> {
+    circular_list: &'a NonEmptyCircularList<T>,
+    index:         usize,
+}
+
+impl<'a, T> Iterator for NonEmptyCircularListIterator<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match &self.circular_list.list.get(self.index) {
+            None => None,
+            Some(found) => {
+                self.index += 1;
+                Some(found)
+            },
+        }
+    }
+}
+
+impl<'a, T: Clone> IntoIterator for &'a NonEmptyCircularList<T> {
+    type IntoIter = NonEmptyCircularListIterator<'a, T>;
+    type Item = &'a T;
+
+    fn into_iter(self) -> Self::IntoIter {
+        NonEmptyCircularListIterator {
+            circular_list: self,
+            index:         0,
+        }
     }
 }

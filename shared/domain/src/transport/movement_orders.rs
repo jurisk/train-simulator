@@ -1,9 +1,11 @@
+#![allow(clippy::into_iter_without_iter)]
+
 // https://wiki.openttd.org/en/Manual/Orders
 
 use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
-use shared_util::non_empty_circular_list::NonEmptyCircularList;
+use shared_util::non_empty_circular_list::{NonEmptyCircularList, NonEmptyCircularListIterator};
 
 use crate::BuildingId;
 
@@ -131,5 +133,28 @@ impl MovementOrders {
 
     pub fn advance_to_next_order(&mut self) {
         self.orders.advance();
+    }
+}
+
+pub struct MovementOrdersIterator<'a> {
+    orders_iter: NonEmptyCircularListIterator<'a, MovementOrder>,
+}
+
+impl<'a> Iterator for MovementOrdersIterator<'a> {
+    type Item = &'a MovementOrder;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.orders_iter.next()
+    }
+}
+
+impl<'a> IntoIterator for &'a MovementOrders {
+    type IntoIter = MovementOrdersIterator<'a>;
+    type Item = &'a MovementOrder;
+
+    fn into_iter(self) -> Self::IntoIter {
+        MovementOrdersIterator {
+            orders_iter: self.orders.into_iter(),
+        }
     }
 }

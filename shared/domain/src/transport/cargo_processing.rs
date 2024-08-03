@@ -76,7 +76,7 @@ pub(crate) fn cargo_processing_advance(
         .action;
     let UnloadAndLoad(unload_action, load_action) = movement_order_action;
 
-    match transport_info.dynamic_info.cargo_loading {
+    match transport_info.dynamic_info.cargo_processing {
         CargoProcessing::NotStarted => {
             CargoProcessingResult::new(CargoProcessing::Unloading, diff, None, None)
         },

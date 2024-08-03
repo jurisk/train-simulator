@@ -40,8 +40,46 @@ pub(crate) fn show_transport_details(
                 egui::Window::new(format!("Transport {:?}", transport.transport_id())).show(
                     contexts.ctx_mut(),
                     |ui| {
-                        // TODO HIGH: Allow adjusting MovementOrders
-                        ui.label(format!("{transport:?}"));
+                        egui::Grid::new("transport_details")
+                            .num_columns(2)
+                            .striped(true)
+                            .show(ui, |ui| {
+                                ui.label("Transport ID");
+                                ui.label(format!("{:?}", transport.transport_id()));
+                                ui.end_row();
+                                ui.label("Owner ID");
+                                ui.label(format!("{:?}", transport.owner_id()));
+                                ui.end_row();
+                                ui.label("Transport Type");
+                                ui.label(format!("{:?}", transport.transport_type()));
+                                ui.end_row();
+                                ui.label("Location");
+                                ui.label(format!("{:?}", transport.location()));
+                                ui.end_row();
+                                ui.label("Velocity");
+                                ui.label(format!("{:?}", transport.velocity()));
+                                ui.end_row();
+                                ui.label("Cargo Loaded");
+                                ui.label(format!("{:?}", transport.cargo_loaded()));
+                                ui.end_row();
+                                ui.label("Cargo Processing");
+                                ui.label(format!("{:?}", transport.cargo_processing()));
+                                ui.end_row();
+                            });
+                        let movement_orders = transport.movement_orders();
+                        egui::Grid::new("transport_movement_orders")
+                            .num_columns(2)
+                            .striped(true)
+                            .show(ui, |ui| {
+                                ui.label("Force Stopped");
+                                ui.label(format!("{:?}", movement_orders.is_force_stopped()));
+                                ui.end_row();
+                                for movement_order in movement_orders {
+                                    ui.label(format!("{:?}", movement_order.go_to));
+                                    ui.label(format!("{:?}", movement_order.action));
+                                    ui.end_row();
+                                }
+                            });
                     },
                 );
             }

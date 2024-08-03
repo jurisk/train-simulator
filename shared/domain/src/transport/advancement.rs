@@ -99,7 +99,7 @@ fn advance_internal(
                     transport_info.remove_cargo(cargo_to_unload);
                 }
 
-                transport_info.dynamic_info.cargo_loading = cargo_loading_result.new_state;
+                transport_info.dynamic_info.cargo_processing = cargo_loading_result.new_state;
                 if cargo_loading_result.advance_to_next_order() {
                     debug!(
                         "Finished loading/unloading, advancing to next orders: {transport_info:?}"

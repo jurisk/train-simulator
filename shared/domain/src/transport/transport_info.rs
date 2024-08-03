@@ -22,11 +22,11 @@ pub struct TransportStaticInfo {
 // TODO: Make fields `private`?
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportDynamicInfo {
-    pub location:        TransportLocation,
-    pub velocity:        TransportVelocity, /* TODO: Acceleration and deceleration should be gradual */
-    pub movement_orders: MovementOrders,
-    pub cargo_loading:   CargoProcessing,
-    pub cargo_loaded:    CargoMap,
+    pub location:         TransportLocation,
+    pub velocity:         TransportVelocity, /* TODO: Acceleration and deceleration should be gradual */
+    pub movement_orders:  MovementOrders,
+    pub cargo_processing: CargoProcessing,
+    pub cargo_loaded:     CargoMap,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -71,7 +71,7 @@ impl TransportInfo {
                 velocity,
                 movement_orders,
                 cargo_loaded: CargoMap::new(),
-                cargo_loading: CargoProcessing::NotStarted,
+                cargo_processing: CargoProcessing::NotStarted,
             },
         }
     }
@@ -105,12 +105,22 @@ impl TransportInfo {
     }
 
     #[must_use]
+    pub fn cargo_processing(&self) -> CargoProcessing {
+        self.dynamic_info.cargo_processing
+    }
+
+    #[must_use]
     pub fn remaining_cargo_capacity(&self) -> CargoMap {
         self.static_info.transport_type.cargo_capacity() - self.dynamic_info.cargo_loaded.clone()
     }
 
     pub fn update_dynamic_info(&mut self, dynamic_info: &TransportDynamicInfo) {
         self.dynamic_info = dynamic_info.clone();
+    }
+
+    #[must_use]
+    pub fn movement_orders(&self) -> &MovementOrders {
+        &self.dynamic_info.movement_orders
     }
 
     #[must_use]
