@@ -56,6 +56,20 @@ impl<T: Clone> NonEmptyCircularList<T> {
     pub fn advance(&mut self) {
         self.next = (self.next + 1) % self.list.len();
     }
+
+    #[must_use]
+    pub fn next_index(&self) -> usize {
+        self.next
+    }
+
+    pub fn remove_by_index(&mut self, index: usize) {
+        if self.list.len() > 1 {
+            self.list.remove(index);
+            if self.next >= index {
+                self.next = 0;
+            }
+        }
+    }
 }
 
 pub struct NonEmptyCircularListIterator<'a, T> {

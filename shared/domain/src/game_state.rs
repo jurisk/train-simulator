@@ -10,6 +10,7 @@ use crate::building_state::BuildingState;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::MapLevel;
 use crate::server_response::{GameInfo, PlayerInfo};
+use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::transport::transport_state::TransportState;
 use crate::{BuildingId, GameId, PlayerId, TransportId};
@@ -136,6 +137,15 @@ impl GameState {
 
     pub fn upsert_transport(&mut self, transport: TransportInfo) {
         self.transports.upsert(transport);
+    }
+
+    pub fn update_transport_movement_orders(
+        &mut self,
+        transport_id: TransportId,
+        movement_orders: &MovementOrders,
+    ) -> Result<(), ()> {
+        self.transports
+            .update_movement_orders(transport_id, movement_orders)
     }
 
     pub fn append_buildings(&mut self, buildings: Vec<BuildingInfo>) {

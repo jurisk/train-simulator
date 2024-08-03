@@ -134,6 +134,15 @@ impl MovementOrders {
     pub fn advance_to_next_order(&mut self) {
         self.orders.advance();
     }
+
+    #[must_use]
+    pub fn next_index(&self) -> usize {
+        self.orders.next_index()
+    }
+
+    pub fn remove_by_index(&mut self, index: usize) {
+        self.orders.remove_by_index(index);
+    }
 }
 
 pub struct MovementOrdersIterator<'a> {

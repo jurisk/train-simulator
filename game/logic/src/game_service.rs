@@ -7,8 +7,9 @@ use shared_domain::game_time::GameTime;
 use shared_domain::server_response::{
     AddressEnvelope, GameError, GameInfo, GameResponse, PlayerInfo,
 };
+use shared_domain::transport::movement_orders::MovementOrders;
 use shared_domain::transport::transport_info::TransportInfo;
-use shared_domain::{GameId, PlayerId};
+use shared_domain::{GameId, PlayerId, TransportId};
 
 #[derive(Clone)]
 pub(crate) struct GameResponseWithAddress {
@@ -55,6 +56,13 @@ impl GameService {
             },
             GameCommand::QueryBuildings => self.process_query_buildings(requesting_player_id),
             GameCommand::QueryTransports => self.process_query_transports(requesting_player_id),
+            GameCommand::UpdateTransportMovementOrders(transport_id, movement_orders) => {
+                self.process_update_transport_movement_orders(
+                    requesting_player_id,
+                    *transport_id,
+                    movement_orders,
+                )
+            },
         }
     }
 
@@ -124,6 +132,23 @@ impl GameService {
         }
     }
 
+    fn process_update_transport_movement_orders(
+        &mut self,
+        _requesting_player_id: PlayerId,
+        transport_id: TransportId,
+        movement_orders: &MovementOrders,
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
+        // TODO: Check this is the right player
+
+        match self
+            .state
+            .update_transport_movement_orders(transport_id, movement_orders)
+        {
+            Err(()) => Err(GameError::UnspecifiedError),
+            Ok(()) => Ok(vec![self.create_dynamic_info_sync()]),
+        }
+    }
+
     pub(crate) fn advance_time(&mut self, time: GameTime) {
         self.state.advance_time(time);
     }
@@ -174,24 +199,28 @@ impl GameService {
 
     pub(crate) fn sync(&self) -> Vec<GameResponseWithAddress> {
         if self.state.time_steps() % SYNC_EVERY_N_TIMESTEPS == 0 {
-            vec![GameResponseWithAddress::new(
-                AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-                GameResponse::DynamicInfosSync(
-                    self.state.time(),
-                    self.state
-                        .building_infos()
-                        .into_iter()
-                        .map(|building| (building.building_id(), building.dynamic_info()))
-                        .collect(),
-                    self.state
-                        .transport_infos()
-                        .into_iter()
-                        .map(|transport| (transport.transport_id(), transport.dynamic_info()))
-                        .collect(),
-                ),
-            )]
+            vec![self.create_dynamic_info_sync()]
         } else {
             vec![]
         }
+    }
+
+    fn create_dynamic_info_sync(&self) -> GameResponseWithAddress {
+        GameResponseWithAddress::new(
+            AddressEnvelope::ToAllPlayersInGame(self.game_id()),
+            GameResponse::DynamicInfosSync(
+                self.state.time(),
+                self.state
+                    .building_infos()
+                    .into_iter()
+                    .map(|building| (building.building_id(), building.dynamic_info()))
+                    .collect(),
+                self.state
+                    .transport_infos()
+                    .into_iter()
+                    .map(|transport| (transport.transport_id(), transport.dynamic_info()))
+                    .collect(),
+            ),
+        )
     }
 }

@@ -92,6 +92,7 @@ pub enum GameError {
     GameNotFound,
     CannotBuild(Vec<BuildingId>),
     CannotPurchase(TransportId),
+    UnspecifiedError,
 }
 
 impl Debug for GameResponse {

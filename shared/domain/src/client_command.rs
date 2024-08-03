@@ -7,8 +7,9 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::building_info::BuildingInfo;
+use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
-use crate::{ClientId, GameId, PlayerId};
+use crate::{ClientId, GameId, PlayerId, TransportId};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct AccessToken(String);
@@ -42,6 +43,7 @@ pub enum GameCommand {
     QueryTransports,
     BuildBuildings(Vec<BuildingInfo>),
     PurchaseTransport(TransportInfo),
+    UpdateTransportMovementOrders(TransportId, MovementOrders),
 }
 
 impl Debug for GameCommand {
@@ -54,6 +56,9 @@ impl Debug for GameCommand {
             },
             GameCommand::PurchaseTransport(transport) => {
                 write!(f, "PurchaseTransport({transport:?})")
+            },
+            GameCommand::UpdateTransportMovementOrders(transport_id, _) => {
+                write!(f, "UpdateTransportMovementOrders({transport_id:?})",)
             },
         }
     }

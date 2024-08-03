@@ -118,6 +118,10 @@ impl TransportInfo {
         self.dynamic_info = dynamic_info.clone();
     }
 
+    pub fn update_movement_orders(&mut self, movement_orders: &MovementOrders) {
+        self.dynamic_info.movement_orders = movement_orders.clone();
+    }
+
     #[must_use]
     pub fn movement_orders(&self) -> &MovementOrders {
         &self.dynamic_info.movement_orders

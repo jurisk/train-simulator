@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
 use crate::transport::advancement::advance;
+use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::TransportId;
 
@@ -54,6 +55,21 @@ impl TransportState {
                 return;
             }
         }
+    }
+
+    pub(crate) fn update_movement_orders(
+        &mut self,
+        transport_id: TransportId,
+        movement_orders: &MovementOrders,
+    ) -> Result<(), ()> {
+        for transport in &mut self.transports {
+            if transport.transport_id() == transport_id {
+                transport.update_movement_orders(movement_orders);
+                return Ok(());
+            }
+        }
+
+        Err(())
     }
 
     pub(crate) fn info_by_id(&self, transport_id: TransportId) -> Option<&TransportInfo> {
