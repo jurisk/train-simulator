@@ -25,7 +25,10 @@ fn jump_tile(transport_info: &mut TransportInfo, building_state: &BuildingState)
     // The first one is the current tile, so we take the second one
     match route.unwrap_or_default().get(1) {
         None => {
-            transport_info.dynamic_info.movement_orders.force_stop();
+            transport_info
+                .dynamic_info
+                .movement_orders
+                .set_force_stop(true);
             warn!(
                 "No route found for orders {current_order:?} for transport {:?}, stopping: {transport_info:?}",
                 transport_info.transport_id()

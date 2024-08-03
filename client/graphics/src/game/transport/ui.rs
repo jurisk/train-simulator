@@ -147,7 +147,19 @@ pub(crate) fn show_transport_details(
                             .striped(true)
                             .show(ui, |ui| {
                                 ui.label("Force Stopped");
-                                ui.label(format!("{:?}", movement_orders.is_force_stopped()));
+                                if ui.button(format!("{:?}", movement_orders.is_force_stopped())).clicked() {
+                                    let mut new_movement_orders = movement_orders.clone();
+                                    new_movement_orders.set_force_stop(!movement_orders.is_force_stopped());
+                                    client_messages.send(ClientMessageEvent::new(
+                                        ClientCommand::Game(
+                                            game_state.game_id(),
+                                            GameCommand::UpdateTransportMovementOrders(
+                                                transport.transport_id(),
+                                                new_movement_orders,
+                                            ),
+                                        ),
+                                    ));
+                                };
                                 ui.end_row();
                                 for (idx, movement_order) in movement_orders.into_iter().enumerate()
                                 {

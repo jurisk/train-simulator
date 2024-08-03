@@ -118,8 +118,8 @@ impl MovementOrders {
         self.force_stop
     }
 
-    pub fn force_stop(&mut self) {
-        self.force_stop = true;
+    pub fn set_force_stop(&mut self, value: bool) {
+        self.force_stop = value;
     }
 
     pub fn push(&mut self, movement_order: MovementOrder) {
