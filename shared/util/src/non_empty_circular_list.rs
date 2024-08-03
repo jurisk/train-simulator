@@ -1,4 +1,4 @@
-#![allow(clippy::module_name_repetitions, clippy::into_iter_without_iter)]
+#![allow(clippy::module_name_repetitions)]
 
 use std::fmt::{Debug, Formatter};
 
@@ -69,6 +69,12 @@ impl<T: Clone> NonEmptyCircularList<T> {
                 self.next = 0;
             }
         }
+    }
+
+    #[must_use]
+    #[allow(dead_code)]
+    fn iter(&self) -> NonEmptyCircularListIterator<'_, T> {
+        <&Self as IntoIterator>::into_iter(self)
     }
 }
 
