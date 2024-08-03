@@ -2,6 +2,9 @@ use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::input::ButtonInput;
 use bevy::math::{Dir3, Vec3};
 use bevy::prelude::{info, warn, EventReader, KeyCode, Mat3, Mut, Res, Transform};
+use bevy_egui::EguiContexts;
+
+use crate::on_ui;
 
 fn zx_movement(keyboard_input: &Res<ButtonInput<KeyCode>>, transform: &Transform) -> Vec3 {
     let zx_direction = zx_direction(keyboard_input);
@@ -42,6 +45,7 @@ fn zx_direction(keyboard_input: &Res<ButtonInput<KeyCode>>) -> Vec3 {
 pub(crate) fn zoom_value(
     keyboard_input: &Res<ButtonInput<KeyCode>>,
     mouse_wheel: &mut EventReader<MouseWheel>,
+    egui_contexts: &mut EguiContexts,
 ) -> f32 {
     let mut result: f32 = 0.0;
 
@@ -56,19 +60,23 @@ pub(crate) fn zoom_value(
 
     for ev in mouse_wheel.read() {
         info!("Mouse zoom: {ev:?} {result}"); // TODO: This results in very weird and choppy scrolling sometimes, needs to be rethought.
-        match ev.unit {
-            MouseScrollUnit::Line => {
-                const MOUSE_SCROLL_UNIT_LINE_COEF: f32 = 100.0;
-                // Later: This results in jumping motion. We have to use camera smoothing.
-                result += ev.y * MOUSE_SCROLL_UNIT_LINE_COEF;
-            },
-            MouseScrollUnit::Pixel => {
-                warn!(
-                    "Scroll (pixel units): vertical: {}, horizontal: {}",
-                    ev.y, ev.x
-                );
-                // Later: Learn to handle those
-            },
+        if on_ui(egui_contexts) {
+            info!("Ignoring as we are over Egui area.");
+        } else {
+            match ev.unit {
+                MouseScrollUnit::Line => {
+                    const MOUSE_SCROLL_UNIT_LINE_COEF: f32 = 100.0;
+                    // Later: This results in jumping motion. We have to use camera smoothing.
+                    result += ev.y * MOUSE_SCROLL_UNIT_LINE_COEF;
+                },
+                MouseScrollUnit::Pixel => {
+                    warn!(
+                        "Scroll (pixel units): vertical: {}, horizontal: {}",
+                        ev.y, ev.x
+                    );
+                    // Later: Learn to handle those
+                },
+            }
         }
     }
 

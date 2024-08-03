@@ -8,6 +8,7 @@ use bevy::prelude::{
     OrthographicProjection, Plugin, Projection, Query, Res, Startup, Time, Transform, Update,
 };
 use bevy::render::camera::ScalingMode;
+use bevy_egui::EguiContexts;
 
 use crate::cameras::util::{movement_and_rotation, zoom_value};
 use crate::cameras::{CameraComponent, CameraId};
@@ -75,12 +76,13 @@ fn zoom_orthographic_camera(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut mouse_wheel: EventReader<MouseWheel>,
     mut query: Query<(&mut Projection, &CameraComponent)>,
+    mut egui_contexts: EguiContexts,
 ) {
     for (projection, camera) in &mut query {
         if camera.id == CameraId::Orthographic {
             if let Projection::Orthographic(ortho) = projection.into_inner() {
                 const ZOOM_SPEED: f32 = 2.0;
-                let zoom_value = zoom_value(&keyboard_input, &mut mouse_wheel);
+                let zoom_value = zoom_value(&keyboard_input, &mut mouse_wheel, &mut egui_contexts);
                 ortho.scale *= 1.0 + time.delta_seconds() * (zoom_value * -1.0) * ZOOM_SPEED;
             }
         }

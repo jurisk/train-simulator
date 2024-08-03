@@ -5,6 +5,7 @@ use bevy::prelude::{info, App, AssetMode, Plugin, PluginGroup};
 use bevy::utils::default;
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution};
 use bevy::DefaultPlugins;
+use bevy_egui::EguiContexts;
 
 use crate::assets::GameAssetsPlugin;
 use crate::cameras::CameraPlugin;
@@ -92,7 +93,8 @@ impl Plugin for ClientGraphicsPlugin {
     }
 }
 
-fn on_ui(egui_context: &mut egui::Context) -> bool {
+fn on_ui(egui_contexts: &mut EguiContexts) -> bool {
     // Later: Actually, our labels are also Egui areas, so this may need improvement.
-    egui_context.is_pointer_over_area()
+    // Later: Actually, this does not seem to work as expected.
+    egui_contexts.ctx_mut().is_pointer_over_area()
 }

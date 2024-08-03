@@ -26,7 +26,7 @@ pub(crate) fn build_building_when_mouse_released(
     hovered_tile: Res<HoveredTile>,
     mut egui_contexts: EguiContexts,
 ) {
-    if on_ui(egui_contexts.ctx_mut()) {
+    if on_ui(&mut egui_contexts) {
         return;
     }
 

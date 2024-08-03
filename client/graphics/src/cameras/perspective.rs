@@ -8,6 +8,7 @@ use bevy::prelude::{
     Res, Startup, Time, Transform, Update,
 };
 use bevy::render::view::ColorGrading;
+use bevy_egui::EguiContexts;
 
 use crate::cameras::util::{movement_and_rotation, zoom_value};
 use crate::cameras::{CameraComponent, CameraId};
@@ -54,12 +55,13 @@ fn move_camera(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut mouse_wheel: EventReader<MouseWheel>,
     mut query: Query<(&mut Transform, &CameraComponent, &Camera)>,
+    mut egui_contexts: EguiContexts,
 ) {
     for (mut transform, camera_component, camera) in &mut query {
         if camera_component.id == CameraId::Perspective && camera.is_active {
             movement_and_rotation(time.delta_seconds(), &keyboard_input, &mut transform);
 
-            let zoom_value = zoom_value(&keyboard_input, &mut mouse_wheel);
+            let zoom_value = zoom_value(&keyboard_input, &mut mouse_wheel, &mut egui_contexts);
             if zoom_value != 0.0 {
                 const CAMERA_ZOOM_SPEED: f32 = 80.0;
                 let forward = transform.forward();

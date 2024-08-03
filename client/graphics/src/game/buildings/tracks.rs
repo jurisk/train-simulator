@@ -212,7 +212,7 @@ pub(crate) fn build_tracks_when_mouse_released(
     selected_mode_resource: Res<SelectedMode>,
     mut egui_contexts: EguiContexts,
 ) {
-    if on_ui(egui_contexts.ctx_mut()) {
+    if on_ui(&mut egui_contexts) {
         return;
     }
 

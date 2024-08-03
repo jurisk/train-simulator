@@ -63,7 +63,7 @@ pub(crate) fn build_transport_when_mouse_released(
     selected_mode_resource: Res<SelectedMode>,
     mut client_messages: EventWriter<ClientMessageEvent>,
 ) {
-    if on_ui(egui_contexts.ctx_mut()) {
+    if on_ui(&mut egui_contexts) {
         return;
     }
 
