@@ -61,7 +61,7 @@ tower-http = { version = "0.3" }
 # From https://rapier.rs/docs/user_guides/bevy_plugin/common_mistakes#my-local-build-of-rapier-is-slower-than-the-online-demos
 [profile.release]
 # Uncomment for profiling
-debug = true
+# debug = true
 
 # Commented for now, may reenable later:
 # codegen-units = 1

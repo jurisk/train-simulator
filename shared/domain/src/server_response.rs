@@ -78,6 +78,7 @@ pub enum GameResponse {
     TransportsAdded(Vec<TransportInfo>),
     DynamicInfosSync(
         GameTime,
+        // TODO HIGH: This is spamming `BuildingDynamicInfo` for each track - possibly treat tracks separately from buildings, at least for this - or overall?
         HashMap<BuildingId, BuildingDynamicInfo>,
         HashMap<TransportId, TransportDynamicInfo>,
     ),

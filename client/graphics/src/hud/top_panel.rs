@@ -12,7 +12,7 @@ const MIN_X: f32 = 200.0;
 const MIN_Y: f32 = 40.0;
 
 pub(crate) fn show_top_panel(mut contexts: EguiContexts, mut selected_mode: ResMut<SelectedMode>) {
-    // Later: We need to better depict the current building mode in the menu, in case it's a sub-menu item that is selected
+    // Later: We need to better depict the current building mode in the main menu, in case it's a sub-menu item that is selected
 
     egui::TopBottomPanel::top("hud_top_panel").show(contexts.ctx_mut(), |ui| {
         set_font_size(ui, 32.0);
@@ -68,7 +68,6 @@ fn tracks_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 
 fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     // Later: We could build stations by just dragging the mouse, but it can wait.
-    // TODO: Use `StationType::all()`
     menu::menu_button(ui, "🚉 Stations", |ui| {
         set_font_size(ui, 24.0);
 
@@ -97,7 +96,6 @@ fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 
 #[allow(clippy::match_same_arms)]
 fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
-    // TODO: Use `ProductionType::all()`
     menu::menu_button(ui, "⚒ Production", |ui| {
         set_font_size(ui, 24.0);
 
@@ -169,7 +167,7 @@ fn trains_menu(selected_mode_res: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     if ui
         .add(
-            // TODO HIGH: Implement
+            // TODO HIGH: Implement - possibly separate demolish for tracks vs buildings
             egui::Button::new("❎ Demolish")
                 .selected(matches!(*selected_mode.as_ref(), SelectedMode::Demolish))
                 .min_size(egui::vec2(MIN_X, MIN_Y)),
