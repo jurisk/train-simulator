@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::building::industry_type::IndustryType;
 use crate::building::station_type::StationType;
+use crate::building::CoversTiles;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type::TrackType;

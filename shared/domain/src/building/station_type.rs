@@ -3,6 +3,7 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
+use crate::building::CoversTiles;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::tile_track::TileTrack;
@@ -118,9 +119,11 @@ impl StationType {
             StationOrientation::EastToWest => TrackType::EastWest,
         }
     }
+}
 
+impl CoversTiles for StationType {
     #[must_use]
-    pub fn relative_tiles_used(self) -> TileCoverage {
+    fn relative_tiles_used(self) -> TileCoverage {
         match self.orientation {
             StationOrientation::NorthToSouth => {
                 TileCoverage::Rectangular {

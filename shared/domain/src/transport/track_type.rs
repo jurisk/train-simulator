@@ -5,6 +5,7 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
+use crate::building::CoversTiles;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_length::TrackLength;
@@ -71,11 +72,6 @@ impl TrackType {
     }
 
     #[must_use]
-    pub fn relative_tiles_used(self) -> TileCoverage {
-        TileCoverage::Single(TileCoordsXZ::ZERO)
-    }
-
-    #[must_use]
     pub fn connections(self) -> HashSet<DirectionXZ> {
         let (a, b) = self.connections_clockwise();
         HashSet::from([a, b])
@@ -103,5 +99,12 @@ impl TrackType {
             | TrackType::SouthWest => Self::SQRT_2_DIV_2,
         };
         TrackLength::new(result)
+    }
+}
+
+impl CoversTiles for TrackType {
+    #[must_use]
+    fn relative_tiles_used(self) -> TileCoverage {
+        TileCoverage::Single(TileCoordsXZ::ZERO)
     }
 }

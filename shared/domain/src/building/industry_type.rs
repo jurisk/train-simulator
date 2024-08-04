@@ -4,6 +4,7 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::building::CoversTiles;
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
@@ -38,14 +39,6 @@ impl IndustryType {
             IndustryType::IronWorks,
             IndustryType::Warehouse,
         ]
-    }
-
-    #[must_use]
-    pub(crate) fn relative_tiles_used(self) -> TileCoverage {
-        TileCoverage::Rectangular {
-            north_west_inclusive: TileCoordsXZ::new(-1, -1),
-            south_east_inclusive: TileCoordsXZ::new(1, 1),
-        }
     }
 
     #[must_use]
@@ -108,6 +101,16 @@ impl IndustryType {
                     vec![],
                 )
             },
+        }
+    }
+}
+
+impl CoversTiles for IndustryType {
+    #[must_use]
+    fn relative_tiles_used(self) -> TileCoverage {
+        TileCoverage::Rectangular {
+            north_west_inclusive: TileCoordsXZ::new(-1, -1),
+            south_east_inclusive: TileCoordsXZ::new(1, 1),
         }
     }
 }
