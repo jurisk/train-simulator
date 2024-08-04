@@ -130,12 +130,24 @@ cargo modules dependencies --no-externs --no-fns --no-sysroot --no-traits --no-t
 
 === Profiling
 
-Does not work on Windows. Set `[profile.release] debug = true` in `Cargo.toml`.
+See https://github.com/bevyengine/bevy/blob/main/docs/profiling.md[Bevy profiling].
+
+In `Cargo.toml`, set:
+
+[source,toml]
+----
+[profile.release]
+debug = true
+----
+
+Needs to be run as admin on Windows.
 
 [source,bash]
 ----
 cargo install flamegraph
-cargo flamegraph --bin server_console --root
+cargo flamegraph --bin client_single_player --features bevy/trace_chrome --root --release
+cargo flamegraph --bin server_console --features bevy/trace_chrome --root --release
+cargo flamegraph --bin client_graphical --features bevy/trace_chrome -- ws://127.0.0.1:8080/ws ee6b4aa1-67e0-4d6b-a42c-56320f61390e
 ----
 
 === Code size profiling
