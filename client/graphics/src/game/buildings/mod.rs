@@ -111,13 +111,13 @@ fn create_building(
                 BuildingType::Track(_track_type) => {
                     // For now, nothing more - just the rails are enough
                 },
-                BuildingType::Production(production_type) => {
+                BuildingType::Industry(industry_type) => {
                     let mesh = game_assets
                         .building_assets
-                        .production_mesh_for(*production_type);
+                        .industry_mesh_for(*industry_type);
                     create_building_entity(
                         building_info,
-                        format!("{production_type:?}"),
+                        format!("{industry_type:?}"),
                         player_info.colour,
                         mesh,
                         materials,

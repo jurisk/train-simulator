@@ -8,7 +8,7 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::building_type::BuildingType;
 use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
-use crate::production_type::ProductionType;
+use crate::industry_type::IndustryType;
 use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
@@ -112,7 +112,7 @@ impl BuildingInfo {
         direction: DirectionXZ,
     ) -> Option<TransportLocation> {
         let station_type = match self.building_type() {
-            BuildingType::Track(_) | BuildingType::Production(_) => None,
+            BuildingType::Track(_) | BuildingType::Industry(_) => None,
             BuildingType::Station(station_type) => Some(station_type),
         }?;
         let exit_track = self
@@ -195,8 +195,8 @@ impl BuildingInfo {
         let seconds = diff.to_seconds();
         match self.building_type() {
             BuildingType::Track(_) | BuildingType::Station(_) => {},
-            BuildingType::Production(production_type) => {
-                self.advance_production(seconds, production_type);
+            BuildingType::Industry(industry_type) => {
+                self.advance_industry(seconds, industry_type);
             },
         }
     }
@@ -207,9 +207,9 @@ impl BuildingInfo {
         match self.building_type() {
             BuildingType::Track(_) => HashSet::new(),
             BuildingType::Station(_) => HashSet::new(),
-            BuildingType::Production(production_type) => {
+            BuildingType::Industry(industry_type) => {
                 let mut result = HashSet::new();
-                for input in production_type.transform_per_second().inputs {
+                for input in industry_type.transform_per_second().inputs {
                     result.insert(input.resource);
                 }
                 result
@@ -222,8 +222,8 @@ impl BuildingInfo {
         match self.building_type() {
             BuildingType::Track(_) => CargoMap::new(),
             BuildingType::Station(_) => self.dynamic_info().cargo.clone(),
-            BuildingType::Production(production_type) => {
-                let transform = production_type.transform_per_second();
+            BuildingType::Industry(industry_type) => {
+                let transform = industry_type.transform_per_second();
                 let mut result = CargoMap::new();
                 for output in transform.outputs {
                     let resource = output.resource;
@@ -236,8 +236,8 @@ impl BuildingInfo {
         }
     }
 
-    fn advance_production(&mut self, seconds: f32, production_type: ProductionType) {
-        let transform = production_type.transform_per_second();
+    fn advance_industry(&mut self, seconds: f32, industry_type: IndustryType) {
+        let transform = industry_type.transform_per_second();
         let utilisation =
             transform.calculate_utilisation_percentage(&self.dynamic_info.cargo, seconds);
         let effective = seconds * utilisation;

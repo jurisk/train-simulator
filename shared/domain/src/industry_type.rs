@@ -11,32 +11,32 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
-pub enum ProductionType {
+pub enum IndustryType {
     CoalMine,
     IronMine,
     IronWorks,
     Warehouse,
 }
 
-impl Debug for ProductionType {
+impl Debug for IndustryType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            ProductionType::CoalMine => write!(f, "CoalMine"),
-            ProductionType::IronMine => write!(f, "IronMine"),
-            ProductionType::IronWorks => write!(f, "IronWorks"),
-            ProductionType::Warehouse => write!(f, "Warehouse"),
+            IndustryType::CoalMine => write!(f, "CoalMine"),
+            IndustryType::IronMine => write!(f, "IronMine"),
+            IndustryType::IronWorks => write!(f, "IronWorks"),
+            IndustryType::Warehouse => write!(f, "Warehouse"),
         }
     }
 }
 
-impl ProductionType {
+impl IndustryType {
     #[must_use]
     pub const fn all() -> [Self; 4] {
         [
-            ProductionType::CoalMine,
-            ProductionType::IronMine,
-            ProductionType::IronWorks,
-            ProductionType::Warehouse,
+            IndustryType::CoalMine,
+            IndustryType::IronMine,
+            IndustryType::IronWorks,
+            IndustryType::Warehouse,
         ]
     }
 
@@ -51,10 +51,10 @@ impl ProductionType {
     #[must_use]
     pub fn resources_accepted(self) -> Vec<ResourceType> {
         match self {
-            ProductionType::CoalMine => vec![],
-            ProductionType::IronMine => vec![],
-            ProductionType::IronWorks => vec![ResourceType::Iron, ResourceType::Coal],
-            ProductionType::Warehouse => vec![ResourceType::Steel],
+            IndustryType::CoalMine => vec![],
+            IndustryType::IronMine => vec![],
+            IndustryType::IronWorks => vec![ResourceType::Iron, ResourceType::Coal],
+            IndustryType::Warehouse => vec![ResourceType::Steel],
         }
     }
 
@@ -62,7 +62,7 @@ impl ProductionType {
     pub fn transform_per_second(self) -> ResourceTransform {
         const CARGO_PER_SECOND: f32 = 0.1f32;
         match self {
-            ProductionType::CoalMine => {
+            IndustryType::CoalMine => {
                 ResourceTransform::new(
                     vec![],
                     vec![ResourceTransformItem::new(
@@ -71,7 +71,7 @@ impl ProductionType {
                     )],
                 )
             },
-            ProductionType::IronMine => {
+            IndustryType::IronMine => {
                 ResourceTransform::new(
                     vec![],
                     vec![ResourceTransformItem::new(
@@ -80,7 +80,7 @@ impl ProductionType {
                     )],
                 )
             },
-            ProductionType::IronWorks => {
+            IndustryType::IronWorks => {
                 // https://marketrealist.com/2015/01/coke-fit-steelmaking-process/
                 ResourceTransform::new(
                     vec![
@@ -99,7 +99,7 @@ impl ProductionType {
                     )],
                 )
             },
-            ProductionType::Warehouse => {
+            IndustryType::Warehouse => {
                 ResourceTransform::new(
                     vec![ResourceTransformItem::new(
                         ResourceType::Steel,
@@ -155,12 +155,12 @@ impl ResourceTransform {
 mod tests {
     use crate::cargo_amount::CargoAmount;
     use crate::cargo_map::CargoMap;
-    use crate::production_type::ProductionType;
+    use crate::industry_type::IndustryType;
     use crate::resource_type::ResourceType;
 
     #[test]
     fn test_coal_mine() {
-        let transform = ProductionType::CoalMine.transform_per_second();
+        let transform = IndustryType::CoalMine.transform_per_second();
         let cargo = CargoMap::new();
         let utilisation = transform.calculate_utilisation_percentage(&cargo, 0.5);
         assert_eq!(utilisation, 1.0);
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn test_iron_works_empty() {
-        let transform = ProductionType::IronWorks.transform_per_second();
+        let transform = IndustryType::IronWorks.transform_per_second();
         let cargo = CargoMap::new();
         let utilisation = transform.calculate_utilisation_percentage(&cargo, 0.5);
         assert_eq!(utilisation, 0.0);
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn test_iron_works_one_component_only_other_empty() {
-        let transform = ProductionType::IronWorks.transform_per_second();
+        let transform = IndustryType::IronWorks.transform_per_second();
         let mut cargo = CargoMap::new();
         cargo.add(ResourceType::Coal, CargoAmount::new(4.0));
         let utilisation = transform.calculate_utilisation_percentage(&cargo, 0.5);
@@ -185,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_iron_abundance() {
-        let transform = ProductionType::IronWorks.transform_per_second();
+        let transform = IndustryType::IronWorks.transform_per_second();
         let mut cargo = CargoMap::new();
         cargo.add(ResourceType::Coal, CargoAmount::new(4.0));
         cargo.add(ResourceType::Iron, CargoAmount::new(4.0));
@@ -195,7 +195,7 @@ mod tests {
 
     #[test]
     fn test_iron_partial() {
-        let transform = ProductionType::IronWorks.transform_per_second();
+        let transform = IndustryType::IronWorks.transform_per_second();
         let mut cargo = CargoMap::new();
         cargo.add(ResourceType::Coal, CargoAmount::new(0.025));
         cargo.add(ResourceType::Iron, CargoAmount::new(4.0));

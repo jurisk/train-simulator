@@ -36,8 +36,8 @@ pub fn draw_labels(
                             camera_transform,
                         );
                     },
-                    BuildingType::Production(production_type) => {
-                        let label = format!("{production_type:?} {:?}", building.dynamic_info());
+                    BuildingType::Industry(industry_type) => {
+                        let label = format!("{industry_type:?} {:?}", building.dynamic_info());
                         let id = format!("{:?}", building.building_id());
                         let building_position_3d = center_vec3(&building, game_state.map_level());
                         draw_label(

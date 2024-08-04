@@ -1,7 +1,7 @@
 use bevy::prelude::ResMut;
 use bevy_egui::EguiContexts;
 use egui::{menu, Ui};
-use shared_domain::production_type::ProductionType;
+use shared_domain::industry_type::IndustryType;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::station_type::{StationOrientation, StationType};
 use shared_domain::transport::transport_type::TransportType;
@@ -23,7 +23,7 @@ pub(crate) fn show_top_panel(mut contexts: EguiContexts, mut selected_mode: ResM
             info_menu(&mut selected_mode, ui);
             tracks_menu(&mut selected_mode, ui);
             stations_menu(&mut selected_mode, ui);
-            production_menu(&mut selected_mode, ui);
+            industry_menu(&mut selected_mode, ui);
             military_menu(&mut selected_mode, ui);
             trains_menu(&mut selected_mode, ui);
             demolish_menu(&mut selected_mode, ui);
@@ -95,28 +95,26 @@ fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 }
 
 #[allow(clippy::match_same_arms)]
-fn production_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
-    menu::menu_button(ui, "⚒ Production", |ui| {
+fn industry_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
+    menu::menu_button(ui, "⚒ Industry", |ui| {
         set_font_size(ui, 24.0);
 
-        for production_type in ProductionType::all() {
-            let symbol = match production_type {
-                ProductionType::IronMine => "⚒",
-                ProductionType::CoalMine => "⛏",
-                ProductionType::IronWorks => "🏭",
-                ProductionType::Warehouse => "📦",
+        for industry_type in IndustryType::all() {
+            let symbol = match industry_type {
+                IndustryType::IronMine => "⚒",
+                IndustryType::CoalMine => "⛏",
+                IndustryType::IronWorks => "🏭",
+                IndustryType::Warehouse => "📦",
             };
             if ui
                 .add(
-                    egui::Button::new(format!("{symbol} {production_type:#?}"))
-                        .selected(
-                            *selected_mode.as_ref() == SelectedMode::Production(production_type),
-                        )
+                    egui::Button::new(format!("{symbol} {industry_type:#?}"))
+                        .selected(*selected_mode.as_ref() == SelectedMode::Industry(industry_type))
                         .min_size(egui::vec2(MIN_X, MIN_Y)),
                 )
                 .clicked()
             {
-                *selected_mode.as_mut() = SelectedMode::Production(production_type);
+                *selected_mode.as_mut() = SelectedMode::Industry(industry_type);
                 ui.close_menu();
             }
         }

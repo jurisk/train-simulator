@@ -2,7 +2,7 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
-use crate::production_type::ProductionType;
+use crate::industry_type::IndustryType;
 use crate::station_type::StationType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
@@ -12,8 +12,7 @@ use crate::transport::track_type::TrackType;
 pub enum BuildingType {
     Track(TrackType),
     Station(StationType),
-    // TODO: It's not really production, but is it `Industry`? Or something else?
-    Production(ProductionType),
+    Industry(IndustryType),
 }
 
 impl Debug for BuildingType {
@@ -21,7 +20,7 @@ impl Debug for BuildingType {
         match self {
             BuildingType::Track(track_type) => write!(f, "T-{track_type:?}"),
             BuildingType::Station(station_type) => write!(f, "S-{station_type:?}"),
-            BuildingType::Production(production_type) => write!(f, "P-{production_type:?}"),
+            BuildingType::Industry(industry_type) => write!(f, "I-{industry_type:?}"),
         }
     }
 }
@@ -33,7 +32,7 @@ impl BuildingType {
     pub fn track_types_at(self, relative_tile: TileCoordsXZ) -> Vec<TrackType> {
         match self {
             BuildingType::Track(track_type) => vec![track_type],
-            BuildingType::Production(_) => vec![],
+            BuildingType::Industry(_) => vec![],
             BuildingType::Station(station_type) => {
                 if station_type.relative_tiles_used().contains(relative_tile) {
                     vec![station_type.track_type()]
@@ -48,7 +47,7 @@ impl BuildingType {
     pub fn relative_tiles_used(self) -> TileCoverage {
         match self {
             BuildingType::Track(track_type) => track_type.relative_tiles_used(),
-            BuildingType::Production(production_type) => production_type.relative_tiles_used(),
+            BuildingType::Industry(industry_type) => industry_type.relative_tiles_used(),
             BuildingType::Station(station_type) => station_type.relative_tiles_used(),
         }
     }

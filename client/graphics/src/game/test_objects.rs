@@ -6,7 +6,7 @@ use shared_domain::building_type::BuildingType;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
-use shared_domain::production_type::ProductionType;
+use shared_domain::industry_type::IndustryType;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::station_type::StationType;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
@@ -44,23 +44,23 @@ fn build_test_buildings(player_id: PlayerId) -> GameCommand {
         (WAREHOUSE_A, BuildingType::Station(StationType::all()[1])),
         (
             TileCoordsXZ::from_usizes(40, 31),
-            BuildingType::Production(ProductionType::IronMine),
+            BuildingType::Industry(IndustryType::IronMine),
         ),
         (
             TileCoordsXZ::from_usizes(55, 36),
-            BuildingType::Production(ProductionType::IronMine),
+            BuildingType::Industry(IndustryType::IronMine),
         ),
         (
             TileCoordsXZ::from_usizes(7, 39),
-            BuildingType::Production(ProductionType::CoalMine),
+            BuildingType::Industry(IndustryType::CoalMine),
         ),
         (
             TileCoordsXZ::from_usizes(12, 82),
-            BuildingType::Production(ProductionType::IronWorks),
+            BuildingType::Industry(IndustryType::IronWorks),
         ),
         (
             TileCoordsXZ::from_usizes(28, 94),
-            BuildingType::Production(ProductionType::Warehouse),
+            BuildingType::Industry(IndustryType::Warehouse),
         ),
     ];
 

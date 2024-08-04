@@ -39,7 +39,7 @@ fn buildings_info_panel(ui: &mut Ui, buildings: &BuildingState) {
             BuildingType::Station(_) => {
                 ui.label(format!("{building:?}"));
             },
-            BuildingType::Production(_) => {
+            BuildingType::Industry(_) => {
                 ui.label(format!("{building:?}"));
             },
         }

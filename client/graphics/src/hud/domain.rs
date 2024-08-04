@@ -1,6 +1,6 @@
 use bevy::prelude::Resource;
 use shared_domain::building_type::BuildingType;
-use shared_domain::production_type::ProductionType;
+use shared_domain::industry_type::IndustryType;
 use shared_domain::station_type::StationType;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
@@ -12,7 +12,7 @@ pub enum SelectedMode {
     Info,
     Tracks,
     Stations(StationType),
-    Production(ProductionType),
+    Industry(IndustryType),
     Military,
     Transport(TransportType),
     Demolish,
@@ -47,9 +47,7 @@ impl SelectedMode {
         match self {
             SelectedMode::Tracks => None,
             SelectedMode::Stations(station_type) => Some(BuildingType::Station(*station_type)),
-            SelectedMode::Production(production_type) => {
-                Some(BuildingType::Production(*production_type))
-            },
+            SelectedMode::Industry(industry_type) => Some(BuildingType::Industry(*industry_type)),
             SelectedMode::Military => None,
             SelectedMode::Transport(_) => None,
             SelectedMode::Info => None,

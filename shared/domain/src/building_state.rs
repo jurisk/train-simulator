@@ -21,7 +21,7 @@ pub enum CanBuildResponse {
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
     buildings:            Vec<BuildingInfo>,
-    // Link from each production building to the closest station
+    // Link from each industry building to the closest station
     // Later: Should these be 1:1, N:1 or N:M correspondence between industry & station? Is it a problem if a station can accept & provide the same good and thus does not need trains?
     closest_station_link: HashMap<BuildingId, BuildingId>,
 }
@@ -83,8 +83,8 @@ impl BuildingState {
         for (building_id, linked_station_id) in self.closest_station_link.clone() {
             if station_id == linked_station_id {
                 if let Some(building) = self.find_building(building_id) {
-                    if let BuildingType::Production(production_type) = building.building_type() {
-                        for resource_type in production_type.resources_accepted() {
+                    if let BuildingType::Industry(industry_type) = building.building_type() {
+                        for resource_type in industry_type.resources_accepted() {
                             results.insert(resource_type);
                         }
                     }
@@ -108,7 +108,7 @@ impl BuildingState {
     fn recalculate_cargo_forwarding_links(&mut self) {
         self.closest_station_link.clear();
         for building in &self.buildings {
-            if let BuildingType::Production(_) = building.building_type() {
+            if let BuildingType::Industry(_) = building.building_type() {
                 let closest_station = self.find_closest_station(building);
 
                 if let Some(closest_station) = closest_station {
@@ -200,7 +200,7 @@ impl BuildingState {
             .filter_map(|building| {
                 match building.building_type() {
                     BuildingType::Track(track_type) => Some(track_type),
-                    BuildingType::Station(_) | BuildingType::Production(_) => None,
+                    BuildingType::Station(_) | BuildingType::Industry(_) => None,
                 }
             })
             .collect::<HashSet<_>>();
@@ -208,20 +208,20 @@ impl BuildingState {
         let has_overlapping_non_tracks = overlapping_buildings.iter().any(|building| {
             match building.building_type() {
                 BuildingType::Track(_) => false,
-                BuildingType::Station(_) | BuildingType::Production(_) => true,
+                BuildingType::Station(_) | BuildingType::Industry(_) => true,
             }
         });
 
         let invalid_overlaps = match building_info.building_type() {
             BuildingType::Track(_track_type) => has_overlapping_non_tracks,
-            BuildingType::Station(_) | BuildingType::Production(_) => {
+            BuildingType::Station(_) | BuildingType::Industry(_) => {
                 !overlapping_buildings.is_empty()
             },
         };
 
         let has_same_track = match building_info.building_type() {
             BuildingType::Track(track_type) => overlapping_tracks.contains(&track_type),
-            BuildingType::Station(_) | BuildingType::Production(_) => false,
+            BuildingType::Station(_) | BuildingType::Industry(_) => false,
         };
 
         let vertex_coords: Vec<_> = building_info
@@ -254,7 +254,7 @@ impl BuildingState {
                     height_a == height_b
                 })
             },
-            BuildingType::Station(_) | BuildingType::Production(_) => all_equal_heights,
+            BuildingType::Station(_) | BuildingType::Industry(_) => all_equal_heights,
         };
 
         if overlapping_other_players || invalid_overlaps || any_vertex_under_water || !valid_heights
