@@ -112,7 +112,7 @@ impl BuildingInfo {
         direction: DirectionXZ,
     ) -> Option<TransportLocation> {
         let station_type = match self.building_type() {
-            BuildingType::Track(_) | BuildingType::Industry(_) => None,
+            BuildingType::Industry(_) => None,
             BuildingType::Station(station_type) => Some(station_type),
         }?;
         let exit_track = self
@@ -194,7 +194,7 @@ impl BuildingInfo {
     pub fn advance(&mut self, diff: GameTimeDiff) {
         let seconds = diff.to_seconds();
         match self.building_type() {
-            BuildingType::Track(_) | BuildingType::Station(_) => {},
+            BuildingType::Station(_) => {},
             BuildingType::Industry(industry_type) => {
                 self.advance_industry(seconds, industry_type);
             },
@@ -205,7 +205,6 @@ impl BuildingInfo {
     #[allow(clippy::match_same_arms)]
     pub fn accepted_inputs(&self) -> HashSet<ResourceType> {
         match self.building_type() {
-            BuildingType::Track(_) => HashSet::new(),
             BuildingType::Station(_) => HashSet::new(),
             BuildingType::Industry(industry_type) => {
                 let mut result = HashSet::new();
@@ -220,7 +219,6 @@ impl BuildingInfo {
     #[must_use]
     pub fn shippable_cargo(&self) -> CargoMap {
         match self.building_type() {
-            BuildingType::Track(_) => CargoMap::new(),
             BuildingType::Station(_) => self.dynamic_info().cargo.clone(),
             BuildingType::Industry(industry_type) => {
                 let transform = industry_type.transform_per_second();

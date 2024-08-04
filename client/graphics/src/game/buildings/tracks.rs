@@ -235,7 +235,7 @@ pub(crate) fn build_tracks_when_mouse_released(
             ordered: ordered_selected_edges,
         } = selected_edges;
 
-        if let Some(buildings) = plan_tracks(
+        if let Some(tracks) = plan_tracks(
             player_id,
             ordered_selected_tiles,
             ordered_selected_edges,
@@ -244,7 +244,7 @@ pub(crate) fn build_tracks_when_mouse_released(
         ) {
             client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                 game_id,
-                GameCommand::BuildBuildings(buildings),
+                GameCommand::BuildTracks(tracks),
             )));
         } else {
             debug!("Could not build track.");

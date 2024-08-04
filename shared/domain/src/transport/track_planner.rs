@@ -3,16 +3,15 @@ use std::collections::HashSet;
 use log::warn;
 use pathfinding::prelude::dijkstra;
 
-use crate::building::building_info::BuildingInfo;
 use crate::building::building_state::{BuildingState, CanBuildResponse};
-use crate::building::building_type::BuildingType;
+use crate::building::track_info::TrackInfo;
 use crate::edge_xz::EdgeXZ;
 use crate::map_level::MapLevel;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::tile_track::TileTrack;
 use crate::transport::track_length::TrackLength;
 use crate::transport::track_type::TrackType;
-use crate::{BuildingId, PlayerId};
+use crate::{PlayerId, TrackId};
 
 // Later:   This actually allows turns that the trains cannot actually make (e.g. crossing rails),
 //          so we should consider the direction of the train when planning the track.
@@ -37,11 +36,11 @@ fn successors(
             const NON_PREFERRED_TILE_MALUS: f32 = 16f32; // How much shorter "length" do we assign to going through a preferred tile
 
             for tile_track in track_types_that_fit(edge, neighbour) {
-                let building = BuildingInfo::new(
+                let track = TrackInfo::new(
+                    TrackId::random(),
                     player_id,
-                    BuildingId::random(),
                     tile_track.tile_coords_xz,
-                    BuildingType::Track(tile_track.track_type),
+                    tile_track.track_type,
                 );
 
                 let malus = if preferred_tiles.contains(&tile) {
@@ -53,7 +52,7 @@ fn successors(
                 // Later: Should we give a bonus in case the track already exists?
 
                 if matches!(
-                    building_state.can_build_building(player_id, &building, map_level),
+                    building_state.can_build_track(player_id, &track, map_level),
                     CanBuildResponse::Ok | CanBuildResponse::AlreadyExists
                 ) {
                     results.push((neighbour, tile_track.track_type.length() * malus));
@@ -73,7 +72,7 @@ pub fn plan_tracks(
     ordered_selected_edges: &[EdgeXZ],
     building_state: &BuildingState,
     map_level: &MapLevel,
-) -> Option<Vec<BuildingInfo>> {
+) -> Option<Vec<TrackInfo>> {
     let head = *ordered_selected_edges.first()?;
     let tail = *ordered_selected_edges.last()?;
 
@@ -96,23 +95,23 @@ pub fn plan_tracks(
     );
 
     path.map(|(path, _length)| {
-        let mut buildings = vec![];
+        let mut tracks = vec![];
 
         for w in path.windows(2) {
             let a = w[0];
             let b = w[1];
 
             for tile_track in track_types_that_fit(a, b) {
-                let building = BuildingInfo::new(
+                let track = TrackInfo::new(
+                    TrackId::random(),
                     player_id,
-                    BuildingId::random(),
                     tile_track.tile_coords_xz,
-                    BuildingType::Track(tile_track.track_type),
+                    tile_track.track_type,
                 );
 
-                match building_state.can_build_building(player_id, &building, map_level) {
+                match building_state.can_build_track(player_id, &track, map_level) {
                     CanBuildResponse::Ok => {
-                        buildings.push(building);
+                        tracks.push(track);
                     },
                     CanBuildResponse::AlreadyExists => {
                         // Expected if we are building an addition to existing track
@@ -120,14 +119,14 @@ pub fn plan_tracks(
                     CanBuildResponse::Invalid => {
                         warn!(
                             "Unexpected state - our found path includes invalid buildings: {:?}",
-                            building
+                            track,
                         );
                     },
                 }
             }
         }
 
-        buildings
+        tracks
     })
 }
 

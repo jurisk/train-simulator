@@ -7,10 +7,11 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
+use crate::building::track_info::TrackInfo;
 use crate::game_state::GameState;
 use crate::game_time::GameTime;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
-use crate::{BuildingId, ClientId, GameId, PlayerId, PlayerName, TransportId};
+use crate::{BuildingId, ClientId, GameId, PlayerId, PlayerName, TrackId, TransportId};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum AuthenticationResponse {
@@ -75,10 +76,10 @@ pub enum GameResponse {
     // Later: Actually, many of these should be sending `GameTime` (if it's not already included in other structures such as `GameState`), and it should be handled on the client.
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
     BuildingsAdded(Vec<BuildingInfo>),
+    TracksAdded(Vec<TrackInfo>),
     TransportsAdded(Vec<TransportInfo>),
     DynamicInfosSync(
         GameTime,
-        // TODO HIGH: This is spamming `BuildingDynamicInfo` for each track - possibly treat tracks separately from buildings, at least for this - or overall?
         HashMap<BuildingId, BuildingDynamicInfo>,
         HashMap<TransportId, TransportDynamicInfo>,
     ),
@@ -91,7 +92,8 @@ pub enum GameResponse {
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub enum GameError {
     GameNotFound,
-    CannotBuild(Vec<BuildingId>),
+    CannotBuildBuildings(Vec<BuildingId>),
+    CannotBuildTracks(Vec<TrackId>),
     CannotPurchase(TransportId),
     UnspecifiedError,
 }
@@ -107,6 +109,9 @@ impl Debug for GameResponse {
             },
             GameResponse::BuildingsAdded(buildings) => {
                 write!(f, "BuildingsAdded({} buildings)", buildings.len())
+            },
+            GameResponse::TracksAdded(tracks) => {
+                write!(f, "TracksAdded({} tracks)", tracks.len())
             },
             GameResponse::TransportsAdded(transports) => {
                 write!(

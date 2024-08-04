@@ -95,7 +95,7 @@ fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCom
         }
     }
 
-    let mut buildings = vec![];
+    let mut tracks = vec![];
     for (a, b) in connections {
         if let Some(route) = plan_tracks(
             player_id,
@@ -107,11 +107,11 @@ fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCom
             game_state.building_state(),
             game_state.map_level(),
         ) {
-            buildings.extend(route);
+            tracks.extend(route);
         }
     }
 
-    vec![GameCommand::BuildBuildings(buildings)]
+    vec![GameCommand::BuildTracks(tracks)]
 }
 
 fn find_station_id(building_state: &BuildingState, tile: TileCoordsXZ) -> BuildingId {

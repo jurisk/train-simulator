@@ -5,6 +5,7 @@ use log::warn;
 use serde::{Deserialize, Serialize};
 
 use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
+use crate::building::track_info::TrackInfo;
 use crate::game_time::GameTimeDiff;
 use crate::map_level::MapLevel;
 use crate::resource_type::ResourceType;
@@ -20,6 +21,7 @@ pub enum CanBuildResponse {
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
+    tracks:               Vec<TrackInfo>,
     buildings:            Vec<BuildingInfo>,
     // Link from each industry building to the closest station
     // Later: Should these be 1:1, N:1 or N:M correspondence between industry & station? Is it a problem if a station can accept & provide the same good and thus does not need trains?
@@ -36,6 +38,7 @@ impl BuildingState {
     #[must_use]
     pub fn empty() -> Self {
         Self {
+            tracks:               Vec::new(),
             buildings:            Vec::new(),
             closest_station_link: HashMap::new(),
         }
@@ -43,10 +46,16 @@ impl BuildingState {
 
     #[must_use]
     pub fn track_types_at(&self, tile: TileCoordsXZ) -> Vec<TrackType> {
-        self.buildings_at(tile)
-            .into_iter()
-            .flat_map(|building| building.track_types_at(tile))
-            .collect()
+        let mut results = vec![];
+        for building in self.buildings_at(tile) {
+            for track in building.track_types_at(tile) {
+                results.push(track);
+            }
+        }
+        for track in self.tracks_at(tile) {
+            results.push(track.track_type);
+        }
+        results
     }
 
     #[must_use]
@@ -54,6 +63,14 @@ impl BuildingState {
         self.buildings
             .iter()
             .filter(|building| building.covers_tiles().contains(tile))
+            .collect()
+    }
+
+    #[must_use]
+    pub fn tracks_at(&self, tile: TileCoordsXZ) -> Vec<&TrackInfo> {
+        self.tracks
+            .iter()
+            .filter(|track| track.tile == tile)
             .collect()
     }
 
@@ -95,13 +112,24 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn to_vec(&self) -> Vec<BuildingInfo> {
+    pub fn building_infos(&self) -> Vec<BuildingInfo> {
+        // TODO: Stop cloning all the time?
         self.buildings.clone()
     }
 
-    pub(crate) fn append_all(&mut self, additional: Vec<BuildingInfo>) {
+    #[must_use]
+    pub fn track_infos(&self) -> Vec<TrackInfo> {
+        // TODO: Stop cloning all the time?
+        self.tracks.clone()
+    }
+
+    pub(crate) fn append_buildings(&mut self, additional: Vec<BuildingInfo>) {
         self.buildings.extend(additional);
         self.recalculate_cargo_forwarding_links();
+    }
+
+    pub(crate) fn append_tracks(&mut self, additional: Vec<TrackInfo>) {
+        self.tracks.extend(additional);
     }
 
     #[allow(clippy::items_after_statements)]
@@ -145,7 +173,7 @@ impl BuildingState {
     }
 
     #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
-    pub fn can_build(
+    pub fn can_build_buildings(
         &mut self,
         requesting_player_id: PlayerId,
         building_infos: &[BuildingInfo],
@@ -157,12 +185,88 @@ impl BuildingState {
 
         // TODO: Check that this is a valid building and there is enough money to build it, subtract money
 
-        let tiles_are_free = building_infos.iter().all(|building_info| {
+        let can_build = building_infos.iter().all(|building_info| {
             self.can_build_building(requesting_player_id, building_info, map_level)
                 == CanBuildResponse::Ok
         });
 
-        valid_player_id && tiles_are_free
+        valid_player_id && can_build
+    }
+
+    #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
+    pub fn can_build_tracks(
+        &mut self,
+        requesting_player_id: PlayerId,
+        track_infos: &[TrackInfo],
+        map_level: &MapLevel,
+    ) -> bool {
+        let valid_player_id = track_infos
+            .iter()
+            .all(|track_info| track_info.owner_id == requesting_player_id);
+
+        let can_build = track_infos.iter().all(|track_info| {
+            self.can_build_track(requesting_player_id, track_info, map_level)
+                == CanBuildResponse::Ok
+        });
+
+        valid_player_id && can_build
+    }
+
+    pub(crate) fn can_build_track(
+        &self,
+        requesting_player_id: PlayerId,
+        track_info: &TrackInfo,
+        map_level: &MapLevel,
+    ) -> CanBuildResponse {
+        // Later: Do not allow tracks that go out of bounds
+        if !map_level.tile_in_bounds(track_info.tile) {
+            return CanBuildResponse::Invalid;
+        }
+
+        // TODO HIGH:   Actually, if the attempt is to build a track over tracks provided by a station,
+        //              we should allow it as CanBuildResponse::AlreadyExists
+        let overlapping_buildings = self.buildings_at(track_info.tile);
+        let invalid_overlaps = !overlapping_buildings.is_empty();
+
+        let overlapping_other_players = overlapping_buildings
+            .iter()
+            .any(|building| building.owner_id() != requesting_player_id);
+
+        let overlapping_tracks = self
+            .tracks_at(track_info.tile)
+            .into_iter()
+            .map(|other_track| other_track.track_type)
+            .collect::<HashSet<_>>();
+
+        let has_same_track = overlapping_tracks.contains(&track_info.track_type);
+
+        let vertex_coords = track_info.tile.vertex_coords();
+
+        let any_vertex_under_water = vertex_coords
+            .into_iter()
+            .any(|vertex| map_level.under_water(vertex));
+
+        // Later: Consider allowing more: https://wiki.openttd.org/en/Archive/Manual/Settings/Build%20on%20slopes .
+        // Later: Consider not allowing slopes that are too steep
+        let valid_heights = track_info
+            .track_type
+            .connections()
+            .into_iter()
+            .all(|direction| {
+                let (a, b) = track_info.tile.vertex_coords_clockwise(direction);
+                let height_a = map_level.height_at(a);
+                let height_b = map_level.height_at(b);
+                height_a == height_b
+            });
+
+        if overlapping_other_players || invalid_overlaps || any_vertex_under_water || !valid_heights
+        {
+            CanBuildResponse::Invalid
+        } else if has_same_track {
+            CanBuildResponse::AlreadyExists
+        } else {
+            CanBuildResponse::Ok
+        }
     }
 
     #[allow(clippy::collapsible_else_if)]
@@ -172,8 +276,6 @@ impl BuildingState {
         building_info: &BuildingInfo,
         map_level: &MapLevel,
     ) -> CanBuildResponse {
-        // Later: Do not allow tracks that go out of bounds
-        // Later: Are you doing bounds checking at all here? Can buildings be built out of bounds?
         let any_tile_out_of_bounds = building_info
             .covers_tiles()
             .to_set()
@@ -195,34 +297,7 @@ impl BuildingState {
             .iter()
             .any(|building| building.owner_id() != requesting_player_id);
 
-        let overlapping_tracks = overlapping_buildings
-            .iter()
-            .filter_map(|building| {
-                match building.building_type() {
-                    BuildingType::Track(track_type) => Some(track_type),
-                    BuildingType::Station(_) | BuildingType::Industry(_) => None,
-                }
-            })
-            .collect::<HashSet<_>>();
-
-        let has_overlapping_non_tracks = overlapping_buildings.iter().any(|building| {
-            match building.building_type() {
-                BuildingType::Track(_) => false,
-                BuildingType::Station(_) | BuildingType::Industry(_) => true,
-            }
-        });
-
-        let invalid_overlaps = match building_info.building_type() {
-            BuildingType::Track(_track_type) => has_overlapping_non_tracks,
-            BuildingType::Station(_) | BuildingType::Industry(_) => {
-                !overlapping_buildings.is_empty()
-            },
-        };
-
-        let has_same_track = match building_info.building_type() {
-            BuildingType::Track(track_type) => overlapping_tracks.contains(&track_type),
-            BuildingType::Station(_) | BuildingType::Industry(_) => false,
-        };
+        let invalid_overlaps = !overlapping_buildings.is_empty();
 
         let vertex_coords: Vec<_> = building_info
             .covers_tiles()
@@ -242,40 +317,41 @@ impl BuildingState {
 
         let all_equal_heights = vertex_heights.len() == 1;
         let valid_heights = match building_info.building_type() {
-            BuildingType::Track(track_type) => {
-                let tile = building_info.reference_tile();
-
-                // Later: Consider allowing more: https://wiki.openttd.org/en/Archive/Manual/Settings/Build%20on%20slopes .
-                // Later: Consider not allowing slopes that are too steep
-                track_type.connections().into_iter().all(|direction| {
-                    let (a, b) = tile.vertex_coords_clockwise(direction);
-                    let height_a = map_level.height_at(a);
-                    let height_b = map_level.height_at(b);
-                    height_a == height_b
-                })
-            },
             BuildingType::Station(_) | BuildingType::Industry(_) => all_equal_heights,
         };
 
         if overlapping_other_players || invalid_overlaps || any_vertex_under_water || !valid_heights
         {
             CanBuildResponse::Invalid
-        } else if has_same_track {
-            CanBuildResponse::AlreadyExists
         } else {
             CanBuildResponse::Ok
         }
     }
 
     #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
-    pub fn build(
+    pub fn build_buildings(
         &mut self,
         requesting_player_id: PlayerId,
         building_infos: &[BuildingInfo],
         map_level: &MapLevel,
     ) -> Result<(), ()> {
-        if self.can_build(requesting_player_id, building_infos, map_level) {
-            self.append_all(building_infos.to_vec());
+        if self.can_build_buildings(requesting_player_id, building_infos, map_level) {
+            self.append_buildings(building_infos.to_vec());
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+
+    #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
+    pub fn build_tracks(
+        &mut self,
+        requesting_player_id: PlayerId,
+        track_infos: &[TrackInfo],
+        map_level: &MapLevel,
+    ) -> Result<(), ()> {
+        if self.can_build_tracks(requesting_player_id, track_infos, map_level) {
+            self.append_tracks(track_infos.to_vec());
             Ok(())
         } else {
             Err(())

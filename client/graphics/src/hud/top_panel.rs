@@ -165,7 +165,7 @@ fn trains_menu(selected_mode_res: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     if ui
         .add(
-            // TODO HIGH: Implement - possibly separate demolish for tracks vs buildings
+            // TODO HIGH: Implement - separate for tracks vs buildings
             egui::Button::new("❎ Demolish")
                 .selected(matches!(*selected_mode.as_ref(), SelectedMode::Demolish))
                 .min_size(egui::vec2(MIN_X, MIN_Y)),

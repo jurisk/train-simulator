@@ -33,9 +33,8 @@ pub(crate) fn show_left_panel(
 #[allow(clippy::match_same_arms)]
 fn buildings_info_panel(ui: &mut Ui, buildings: &BuildingState) {
     ui.heading("Buildings");
-    for building in buildings.to_vec() {
+    for building in buildings.building_infos() {
         match building.building_type() {
-            BuildingType::Track(_) => {},
             BuildingType::Station(_) => {
                 ui.label(format!("{building:?}"));
             },

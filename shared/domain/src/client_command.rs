@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::building::building_info::BuildingInfo;
+use crate::building::track_info::TrackInfo;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
 use crate::{ClientId, GameId, PlayerId, TransportId};
@@ -40,8 +41,10 @@ pub enum GameCommand {
     // These queries are separate due to some race conditions on the client, where the map level
     // was not available yet, so received buildings / transports got ignored.
     QueryBuildings,
+    QueryTracks,
     QueryTransports,
     BuildBuildings(Vec<BuildingInfo>),
+    BuildTracks(Vec<TrackInfo>),
     PurchaseTransport(TransportInfo),
     UpdateTransportMovementOrders(TransportId, MovementOrders),
 }
@@ -50,9 +53,13 @@ impl Debug for GameCommand {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             GameCommand::QueryBuildings => write!(f, "QueryBuildings"),
+            GameCommand::QueryTracks => write!(f, "QueryTracks"),
             GameCommand::QueryTransports => write!(f, "QueryTransports"),
             GameCommand::BuildBuildings(buildings) => {
                 write!(f, "BuildBuildings({} buildings)", buildings.len())
+            },
+            GameCommand::BuildTracks(tracks) => {
+                write!(f, "BuildTracks({} tracks)", tracks.len())
             },
             GameCommand::PurchaseTransport(transport) => {
                 write!(f, "PurchaseTransport({transport:?})")

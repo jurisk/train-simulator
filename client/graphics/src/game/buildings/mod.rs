@@ -13,6 +13,7 @@ use bevy::prelude::{
 use bevy::state::condition::in_state;
 use shared_domain::building::building_info::BuildingInfo;
 use shared_domain::building::building_type::BuildingType;
+use shared_domain::building::track_info::TrackInfo;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{Colour, GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::PlayerId;
@@ -32,7 +33,7 @@ impl Plugin for BuildingsPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_systems(
             FixedUpdate,
-            handle_building_built.run_if(in_state(ClientState::Playing)),
+            handle_buildings_or_tracks_added.run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(
             Update,
@@ -45,8 +46,8 @@ impl Plugin for BuildingsPlugin {
     }
 }
 
-#[allow(clippy::collapsible_match)]
-fn handle_building_built(
+#[allow(clippy::collapsible_match, clippy::match_same_arms)]
+fn handle_buildings_or_tracks_added(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
     game_assets: Res<GameAssets>,
@@ -58,25 +59,75 @@ fn handle_building_built(
     let map_level = game_state.map_level().clone();
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
-            if let GameResponse::BuildingsAdded(building_infos) = game_response {
-                game_state.append_buildings(building_infos.clone());
+            match game_response {
+                GameResponse::GameStateSnapshot(_) => {},
+                GameResponse::PlayersUpdated(_) => {},
+                GameResponse::BuildingsAdded(building_infos) => {
+                    game_state.append_buildings(building_infos.clone());
 
-                for building_info in building_infos {
-                    create_building(
-                        building_info,
-                        &mut commands,
-                        &mut materials,
-                        game_assets.as_ref(),
-                        &map_level,
-                        game_state.players(),
-                    );
-                }
+                    for building_info in building_infos {
+                        create_building(
+                            building_info,
+                            &mut commands,
+                            &mut materials,
+                            game_assets.as_ref(),
+                            &map_level,
+                            game_state.players(),
+                        );
+                    }
+                },
+                GameResponse::TracksAdded(track_infos) => {
+                    game_state.append_tracks(track_infos.clone());
+
+                    for track_info in track_infos {
+                        create_track(
+                            track_info,
+                            &mut commands,
+                            &mut materials,
+                            game_assets.as_ref(),
+                            &map_level,
+                            game_state.players(),
+                        );
+                    }
+                },
+                GameResponse::TransportsAdded(_) => {},
+                GameResponse::DynamicInfosSync(..) => {},
+                GameResponse::GameJoined => {},
+                GameResponse::GameLeft => {},
+                GameResponse::Error(_) => {},
             }
         }
     }
 }
 
 const STATION_BASE_COLOUR: Colour = Colour::rgb(128, 128, 128);
+
+#[allow(clippy::similar_names)]
+fn create_track(
+    track_info: &TrackInfo,
+    commands: &mut Commands,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    game_assets: &GameAssets,
+    map_level: &MapLevel,
+    players_info: &HashMap<PlayerId, PlayerInfo>,
+) {
+    match players_info.get(&track_info.owner_id) {
+        None => {
+            error!("Player with ID {:?} not found", track_info.owner_id);
+        },
+        Some(player_info) => {
+            create_rails(
+                player_info,
+                commands,
+                &game_assets.track_assets,
+                materials,
+                map_level,
+                track_info.tile,
+                track_info.track_type,
+            );
+        },
+    }
+}
 
 #[allow(clippy::similar_names, clippy::match_same_arms)]
 fn create_building(
@@ -108,9 +159,6 @@ fn create_building(
             }
 
             match &building_info.building_type() {
-                BuildingType::Track(_track_type) => {
-                    // For now, nothing more - just the rails are enough
-                },
                 BuildingType::Industry(industry_type) => {
                     let mesh = game_assets
                         .building_assets

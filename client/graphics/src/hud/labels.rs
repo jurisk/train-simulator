@@ -20,9 +20,8 @@ pub fn draw_labels(
 
             let context = contexts.ctx_mut();
             let buildings = game_state.building_state();
-            for building in buildings.to_vec() {
+            for building in buildings.building_infos() {
                 match building.building_type() {
-                    BuildingType::Track(_) => {},
                     BuildingType::Station(_) => {
                         let label = format!("{:?}", building.dynamic_info());
                         let id = format!("{:?}", building.building_id());

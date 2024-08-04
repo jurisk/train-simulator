@@ -4,7 +4,7 @@ use bevy::prelude::{
     in_state, info, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, NextState,
     OnEnter, Plugin, Res, ResMut, Resource, Time, Update,
 };
-use shared_domain::client_command::GameCommand::{QueryBuildings, QueryTransports};
+use shared_domain::client_command::GameCommand::{QueryBuildings, QueryTracks, QueryTransports};
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
 };
@@ -143,13 +143,11 @@ fn handle_game_state_snapshot(
                 //          objects using the same update mechanism, instead of immediately, now.
                 //          This should be improved as we basically send buildings & transports
                 //          twice now.
-                client_messages.send(ClientMessageEvent {
-                    command: ClientCommand::Game(*game_id, QueryBuildings),
-                });
-
-                client_messages.send(ClientMessageEvent {
-                    command: ClientCommand::Game(*game_id, QueryTransports),
-                });
+                for query in [QueryBuildings, QueryTracks, QueryTransports] {
+                    client_messages.send(ClientMessageEvent {
+                        command: ClientCommand::Game(*game_id, query),
+                    });
+                }
             }
         }
     }

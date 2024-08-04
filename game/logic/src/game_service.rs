@@ -1,6 +1,7 @@
 #![allow(clippy::unnecessary_wraps, clippy::missing_errors_doc)]
 
 use shared_domain::building::building_info::BuildingInfo;
+use shared_domain::building::track_info::TrackInfo;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTime;
@@ -54,7 +55,11 @@ impl GameService {
             GameCommand::BuildBuildings(building_infos) => {
                 self.process_build_buildings(requesting_player_id, building_infos)
             },
+            GameCommand::BuildTracks(track_infos) => {
+                self.process_build_tracks(requesting_player_id, track_infos)
+            },
             GameCommand::QueryBuildings => self.process_query_buildings(requesting_player_id),
+            GameCommand::QueryTracks => self.process_query_tracks(requesting_player_id),
             GameCommand::QueryTransports => self.process_query_transports(requesting_player_id),
             GameCommand::UpdateTransportMovementOrders(transport_id, movement_orders) => {
                 self.process_update_transport_movement_orders(
@@ -86,6 +91,16 @@ impl GameService {
         )])
     }
 
+    fn process_query_tracks(
+        &mut self,
+        requesting_player_id: PlayerId,
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
+        Ok(vec![GameResponseWithAddress::new(
+            AddressEnvelope::ToPlayer(requesting_player_id),
+            GameResponse::TracksAdded(self.state.track_infos()),
+        )])
+    }
+
     fn process_build_buildings(
         &mut self,
         requesting_player_id: PlayerId,
@@ -102,10 +117,33 @@ impl GameService {
                 )])
             },
             Err(()) => {
-                Err(GameError::CannotBuild(
+                Err(GameError::CannotBuildBuildings(
                     building_infos
                         .iter()
                         .map(BuildingInfo::building_id)
+                        .collect(),
+                ))
+            },
+        }
+    }
+
+    fn process_build_tracks(
+        &mut self,
+        requesting_player_id: PlayerId,
+        track_infos: &[TrackInfo],
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
+        match self.state.build_tracks(requesting_player_id, track_infos) {
+            Ok(()) => {
+                Ok(vec![GameResponseWithAddress::new(
+                    AddressEnvelope::ToAllPlayersInGame(self.game_id()),
+                    GameResponse::TracksAdded(track_infos.to_vec()),
+                )])
+            },
+            Err(()) => {
+                Err(GameError::CannotBuildTracks(
+                    track_infos
+                        .iter()
+                        .map(|track_info| track_info.track_id)
                         .collect(),
                 ))
             },

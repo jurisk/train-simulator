@@ -141,6 +141,24 @@ impl GameId {
 }
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Hash)]
+pub struct TrackId(Uuid);
+
+impl TrackId {
+    #[must_use]
+    pub fn random() -> Self {
+        Self(Uuid::new_v4())
+    }
+}
+
+impl Debug for TrackId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let uuid_str = self.0.to_string();
+        let truncated_uuid = &uuid_str[.. 8];
+        write!(f, "T-{truncated_uuid}")
+    }
+}
+
+#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Hash)]
 pub struct BuildingId(Uuid);
 
 impl BuildingId {

@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
 use crate::building::building_state::BuildingState;
+use crate::building::track_info::TrackInfo;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::MapLevel;
 use crate::server_response::{GameInfo, PlayerInfo};
@@ -110,7 +111,12 @@ impl GameState {
 
     #[must_use]
     pub fn building_infos(&self) -> Vec<BuildingInfo> {
-        self.buildings.to_vec()
+        self.buildings.building_infos()
+    }
+
+    #[must_use]
+    pub fn track_infos(&self) -> Vec<TrackInfo> {
+        self.buildings.track_infos()
     }
 
     #[must_use]
@@ -149,7 +155,11 @@ impl GameState {
     }
 
     pub fn append_buildings(&mut self, buildings: Vec<BuildingInfo>) {
-        self.buildings.append_all(buildings);
+        self.buildings.append_buildings(buildings);
+    }
+
+    pub fn append_tracks(&mut self, tracks: Vec<TrackInfo>) {
+        self.buildings.append_tracks(tracks);
     }
 
     pub fn build_buildings(
@@ -158,7 +168,16 @@ impl GameState {
         buildings: &[BuildingInfo],
     ) -> Result<(), ()> {
         self.buildings
-            .build(requesting_player_id, buildings, &self.map_level)
+            .build_buildings(requesting_player_id, buildings, &self.map_level)
+    }
+
+    pub fn build_tracks(
+        &mut self,
+        requesting_player_id: PlayerId,
+        tracks: &[TrackInfo],
+    ) -> Result<(), ()> {
+        self.buildings
+            .build_tracks(requesting_player_id, tracks, &self.map_level)
     }
 
     #[must_use]
