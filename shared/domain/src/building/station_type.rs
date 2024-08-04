@@ -119,6 +119,15 @@ impl StationType {
             StationOrientation::EastToWest => TrackType::EastWest,
         }
     }
+
+    #[must_use]
+    pub fn track_types_at(self, relative_tile: TileCoordsXZ) -> Vec<TrackType> {
+        if self.relative_tiles_used().contains(relative_tile) {
+            vec![self.track_type()]
+        } else {
+            vec![]
+        }
+    }
 }
 
 impl CoversTiles for StationType {
