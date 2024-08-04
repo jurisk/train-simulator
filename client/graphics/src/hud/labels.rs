@@ -1,7 +1,7 @@
 use bevy::prelude::{Camera, GlobalTransform, Query, Res, Vec3};
 use bevy_egui::EguiContexts;
 use egui::{Align2, Context, Id, Pos2};
-use shared_domain::building_type::BuildingType;
+use shared_domain::building::building_type::BuildingType;
 
 use crate::game::buildings::building::center_vec3;
 use crate::game::GameStateResource;

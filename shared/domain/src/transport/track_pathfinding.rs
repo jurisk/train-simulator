@@ -1,7 +1,7 @@
 use log::debug;
 use pathfinding::prelude::dijkstra;
 
-use crate::building_state::BuildingState;
+use crate::building::building_state::BuildingState;
 use crate::transport::movement_orders::MovementOrderLocation;
 use crate::transport::tile_track::TileTrack;
 use crate::transport::track_length::TrackLength;

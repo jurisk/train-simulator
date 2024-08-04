@@ -5,10 +5,10 @@ use serde::{Deserialize, Serialize};
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
 
-use crate::building_type::BuildingType;
+use crate::building::building_type::BuildingType;
+use crate::building::industry_type::IndustryType;
 use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
-use crate::industry_type::IndustryType;
 use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;

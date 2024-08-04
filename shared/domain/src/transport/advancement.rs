@@ -1,6 +1,6 @@
 use log::{debug, error, warn};
 
-use crate::building_state::BuildingState;
+use crate::building::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
 use crate::transport::cargo_processing::cargo_processing_advance;
 use crate::transport::movement_orders::MovementOrderLocation;

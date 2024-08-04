@@ -1,7 +1,7 @@
 use bevy::prelude::Resource;
-use shared_domain::building_type::BuildingType;
-use shared_domain::industry_type::IndustryType;
-use shared_domain::station_type::StationType;
+use shared_domain::building::building_type::BuildingType;
+use shared_domain::building::industry_type::IndustryType;
+use shared_domain::building::station_type::StationType;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::transport::transport_type::TransportType;

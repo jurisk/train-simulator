@@ -11,8 +11,8 @@ use bevy::prelude::{
     StandardMaterial, Update,
 };
 use bevy::state::condition::in_state;
-use shared_domain::building_info::BuildingInfo;
-use shared_domain::building_type::BuildingType;
+use shared_domain::building::building_info::BuildingInfo;
+use shared_domain::building::building_type::BuildingType;
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::{Colour, GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::PlayerId;

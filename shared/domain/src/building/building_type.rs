@@ -2,8 +2,8 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
-use crate::industry_type::IndustryType;
-use crate::station_type::StationType;
+use crate::building::industry_type::IndustryType;
+use crate::building::station_type::StationType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type::TrackType;

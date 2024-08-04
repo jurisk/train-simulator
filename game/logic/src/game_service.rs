@@ -1,6 +1,6 @@
 #![allow(clippy::unnecessary_wraps, clippy::missing_errors_doc)]
 
-use shared_domain::building_info::BuildingInfo;
+use shared_domain::building::building_info::BuildingInfo;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTime;

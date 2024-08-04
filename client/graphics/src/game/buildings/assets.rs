@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use bevy::prelude::{Assets, Cuboid, Handle, Mesh, Sphere, Vec3};
-use shared_domain::industry_type::IndustryType;
-use shared_domain::station_type::{StationOrientation, StationType};
+use shared_domain::building::industry_type::IndustryType;
+use shared_domain::building::station_type::{StationOrientation, StationType};
 
 use crate::util::shift_mesh;
 

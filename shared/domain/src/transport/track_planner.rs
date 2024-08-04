@@ -3,9 +3,9 @@ use std::collections::HashSet;
 use log::warn;
 use pathfinding::prelude::dijkstra;
 
-use crate::building_info::BuildingInfo;
-use crate::building_state::{BuildingState, CanBuildResponse};
-use crate::building_type::BuildingType;
+use crate::building::building_info::BuildingInfo;
+use crate::building::building_state::{BuildingState, CanBuildResponse};
+use crate::building::building_type::BuildingType;
 use crate::edge_xz::EdgeXZ;
 use crate::map_level::MapLevel;
 use crate::tile_coords_xz::TileCoordsXZ;

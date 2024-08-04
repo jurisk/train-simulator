@@ -5,8 +5,8 @@ use std::collections::HashMap;
 use log::trace;
 use serde::{Deserialize, Serialize};
 
-use crate::building_info::{BuildingDynamicInfo, BuildingInfo};
-use crate::building_state::BuildingState;
+use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
+use crate::building::building_state::BuildingState;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::MapLevel;
 use crate::server_response::{GameInfo, PlayerInfo};

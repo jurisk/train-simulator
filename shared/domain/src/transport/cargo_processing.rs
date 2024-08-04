@@ -4,7 +4,7 @@ use std::fmt::{Debug, Formatter};
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use crate::building_info::BuildingInfo;
+use crate::building::building_info::BuildingInfo;
 use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;

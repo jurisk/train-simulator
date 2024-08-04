@@ -150,7 +150,7 @@ mod tests {
 
     use shared_util::direction_xz::DirectionXZ;
 
-    use crate::station_type::{StationOrientation, StationType};
+    use crate::building::station_type::{StationOrientation, StationType};
     use crate::tile_coords_xz::TileCoordsXZ;
     use crate::transport::tile_track::TileTrack;
     use crate::transport::track_type::TrackType;

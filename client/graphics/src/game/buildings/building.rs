@@ -4,7 +4,7 @@ use bevy::prelude::{
 };
 use bevy::utils::default;
 use bevy_egui::EguiContexts;
-use shared_domain::building_info::BuildingInfo;
+use shared_domain::building::building_info::BuildingInfo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::Colour;

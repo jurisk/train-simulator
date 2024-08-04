@@ -1,9 +1,9 @@
 use bevy::prelude::ResMut;
 use bevy_egui::EguiContexts;
 use egui::{menu, Ui};
-use shared_domain::industry_type::IndustryType;
+use shared_domain::building::industry_type::IndustryType;
+use shared_domain::building::station_type::{StationOrientation, StationType};
 use shared_domain::resource_type::ResourceType;
-use shared_domain::station_type::{StationOrientation, StationType};
 use shared_domain::transport::transport_type::TransportType;
 
 use crate::hud::domain::SelectedMode;

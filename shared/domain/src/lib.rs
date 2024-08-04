@@ -3,28 +3,24 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 
+use building::building_type::BuildingType;
 use serde::{Deserialize, Serialize};
 use shared_util::random::generate_random_string;
 use transport::track_type::TrackType;
 use uuid::Uuid;
 
-use crate::building_type::BuildingType;
 use crate::tile_coords_xz::TileCoordsXZ;
 
-pub mod building_info;
-pub mod building_state;
-pub mod building_type;
+pub mod building;
 mod cargo_amount;
 pub mod cargo_map;
 pub mod client_command;
 pub mod edge_xz;
 pub mod game_state;
 pub mod game_time;
-pub mod industry_type;
 pub mod map_level;
 pub mod resource_type;
 pub mod server_response;
-pub mod station_type;
 pub mod terrain;
 pub mod tile_coords_xz;
 pub mod tile_coverage;

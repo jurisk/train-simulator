@@ -153,9 +153,9 @@ impl ResourceTransform {
 
 #[cfg(test)]
 mod tests {
+    use crate::building::industry_type::IndustryType;
     use crate::cargo_amount::CargoAmount;
     use crate::cargo_map::CargoMap;
-    use crate::industry_type::IndustryType;
     use crate::resource_type::ResourceType;
 
     #[test]

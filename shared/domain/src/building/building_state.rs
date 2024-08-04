@@ -4,7 +4,7 @@ use std::fmt::{Debug, Formatter};
 use log::warn;
 use serde::{Deserialize, Serialize};
 
-use crate::building_info::{BuildingDynamicInfo, BuildingInfo};
+use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
 use crate::game_time::GameTimeDiff;
 use crate::map_level::MapLevel;
 use crate::resource_type::ResourceType;

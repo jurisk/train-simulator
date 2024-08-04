@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::building_state::BuildingState;
+use crate::building::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
 use crate::transport::advancement::advance;
 use crate::transport::movement_orders::MovementOrders;
