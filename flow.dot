@@ -19,12 +19,14 @@ digraph G {
     # https://en.wikipedia.org/wiki/Basic_oxygen_steelmaking
     IronWorks [label = "Iron Works"];
     WeaponsFactory [label = "Weapons Factory"];
+    TrainFactory [label = "Train Factory"];
     LumberMill [label = "Lumber Mill"];
     AmmunitionFactory [label = "Ammunition Factory"];
     OilRefinery [label = "Oil Refinery"];
     CementPlant [label = "Cement Plant"];
     ConcretePlant [label = "Concrete Plant"];
     FoodProcessingPlant [label = "Food Processing Plant"];
+    PowerPlant [label = "Power Plant"];
 
     subgraph cluster_ExplosivesPlant {
         # This is being built together as otherwise it becomes too much micro-management
@@ -47,10 +49,12 @@ digraph G {
     node [shape = box, color = "#4A5F6D"];
     Construction [label = "Construction"];
     Military [label = "Military"];
-    CoalUsageByTrains [label = "Coal Usage by Trains"]
+    CoalUsageByTrainMovement [label = "Coal Usage by Train Movement"]
+    TrainBuilding [label = "Train Building"];
     PowerPlant [label = "Power Plant"];
     City [label = "City"];
-    { rank = same; Construction; Military; CoalUsageByTrains; PowerPlant; City; }
+    EnergyUsageByFactories [label = "Energy Usage by Factories"];
+    { rank = same; Construction; Military; CoalUsageByTrainMovement; TrainBuilding; EnergyUsageByFactories; City; }
 
     node [shape = ellipse, color = "#D8DBE2", fontcolor = black];
     Coal [label = "Coal"];
@@ -71,12 +75,19 @@ digraph G {
     Ammunition [label = "Ammunition"];
     Steel [label = "Steel"];
     FarmProducts [label = "Farm Products"];
+    Wood [label = "Wood"];
     Food [label = "Food"];
+
+    node [color = "darkblue", fontcolor = white];
+    Energy [label = "Energy"];
+    TrainPoints [label = "Train Points"];
 
     CoalMine -> Coal;
     Coal -> IronWorks;
-    Coal -> CoalUsageByTrains;
+    Coal -> CoalUsageByTrainMovement;
     Coal -> PowerPlant;
+    PowerPlant -> Energy;
+    Energy -> EnergyUsageByFactories;
 
     IronMine -> Iron;
     Iron -> IronWorks;
@@ -117,6 +128,9 @@ digraph G {
     Steel -> AmmunitionFactory;
     Steel -> WeaponsFactory;
     Steel -> Construction;
+    Steel -> TrainFactory;
+    TrainFactory -> TrainPoints;
+    TrainPoints -> TrainBuilding;
 
     LimestoneMine -> Limestone;
     Limestone -> CementPlant;

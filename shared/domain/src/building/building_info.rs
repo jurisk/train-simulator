@@ -40,7 +40,6 @@ impl Debug for BuildingDynamicInfo {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct BuildingInfo {
     static_info:  BuildingStaticInfo,
-    // TODO: Not all building types have dynamic info, and it can differ between building types... think of a better design.
     dynamic_info: BuildingDynamicInfo,
 }
 
