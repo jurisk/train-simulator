@@ -43,7 +43,8 @@ pub enum GameCommand {
     QueryBuildings,
     QueryTracks,
     QueryTransports,
-    BuildBuildings(Vec<BuildingInfo>),
+    BuildIndustryBuildings(Vec<BuildingInfo>),
+    BuildStations(Vec<BuildingInfo>),
     BuildTracks(Vec<TrackInfo>),
     PurchaseTransport(TransportInfo),
     UpdateTransportMovementOrders(TransportId, MovementOrders),
@@ -55,8 +56,11 @@ impl Debug for GameCommand {
             GameCommand::QueryBuildings => write!(f, "QueryBuildings"),
             GameCommand::QueryTracks => write!(f, "QueryTracks"),
             GameCommand::QueryTransports => write!(f, "QueryTransports"),
-            GameCommand::BuildBuildings(buildings) => {
-                write!(f, "BuildBuildings({} buildings)", buildings.len())
+            GameCommand::BuildIndustryBuildings(buildings) => {
+                write!(f, "BuildIndustryBuildings({} buildings)", buildings.len())
+            },
+            GameCommand::BuildStations(stations) => {
+                write!(f, "BuildStations({} stations)", stations.len())
             },
             GameCommand::BuildTracks(tracks) => {
                 write!(f, "BuildTracks({} tracks)", tracks.len())

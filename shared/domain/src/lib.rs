@@ -161,6 +161,12 @@ impl Debug for TrackId {
 #[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Hash)]
 pub struct BuildingId(Uuid);
 
+// TODO HIGH
+pub type StationId = BuildingId;
+
+// TODO HIGH
+pub type IndustryBuildingId = BuildingId;
+
 impl BuildingId {
     #[must_use]
     pub fn random() -> Self {

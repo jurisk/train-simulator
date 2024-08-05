@@ -62,8 +62,10 @@ fn handle_buildings_or_tracks_added(
             match game_response {
                 GameResponse::GameStateSnapshot(_) => {},
                 GameResponse::PlayersUpdated(_) => {},
-                GameResponse::BuildingsAdded(building_infos) => {
-                    game_state.append_buildings(building_infos.clone());
+                GameResponse::IndustryBuildingsAdded(building_infos) => {
+                    game_state
+                        .building_state_mut()
+                        .append_industry_buildings(building_infos.clone());
 
                     for building_info in building_infos {
                         create_building(
@@ -76,8 +78,26 @@ fn handle_buildings_or_tracks_added(
                         );
                     }
                 },
+                GameResponse::StationsAdded(station_infos) => {
+                    game_state
+                        .building_state_mut()
+                        .append_stations(station_infos.clone());
+
+                    for station_info in station_infos {
+                        create_building(
+                            station_info,
+                            &mut commands,
+                            &mut materials,
+                            game_assets.as_ref(),
+                            &map_level,
+                            game_state.players(),
+                        );
+                    }
+                },
                 GameResponse::TracksAdded(track_infos) => {
-                    game_state.append_tracks(track_infos.clone());
+                    game_state
+                        .building_state_mut()
+                        .append_tracks(track_infos.clone());
 
                     for track_info in track_infos {
                         create_track(

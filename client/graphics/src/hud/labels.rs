@@ -1,10 +1,35 @@
 use bevy::prelude::{Camera, GlobalTransform, Query, Res, Vec3};
 use bevy_egui::EguiContexts;
 use egui::{Align2, Context, Id, Pos2};
-use shared_domain::building::building_type::BuildingType;
+use shared_domain::building::building_info::BuildingInfo;
+use shared_domain::game_state::GameState;
 
 use crate::game::buildings::building::center_vec3;
 use crate::game::GameStateResource;
+
+fn building_label(
+    building: &BuildingInfo,
+    game_state: &GameState,
+    context: &mut Context,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+) {
+    let label = format!(
+        "{:?} {:?}",
+        building.building_type(),
+        building.dynamic_info()
+    );
+    let id = format!("{:?}", building.building_id());
+    let building_position_3d = center_vec3(building, game_state.map_level());
+    draw_label(
+        building_position_3d,
+        label,
+        id,
+        context,
+        camera,
+        camera_transform,
+    );
+}
 
 #[allow(clippy::needless_pass_by_value, clippy::module_name_repetitions)]
 pub fn draw_labels(
@@ -20,35 +45,13 @@ pub fn draw_labels(
 
             let context = contexts.ctx_mut();
             let buildings = game_state.building_state();
-            for building in buildings.building_infos() {
-                match building.building_type() {
-                    BuildingType::Station(_) => {
-                        let label = format!("{:?}", building.dynamic_info());
-                        let id = format!("{:?}", building.building_id());
-                        let building_position_3d = center_vec3(&building, game_state.map_level());
-                        draw_label(
-                            building_position_3d,
-                            label,
-                            id,
-                            context,
-                            camera,
-                            camera_transform,
-                        );
-                    },
-                    BuildingType::Industry(industry_type) => {
-                        let label = format!("{industry_type:?} {:?}", building.dynamic_info());
-                        let id = format!("{:?}", building.building_id());
-                        let building_position_3d = center_vec3(&building, game_state.map_level());
-                        draw_label(
-                            building_position_3d,
-                            label,
-                            id,
-                            context,
-                            camera,
-                            camera_transform,
-                        );
-                    },
-                }
+
+            for building in buildings.all_industry_buildings() {
+                building_label(building, game_state, context, camera, camera_transform);
+            }
+
+            for station in buildings.all_stations() {
+                building_label(station, game_state, context, camera, camera_transform);
             }
 
             let transports = game_state.transport_infos();

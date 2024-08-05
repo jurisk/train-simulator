@@ -42,7 +42,7 @@ pub fn find_location_tile_tracks(
     building_state: &BuildingState,
 ) -> Option<Vec<TileTrack>> {
     let MovementOrderLocation::StationId(station_id) = location;
-    let building = building_state.find_building(station_id)?;
+    let building = building_state.find_station(station_id)?;
     let targets = building
         .station_exit_tile_tracks()
         .into_iter()

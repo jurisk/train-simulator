@@ -35,13 +35,16 @@ const ALL: [TileCoordsXZ; 5] = [
 ];
 
 #[allow(clippy::vec_init_then_push)]
-fn build_test_buildings(player_id: PlayerId) -> GameCommand {
-    let buildings = [
+fn build_test_buildings(player_id: PlayerId) -> Vec<GameCommand> {
+    let stations = [
         (IRON_MINE_A, BuildingType::Station(StationType::all()[0])),
         (IRON_MINE_B, BuildingType::Station(StationType::all()[0])),
         (COAL_MINE_A, BuildingType::Station(StationType::all()[1])),
         (IRON_WORKS_A, BuildingType::Station(StationType::all()[1])),
         (WAREHOUSE_A, BuildingType::Station(StationType::all()[1])),
+    ];
+
+    let industry_buildings = [
         (
             TileCoordsXZ::from_usizes(40, 31),
             BuildingType::Industry(IndustryType::IronMine),
@@ -64,14 +67,24 @@ fn build_test_buildings(player_id: PlayerId) -> GameCommand {
         ),
     ];
 
-    let buildings = buildings
+    let stations = stations
         .into_iter()
         .map(|(tile, building_type)| {
             BuildingInfo::new(player_id, BuildingId::random(), tile, building_type)
         })
         .collect();
 
-    GameCommand::BuildBuildings(buildings)
+    let industry_buildings = industry_buildings
+        .into_iter()
+        .map(|(tile, building_type)| {
+            BuildingInfo::new(player_id, BuildingId::random(), tile, building_type)
+        })
+        .collect();
+
+    vec![
+        GameCommand::BuildStations(stations),
+        GameCommand::BuildIndustryBuildings(industry_buildings),
+    ]
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -160,7 +173,7 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Vec<Gam
         movement_orders.push(MovementOrder::stop_at_station(station_2));
 
         let transport_location = building_state
-            .find_building(station_1)
+            .find_station(station_1)
             .unwrap()
             .transport_location_at_station(tile_1, direction)
             .unwrap();
@@ -189,7 +202,7 @@ pub(crate) fn build_test_objects(
     let GameStateResource(game_state) = game_state_resource.as_ref();
 
     let commands = if keyboard_input.just_pressed(KeyCode::Digit1) {
-        vec![build_test_buildings(player_id)]
+        build_test_buildings(player_id)
     } else if keyboard_input.just_pressed(KeyCode::Digit2) {
         build_test_tracks(player_id, game_state)
     } else if keyboard_input.just_pressed(KeyCode::Digit3) {

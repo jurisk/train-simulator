@@ -52,8 +52,11 @@ impl GameService {
             GameCommand::PurchaseTransport(transport_info) => {
                 self.process_purchase_transport(requesting_player_id, transport_info)
             },
-            GameCommand::BuildBuildings(building_infos) => {
-                self.process_build_buildings(requesting_player_id, building_infos)
+            GameCommand::BuildIndustryBuildings(industry_buildings) => {
+                self.process_build_industry_buildings(requesting_player_id, industry_buildings)
+            },
+            GameCommand::BuildStations(stations) => {
+                self.process_build_stations(requesting_player_id, stations)
             },
             GameCommand::BuildTracks(track_infos) => {
                 self.process_build_tracks(requesting_player_id, track_infos)
@@ -77,7 +80,7 @@ impl GameService {
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         Ok(vec![GameResponseWithAddress::new(
             AddressEnvelope::ToPlayer(requesting_player_id),
-            GameResponse::TransportsAdded(self.state.transport_infos()),
+            GameResponse::TransportsAdded(self.state.transport_infos().clone()),
         )])
     }
 
@@ -85,10 +88,18 @@ impl GameService {
         &mut self,
         requesting_player_id: PlayerId,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
-        Ok(vec![GameResponseWithAddress::new(
-            AddressEnvelope::ToPlayer(requesting_player_id),
-            GameResponse::BuildingsAdded(self.state.building_infos()),
-        )])
+        Ok(vec![
+            GameResponseWithAddress::new(
+                AddressEnvelope::ToPlayer(requesting_player_id),
+                GameResponse::IndustryBuildingsAdded(
+                    self.state.building_state().all_industry_buildings().clone(),
+                ),
+            ),
+            GameResponseWithAddress::new(
+                AddressEnvelope::ToPlayer(requesting_player_id),
+                GameResponse::StationsAdded(self.state.building_state().all_stations().clone()),
+            ),
+        ])
     }
 
     fn process_query_tracks(
@@ -101,30 +112,47 @@ impl GameService {
         )])
     }
 
-    fn process_build_buildings(
+    fn process_build_industry_buildings(
         &mut self,
         requesting_player_id: PlayerId,
-        building_infos: &[BuildingInfo],
+        industry_buildings: &[BuildingInfo],
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
-        match self
-            .state
-            .build_buildings(requesting_player_id, building_infos)
-        {
-            Ok(()) => {
-                Ok(vec![GameResponseWithAddress::new(
+        self.state
+            .build_industry_buildings(requesting_player_id, industry_buildings)
+            .map(|()| {
+                vec![GameResponseWithAddress::new(
                     AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-                    GameResponse::BuildingsAdded(building_infos.to_vec()),
-                )])
-            },
-            Err(()) => {
-                Err(GameError::CannotBuildBuildings(
-                    building_infos
+                    GameResponse::IndustryBuildingsAdded(industry_buildings.to_vec()),
+                )]
+            })
+            .map_err(|()| {
+                GameError::CannotBuildBuildings(
+                    industry_buildings
                         .iter()
                         .map(BuildingInfo::building_id)
                         .collect(),
-                ))
-            },
-        }
+                )
+            })
+    }
+
+    fn process_build_stations(
+        &mut self,
+        requesting_player_id: PlayerId,
+        stations: &[BuildingInfo],
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
+        self.state
+            .build_stations(requesting_player_id, stations)
+            .map(|()| {
+                vec![GameResponseWithAddress::new(
+                    AddressEnvelope::ToAllPlayersInGame(self.game_id()),
+                    GameResponse::StationsAdded(stations.to_vec()),
+                )]
+            })
+            .map_err(|()| {
+                GameError::CannotBuildBuildings(
+                    stations.iter().map(BuildingInfo::building_id).collect(),
+                )
+            })
     }
 
     fn process_build_tracks(
@@ -249,13 +277,20 @@ impl GameService {
             GameResponse::DynamicInfosSync(
                 self.state.time(),
                 self.state
-                    .building_infos()
-                    .into_iter()
+                    .building_state()
+                    .all_industry_buildings()
+                    .iter()
+                    .map(|building| (building.building_id(), building.dynamic_info()))
+                    .collect(),
+                self.state
+                    .building_state()
+                    .all_stations()
+                    .iter()
                     .map(|building| (building.building_id(), building.dynamic_info()))
                     .collect(),
                 self.state
                     .transport_infos()
-                    .into_iter()
+                    .iter()
                     .map(|transport| (transport.transport_id(), transport.dynamic_info()))
                     .collect(),
             ),

@@ -5,6 +5,7 @@ use bevy::prelude::{
 use bevy::utils::default;
 use bevy_egui::EguiContexts;
 use shared_domain::building::building_info::BuildingInfo;
+use shared_domain::building::building_type::BuildingType;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::Colour;
@@ -51,9 +52,13 @@ pub(crate) fn build_building_when_mouse_released(
                 );
                 let buildings = vec![building];
 
+                let command = match building_type {
+                    BuildingType::Station(_) => GameCommand::BuildStations(buildings),
+                    BuildingType::Industry(_) => GameCommand::BuildIndustryBuildings(buildings),
+                };
+
                 client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
-                    game_id,
-                    GameCommand::BuildBuildings(buildings),
+                    game_id, command,
                 )));
             }
         }

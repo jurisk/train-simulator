@@ -11,7 +11,10 @@ use crate::building::track_info::TrackInfo;
 use crate::game_state::GameState;
 use crate::game_time::GameTime;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
-use crate::{BuildingId, ClientId, GameId, PlayerId, PlayerName, TrackId, TransportId};
+use crate::{
+    BuildingId, ClientId, GameId, IndustryBuildingId, PlayerId, PlayerName, StationId, TrackId,
+    TransportId,
+};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum AuthenticationResponse {
@@ -75,12 +78,14 @@ pub enum GameResponse {
 
     // Later: Actually, many of these should be sending `GameTime` (if it's not already included in other structures such as `GameState`), and it should be handled on the client.
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
-    BuildingsAdded(Vec<BuildingInfo>),
+    IndustryBuildingsAdded(Vec<BuildingInfo>),
+    StationsAdded(Vec<BuildingInfo>),
     TracksAdded(Vec<TrackInfo>),
     TransportsAdded(Vec<TransportInfo>),
     DynamicInfosSync(
         GameTime,
-        HashMap<BuildingId, BuildingDynamicInfo>,
+        HashMap<IndustryBuildingId, BuildingDynamicInfo>,
+        HashMap<StationId, BuildingDynamicInfo>,
         HashMap<TransportId, TransportDynamicInfo>,
     ),
     GameJoined,
@@ -107,8 +112,11 @@ impl Debug for GameResponse {
             GameResponse::PlayersUpdated(players) => {
                 write!(f, "PlayersUpdated({} players)", players.len())
             },
-            GameResponse::BuildingsAdded(buildings) => {
-                write!(f, "BuildingsAdded({} buildings)", buildings.len())
+            GameResponse::IndustryBuildingsAdded(buildings) => {
+                write!(f, "IndustryBuildingsAdded({} buildings)", buildings.len())
+            },
+            GameResponse::StationsAdded(stations) => {
+                write!(f, "StationsAdded({} stations)", stations.len())
             },
             GameResponse::TracksAdded(tracks) => {
                 write!(f, "TracksAdded({} tracks)", tracks.len())
@@ -124,12 +132,13 @@ impl Debug for GameResponse {
                         .join(", ")
                 )
             },
-            GameResponse::DynamicInfosSync(game_time, buildings, transports) => {
+            GameResponse::DynamicInfosSync(game_time, buildings, stations, transports) => {
                 write!(
                     f,
-                    "DynamicInfosSync({:?} time, {} buildings, {} transports)",
+                    "DynamicInfosSync({:?} time, {} industry, {} stations, {} transports)",
                     game_time,
                     buildings.len(),
+                    stations.len(),
                     transports.len()
                 )
             },

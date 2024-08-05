@@ -14,7 +14,7 @@ use crate::server_response::{GameInfo, PlayerInfo};
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::transport::transport_state::TransportState;
-use crate::{BuildingId, GameId, PlayerId, TransportId};
+use crate::{GameId, IndustryBuildingId, PlayerId, StationId, TransportId};
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
 //          So the API gets quite busy because of this. There may be better ways.
@@ -105,13 +105,8 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn transport_infos(&self) -> Vec<TransportInfo> {
-        self.transports.to_vec()
-    }
-
-    #[must_use]
-    pub fn building_infos(&self) -> Vec<BuildingInfo> {
-        self.buildings.building_infos()
+    pub fn transport_infos(&self) -> &Vec<TransportInfo> {
+        self.transports.all_transports()
     }
 
     #[must_use]
@@ -154,23 +149,6 @@ impl GameState {
             .update_movement_orders(transport_id, movement_orders)
     }
 
-    pub fn append_buildings(&mut self, buildings: Vec<BuildingInfo>) {
-        self.buildings.append_buildings(buildings);
-    }
-
-    pub fn append_tracks(&mut self, tracks: Vec<TrackInfo>) {
-        self.buildings.append_tracks(tracks);
-    }
-
-    pub fn build_buildings(
-        &mut self,
-        requesting_player_id: PlayerId,
-        buildings: &[BuildingInfo],
-    ) -> Result<(), ()> {
-        self.buildings
-            .build_buildings(requesting_player_id, buildings, &self.map_level)
-    }
-
     pub fn build_tracks(
         &mut self,
         requesting_player_id: PlayerId,
@@ -180,24 +158,49 @@ impl GameState {
             .build_tracks(requesting_player_id, tracks, &self.map_level)
     }
 
+    pub fn build_industry_buildings(
+        &mut self,
+        requesting_player_id: PlayerId,
+        buildings: &[BuildingInfo],
+    ) -> Result<(), ()> {
+        self.buildings
+            .build_industry_buildings(requesting_player_id, buildings, &self.map_level)
+    }
+
+    pub fn build_stations(
+        &mut self,
+        requesting_player_id: PlayerId,
+        stations: &[BuildingInfo],
+    ) -> Result<(), ()> {
+        self.buildings
+            .build_stations(requesting_player_id, stations, &self.map_level)
+    }
+
     #[must_use]
     pub fn building_state(&self) -> &BuildingState {
         &self.buildings
     }
 
+    #[must_use]
+    pub fn building_state_mut(&mut self) -> &mut BuildingState {
+        &mut self.buildings
+    }
+
     pub fn update_dynamic_infos(
         &mut self,
         server_time: GameTime,
-        building_dynamic_infos: &HashMap<BuildingId, BuildingDynamicInfo>,
+        industry_building_dynamic_infos: &HashMap<IndustryBuildingId, BuildingDynamicInfo>,
+        station_dynamic_infos: &HashMap<StationId, BuildingDynamicInfo>,
         transport_dynamic_infos: &HashMap<TransportId, TransportDynamicInfo>,
     ) {
         let diff = server_time - self.time;
         trace!(
-            "Updated dynamic infos, diff {:?}, old {:?}, new {:?}, {} buildings, {} transports",
+            "Updated dynamic infos, diff {:?}, old {:?}, new {:?}, {} buildings, {} stations, {} transports",
             diff,
             self.time,
             server_time,
-            building_dynamic_infos.len(),
+            industry_building_dynamic_infos.len(),
+            station_dynamic_infos.len(),
             transport_dynamic_infos.len(),
         );
         self.time = server_time;
@@ -205,10 +208,8 @@ impl GameState {
             self.transports
                 .update_dynamic_info(*transport_id, transport_dynamic_info);
         }
-        for (building_id, building_dynamic_info) in building_dynamic_infos {
-            self.buildings
-                .update_dynamic_info(*building_id, building_dynamic_info);
-        }
+        self.buildings
+            .update_dynamic_infos(industry_building_dynamic_infos, station_dynamic_infos);
     }
 
     #[must_use]

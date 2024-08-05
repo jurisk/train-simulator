@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 
+use log::error;
 use serde::{Deserialize, Serialize};
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
@@ -190,10 +191,12 @@ impl BuildingInfo {
             .offset_by(self.reference_tile())
     }
 
-    pub fn advance(&mut self, diff: GameTimeDiff) {
+    pub fn advance_industry_building(&mut self, diff: GameTimeDiff) {
         let seconds = diff.to_seconds();
         match self.building_type() {
-            BuildingType::Station(_) => {},
+            BuildingType::Station(station_id) => {
+                error!("Tried to advance industry on a station {station_id:?}");
+            },
             BuildingType::Industry(industry_type) => {
                 self.advance_industry(seconds, industry_type);
             },

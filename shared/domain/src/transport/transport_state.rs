@@ -21,8 +21,8 @@ impl TransportState {
     }
 
     #[must_use]
-    pub fn to_vec(&self) -> Vec<TransportInfo> {
-        self.transports.clone()
+    pub fn all_transports(&self) -> &Vec<TransportInfo> {
+        &self.transports
     }
 
     pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff, buildings: &mut BuildingState) {

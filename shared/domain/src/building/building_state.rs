@@ -9,7 +9,9 @@ use crate::building::track_info::TrackInfo;
 use crate::game_time::GameTimeDiff;
 use crate::map_level::MapLevel;
 use crate::resource_type::ResourceType;
-use crate::{BuildingId, BuildingType, PlayerId, TileCoordsXZ, TrackType};
+use crate::{
+    BuildingId, BuildingType, IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackType,
+};
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum CanBuildResponse {
@@ -19,13 +21,15 @@ pub enum CanBuildResponse {
 }
 
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
+// TODO HIGH: Refactor `Vec<BuildingInfo>` into something common?
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
     tracks:               Vec<TrackInfo>,
-    buildings:            Vec<BuildingInfo>,
+    industry_buildings:   Vec<BuildingInfo>,
+    stations:             Vec<BuildingInfo>,
     // Link from each industry building to the closest station
     // Later: Should these be 1:1, N:1 or N:M correspondence between industry & station? Is it a problem if a station can accept & provide the same good and thus does not need trains?
-    closest_station_link: HashMap<BuildingId, BuildingId>,
+    closest_station_link: HashMap<IndustryBuildingId, StationId>,
 }
 
 impl Debug for BuildingState {
@@ -39,7 +43,8 @@ impl BuildingState {
     pub fn empty() -> Self {
         Self {
             tracks:               Vec::new(),
-            buildings:            Vec::new(),
+            industry_buildings:   Vec::new(),
+            stations:             Vec::new(),
             closest_station_link: HashMap::new(),
         }
     }
@@ -47,8 +52,8 @@ impl BuildingState {
     #[must_use]
     pub fn track_types_at(&self, tile: TileCoordsXZ) -> Vec<TrackType> {
         let mut results = vec![];
-        for building in self.buildings_at(tile) {
-            for track in building.track_types_at(tile) {
+        for station in self.stations_at(tile) {
+            for track in station.track_types_at(tile) {
                 results.push(track);
             }
         }
@@ -59,10 +64,19 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn buildings_at(&self, tile: TileCoordsXZ) -> Vec<&BuildingInfo> {
-        self.buildings
+    fn buildings_at(&self, tile: TileCoordsXZ) -> Vec<&BuildingInfo> {
+        self.stations
             .iter()
+            .chain(self.industry_buildings.iter())
             .filter(|building| building.covers_tiles().contains(tile))
+            .collect()
+    }
+
+    #[must_use]
+    fn stations_at(&self, tile: TileCoordsXZ) -> Vec<&BuildingInfo> {
+        self.stations
+            .iter()
+            .filter(|station| station.covers_tiles().contains(tile))
             .collect()
     }
 
@@ -76,11 +90,7 @@ impl BuildingState {
 
     #[must_use]
     pub fn station_at(&self, tile: TileCoordsXZ) -> Option<&BuildingInfo> {
-        let results: Vec<_> = self
-            .buildings_at(tile)
-            .into_iter()
-            .filter(|building| matches!(building.building_type(), BuildingType::Station(_)))
-            .collect();
+        let results: Vec<_> = self.stations_at(tile);
 
         if results.len() > 1 {
             warn!("Found multiple stations at tile {:?}: {:?}", tile, results);
@@ -97,9 +107,9 @@ impl BuildingState {
     ) -> HashSet<ResourceType> {
         // Note - we are not checking that the building actually is a station here
         let mut results = HashSet::new();
-        for (building_id, linked_station_id) in self.closest_station_link.clone() {
+        for (industry_building_id, linked_station_id) in self.closest_station_link.clone() {
             if station_id == linked_station_id {
-                if let Some(building) = self.find_building(building_id) {
+                if let Some(building) = self.find_industry_building(industry_building_id) {
                     if let BuildingType::Industry(industry_type) = building.building_type() {
                         for resource_type in industry_type.resources_accepted() {
                             results.insert(resource_type);
@@ -112,9 +122,13 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn building_infos(&self) -> Vec<BuildingInfo> {
-        // TODO: Stop cloning all the time?
-        self.buildings.clone()
+    pub fn all_stations(&self) -> &Vec<BuildingInfo> {
+        &self.stations
+    }
+
+    #[must_use]
+    pub fn all_industry_buildings(&self) -> &Vec<BuildingInfo> {
+        &self.industry_buildings
     }
 
     #[must_use]
@@ -123,19 +137,24 @@ impl BuildingState {
         self.tracks.clone()
     }
 
-    pub(crate) fn append_buildings(&mut self, additional: Vec<BuildingInfo>) {
-        self.buildings.extend(additional);
+    pub fn append_industry_buildings(&mut self, additional: Vec<BuildingInfo>) {
+        self.industry_buildings.extend(additional);
         self.recalculate_cargo_forwarding_links();
     }
 
-    pub(crate) fn append_tracks(&mut self, additional: Vec<TrackInfo>) {
+    pub fn append_stations(&mut self, additional: Vec<BuildingInfo>) {
+        self.stations.extend(additional);
+        self.recalculate_cargo_forwarding_links();
+    }
+
+    pub fn append_tracks(&mut self, additional: Vec<TrackInfo>) {
         self.tracks.extend(additional);
     }
 
     #[allow(clippy::items_after_statements)]
     fn recalculate_cargo_forwarding_links(&mut self) {
         self.closest_station_link.clear();
-        for building in &self.buildings {
+        for building in &self.industry_buildings {
             if let BuildingType::Industry(_) = building.building_type() {
                 let closest_station = self.find_closest_station(building);
 
@@ -163,7 +182,7 @@ impl BuildingState {
     }
 
     fn stations_owned_by(&self, owner_id: PlayerId) -> Vec<&BuildingInfo> {
-        self.buildings
+        self.stations
             .iter()
             .filter(|building| {
                 building.owner_id() == owner_id
@@ -329,14 +348,29 @@ impl BuildingState {
     }
 
     #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
-    pub fn build_buildings(
+    pub(crate) fn build_industry_buildings(
         &mut self,
         requesting_player_id: PlayerId,
         building_infos: &[BuildingInfo],
         map_level: &MapLevel,
     ) -> Result<(), ()> {
         if self.can_build_buildings(requesting_player_id, building_infos, map_level) {
-            self.append_buildings(building_infos.to_vec());
+            self.append_industry_buildings(building_infos.to_vec());
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+
+    #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
+    pub(crate) fn build_stations(
+        &mut self,
+        requesting_player_id: PlayerId,
+        building_infos: &[BuildingInfo],
+        map_level: &MapLevel,
+    ) -> Result<(), ()> {
+        if self.can_build_buildings(requesting_player_id, building_infos, map_level) {
+            self.append_stations(building_infos.to_vec());
             Ok(())
         } else {
             Err(())
@@ -359,61 +393,111 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn find_building(&self, building_id: BuildingId) -> Option<&BuildingInfo> {
-        self.buildings
+    pub fn find_station(&self, station_id: StationId) -> Option<&BuildingInfo> {
+        self.stations
             .iter()
-            .find(|building| building.building_id() == building_id)
+            .find(|building| building.building_id() == station_id)
     }
 
     #[must_use]
-    pub(crate) fn find_building_mut(
+    pub fn find_industry_building(
+        &self,
+        industry_building_id: IndustryBuildingId,
+    ) -> Option<&BuildingInfo> {
+        self.industry_buildings
+            .iter()
+            .find(|building| building.building_id() == industry_building_id)
+    }
+
+    #[must_use]
+    pub(crate) fn find_industry_building_mut(
         &mut self,
-        building_id: BuildingId,
+        industry_building_id: IndustryBuildingId,
     ) -> Option<&mut BuildingInfo> {
-        self.buildings
+        self.industry_buildings
             .iter_mut()
-            .find(|building| building.building_id() == building_id)
+            .find(|industry_building| industry_building.building_id() == industry_building_id)
+    }
+
+    #[must_use]
+    pub(crate) fn find_station_mut(&mut self, station_id: StationId) -> Option<&mut BuildingInfo> {
+        self.stations
+            .iter_mut()
+            .find(|building| building.building_id() == station_id)
     }
 
     pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff) {
-        for building in &mut self.buildings {
-            building.advance(diff);
+        for industry_building in &mut self.industry_buildings {
+            industry_building.advance_industry_building(diff);
         }
-        for (building_id, station_id) in self.closest_station_link.clone() {
-            self.exchange_cargo(building_id, station_id);
+        for (industry_building_id, station_id) in self.closest_station_link.clone() {
+            self.exchange_cargo(industry_building_id, station_id);
         }
     }
 
     #[allow(clippy::unwrap_used)]
-    fn exchange_cargo(&mut self, building_id: BuildingId, station_id: BuildingId) {
-        let building = self.find_building(building_id).unwrap();
+    fn exchange_cargo(&mut self, industry_building_id: IndustryBuildingId, station_id: StationId) {
+        let building = self.find_industry_building(industry_building_id).unwrap();
         let building_inputs = building.accepted_inputs();
         let cargo_from_building_to_station = building.shippable_cargo();
 
-        let station = self.find_building(station_id).unwrap();
+        let station = self.find_station(station_id).unwrap();
         let cargo_from_station_to_building = station
             .shippable_cargo()
             .filter(|(resource_type, _cargo_amount)| building_inputs.contains(&resource_type));
 
-        let building_mut = self.find_building_mut(building_id).unwrap();
+        let building_mut = self
+            .find_industry_building_mut(industry_building_id)
+            .unwrap();
         building_mut.remove_cargo(&cargo_from_building_to_station);
         building_mut.add_cargo(&cargo_from_station_to_building);
 
-        let station_mut = self.find_building_mut(station_id).unwrap();
+        let station_mut = self.find_station_mut(station_id).unwrap();
         station_mut.add_cargo(&cargo_from_building_to_station);
         station_mut.remove_cargo(&cargo_from_station_to_building);
     }
 
-    pub(crate) fn update_dynamic_info(
+    pub(crate) fn update_dynamic_infos(
         &mut self,
-        building_id: BuildingId,
+        industry_building_dynamic_infos: &HashMap<IndustryBuildingId, BuildingDynamicInfo>,
+        station_dynamic_infos: &HashMap<StationId, BuildingDynamicInfo>,
+    ) {
+        for (industry_building_id, building_dynamic_info) in industry_building_dynamic_infos {
+            self.update_industry_building_dynamic_info(
+                *industry_building_id,
+                building_dynamic_info,
+            );
+        }
+
+        for (station_id, building_dynamic_info) in station_dynamic_infos {
+            self.update_station_dynamic_info(*station_id, building_dynamic_info);
+        }
+    }
+
+    fn update_industry_building_dynamic_info(
+        &mut self,
+        industry_building_id: IndustryBuildingId,
         building_dynamic_info: &BuildingDynamicInfo,
     ) {
-        for building in &mut self.buildings {
-            if building.building_id() == building_id {
-                building.update_dynamic_info(building_dynamic_info);
-                return;
-            }
+        if let Some(building) = self.find_industry_building_mut(industry_building_id) {
+            building.update_dynamic_info(building_dynamic_info);
+        } else {
+            warn!(
+                "Could not find industry building with id {:?}",
+                industry_building_id
+            );
+        }
+    }
+
+    fn update_station_dynamic_info(
+        &mut self,
+        station_id: StationId,
+        building_dynamic_info: &BuildingDynamicInfo,
+    ) {
+        if let Some(building) = self.find_station_mut(station_id) {
+            building.update_dynamic_info(building_dynamic_info);
+        } else {
+            warn!("Could not find station with id {:?}", station_id);
         }
     }
 }

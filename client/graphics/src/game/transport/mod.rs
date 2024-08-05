@@ -118,10 +118,19 @@ fn handle_transports_sync(
     let GameStateResource(game_state) = game_state_resource.as_mut();
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
-            if let GameResponse::DynamicInfosSync(game_time, building_infos, transport_infos) =
-                game_response
+            if let GameResponse::DynamicInfosSync(
+                game_time,
+                industry_building_infos,
+                station_building_infos,
+                transport_infos,
+            ) = game_response
             {
-                game_state.update_dynamic_infos(*game_time, building_infos, transport_infos);
+                game_state.update_dynamic_infos(
+                    *game_time,
+                    industry_building_infos,
+                    station_building_infos,
+                    transport_infos,
+                );
             }
         }
     }

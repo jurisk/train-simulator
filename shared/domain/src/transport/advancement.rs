@@ -84,7 +84,7 @@ fn advance_internal(
             let MovementOrderLocation::StationId(station_id) = current_orders.go_to;
             let resources_accepted_for_unloading =
                 building_state.resource_types_accepted_by_station(station_id);
-            if let Some(building) = building_state.find_building_mut(station_id) {
+            if let Some(building) = building_state.find_station_mut(station_id) {
                 let cargo_loading_result = cargo_processing_advance(
                     transport_info,
                     building,
