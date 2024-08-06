@@ -3,7 +3,7 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
-use crate::building::CoversTiles;
+use crate::building::WithRelativeTileCoverage;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::tile_track::TileTrack;
@@ -130,7 +130,7 @@ impl StationType {
     }
 }
 
-impl CoversTiles for StationType {
+impl WithRelativeTileCoverage for StationType {
     #[must_use]
     fn relative_tiles_used(&self) -> TileCoverage {
         match self.orientation {

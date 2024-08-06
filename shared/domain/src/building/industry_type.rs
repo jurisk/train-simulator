@@ -4,7 +4,7 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
-use crate::building::CoversTiles;
+use crate::building::WithRelativeTileCoverage;
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
@@ -105,7 +105,7 @@ impl IndustryType {
     }
 }
 
-impl CoversTiles for IndustryType {
+impl WithRelativeTileCoverage for IndustryType {
     #[must_use]
     fn relative_tiles_used(&self) -> TileCoverage {
         TileCoverage::Rectangular {

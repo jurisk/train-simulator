@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::building::industry_type::IndustryType;
 use crate::building::station_type::StationType;
-use crate::building::CoversTiles;
+use crate::building::WithRelativeTileCoverage;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type::TrackType;
@@ -35,7 +35,7 @@ impl BuildingType {
     }
 }
 
-impl CoversTiles for BuildingType {
+impl WithRelativeTileCoverage for BuildingType {
     fn relative_tiles_used(&self) -> TileCoverage {
         match self {
             BuildingType::Industry(industry_type) => industry_type.relative_tiles_used(),

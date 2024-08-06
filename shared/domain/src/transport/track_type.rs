@@ -5,7 +5,7 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
-use crate::building::CoversTiles;
+use crate::building::WithRelativeTileCoverage;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_length::TrackLength;
@@ -102,7 +102,7 @@ impl TrackType {
     }
 }
 
-impl CoversTiles for TrackType {
+impl WithRelativeTileCoverage for TrackType {
     #[must_use]
     fn relative_tiles_used(&self) -> TileCoverage {
         TileCoverage::Single(TileCoordsXZ::ZERO)
