@@ -6,7 +6,7 @@ use fastrand::Rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
+use crate::building::building_info::{BuildingDynamicInfo, IndustryBuildingInfo, StationInfo};
 use crate::building::track_info::TrackInfo;
 use crate::game_state::GameState;
 use crate::game_time::GameTime;
@@ -78,8 +78,8 @@ pub enum GameResponse {
 
     // Later: Actually, many of these should be sending `GameTime` (if it's not already included in other structures such as `GameState`), and it should be handled on the client.
     PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
-    IndustryBuildingsAdded(Vec<BuildingInfo>),
-    StationsAdded(Vec<BuildingInfo>),
+    IndustryBuildingsAdded(Vec<IndustryBuildingInfo>),
+    StationsAdded(Vec<StationInfo>),
     TracksAdded(Vec<TrackInfo>),
     TransportsAdded(Vec<TransportInfo>),
     DynamicInfosSync(

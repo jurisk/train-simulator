@@ -4,7 +4,9 @@ use std::fmt::{Debug, Formatter};
 use log::warn;
 use serde::{Deserialize, Serialize};
 
-use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
+use crate::building::building_info::{
+    BuildingDynamicInfo, BuildingInfo, IndustryBuildingInfo, StationInfo,
+};
 use crate::building::track_info::TrackInfo;
 use crate::cargo_map::CargoOps;
 use crate::game_time::GameTimeDiff;
@@ -27,8 +29,8 @@ pub enum CanBuildResponse {
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
     tracks:               Vec<TrackInfo>,
-    industry_buildings:   Vec<BuildingInfo>,
-    stations:             Vec<BuildingInfo>,
+    industry_buildings:   Vec<IndustryBuildingInfo>,
+    stations:             Vec<StationInfo>,
     // Link from each industry building to the closest station
     // Later: Should these be 1:1, N:1 or N:M correspondence between industry & station? Is it a problem if a station can accept & provide the same good and thus does not need trains?
     closest_station_link: HashMap<IndustryBuildingId, StationId>,
@@ -54,7 +56,7 @@ impl BuildingState {
     #[must_use]
     pub fn track_types_at(&self, tile: TileCoordsXZ) -> Vec<TrackType> {
         let mut results = vec![];
-        for station in self.stations_at(tile) {
+        if let Some(station) = self.station_at(tile) {
             for track in station.station_track_types_at(tile) {
                 results.push(track);
             }
@@ -66,20 +68,21 @@ impl BuildingState {
     }
 
     #[must_use]
-    fn buildings_at(&self, tile: TileCoordsXZ) -> Vec<&BuildingInfo> {
-        self.stations
-            .iter()
-            .chain(self.industry_buildings.iter())
-            .filter(|building| building.covers_tiles().contains(tile))
-            .collect()
-    }
-
-    #[must_use]
-    fn stations_at(&self, tile: TileCoordsXZ) -> Vec<&BuildingInfo> {
-        self.stations
-            .iter()
-            .filter(|station| station.covers_tiles().contains(tile))
-            .collect()
+    fn building_at(&self, tile: TileCoordsXZ) -> Option<&dyn BuildingInfo> {
+        let station = self.station_at(tile);
+        let industry_building = self.industry_building_at(tile);
+        match (station, industry_building) {
+            (Some(station), None) => Some(station),
+            (None, Some(industry_building)) => Some(industry_building),
+            (Some(station), Some(industry_building)) => {
+                warn!(
+                    "Found both a station and an industry building at tile {:?}: {:?} {:?}",
+                    tile, station, industry_building
+                );
+                None
+            },
+            (None, None) => None,
+        }
     }
 
     #[must_use]
@@ -91,11 +94,34 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn station_at(&self, tile: TileCoordsXZ) -> Option<&BuildingInfo> {
-        let results: Vec<_> = self.stations_at(tile);
+    pub fn station_at(&self, tile: TileCoordsXZ) -> Option<&StationInfo> {
+        let results: Vec<_> = self
+            .stations
+            .iter()
+            .filter(|station| station.covers_tiles().contains(tile))
+            .collect();
 
         if results.len() > 1 {
             warn!("Found multiple stations at tile {:?}: {:?}", tile, results);
+            None
+        } else {
+            results.first().copied()
+        }
+    }
+
+    #[must_use]
+    pub fn industry_building_at(&self, tile: TileCoordsXZ) -> Option<&IndustryBuildingInfo> {
+        let results: Vec<_> = self
+            .industry_buildings
+            .iter()
+            .filter(|station| station.covers_tiles().contains(tile))
+            .collect();
+
+        if results.len() > 1 {
+            warn!(
+                "Found multiple industry buildings at tile {:?}: {:?}",
+                tile, results
+            );
             None
         } else {
             results.first().copied()
@@ -124,12 +150,12 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn all_stations(&self) -> &Vec<BuildingInfo> {
+    pub fn all_stations(&self) -> &Vec<StationInfo> {
         &self.stations
     }
 
     #[must_use]
-    pub fn all_industry_buildings(&self) -> &Vec<BuildingInfo> {
+    pub fn all_industry_buildings(&self) -> &Vec<IndustryBuildingInfo> {
         &self.industry_buildings
     }
 
@@ -139,12 +165,12 @@ impl BuildingState {
         self.tracks.clone()
     }
 
-    pub fn append_industry_buildings(&mut self, additional: Vec<BuildingInfo>) {
+    pub fn append_industry_buildings(&mut self, additional: Vec<IndustryBuildingInfo>) {
         self.industry_buildings.extend(additional);
         self.recalculate_cargo_forwarding_links();
     }
 
-    pub fn append_stations(&mut self, additional: Vec<BuildingInfo>) {
+    pub fn append_stations(&mut self, additional: Vec<StationInfo>) {
         self.stations.extend(additional);
         self.recalculate_cargo_forwarding_links();
     }
@@ -169,7 +195,7 @@ impl BuildingState {
         }
     }
 
-    fn find_closest_station(&self, building: &BuildingInfo) -> Option<(&BuildingInfo, i32)> {
+    fn find_closest_station(&self, building: &IndustryBuildingInfo) -> Option<(&StationInfo, i32)> {
         self.stations_owned_by(building.owner_id())
             .into_iter()
             .map(|station| {
@@ -184,7 +210,7 @@ impl BuildingState {
             .min_by_key(|(_, distance)| *distance)
     }
 
-    fn stations_owned_by(&self, owner_id: PlayerId) -> Vec<&BuildingInfo> {
+    fn stations_owned_by(&self, owner_id: PlayerId) -> Vec<&StationInfo> {
         self.stations
             .iter()
             .filter(|building| {
@@ -195,10 +221,10 @@ impl BuildingState {
     }
 
     #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
-    pub fn can_build_buildings(
+    pub fn can_build_buildings<T: BuildingInfo>(
         &mut self,
         requesting_player_id: PlayerId,
-        building_infos: &[BuildingInfo],
+        building_infos: &[T],
         map_level: &MapLevel,
     ) -> bool {
         let valid_player_id = building_infos
@@ -208,8 +234,11 @@ impl BuildingState {
         // TODO: Check that this is a valid building and there is enough money to build it, subtract money
 
         let can_build = building_infos.iter().all(|building_info| {
-            self.can_build_building(requesting_player_id, building_info, map_level)
-                == CanBuildResponse::Ok
+            self.can_build_building(
+                requesting_player_id,
+                &building_info.covers_tiles(),
+                map_level,
+            ) == CanBuildResponse::Ok
         });
 
         valid_player_id && can_build
@@ -247,8 +276,8 @@ impl BuildingState {
 
         // TODO HIGH:   Actually, if the attempt is to build a track over tracks provided by a station,
         //              we should allow it as CanBuildResponse::AlreadyExists
-        let overlapping_buildings = self.buildings_at(track_info.tile);
-        let invalid_overlaps = !overlapping_buildings.is_empty();
+        let overlapping_buildings = self.building_at(track_info.tile);
+        let invalid_overlaps = overlapping_buildings.is_some();
 
         let overlapping_other_players = overlapping_buildings
             .iter()
@@ -295,11 +324,10 @@ impl BuildingState {
     pub(crate) fn can_build_building(
         &self,
         requesting_player_id: PlayerId,
-        building_info: &BuildingInfo,
+        tile_coverage: &TileCoverage,
         map_level: &MapLevel,
     ) -> CanBuildResponse {
-        let any_tile_out_of_bounds = building_info
-            .covers_tiles()
+        let any_tile_out_of_bounds = tile_coverage
             .to_set()
             .into_iter()
             .any(|tile| !map_level.tile_in_bounds(tile));
@@ -308,11 +336,10 @@ impl BuildingState {
             return CanBuildResponse::Invalid;
         }
 
-        let overlapping_buildings = building_info
-            .covers_tiles()
+        let overlapping_buildings = tile_coverage
             .to_set()
             .into_iter()
-            .flat_map(|tile| self.buildings_at(tile))
+            .filter_map(|tile| self.building_at(tile))
             .collect::<Vec<_>>();
 
         let overlapping_other_players = overlapping_buildings
@@ -321,8 +348,7 @@ impl BuildingState {
 
         let invalid_overlaps = !overlapping_buildings.is_empty();
 
-        let vertex_coords: Vec<_> = building_info
-            .covers_tiles()
+        let vertex_coords: Vec<_> = tile_coverage
             .to_set()
             .into_iter()
             .flat_map(TileCoordsXZ::vertex_coords)
@@ -337,10 +363,7 @@ impl BuildingState {
             .map(|vertex| map_level.height_at(vertex))
             .collect::<HashSet<_>>();
 
-        let all_equal_heights = vertex_heights.len() == 1;
-        let valid_heights = match building_info.building_type() {
-            BuildingType::Station(_) | BuildingType::Industry(_) => all_equal_heights,
-        };
+        let valid_heights = vertex_heights.len() == 1;
 
         if overlapping_other_players || invalid_overlaps || any_vertex_under_water || !valid_heights
         {
@@ -354,7 +377,7 @@ impl BuildingState {
     pub(crate) fn build_industry_buildings(
         &mut self,
         requesting_player_id: PlayerId,
-        building_infos: &[BuildingInfo],
+        building_infos: &[IndustryBuildingInfo],
         map_level: &MapLevel,
     ) -> Result<(), ()> {
         if self.can_build_buildings(requesting_player_id, building_infos, map_level) {
@@ -369,7 +392,7 @@ impl BuildingState {
     pub(crate) fn build_stations(
         &mut self,
         requesting_player_id: PlayerId,
-        building_infos: &[BuildingInfo],
+        building_infos: &[StationInfo],
         map_level: &MapLevel,
     ) -> Result<(), ()> {
         if self.can_build_buildings(requesting_player_id, building_infos, map_level) {
@@ -396,7 +419,7 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn find_station(&self, station_id: StationId) -> Option<&BuildingInfo> {
+    pub fn find_station(&self, station_id: StationId) -> Option<&StationInfo> {
         self.stations
             .iter()
             .find(|building| building.building_id() == station_id)
@@ -406,7 +429,7 @@ impl BuildingState {
     pub fn find_industry_building(
         &self,
         industry_building_id: IndustryBuildingId,
-    ) -> Option<&BuildingInfo> {
+    ) -> Option<&IndustryBuildingInfo> {
         self.industry_buildings
             .iter()
             .find(|building| building.building_id() == industry_building_id)
@@ -416,14 +439,14 @@ impl BuildingState {
     pub(crate) fn find_industry_building_mut(
         &mut self,
         industry_building_id: IndustryBuildingId,
-    ) -> Option<&mut BuildingInfo> {
+    ) -> Option<&mut IndustryBuildingInfo> {
         self.industry_buildings
             .iter_mut()
             .find(|industry_building| industry_building.building_id() == industry_building_id)
     }
 
     #[must_use]
-    pub(crate) fn find_station_mut(&mut self, station_id: StationId) -> Option<&mut BuildingInfo> {
+    pub(crate) fn find_station_mut(&mut self, station_id: StationId) -> Option<&mut StationInfo> {
         self.stations
             .iter_mut()
             .find(|building| building.building_id() == station_id)

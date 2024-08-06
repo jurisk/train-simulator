@@ -1,6 +1,6 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, KeyCode, Res};
-use shared_domain::building::building_info::BuildingInfo;
+use shared_domain::building::building_info::{IndustryBuildingInfo, StationInfo};
 use shared_domain::building::building_state::BuildingState;
 use shared_domain::building::building_type::BuildingType;
 use shared_domain::building::industry_type::IndustryType;
@@ -70,14 +70,14 @@ fn build_test_buildings(player_id: PlayerId) -> Vec<GameCommand> {
     let stations = stations
         .into_iter()
         .map(|(tile, building_type)| {
-            BuildingInfo::new(player_id, BuildingId::random(), tile, building_type)
+            StationInfo::new(player_id, BuildingId::random(), tile, building_type)
         })
         .collect();
 
     let industry_buildings = industry_buildings
         .into_iter()
         .map(|(tile, building_type)| {
-            BuildingInfo::new(player_id, BuildingId::random(), tile, building_type)
+            IndustryBuildingInfo::new(player_id, BuildingId::random(), tile, building_type)
         })
         .collect();
 
@@ -132,7 +132,7 @@ fn find_station_id(building_state: &BuildingState, tile: TileCoordsXZ) -> Buildi
 }
 
 #[allow(clippy::unwrap_used)]
-fn find_station(building_state: &BuildingState, tile: TileCoordsXZ) -> &BuildingInfo {
+fn find_station(building_state: &BuildingState, tile: TileCoordsXZ) -> &StationInfo {
     building_state.station_at(tile).unwrap()
 }
 

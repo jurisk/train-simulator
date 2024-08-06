@@ -4,7 +4,7 @@ use bevy::prelude::{
 };
 use bevy::utils::default;
 use bevy_egui::EguiContexts;
-use shared_domain::building::building_info::BuildingInfo;
+use shared_domain::building::building_info::{BuildingInfo, IndustryBuildingInfo, StationInfo};
 use shared_domain::building::building_type::BuildingType;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
@@ -44,17 +44,23 @@ pub(crate) fn build_building_when_mouse_released(
                 let game_id = game_state.game_id();
 
                 // Later: Check we can build this? And that check is different for stations, as they can be built on top of fully straight tracks with no branching.
-                let building = BuildingInfo::new(
-                    player_id,
-                    BuildingId::random(),
-                    *hovered_tile,
-                    building_type,
-                );
-                let buildings = vec![building];
-
                 let command = match building_type {
-                    BuildingType::Station(_) => GameCommand::BuildStations(buildings),
-                    BuildingType::Industry(_) => GameCommand::BuildIndustryBuildings(buildings),
+                    BuildingType::Station(_) => {
+                        GameCommand::BuildStations(vec![StationInfo::new(
+                            player_id,
+                            BuildingId::random(),
+                            *hovered_tile,
+                            building_type,
+                        )])
+                    },
+                    BuildingType::Industry(_) => {
+                        GameCommand::BuildIndustryBuildings(vec![IndustryBuildingInfo::new(
+                            player_id,
+                            BuildingId::random(),
+                            *hovered_tile,
+                            building_type,
+                        )])
+                    },
                 };
 
                 client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
@@ -67,7 +73,7 @@ pub(crate) fn build_building_when_mouse_released(
 
 #[must_use]
 #[allow(clippy::missing_panics_doc)]
-pub fn center_vec3(building_info: &BuildingInfo, map_level: &MapLevel) -> Vec3 {
+pub fn center_vec3(building_info: &dyn BuildingInfo, map_level: &MapLevel) -> Vec3 {
     let terrain = map_level.terrain();
     let (nw, se) = match building_info.covers_tiles() {
         TileCoverage::Empty => panic!("Building has no tiles"),
@@ -87,7 +93,7 @@ pub fn center_vec3(building_info: &BuildingInfo, map_level: &MapLevel) -> Vec3 {
 
 #[allow(clippy::too_many_arguments, clippy::similar_names)]
 pub(crate) fn create_building_entity(
-    building_info: &BuildingInfo,
+    building_info: &dyn BuildingInfo,
     label: String,
     colour: Colour,
     mesh: Handle<Mesh>,

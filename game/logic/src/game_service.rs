@@ -1,6 +1,8 @@
 #![allow(clippy::unnecessary_wraps, clippy::missing_errors_doc)]
 
-use shared_domain::building::building_info::{BuildingInfo, WithBuildingDynamicInfo};
+use shared_domain::building::building_info::{
+    IndustryBuildingInfo, StationInfo, WithBuildingDynamicInfo,
+};
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
@@ -115,7 +117,7 @@ impl GameService {
     fn process_build_industry_buildings(
         &mut self,
         requesting_player_id: PlayerId,
-        industry_buildings: &[BuildingInfo],
+        industry_buildings: &[IndustryBuildingInfo],
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         self.state
             .build_industry_buildings(requesting_player_id, industry_buildings)
@@ -129,7 +131,7 @@ impl GameService {
                 GameError::CannotBuildBuildings(
                     industry_buildings
                         .iter()
-                        .map(BuildingInfo::building_id)
+                        .map(IndustryBuildingInfo::building_id)
                         .collect(),
                 )
             })
@@ -138,7 +140,7 @@ impl GameService {
     fn process_build_stations(
         &mut self,
         requesting_player_id: PlayerId,
-        stations: &[BuildingInfo],
+        stations: &[StationInfo],
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         self.state
             .build_stations(requesting_player_id, stations)
@@ -150,7 +152,7 @@ impl GameService {
             })
             .map_err(|()| {
                 GameError::CannotBuildBuildings(
-                    stations.iter().map(BuildingInfo::building_id).collect(),
+                    stations.iter().map(StationInfo::building_id).collect(),
                 )
             })
     }

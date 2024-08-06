@@ -11,7 +11,7 @@ use bevy::prelude::{
     StandardMaterial, Update,
 };
 use bevy::state::condition::in_state;
-use shared_domain::building::building_info::BuildingInfo;
+use shared_domain::building::building_info::{BuildingInfo, IndustryBuildingInfo, StationInfo};
 use shared_domain::building::building_type::BuildingType;
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::map_level::MapLevel;
@@ -145,7 +145,7 @@ fn create_track(
 
 #[allow(clippy::similar_names, clippy::match_same_arms)]
 fn create_industry_building(
-    building_info: &BuildingInfo,
+    building_info: &IndustryBuildingInfo,
     commands: &mut Commands,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     game_assets: &GameAssets,
@@ -176,7 +176,7 @@ fn create_industry_building(
 
 #[allow(clippy::similar_names, clippy::match_same_arms)]
 fn create_station(
-    building_info: &BuildingInfo,
+    building_info: &StationInfo,
     commands: &mut Commands,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     game_assets: &GameAssets,

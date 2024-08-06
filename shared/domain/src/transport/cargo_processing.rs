@@ -4,7 +4,7 @@ use std::fmt::{Debug, Formatter};
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use crate::building::building_info::BuildingInfo;
+use crate::building::building_info::StationInfo;
 use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;
@@ -60,7 +60,7 @@ impl CargoProcessingResult {
 
 pub(crate) fn cargo_processing_advance(
     transport_info: &TransportInfo,
-    station: &BuildingInfo,
+    station: &StationInfo,
     resources_accepted_for_unloading: &HashSet<ResourceType>,
     diff: GameTimeDiff,
 ) -> CargoProcessingResult {

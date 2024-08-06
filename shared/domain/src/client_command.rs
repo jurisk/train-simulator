@@ -6,7 +6,7 @@ use std::time::Duration;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::building::building_info::BuildingInfo;
+use crate::building::building_info::{IndustryBuildingInfo, StationInfo};
 use crate::building::track_info::TrackInfo;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
@@ -43,8 +43,8 @@ pub enum GameCommand {
     QueryBuildings,
     QueryTracks,
     QueryTransports,
-    BuildIndustryBuildings(Vec<BuildingInfo>),
-    BuildStations(Vec<BuildingInfo>),
+    BuildIndustryBuildings(Vec<IndustryBuildingInfo>),
+    BuildStations(Vec<StationInfo>),
     BuildTracks(Vec<TrackInfo>),
     PurchaseTransport(TransportInfo),
     UpdateTransportMovementOrders(TransportId, MovementOrders),

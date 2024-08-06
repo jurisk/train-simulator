@@ -1,14 +1,40 @@
 use bevy::prelude::{Camera, GlobalTransform, Query, Res, Vec3};
 use bevy_egui::EguiContexts;
 use egui::{Align2, Context, Id, Pos2};
-use shared_domain::building::building_info::{BuildingInfo, WithBuildingDynamicInfo};
+use shared_domain::building::building_info::{
+    IndustryBuildingInfo, StationInfo, WithBuildingDynamicInfo,
+};
 use shared_domain::game_state::GameState;
 
 use crate::game::buildings::building::center_vec3;
 use crate::game::GameStateResource;
 
-fn building_label(
-    building: &BuildingInfo,
+fn industry_building_label(
+    building: &IndustryBuildingInfo,
+    game_state: &GameState,
+    context: &mut Context,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+) {
+    let label = format!(
+        "{:?} {:?}",
+        building.building_type(),
+        building.dynamic_info()
+    );
+    let id = format!("{:?}", building.building_id());
+    let building_position_3d = center_vec3(building, game_state.map_level());
+    draw_label(
+        building_position_3d,
+        label,
+        id,
+        context,
+        camera,
+        camera_transform,
+    );
+}
+
+fn station_label(
+    building: &StationInfo,
     game_state: &GameState,
     context: &mut Context,
     camera: &Camera,
@@ -46,12 +72,18 @@ pub fn draw_labels(
             let context = contexts.ctx_mut();
             let buildings = game_state.building_state();
 
-            for building in buildings.all_industry_buildings() {
-                building_label(building, game_state, context, camera, camera_transform);
+            for industry_building in buildings.all_industry_buildings() {
+                industry_building_label(
+                    industry_building,
+                    game_state,
+                    context,
+                    camera,
+                    camera_transform,
+                );
             }
 
             for station in buildings.all_stations() {
-                building_label(station, game_state, context, camera, camera_transform);
+                station_label(station, game_state, context, camera, camera_transform);
             }
 
             let transports = game_state.transport_infos();

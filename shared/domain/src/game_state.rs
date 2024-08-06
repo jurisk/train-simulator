@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use log::trace;
 use serde::{Deserialize, Serialize};
 
-use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
+use crate::building::building_info::{BuildingDynamicInfo, IndustryBuildingInfo, StationInfo};
 use crate::building::building_state::BuildingState;
 use crate::building::track_info::TrackInfo;
 use crate::game_time::{GameTime, GameTimeDiff};
@@ -162,7 +162,7 @@ impl GameState {
     pub fn build_industry_buildings(
         &mut self,
         requesting_player_id: PlayerId,
-        buildings: &[BuildingInfo],
+        buildings: &[IndustryBuildingInfo],
     ) -> Result<(), ()> {
         self.buildings
             .build_industry_buildings(requesting_player_id, buildings, &self.map_level)
@@ -171,7 +171,7 @@ impl GameState {
     pub fn build_stations(
         &mut self,
         requesting_player_id: PlayerId,
-        stations: &[BuildingInfo],
+        stations: &[StationInfo],
     ) -> Result<(), ()> {
         self.buildings
             .build_stations(requesting_player_id, stations, &self.map_level)
