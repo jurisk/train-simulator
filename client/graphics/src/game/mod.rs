@@ -1,5 +1,8 @@
 #![allow(clippy::module_name_repetitions)]
 
+use std::collections::HashMap;
+
+use bevy::log::error;
 use bevy::prelude::{
     in_state, info, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, NextState,
     OnEnter, Plugin, Res, ResMut, Resource, Time, Update,
@@ -10,7 +13,9 @@ use shared_domain::client_command::{
 };
 use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTimeDiff;
-use shared_domain::server_response::{AuthenticationResponse, GameResponse, ServerResponse};
+use shared_domain::server_response::{
+    AuthenticationResponse, Colour, GameResponse, PlayerInfo, ServerResponse,
+};
 use shared_domain::{GameId, PlayerId};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
@@ -150,5 +155,22 @@ fn handle_game_state_snapshot(
                 }
             }
         }
+    }
+}
+
+#[allow(clippy::similar_names)]
+pub(crate) fn player_colour(
+    players_info: &HashMap<PlayerId, PlayerInfo>,
+    player_id: PlayerId,
+) -> Colour {
+    match players_info.get(&player_id) {
+        None => {
+            error!(
+                "Player with ID {:?} not found, returning invalid colour",
+                player_id
+            );
+            Colour::rgb(255, 0, 0)
+        },
+        Some(player_info) => player_info.colour,
     }
 }

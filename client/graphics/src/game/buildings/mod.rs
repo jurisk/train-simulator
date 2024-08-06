@@ -7,7 +7,7 @@ pub mod tracks;
 use std::collections::HashMap;
 
 use bevy::prelude::{
-    error, Assets, Commands, EventReader, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut,
+    Assets, Commands, EventReader, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut,
     StandardMaterial, Update,
 };
 use bevy::state::condition::in_state;
@@ -24,7 +24,7 @@ use crate::game::buildings::building::{
     build_building_when_mouse_released, create_building_entity,
 };
 use crate::game::buildings::tracks::{build_tracks_when_mouse_released, create_rails};
-use crate::game::GameStateResource;
+use crate::game::{player_colour, GameStateResource};
 use crate::states::ClientState;
 
 pub(crate) struct BuildingsPlugin;
@@ -68,7 +68,7 @@ fn handle_buildings_or_tracks_added(
                         .append_industry_buildings(building_infos.clone());
 
                     for building_info in building_infos {
-                        create_building(
+                        create_industry_building(
                             building_info,
                             &mut commands,
                             &mut materials,
@@ -84,7 +84,7 @@ fn handle_buildings_or_tracks_added(
                         .append_stations(station_infos.clone());
 
                     for station_info in station_infos {
-                        create_building(
+                        create_station(
                             station_info,
                             &mut commands,
                             &mut materials,
@@ -131,26 +131,20 @@ fn create_track(
     map_level: &MapLevel,
     players_info: &HashMap<PlayerId, PlayerInfo>,
 ) {
-    match players_info.get(&track_info.owner_id) {
-        None => {
-            error!("Player with ID {:?} not found", track_info.owner_id);
-        },
-        Some(player_info) => {
-            create_rails(
-                player_info,
-                commands,
-                &game_assets.track_assets,
-                materials,
-                map_level,
-                track_info.tile,
-                track_info.track_type,
-            );
-        },
-    }
+    let colour = player_colour(players_info, track_info.owner_id);
+    create_rails(
+        colour,
+        commands,
+        &game_assets.track_assets,
+        materials,
+        map_level,
+        track_info.tile,
+        track_info.track_type,
+    );
 }
 
 #[allow(clippy::similar_names, clippy::match_same_arms)]
-fn create_building(
+fn create_industry_building(
     building_info: &BuildingInfo,
     commands: &mut Commands,
     materials: &mut ResMut<Assets<StandardMaterial>>,
@@ -158,54 +152,68 @@ fn create_building(
     map_level: &MapLevel,
     players_info: &HashMap<PlayerId, PlayerInfo>,
 ) {
-    match players_info.get(&building_info.owner_id()) {
-        None => {
-            error!("Player with ID {:?} not found", building_info.owner_id());
+    let colour = player_colour(players_info, building_info.owner_id());
+    match &building_info.building_type() {
+        BuildingType::Industry(industry_type) => {
+            let mesh = game_assets
+                .building_assets
+                .industry_mesh_for(*industry_type);
+            create_building_entity(
+                building_info,
+                format!("{industry_type:?}"),
+                colour,
+                mesh,
+                materials,
+                commands,
+                map_level,
+            );
         },
-        Some(player_info) => {
-            for tile_track in building_info.tile_tracks() {
-                let tile_coords = tile_track.tile_coords_xz;
-                let track_type = tile_track.track_type;
+        BuildingType::Station(_) => {
+            unreachable!("Station building type in industry buildings");
+        },
+    }
+}
 
-                create_rails(
-                    player_info,
-                    commands,
-                    &game_assets.track_assets,
-                    materials,
-                    map_level,
-                    tile_coords,
-                    track_type,
-                );
-            }
+#[allow(clippy::similar_names, clippy::match_same_arms)]
+fn create_station(
+    building_info: &BuildingInfo,
+    commands: &mut Commands,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    game_assets: &GameAssets,
+    map_level: &MapLevel,
+    players_info: &HashMap<PlayerId, PlayerInfo>,
+) {
+    let colour = player_colour(players_info, building_info.owner_id());
+    for tile_track in building_info.tile_tracks() {
+        let tile_coords = tile_track.tile_coords_xz;
+        let track_type = tile_track.track_type;
 
-            match &building_info.building_type() {
-                BuildingType::Industry(industry_type) => {
-                    let mesh = game_assets
-                        .building_assets
-                        .industry_mesh_for(*industry_type);
-                    create_building_entity(
-                        building_info,
-                        format!("{industry_type:?}"),
-                        player_info.colour,
-                        mesh,
-                        materials,
-                        commands,
-                        map_level,
-                    );
-                },
-                BuildingType::Station(station_type) => {
-                    let mesh = game_assets.building_assets.station_mesh_for(*station_type);
-                    create_building_entity(
-                        building_info,
-                        format!("{station_type:?}"),
-                        STATION_BASE_COLOUR,
-                        mesh,
-                        materials,
-                        commands,
-                        map_level,
-                    );
-                },
-            }
+        create_rails(
+            colour,
+            commands,
+            &game_assets.track_assets,
+            materials,
+            map_level,
+            tile_coords,
+            track_type,
+        );
+    }
+
+    match &building_info.building_type() {
+        BuildingType::Industry(_) => {
+            unreachable!("Industry building type in station buildings");
+        },
+        BuildingType::Station(station_type) => {
+            let mesh = game_assets.building_assets.station_mesh_for(*station_type);
+            create_building_entity(
+                building_info,
+                format!("{station_type:?}"),
+                STATION_BASE_COLOUR,
+                mesh,
+                materials,
+                commands,
+                map_level,
+            );
         },
     }
 }

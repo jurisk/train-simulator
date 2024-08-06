@@ -53,7 +53,7 @@ impl BuildingState {
     pub fn track_types_at(&self, tile: TileCoordsXZ) -> Vec<TrackType> {
         let mut results = vec![];
         for station in self.stations_at(tile) {
-            for track in station.track_types_at(tile) {
+            for track in station.station_track_types_at(tile) {
                 results.push(track);
             }
         }
@@ -437,14 +437,17 @@ impl BuildingState {
 
     #[allow(clippy::unwrap_used)]
     fn exchange_cargo(&mut self, industry_building_id: IndustryBuildingId, station_id: StationId) {
-        let building = self.find_industry_building(industry_building_id).unwrap();
-        let building_inputs = building.accepted_inputs();
-        let cargo_from_building_to_station = building.shippable_cargo();
+        let industry_building = self.find_industry_building(industry_building_id).unwrap();
+        let industry_building_inputs = industry_building.industry_transform_inputs();
+        let cargo_from_building_to_station = industry_building.industry_building_shippable_cargo();
 
         let station = self.find_station(station_id).unwrap();
-        let cargo_from_station_to_building = station
-            .shippable_cargo()
-            .filter(|(resource_type, _cargo_amount)| building_inputs.contains(&resource_type));
+        let cargo_from_station_to_building =
+            station
+                .station_shippable_cargo()
+                .filter(|(resource_type, _cargo_amount)| {
+                    industry_building_inputs.contains(&resource_type)
+                });
 
         let building_mut = self
             .find_industry_building_mut(industry_building_id)

@@ -13,7 +13,7 @@ use bevy_egui::EguiContexts;
 use bigdecimal::BigDecimal;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
-use shared_domain::server_response::PlayerInfo;
+use shared_domain::server_response::Colour;
 use shared_domain::terrain::DEFAULT_Y_COEF;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::track_planner::plan_tracks;
@@ -121,7 +121,7 @@ impl TrackAssets {
 // Either prohibit such, or make them render better.
 #[allow(clippy::similar_names)]
 pub(crate) fn create_rails(
-    player_info: &PlayerInfo,
+    colour: Colour,
     commands: &mut Commands,
     track_assets: &TrackAssets,
     materials: &mut ResMut<Assets<StandardMaterial>>,
@@ -139,7 +139,6 @@ pub(crate) fn create_rails(
     let (a1, a2) = pick_rail_positions(a1, a2);
     let (b1, b2) = pick_rail_positions(b1, b2);
 
-    let colour = player_info.colour;
     let color = Color::srgb_u8(colour.r, colour.g, colour.b);
 
     spawn_rail(

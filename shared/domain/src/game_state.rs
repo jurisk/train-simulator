@@ -24,6 +24,7 @@ pub struct GameState {
     map_level:  MapLevel,
     buildings:  BuildingState,
     transports: TransportState,
+    // TODO HIGH: Extract `players` `HashMap` into a separate struct
     players:    HashMap<PlayerId, PlayerInfo>,
     time:       GameTime,
     time_steps: u64,

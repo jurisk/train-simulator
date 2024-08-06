@@ -179,7 +179,7 @@ impl BuildingInfo {
     }
 
     #[must_use]
-    pub(crate) fn track_types_at(&self, tile: TileCoordsXZ) -> Vec<TrackType> {
+    pub(crate) fn station_track_types_at(&self, tile: TileCoordsXZ) -> Vec<TrackType> {
         self.building_type()
             .track_types_at(tile - self.reference_tile())
     }
@@ -205,7 +205,7 @@ impl BuildingInfo {
 
     #[must_use]
     #[allow(clippy::match_same_arms)]
-    pub fn accepted_inputs(&self) -> HashSet<ResourceType> {
+    pub fn industry_transform_inputs(&self) -> HashSet<ResourceType> {
         match self.building_type() {
             BuildingType::Station(_) => HashSet::new(),
             BuildingType::Industry(industry_type) => {
@@ -219,9 +219,11 @@ impl BuildingInfo {
     }
 
     #[must_use]
-    pub fn shippable_cargo(&self) -> CargoMap {
+    pub fn industry_building_shippable_cargo(&self) -> CargoMap {
         match self.building_type() {
-            BuildingType::Station(_) => self.dynamic_info().cargo.clone(),
+            BuildingType::Station(_) => {
+                unreachable!("Should not call this for stations");
+            },
             BuildingType::Industry(industry_type) => {
                 let transform = industry_type.transform_per_second();
                 let mut result = CargoMap::new();
@@ -232,6 +234,16 @@ impl BuildingInfo {
                     result.add(resource, amount);
                 }
                 result
+            },
+        }
+    }
+
+    #[must_use]
+    pub fn station_shippable_cargo(&self) -> CargoMap {
+        match self.building_type() {
+            BuildingType::Station(_) => self.dynamic_info().cargo.clone(),
+            BuildingType::Industry(_) => {
+                unreachable!("Should not call this for industries");
             },
         }
     }

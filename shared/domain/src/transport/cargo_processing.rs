@@ -60,13 +60,13 @@ impl CargoProcessingResult {
 
 pub(crate) fn cargo_processing_advance(
     transport_info: &TransportInfo,
-    building: &BuildingInfo,
+    station: &BuildingInfo,
     resources_accepted_for_unloading: &HashSet<ResourceType>,
     diff: GameTimeDiff,
 ) -> CargoProcessingResult {
     debug!(
         "Advancing cargo loading: {:?} {:?} {:?}",
-        transport_info, building, diff
+        transport_info, station, diff
     );
 
     let movement_order_action = transport_info
@@ -102,8 +102,8 @@ pub(crate) fn cargo_processing_advance(
                 CargoProcessingResult::new(CargoProcessing::Finished, diff, None, None)
             } else {
                 // We will only load the cargo that we are not also unloading, as otherwise we may be unloading and instantly loading the same cargo
-                let cargo_to_load: CargoMap = building
-                    .shippable_cargo()
+                let cargo_to_load: CargoMap = station
+                    .station_shippable_cargo()
                     .filter(|(resource, _)| !resources_accepted_for_unloading.contains(&resource));
 
                 let cargo_to_load =
