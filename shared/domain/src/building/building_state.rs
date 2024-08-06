@@ -25,7 +25,6 @@ pub enum CanBuildResponse {
 }
 
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
-// TODO HIGH: Refactor `Vec<BuildingInfo>` into something common?
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
     tracks:               Vec<TrackInfo>,
