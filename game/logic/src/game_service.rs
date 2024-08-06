@@ -1,6 +1,6 @@
 #![allow(clippy::unnecessary_wraps, clippy::missing_errors_doc)]
 
-use shared_domain::building::building_info::BuildingInfo;
+use shared_domain::building::building_info::{BuildingInfo, WithBuildingDynamicInfo};
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
@@ -280,18 +280,18 @@ impl GameService {
                     .building_state()
                     .all_industry_buildings()
                     .iter()
-                    .map(|building| (building.building_id(), building.dynamic_info()))
+                    .map(|building| (building.building_id(), building.dynamic_info().clone()))
                     .collect(),
                 self.state
                     .building_state()
                     .all_stations()
                     .iter()
-                    .map(|building| (building.building_id(), building.dynamic_info()))
+                    .map(|building| (building.building_id(), building.dynamic_info().clone()))
                     .collect(),
                 self.state
                     .transport_infos()
                     .iter()
-                    .map(|transport| (transport.transport_id(), transport.dynamic_info()))
+                    .map(|transport| (transport.transport_id(), transport.dynamic_info().clone()))
                     .collect(),
             ),
         )

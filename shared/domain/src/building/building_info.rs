@@ -67,6 +67,11 @@ impl Debug for BuildingInfo {
     }
 }
 
+pub trait WithBuildingDynamicInfo {
+    fn dynamic_info(&self) -> &BuildingDynamicInfo;
+    fn dynamic_info_mut(&mut self) -> &mut BuildingDynamicInfo;
+}
+
 impl BuildingInfo {
     #[must_use]
     pub fn new(
@@ -86,11 +91,6 @@ impl BuildingInfo {
                 cargo: CargoMap::new(),
             },
         }
-    }
-
-    #[must_use]
-    pub fn dynamic_info_mut(&mut self) -> &mut BuildingDynamicInfo {
-        &mut self.dynamic_info
     }
 
     pub fn add_cargo(&mut self, cargo: &CargoMap) {
@@ -154,11 +154,6 @@ impl BuildingInfo {
     #[must_use]
     pub fn owner_id(&self) -> PlayerId {
         self.static_info.owner_id
-    }
-
-    #[must_use]
-    pub fn dynamic_info(&self) -> BuildingDynamicInfo {
-        self.dynamic_info.clone()
     }
 
     #[must_use]
@@ -279,5 +274,15 @@ impl BuildingInfo {
                 .cargo
                 .add(item.resource, item.amount * effective);
         }
+    }
+}
+
+impl WithBuildingDynamicInfo for BuildingInfo {
+    fn dynamic_info(&self) -> &BuildingDynamicInfo {
+        &self.dynamic_info
+    }
+
+    fn dynamic_info_mut(&mut self) -> &mut BuildingDynamicInfo {
+        &mut self.dynamic_info
     }
 }
