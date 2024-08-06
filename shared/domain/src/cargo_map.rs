@@ -7,6 +7,26 @@ use serde::{Deserialize, Serialize};
 use crate::cargo_amount::CargoAmount;
 use crate::resource_type::ResourceType;
 
+pub trait WithCargo {
+    fn cargo(&self) -> &CargoMap;
+    fn cargo_mut(&mut self) -> &mut CargoMap;
+}
+
+pub trait CargoOps {
+    fn add_cargo(&mut self, cargo: &CargoMap);
+    fn remove_cargo(&mut self, cargo: &CargoMap);
+}
+
+impl<T: WithCargo> CargoOps for T {
+    fn add_cargo(&mut self, cargo: &CargoMap) {
+        *self.cargo_mut() += cargo;
+    }
+
+    fn remove_cargo(&mut self, cargo: &CargoMap) {
+        *self.cargo_mut() -= cargo;
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct CargoMap {
     map: HashMap<ResourceType, CargoAmount>,
@@ -124,8 +144,24 @@ impl AddAssign<&Self> for CargoMap {
     }
 }
 
+impl AddAssign<&CargoMap> for &mut CargoMap {
+    fn add_assign(&mut self, rhs: &CargoMap) {
+        for (resource, amount) in &rhs.map {
+            self.add(*resource, *amount);
+        }
+    }
+}
+
 impl SubAssign<&Self> for CargoMap {
     fn sub_assign(&mut self, rhs: &Self) {
+        for (resource, amount) in &rhs.map {
+            self.add(*resource, -*amount);
+        }
+    }
+}
+
+impl SubAssign<&CargoMap> for &mut CargoMap {
+    fn sub_assign(&mut self, rhs: &CargoMap) {
         for (resource, amount) in &rhs.map {
             self.add(*resource, -*amount);
         }

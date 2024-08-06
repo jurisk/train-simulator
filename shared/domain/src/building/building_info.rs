@@ -9,7 +9,7 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::building::building_type::BuildingType;
 use crate::building::industry_type::IndustryType;
 use crate::building::WithRelativeTileCoverage;
-use crate::cargo_map::CargoMap;
+use crate::cargo_map::{CargoMap, CargoOps, WithCargo};
 use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
@@ -33,13 +33,13 @@ pub struct BuildingDynamicInfo {
     cargo: CargoMap,
 }
 
-impl BuildingDynamicInfo {
-    pub fn add_cargo(&mut self, cargo: &CargoMap) {
-        self.cargo += cargo;
+impl WithCargo for &mut BuildingDynamicInfo {
+    fn cargo(&self) -> &CargoMap {
+        &self.cargo
     }
 
-    pub fn remove_cargo(&mut self, cargo: &CargoMap) {
-        self.cargo -= cargo;
+    fn cargo_mut(&mut self) -> &mut CargoMap {
+        &mut self.cargo
     }
 }
 
