@@ -8,6 +8,7 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::building::building_type::BuildingType;
 use crate::building::industry_type::IndustryType;
+use crate::building::CoversTiles;
 use crate::cargo_map::CargoMap;
 use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;
@@ -196,9 +197,7 @@ impl BuildingInfo {
 
     #[must_use]
     pub fn covers_tiles(&self) -> TileCoverage {
-        self.building_type()
-            .relative_tiles_used()
-            .offset_by(self.reference_tile())
+        self.relative_tiles_used().offset_by(self.reference_tile())
     }
 
     pub fn advance_industry_building(&mut self, diff: GameTimeDiff) {
@@ -284,5 +283,11 @@ impl WithBuildingDynamicInfo for BuildingInfo {
 
     fn dynamic_info_mut(&mut self) -> &mut BuildingDynamicInfo {
         &mut self.dynamic_info
+    }
+}
+
+impl CoversTiles for BuildingInfo {
+    fn relative_tiles_used(&self) -> TileCoverage {
+        self.building_type().relative_tiles_used()
     }
 }

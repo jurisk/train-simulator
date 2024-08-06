@@ -33,9 +33,10 @@ impl BuildingType {
             BuildingType::Station(station_type) => station_type.track_types_at(relative_tile),
         }
     }
+}
 
-    #[must_use]
-    pub fn relative_tiles_used(self) -> TileCoverage {
+impl CoversTiles for BuildingType {
+    fn relative_tiles_used(&self) -> TileCoverage {
         match self {
             BuildingType::Industry(industry_type) => industry_type.relative_tiles_used(),
             BuildingType::Station(station_type) => station_type.relative_tiles_used(),

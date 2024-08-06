@@ -107,7 +107,7 @@ impl IndustryType {
 
 impl CoversTiles for IndustryType {
     #[must_use]
-    fn relative_tiles_used(self) -> TileCoverage {
+    fn relative_tiles_used(&self) -> TileCoverage {
         TileCoverage::Rectangular {
             north_west_inclusive: TileCoordsXZ::new(-1, -1),
             south_east_inclusive: TileCoordsXZ::new(1, 1),

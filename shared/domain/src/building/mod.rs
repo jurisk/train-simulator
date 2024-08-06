@@ -10,5 +10,5 @@ pub mod station_type;
 pub mod track_info;
 
 pub trait CoversTiles {
-    fn relative_tiles_used(self) -> TileCoverage;
+    fn relative_tiles_used(&self) -> TileCoverage;
 }

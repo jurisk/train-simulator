@@ -132,7 +132,7 @@ impl StationType {
 
 impl CoversTiles for StationType {
     #[must_use]
-    fn relative_tiles_used(self) -> TileCoverage {
+    fn relative_tiles_used(&self) -> TileCoverage {
         match self.orientation {
             StationOrientation::NorthToSouth => {
                 TileCoverage::Rectangular {

@@ -104,7 +104,7 @@ impl TrackType {
 
 impl CoversTiles for TrackType {
     #[must_use]
-    fn relative_tiles_used(self) -> TileCoverage {
+    fn relative_tiles_used(&self) -> TileCoverage {
         TileCoverage::Single(TileCoordsXZ::ZERO)
     }
 }
