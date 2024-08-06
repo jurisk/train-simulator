@@ -156,13 +156,7 @@ impl BuildingState {
         self.closest_station_link.clear();
         for building in &self.industry_buildings {
             if let BuildingType::Industry(_) = building.building_type() {
-                let closest_station = self.find_closest_station(building);
-
-                if let Some(closest_station) = closest_station {
-                    let distance = BuildingInfo::manhattan_distance_between_closest_tiles(
-                        building,
-                        closest_station,
-                    );
+                if let Some((closest_station, distance)) = self.find_closest_station(building) {
                     const CARGO_FORWARDING_DISTANCE_THRESHOLD: i32 = 1;
                     if distance <= CARGO_FORWARDING_DISTANCE_THRESHOLD {
                         self.closest_station_link
@@ -173,12 +167,16 @@ impl BuildingState {
         }
     }
 
-    fn find_closest_station(&self, building: &BuildingInfo) -> Option<&BuildingInfo> {
+    fn find_closest_station(&self, building: &BuildingInfo) -> Option<(&BuildingInfo, i32)> {
         self.stations_owned_by(building.owner_id())
             .into_iter()
-            .min_by_key(|station| {
-                BuildingInfo::manhattan_distance_between_closest_tiles(building, station)
+            .map(|station| {
+                (
+                    station,
+                    BuildingInfo::manhattan_distance_between_closest_tiles(building, station),
+                )
             })
+            .min_by_key(|(_, distance)| *distance)
     }
 
     fn stations_owned_by(&self, owner_id: PlayerId) -> Vec<&BuildingInfo> {
