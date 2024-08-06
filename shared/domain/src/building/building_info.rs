@@ -23,9 +23,7 @@ use crate::{BuildingId, PlayerId};
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub struct BuildingStaticInfo {
     owner_id:       PlayerId,
-    building_id:    BuildingId,
     reference_tile: TileCoordsXZ,
-    building_type:  BuildingType,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -51,8 +49,10 @@ impl Debug for BuildingDynamicInfo {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct BuildingInfo {
-    static_info:  BuildingStaticInfo,
-    dynamic_info: BuildingDynamicInfo,
+    building_id:   BuildingId,
+    building_type: BuildingType,
+    static_info:   BuildingStaticInfo,
+    dynamic_info:  BuildingDynamicInfo,
 }
 
 impl Debug for BuildingInfo {
@@ -62,7 +62,7 @@ impl Debug for BuildingInfo {
             "{:?} {:?} {:?} {:?}",
             self.building_id(),
             self.static_info.reference_tile,
-            self.static_info.building_type,
+            self.building_type,
             self.dynamic_info
         )
     }
@@ -92,11 +92,11 @@ impl BuildingInfo {
         building_type: BuildingType,
     ) -> Self {
         Self {
-            static_info:  BuildingStaticInfo {
+            building_id,
+            building_type,
+            static_info: BuildingStaticInfo {
                 owner_id,
-                building_id,
                 reference_tile,
-                building_type,
             },
             dynamic_info: BuildingDynamicInfo {
                 cargo: CargoMap::new(),
@@ -161,12 +161,12 @@ impl BuildingInfo {
 
     #[must_use]
     pub fn building_id(&self) -> BuildingId {
-        self.static_info.building_id
+        self.building_id
     }
 
     #[must_use]
     pub fn building_type(&self) -> BuildingType {
-        self.static_info.building_type
+        self.building_type
     }
 
     #[must_use]
