@@ -265,16 +265,4 @@ impl BuildingInfo {
                 .add(item.resource, item.amount * effective);
         }
     }
-
-    #[must_use]
-    pub fn manhattan_distance_between_closest_tiles(a: &BuildingInfo, b: &BuildingInfo) -> i32 {
-        let mut result = i32::MAX;
-        for a in a.covers_tiles().to_set() {
-            for b in b.covers_tiles().to_set() {
-                let distance = a.manhattan_distance(b);
-                result = result.min(distance);
-            }
-        }
-        result
-    }
 }

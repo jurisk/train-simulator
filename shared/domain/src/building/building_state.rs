@@ -9,6 +9,7 @@ use crate::building::track_info::TrackInfo;
 use crate::game_time::GameTimeDiff;
 use crate::map_level::MapLevel;
 use crate::resource_type::ResourceType;
+use crate::tile_coverage::TileCoverage;
 use crate::{
     BuildingId, BuildingType, IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackType,
 };
@@ -173,7 +174,10 @@ impl BuildingState {
             .map(|station| {
                 (
                     station,
-                    BuildingInfo::manhattan_distance_between_closest_tiles(building, station),
+                    TileCoverage::manhattan_distance_between_closest_tiles(
+                        &building.covers_tiles(),
+                        &station.covers_tiles(),
+                    ),
                 )
             })
             .min_by_key(|(_, distance)| *distance)
