@@ -9,7 +9,7 @@ use shared_util::direction_xz::DirectionXZ;
 use crate::building::building_type::BuildingType;
 use crate::building::industry_type::IndustryType;
 use crate::building::WithRelativeTileCoverage;
-use crate::cargo_map::{CargoMap, CargoOps, WithCargo};
+use crate::cargo_map::{CargoMap, WithCargo};
 use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
@@ -73,6 +73,16 @@ pub trait WithBuildingDynamicInfo {
     fn dynamic_info_mut(&mut self) -> &mut BuildingDynamicInfo;
 }
 
+impl<T: WithBuildingDynamicInfo> WithCargo for T {
+    fn cargo(&self) -> &CargoMap {
+        &self.dynamic_info().cargo
+    }
+
+    fn cargo_mut(&mut self) -> &mut CargoMap {
+        &mut self.dynamic_info_mut().cargo
+    }
+}
+
 impl BuildingInfo {
     #[must_use]
     pub fn new(
@@ -92,14 +102,6 @@ impl BuildingInfo {
                 cargo: CargoMap::new(),
             },
         }
-    }
-
-    pub fn add_cargo(&mut self, cargo: &CargoMap) {
-        self.dynamic_info_mut().add_cargo(cargo);
-    }
-
-    pub fn remove_cargo(&mut self, cargo: &CargoMap) {
-        self.dynamic_info_mut().remove_cargo(cargo);
     }
 
     pub fn update_dynamic_info(&mut self, dynamic_info: &BuildingDynamicInfo) {

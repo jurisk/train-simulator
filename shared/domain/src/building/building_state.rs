@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
 use crate::building::track_info::TrackInfo;
+use crate::cargo_map::CargoOps;
 use crate::game_time::GameTimeDiff;
 use crate::map_level::MapLevel;
 use crate::resource_type::ResourceType;
