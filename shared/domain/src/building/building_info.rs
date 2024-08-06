@@ -32,6 +32,16 @@ pub struct BuildingDynamicInfo {
     cargo: CargoMap,
 }
 
+impl BuildingDynamicInfo {
+    pub fn add_cargo(&mut self, cargo: &CargoMap) {
+        self.cargo += cargo;
+    }
+
+    pub fn remove_cargo(&mut self, cargo: &CargoMap) {
+        self.cargo -= cargo;
+    }
+}
+
 impl Debug for BuildingDynamicInfo {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self.cargo)
@@ -78,16 +88,21 @@ impl BuildingInfo {
         }
     }
 
+    #[must_use]
+    pub fn dynamic_info_mut(&mut self) -> &mut BuildingDynamicInfo {
+        &mut self.dynamic_info
+    }
+
     pub fn add_cargo(&mut self, cargo: &CargoMap) {
-        self.dynamic_info.cargo += cargo;
+        self.dynamic_info_mut().add_cargo(cargo);
     }
 
     pub fn remove_cargo(&mut self, cargo: &CargoMap) {
-        self.dynamic_info.cargo -= cargo;
+        self.dynamic_info_mut().remove_cargo(cargo);
     }
 
     pub fn update_dynamic_info(&mut self, dynamic_info: &BuildingDynamicInfo) {
-        self.dynamic_info = dynamic_info.clone();
+        *self.dynamic_info_mut() = dynamic_info.clone();
     }
 
     #[must_use]
