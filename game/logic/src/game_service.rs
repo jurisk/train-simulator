@@ -1,8 +1,8 @@
 #![allow(clippy::unnecessary_wraps, clippy::missing_errors_doc)]
 
-use shared_domain::building::building_info::{
-    IndustryBuildingInfo, StationInfo, WithBuildingDynamicInfo,
-};
+use shared_domain::building::building_info::WithBuildingDynamicInfo;
+use shared_domain::building::industry_building_info::IndustryBuildingInfo;
+use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;

@@ -1,9 +1,10 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, KeyCode, Res};
-use shared_domain::building::building_info::{IndustryBuildingInfo, StationInfo};
 use shared_domain::building::building_state::BuildingState;
 use shared_domain::building::building_type::BuildingType;
+use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
+use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::station_type::StationType;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::edge_xz::EdgeXZ;

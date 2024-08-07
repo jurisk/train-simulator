@@ -4,8 +4,10 @@ use bevy::prelude::{
 };
 use bevy::utils::default;
 use bevy_egui::EguiContexts;
-use shared_domain::building::building_info::{BuildingInfo, IndustryBuildingInfo, StationInfo};
+use shared_domain::building::building_info::BuildingInfo;
 use shared_domain::building::building_type::BuildingType;
+use shared_domain::building::industry_building_info::IndustryBuildingInfo;
+use shared_domain::building::station_info::StationInfo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::Colour;

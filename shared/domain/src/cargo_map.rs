@@ -9,6 +9,9 @@ use crate::resource_type::ResourceType;
 
 pub trait WithCargo {
     fn cargo(&self) -> &CargoMap;
+}
+
+pub trait WithCargoMut {
     fn cargo_mut(&mut self) -> &mut CargoMap;
 }
 
@@ -17,7 +20,7 @@ pub trait CargoOps {
     fn remove_cargo(&mut self, cargo: &CargoMap);
 }
 
-impl<T: WithCargo> CargoOps for T {
+impl<T: WithCargoMut> CargoOps for T {
     fn add_cargo(&mut self, cargo: &CargoMap) {
         *self.cargo_mut() += cargo;
     }

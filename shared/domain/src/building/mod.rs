@@ -5,7 +5,9 @@ use crate::tile_coverage::TileCoverage;
 pub mod building_info;
 pub mod building_state;
 pub mod building_type;
+pub mod industry_building_info;
 pub mod industry_type;
+pub mod station_info;
 pub mod station_type;
 pub mod track_info;
 

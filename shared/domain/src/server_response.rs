@@ -6,7 +6,9 @@ use fastrand::Rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::building::building_info::{BuildingDynamicInfo, IndustryBuildingInfo, StationInfo};
+use crate::building::building_info::BuildingDynamicInfo;
+use crate::building::industry_building_info::IndustryBuildingInfo;
+use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::game_state::GameState;
 use crate::game_time::GameTime;

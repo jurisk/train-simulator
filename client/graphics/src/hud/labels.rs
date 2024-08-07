@@ -1,9 +1,9 @@
 use bevy::prelude::{Camera, GlobalTransform, Query, Res, Vec3};
 use bevy_egui::EguiContexts;
 use egui::{Align2, Context, Id, Pos2};
-use shared_domain::building::building_info::{
-    IndustryBuildingInfo, StationInfo, WithBuildingDynamicInfo,
-};
+use shared_domain::building::building_info::WithBuildingDynamicInfo;
+use shared_domain::building::industry_building_info::IndustryBuildingInfo;
+use shared_domain::building::station_info::StationInfo;
 use shared_domain::game_state::GameState;
 
 use crate::game::buildings::building::center_vec3;
