@@ -10,7 +10,7 @@ use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::map_level::MapLevel;
 use shared_domain::server_response::Colour;
 use shared_domain::tile_coverage::TileCoverage;
-use shared_domain::BuildingId;
+use shared_domain::{IndustryBuildingId, StationId};
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
@@ -48,7 +48,7 @@ pub(crate) fn build_building_when_mouse_released(
                     BuildingType::Station(_) => {
                         GameCommand::BuildStations(vec![StationInfo::new(
                             player_id,
-                            BuildingId::random(),
+                            StationId::random(),
                             *hovered_tile,
                             building_type,
                         )])
@@ -56,7 +56,7 @@ pub(crate) fn build_building_when_mouse_released(
                     BuildingType::Industry(_) => {
                         GameCommand::BuildIndustryBuildings(vec![IndustryBuildingInfo::new(
                             player_id,
-                            BuildingId::random(),
+                            IndustryBuildingId::random(),
                             *hovered_tile,
                             building_type,
                         )])

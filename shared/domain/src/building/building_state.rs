@@ -13,9 +13,7 @@ use crate::game_time::GameTimeDiff;
 use crate::map_level::MapLevel;
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
-use crate::{
-    BuildingId, BuildingType, IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackType,
-};
+use crate::{BuildingType, IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackType};
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum CanBuildResponse {
@@ -130,7 +128,7 @@ impl BuildingState {
     #[must_use]
     pub fn resource_types_accepted_by_station(
         &self,
-        station_id: BuildingId,
+        station_id: StationId,
     ) -> HashSet<ResourceType> {
         // Note - we are not checking that the building actually is a station here
         let mut results = HashSet::new();
@@ -187,7 +185,7 @@ impl BuildingState {
                     const CARGO_FORWARDING_DISTANCE_THRESHOLD: i32 = 1;
                     if distance <= CARGO_FORWARDING_DISTANCE_THRESHOLD {
                         self.closest_station_link
-                            .insert(building.building_id(), closest_station.building_id());
+                            .insert(building.id(), closest_station.id());
                     }
                 }
             }
@@ -421,7 +419,7 @@ impl BuildingState {
     pub fn find_station(&self, station_id: StationId) -> Option<&StationInfo> {
         self.stations
             .iter()
-            .find(|building| building.building_id() == station_id)
+            .find(|building| building.id() == station_id)
     }
 
     #[must_use]
@@ -431,7 +429,7 @@ impl BuildingState {
     ) -> Option<&IndustryBuildingInfo> {
         self.industry_buildings
             .iter()
-            .find(|building| building.building_id() == industry_building_id)
+            .find(|building| building.id() == industry_building_id)
     }
 
     #[must_use]
@@ -441,14 +439,14 @@ impl BuildingState {
     ) -> Option<&mut IndustryBuildingInfo> {
         self.industry_buildings
             .iter_mut()
-            .find(|industry_building| industry_building.building_id() == industry_building_id)
+            .find(|industry_building| industry_building.id() == industry_building_id)
     }
 
     #[must_use]
     pub(crate) fn find_station_mut(&mut self, station_id: StationId) -> Option<&mut StationInfo> {
         self.stations
             .iter_mut()
-            .find(|building| building.building_id() == station_id)
+            .find(|building| building.id() == station_id)
     }
 
     pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff) {

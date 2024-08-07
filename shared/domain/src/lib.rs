@@ -79,28 +79,50 @@ impl Display for PlayerName {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
-pub struct PlayerId(Uuid);
+macro_rules! newtype_uuid {
+    ($name:ident, $prefix:expr) => {
+        #[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
+        pub struct $name(Uuid);
 
-impl Debug for PlayerId {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let uuid_str = self.0.to_string();
-        let truncated_uuid = &uuid_str[.. 8];
-        write!(f, "P-{truncated_uuid}")
-    }
+        impl $name {
+            #[must_use]
+            pub fn new(uuid: Uuid) -> Self {
+                Self(uuid)
+            }
+
+            #[must_use]
+            pub fn random() -> Self {
+                Self(Uuid::new_v4())
+            }
+        }
+
+        impl Debug for $name {
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                let uuid_str = self.0.to_string();
+                let truncated_uuid = &uuid_str[.. 8];
+                write!(f, "{}-{}", $prefix, truncated_uuid)
+            }
+        }
+
+        impl FromStr for $name {
+            type Err = uuid::Error;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                Uuid::from_str(s).map(Self)
+            }
+        }
+
+        impl Display for $name {
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{}", self.0)
+            }
+        }
+    };
 }
 
+newtype_uuid!(PlayerId, "P");
+
 impl PlayerId {
-    #[must_use]
-    pub fn new(uuid: Uuid) -> Self {
-        Self(uuid)
-    }
-
-    #[must_use]
-    pub fn random() -> Self {
-        Self(Uuid::new_v4())
-    }
-
     #[must_use]
     pub fn hash_to_u64(self) -> u64 {
         let (a, b) = self.0.as_u64_pair();
@@ -108,94 +130,8 @@ impl PlayerId {
     }
 }
 
-impl FromStr for PlayerId {
-    type Err = uuid::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Uuid::from_str(s).map(Self)
-    }
-}
-
-impl Display for PlayerId {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-#[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
-pub struct GameId(Uuid);
-
-impl Debug for GameId {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let uuid_str = self.0.to_string();
-        let truncated_uuid = &uuid_str[.. 8];
-        write!(f, "G-{truncated_uuid}")
-    }
-}
-
-impl GameId {
-    #[must_use]
-    pub fn random() -> Self {
-        Self(Uuid::new_v4())
-    }
-}
-
-#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Hash)]
-pub struct TrackId(Uuid);
-
-impl TrackId {
-    #[must_use]
-    pub fn random() -> Self {
-        Self(Uuid::new_v4())
-    }
-}
-
-impl Debug for TrackId {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let uuid_str = self.0.to_string();
-        let truncated_uuid = &uuid_str[.. 8];
-        write!(f, "T-{truncated_uuid}")
-    }
-}
-
-#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Hash)]
-pub struct BuildingId(Uuid);
-
-// TODO HIGH
-pub type StationId = BuildingId;
-
-// TODO HIGH
-pub type IndustryBuildingId = BuildingId;
-
-impl BuildingId {
-    #[must_use]
-    pub fn random() -> Self {
-        Self(Uuid::new_v4())
-    }
-}
-
-impl Debug for BuildingId {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let uuid_str = self.0.to_string();
-        let truncated_uuid = &uuid_str[.. 8];
-        write!(f, "B-{truncated_uuid}")
-    }
-}
-
-#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
-pub struct TransportId(Uuid);
-
-impl Debug for TransportId {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let uuid_str = self.0.to_string();
-        let truncated_uuid = &uuid_str[.. 8];
-        write!(f, "T-{truncated_uuid}")
-    }
-}
-
-impl TransportId {
-    #[must_use]
-    pub fn random() -> Self {
-        Self(Uuid::new_v4())
-    }
-}
+newtype_uuid!(GameId, "G");
+newtype_uuid!(TrackId, "T");
+newtype_uuid!(StationId, "S");
+newtype_uuid!(IndustryBuildingId, "IB");
+newtype_uuid!(TransportId, "T");

@@ -63,10 +63,10 @@ pub(crate) fn select_station_to_add_to_movement_orders(
 
                         if let Some(station) = game_state.building_state().station_at(*hovered_tile)
                         {
-                            let station_id = station.building_id();
+                            let station_id = station.id();
 
                             let movement_order = MovementOrder {
-                                go_to:  MovementOrderLocation::StationId(station_id),
+                                go_to:  MovementOrderLocation::Station(station_id),
                                 action: MovementOrderAction::UnloadAndLoad(
                                     UnloadAction::Unload,
                                     LoadAction::Load,

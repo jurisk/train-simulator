@@ -82,7 +82,7 @@ fn advance_internal(
         );
 
         if at_location {
-            let MovementOrderLocation::StationId(station_id) = current_orders.go_to;
+            let MovementOrderLocation::Station(station_id) = current_orders.go_to;
             let resources_accepted_for_unloading =
                 building_state.resource_types_accepted_by_station(station_id);
             if let Some(station) = building_state.find_station_mut(station_id) {

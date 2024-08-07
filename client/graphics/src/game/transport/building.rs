@@ -39,8 +39,7 @@ fn build_transport_command(
     let location = building
         .transport_location_at_station(tile, *direction)
         .ok_or(format!("No transport location at tile {tile:?}"))?;
-    let movement_orders =
-        MovementOrders::one(MovementOrder::stop_at_station(building.building_id()));
+    let movement_orders = MovementOrders::one(MovementOrder::stop_at_station(building.id()));
     let transport_info = TransportInfo::new(
         TransportId::random(),
         *player_id,

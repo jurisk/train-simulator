@@ -18,7 +18,7 @@ use crate::transport::progress_within_tile::ProgressWithinTile;
 use crate::transport::tile_track::TileTrack;
 use crate::transport::track_type::TrackType;
 use crate::transport::transport_location::TransportLocation;
-use crate::{BuildingId, IndustryBuildingId, PlayerId, StationId};
+use crate::{IndustryBuildingId, PlayerId, StationId};
 
 pub trait BuildingInfo {
     fn owner_id(&self) -> PlayerId;
@@ -54,7 +54,7 @@ impl Debug for BuildingDynamicInfo {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct IndustryBuildingInfo {
-    building_id:   IndustryBuildingId,
+    id:            IndustryBuildingId,
     building_type: BuildingType,
     static_info:   BuildingStaticInfo,
     dynamic_info:  BuildingDynamicInfo,
@@ -62,7 +62,7 @@ pub struct IndustryBuildingInfo {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct StationInfo {
-    building_id:   StationId,
+    id:            StationId,
     building_type: BuildingType,
     static_info:   BuildingStaticInfo,
     dynamic_info:  BuildingDynamicInfo,
@@ -73,7 +73,7 @@ impl Debug for IndustryBuildingInfo {
         write!(
             f,
             "{:?} {:?} {:?} {:?}",
-            self.building_id(),
+            self.id(),
             self.static_info.reference_tile,
             self.building_type,
             self.dynamic_info
@@ -86,7 +86,7 @@ impl Debug for StationInfo {
         write!(
             f,
             "{:?} {:?} {:?} {:?}",
-            self.building_id(),
+            self.id(),
             self.static_info.reference_tile,
             self.building_type,
             self.dynamic_info
@@ -113,12 +113,12 @@ impl IndustryBuildingInfo {
     #[must_use]
     pub fn new(
         owner_id: PlayerId,
-        building_id: IndustryBuildingId,
+        id: IndustryBuildingId,
         reference_tile: TileCoordsXZ,
         building_type: BuildingType,
     ) -> Self {
         Self {
-            building_id,
+            id,
             building_type,
             static_info: BuildingStaticInfo {
                 owner_id,
@@ -135,8 +135,8 @@ impl IndustryBuildingInfo {
     }
 
     #[must_use]
-    pub fn building_id(&self) -> BuildingId {
-        self.building_id
+    pub fn id(&self) -> IndustryBuildingId {
+        self.id
     }
 
     #[must_use]
@@ -219,12 +219,12 @@ impl StationInfo {
     #[must_use]
     pub fn new(
         owner_id: PlayerId,
-        building_id: StationId,
+        id: StationId,
         reference_tile: TileCoordsXZ,
         building_type: BuildingType,
     ) -> Self {
         Self {
-            building_id,
+            id,
             building_type,
             static_info: BuildingStaticInfo {
                 owner_id,
@@ -286,8 +286,8 @@ impl StationInfo {
     }
 
     #[must_use]
-    pub fn building_id(&self) -> BuildingId {
-        self.building_id
+    pub fn id(&self) -> StationId {
+        self.id
     }
 
     #[must_use]

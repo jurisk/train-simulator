@@ -129,9 +129,10 @@ impl GameService {
             })
             .map_err(|()| {
                 GameError::CannotBuildBuildings(
+                    vec![],
                     industry_buildings
                         .iter()
-                        .map(IndustryBuildingInfo::building_id)
+                        .map(IndustryBuildingInfo::id)
                         .collect(),
                 )
             })
@@ -152,7 +153,8 @@ impl GameService {
             })
             .map_err(|()| {
                 GameError::CannotBuildBuildings(
-                    stations.iter().map(StationInfo::building_id).collect(),
+                    stations.iter().map(StationInfo::id).collect(),
+                    vec![],
                 )
             })
     }
@@ -282,13 +284,13 @@ impl GameService {
                     .building_state()
                     .all_industry_buildings()
                     .iter()
-                    .map(|building| (building.building_id(), building.dynamic_info().clone()))
+                    .map(|building| (building.id(), building.dynamic_info().clone()))
                     .collect(),
                 self.state
                     .building_state()
                     .all_stations()
                     .iter()
-                    .map(|building| (building.building_id(), building.dynamic_info().clone()))
+                    .map(|building| (building.id(), building.dynamic_info().clone()))
                     .collect(),
                 self.state
                     .transport_infos()

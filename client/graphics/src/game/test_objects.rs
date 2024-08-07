@@ -14,7 +14,7 @@ use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::track_planner::plan_tracks;
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
-use shared_domain::{BuildingId, PlayerId, TransportId};
+use shared_domain::{IndustryBuildingId, PlayerId, StationId, TransportId};
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::ClientMessageEvent;
@@ -70,14 +70,14 @@ fn build_test_buildings(player_id: PlayerId) -> Vec<GameCommand> {
     let stations = stations
         .into_iter()
         .map(|(tile, building_type)| {
-            StationInfo::new(player_id, BuildingId::random(), tile, building_type)
+            StationInfo::new(player_id, StationId::random(), tile, building_type)
         })
         .collect();
 
     let industry_buildings = industry_buildings
         .into_iter()
         .map(|(tile, building_type)| {
-            IndustryBuildingInfo::new(player_id, BuildingId::random(), tile, building_type)
+            IndustryBuildingInfo::new(player_id, IndustryBuildingId::random(), tile, building_type)
         })
         .collect();
 
@@ -127,8 +127,8 @@ fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCom
     vec![GameCommand::BuildTracks(tracks)]
 }
 
-fn find_station_id(building_state: &BuildingState, tile: TileCoordsXZ) -> BuildingId {
-    find_station(building_state, tile).building_id()
+fn find_station_id(building_state: &BuildingState, tile: TileCoordsXZ) -> StationId {
+    find_station(building_state, tile).id()
 }
 
 #[allow(clippy::unwrap_used)]

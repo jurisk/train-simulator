@@ -12,8 +12,7 @@ use crate::game_state::GameState;
 use crate::game_time::GameTime;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::{
-    BuildingId, ClientId, GameId, IndustryBuildingId, PlayerId, PlayerName, StationId, TrackId,
-    TransportId,
+    ClientId, GameId, IndustryBuildingId, PlayerId, PlayerName, StationId, TrackId, TransportId,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -97,7 +96,7 @@ pub enum GameResponse {
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub enum GameError {
     GameNotFound,
-    CannotBuildBuildings(Vec<BuildingId>),
+    CannotBuildBuildings(Vec<StationId>, Vec<IndustryBuildingId>),
     CannotBuildTracks(Vec<TrackId>),
     CannotPurchase(TransportId),
     UnspecifiedError,

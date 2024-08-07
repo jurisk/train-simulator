@@ -7,17 +7,17 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use shared_util::non_empty_circular_list::{NonEmptyCircularList, NonEmptyCircularListIterator};
 
-use crate::BuildingId;
+use crate::StationId;
 
 #[derive(Serialize, Deserialize, PartialEq, Copy, Clone)]
 pub enum MovementOrderLocation {
-    StationId(BuildingId),
+    Station(StationId),
 }
 
 impl Debug for MovementOrderLocation {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::StationId(building_id) => write!(f, "{building_id:?}"),
+            Self::Station(station_id) => write!(f, "{station_id:?}"),
         }
     }
 }
@@ -81,9 +81,9 @@ impl Debug for MovementOrder {
 
 impl MovementOrder {
     #[must_use]
-    pub fn stop_at_station(building_id: BuildingId) -> Self {
+    pub fn stop_at_station(station_id: StationId) -> Self {
         Self {
-            go_to:  MovementOrderLocation::StationId(building_id),
+            go_to:  MovementOrderLocation::Station(station_id),
             action: MovementOrderAction::UnloadAndLoad(UnloadAction::Unload, LoadAction::Load),
         }
     }

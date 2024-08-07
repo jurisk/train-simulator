@@ -21,7 +21,7 @@ fn industry_building_label(
         building.building_type(),
         building.dynamic_info()
     );
-    let id = format!("{:?}", building.building_id());
+    let id = format!("{:?}", building.id());
     let building_position_3d = center_vec3(building, game_state.map_level());
     draw_label(
         building_position_3d,
@@ -45,7 +45,7 @@ fn station_label(
         building.building_type(),
         building.dynamic_info()
     );
-    let id = format!("{:?}", building.building_id());
+    let id = format!("{:?}", building.id());
     let building_position_3d = center_vec3(building, game_state.map_level());
     draw_label(
         building_position_3d,
