@@ -74,7 +74,8 @@ fn build_test_buildings(player_id: PlayerId) -> Vec<GameCommand> {
 
 #[allow(clippy::unnecessary_wraps)]
 fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCommand> {
-    // Later: Could automatically generate these connections from the station exits
+    // Later:   Since we build this all at once, it is not really "reusing" the tracks very well.
+    //          We should build them iteratively.
 
     let building_state = game_state.building_state();
     let mut connections = vec![];

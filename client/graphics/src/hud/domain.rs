@@ -7,6 +7,7 @@ use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::transport::transport_type::TransportType;
 use shared_domain::TransportId;
 
+// Later: Structure this more logically, it's too flattened
 #[derive(Resource, Eq, PartialEq, Debug, Clone)]
 pub enum SelectedMode {
     Info,
@@ -15,7 +16,9 @@ pub enum SelectedMode {
     Industry(IndustryType),
     Military,
     Transport(TransportType),
-    Demolish,
+    DemolishStation,
+    DemolishIndustry,
+    DemolishTracks,
     // Later: This feels like a hack, this is very much not like the others
     SelectStationToAppendToTransportMovementInstructions(TransportId),
 }

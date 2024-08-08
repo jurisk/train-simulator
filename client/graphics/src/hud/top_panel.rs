@@ -140,7 +140,6 @@ fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 }
 
 fn trains_menu(selected_mode_res: &mut ResMut<SelectedMode>, ui: &mut Ui) {
-    // Later: More types of trains
     menu::menu_button(ui, "🚆 Trains", |ui| {
         set_font_size(ui, 24.0);
 
@@ -162,17 +161,27 @@ fn trains_menu(selected_mode_res: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
+// TODO HIGH: Actually do the demolishing!
 fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
-    if ui
-        .add(
-            // TODO HIGH: Implement - separate for tracks vs buildings
-            egui::Button::new("❎ Demolish")
-                .selected(matches!(*selected_mode.as_ref(), SelectedMode::Demolish))
-                .min_size(egui::vec2(MIN_X, MIN_Y)),
-        )
-        .clicked()
-    {
-        *selected_mode.as_mut() = SelectedMode::Demolish;
-        ui.close_menu();
-    }
+    menu::menu_button(ui, "❎ Demolish", |ui| {
+        set_font_size(ui, 24.0);
+
+        for (name, mode) in [
+            ("🚉 Stations", SelectedMode::DemolishStation),
+            ("⚒ Industry", SelectedMode::DemolishIndustry),
+            ("🚆 Tracks", SelectedMode::DemolishTracks),
+        ] {
+            if ui
+                .add(
+                    egui::Button::new(name)
+                        .selected(*selected_mode.as_ref() == mode)
+                        .min_size(egui::vec2(MIN_X, MIN_Y)),
+                )
+                .clicked()
+            {
+                *selected_mode.as_mut() = mode;
+                ui.close_menu();
+            }
+        }
+    });
 }
