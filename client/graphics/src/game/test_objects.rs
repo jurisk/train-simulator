@@ -1,7 +1,6 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, KeyCode, Res};
 use shared_domain::building::building_state::BuildingState;
-use shared_domain::building::building_type::BuildingType;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
@@ -38,34 +37,19 @@ const ALL: [TileCoordsXZ; 5] = [
 #[allow(clippy::vec_init_then_push)]
 fn build_test_buildings(player_id: PlayerId) -> Vec<GameCommand> {
     let stations = [
-        (IRON_MINE_A, BuildingType::Station(StationType::all()[0])),
-        (IRON_MINE_B, BuildingType::Station(StationType::all()[0])),
-        (COAL_MINE_A, BuildingType::Station(StationType::all()[1])),
-        (IRON_WORKS_A, BuildingType::Station(StationType::all()[1])),
-        (WAREHOUSE_A, BuildingType::Station(StationType::all()[1])),
+        (IRON_MINE_A, StationType::all()[0]),
+        (IRON_MINE_B, StationType::all()[0]),
+        (COAL_MINE_A, StationType::all()[1]),
+        (IRON_WORKS_A, StationType::all()[1]),
+        (WAREHOUSE_A, StationType::all()[1]),
     ];
 
     let industry_buildings = [
-        (
-            TileCoordsXZ::from_usizes(40, 31),
-            BuildingType::Industry(IndustryType::IronMine),
-        ),
-        (
-            TileCoordsXZ::from_usizes(55, 36),
-            BuildingType::Industry(IndustryType::IronMine),
-        ),
-        (
-            TileCoordsXZ::from_usizes(7, 39),
-            BuildingType::Industry(IndustryType::CoalMine),
-        ),
-        (
-            TileCoordsXZ::from_usizes(12, 82),
-            BuildingType::Industry(IndustryType::IronWorks),
-        ),
-        (
-            TileCoordsXZ::from_usizes(28, 94),
-            BuildingType::Industry(IndustryType::Warehouse),
-        ),
+        (TileCoordsXZ::from_usizes(40, 31), IndustryType::IronMine),
+        (TileCoordsXZ::from_usizes(55, 36), IndustryType::IronMine),
+        (TileCoordsXZ::from_usizes(7, 39), IndustryType::CoalMine),
+        (TileCoordsXZ::from_usizes(12, 82), IndustryType::IronWorks),
+        (TileCoordsXZ::from_usizes(28, 94), IndustryType::Warehouse),
     ];
 
     let stations = stations

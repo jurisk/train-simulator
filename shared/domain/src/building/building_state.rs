@@ -13,7 +13,7 @@ use crate::game_time::GameTimeDiff;
 use crate::map_level::MapLevel;
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
-use crate::{BuildingType, IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackType};
+use crate::{IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackType};
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum CanBuildResponse {
@@ -135,10 +135,8 @@ impl BuildingState {
         for (industry_building_id, linked_station_id) in self.closest_station_link.clone() {
             if station_id == linked_station_id {
                 if let Some(building) = self.find_industry_building(industry_building_id) {
-                    if let BuildingType::Industry(industry_type) = building.building_type() {
-                        for resource_type in industry_type.resources_accepted() {
-                            results.insert(resource_type);
-                        }
+                    for resource_type in building.industry_type().resources_accepted() {
+                        results.insert(resource_type);
                     }
                 }
             }
@@ -180,13 +178,11 @@ impl BuildingState {
     fn recalculate_cargo_forwarding_links(&mut self) {
         self.closest_station_link.clear();
         for building in &self.industry_buildings {
-            if let BuildingType::Industry(_) = building.building_type() {
-                if let Some((closest_station, distance)) = self.find_closest_station(building) {
-                    const CARGO_FORWARDING_DISTANCE_THRESHOLD: i32 = 1;
-                    if distance <= CARGO_FORWARDING_DISTANCE_THRESHOLD {
-                        self.closest_station_link
-                            .insert(building.id(), closest_station.id());
-                    }
+            if let Some((closest_station, distance)) = self.find_closest_station(building) {
+                const CARGO_FORWARDING_DISTANCE_THRESHOLD: i32 = 1;
+                if distance <= CARGO_FORWARDING_DISTANCE_THRESHOLD {
+                    self.closest_station_link
+                        .insert(building.id(), closest_station.id());
                 }
             }
         }
@@ -210,10 +206,7 @@ impl BuildingState {
     fn stations_owned_by(&self, owner_id: PlayerId) -> Vec<&StationInfo> {
         self.stations
             .iter()
-            .filter(|building| {
-                building.owner_id() == owner_id
-                    && matches!(building.building_type(), BuildingType::Station(_))
-            })
+            .filter(|building| building.owner_id() == owner_id)
             .collect()
     }
 

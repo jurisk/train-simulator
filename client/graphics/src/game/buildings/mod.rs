@@ -12,7 +12,6 @@ use bevy::prelude::{
 };
 use bevy::state::condition::in_state;
 use shared_domain::building::building_info::BuildingInfo;
-use shared_domain::building::building_type::BuildingType;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::track_info::TrackInfo;
@@ -155,25 +154,17 @@ fn create_industry_building(
     players_info: &HashMap<PlayerId, PlayerInfo>,
 ) {
     let colour = player_colour(players_info, building_info.owner_id());
-    match &building_info.building_type() {
-        BuildingType::Industry(industry_type) => {
-            let mesh = game_assets
-                .building_assets
-                .industry_mesh_for(*industry_type);
-            create_building_entity(
-                building_info,
-                format!("{industry_type:?}"),
-                colour,
-                mesh,
-                materials,
-                commands,
-                map_level,
-            );
-        },
-        BuildingType::Station(_) => {
-            unreachable!("Station building type in industry buildings");
-        },
-    }
+    let industry_type = building_info.industry_type();
+    let mesh = game_assets.building_assets.industry_mesh_for(industry_type);
+    create_building_entity(
+        building_info,
+        format!("{industry_type:?}"),
+        colour,
+        mesh,
+        materials,
+        commands,
+        map_level,
+    );
 }
 
 #[allow(clippy::similar_names, clippy::match_same_arms)]
@@ -201,21 +192,15 @@ fn create_station(
         );
     }
 
-    match &building_info.building_type() {
-        BuildingType::Industry(_) => {
-            unreachable!("Industry building type in station buildings");
-        },
-        BuildingType::Station(station_type) => {
-            let mesh = game_assets.building_assets.station_mesh_for(*station_type);
-            create_building_entity(
-                building_info,
-                format!("{station_type:?}"),
-                STATION_BASE_COLOUR,
-                mesh,
-                materials,
-                commands,
-                map_level,
-            );
-        },
-    }
+    let station_type = building_info.station_type();
+    let mesh = game_assets.building_assets.station_mesh_for(station_type);
+    create_building_entity(
+        building_info,
+        format!("{station_type:?}"),
+        STATION_BASE_COLOUR,
+        mesh,
+        materials,
+        commands,
+        map_level,
+    );
 }

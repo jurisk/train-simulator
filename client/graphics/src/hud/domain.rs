@@ -1,5 +1,4 @@
 use bevy::prelude::Resource;
-use shared_domain::building::building_type::BuildingType;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_type::StationType;
 use shared_domain::building::WithRelativeTileCoverage;
@@ -43,25 +42,13 @@ impl SelectedMode {
     }
 
     #[must_use]
-    #[allow(clippy::match_same_arms)]
-    pub fn corresponding_building(&self) -> Option<BuildingType> {
-        match self {
-            SelectedMode::Tracks => None,
-            SelectedMode::Stations(station_type) => Some(BuildingType::Station(*station_type)),
-            SelectedMode::Industry(industry_type) => Some(BuildingType::Industry(*industry_type)),
-            SelectedMode::Military => None,
-            SelectedMode::Transport(_) => None,
-            SelectedMode::Info => None,
-            SelectedMode::Demolish => None,
-            SelectedMode::SelectStationToAppendToTransportMovementInstructions(_) => None,
-        }
-    }
-
-    #[must_use]
     pub fn building_tiles(&self, reference_tile: TileCoordsXZ) -> TileCoverage {
-        match self.corresponding_building() {
-            None => TileCoverage::Empty,
-            Some(building) => building.relative_tiles_used().offset_by(reference_tile),
-        }
+        let relative_tiles = match self {
+            SelectedMode::Stations(station_type) => Some(station_type.relative_tiles_used()),
+            SelectedMode::Industry(industry_type) => Some(industry_type.relative_tiles_used()),
+            _ => None,
+        };
+
+        relative_tiles.map_or(TileCoverage::Empty, |tiles| tiles.offset_by(reference_tile))
     }
 }

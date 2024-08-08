@@ -5,7 +5,6 @@ use bevy::prelude::{
 use bevy::utils::default;
 use bevy_egui::EguiContexts;
 use shared_domain::building::building_info::BuildingInfo;
-use shared_domain::building::building_type::BuildingType;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
@@ -35,36 +34,40 @@ pub(crate) fn build_building_when_mouse_released(
 
     if mouse_buttons.just_released(MouseButton::Left) {
         let selected_mode = selected_mode_resource.as_ref();
-        if let Some(building_type) = selected_mode.corresponding_building() {
-            let HoveredTile(hovered_tile) = hovered_tile.as_ref();
-            if let Some(hovered_tile) = hovered_tile {
-                // Later: Check we can build this?
+        let HoveredTile(hovered_tile) = hovered_tile.as_ref();
+        if let Some(hovered_tile) = hovered_tile {
+            // Later: Check we can build this?
 
-                let GameStateResource(game_state) = game_state_resource.as_ref();
-                let PlayerIdResource(player_id) = *player_id_resource;
+            let GameStateResource(game_state) = game_state_resource.as_ref();
+            let PlayerIdResource(player_id) = *player_id_resource;
 
-                let game_id = game_state.game_id();
+            let game_id = game_state.game_id();
 
-                // Later: Check we can build this? And that check is different for stations, as they can be built on top of fully straight tracks with no branching.
-                let command = match building_type {
-                    BuildingType::Station(_) => {
-                        GameCommand::BuildStations(vec![StationInfo::new(
-                            player_id,
-                            StationId::random(),
-                            *hovered_tile,
-                            building_type,
-                        )])
-                    },
-                    BuildingType::Industry(_) => {
-                        GameCommand::BuildIndustryBuildings(vec![IndustryBuildingInfo::new(
+            let command = match selected_mode {
+                SelectedMode::Stations(station_type) => {
+                    Some(GameCommand::BuildStations(vec![StationInfo::new(
+                        player_id,
+                        StationId::random(),
+                        *hovered_tile,
+                        *station_type,
+                    )]))
+                },
+                SelectedMode::Industry(industry_type) => {
+                    Some(GameCommand::BuildIndustryBuildings(vec![
+                        IndustryBuildingInfo::new(
                             player_id,
                             IndustryBuildingId::random(),
                             *hovered_tile,
-                            building_type,
-                        )])
-                    },
-                };
+                            *industry_type,
+                        ),
+                    ]))
+                },
+                _ => None,
+            };
 
+            // Later: Check we can build this? And that check is different for stations, as they can be built on top of fully straight tracks with no branching.
+
+            if let Some(command) = command {
                 client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                     game_id, command,
                 )));

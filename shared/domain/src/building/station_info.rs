@@ -8,7 +8,7 @@ use crate::building::building_info::{
     BuildingDynamicInfo, BuildingInfo, BuildingStaticInfo, WithBuildingDynamicInfo,
     WithBuildingDynamicInfoMut,
 };
-use crate::building::building_type::BuildingType;
+use crate::building::station_type::StationType;
 use crate::building::WithRelativeTileCoverage;
 use crate::cargo_map::{CargoMap, WithCargo};
 use crate::tile_coords_xz::TileCoordsXZ;
@@ -21,10 +21,10 @@ use crate::{PlayerId, StationId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct StationInfo {
-    id:            StationId,
-    building_type: BuildingType,
-    static_info:   BuildingStaticInfo,
-    dynamic_info:  BuildingDynamicInfo,
+    id:           StationId,
+    station_type: StationType,
+    static_info:  BuildingStaticInfo,
+    dynamic_info: BuildingDynamicInfo,
 }
 
 impl Debug for StationInfo {
@@ -34,7 +34,7 @@ impl Debug for StationInfo {
             "{:?} {:?} {:?} {:?}",
             self.id(),
             self.static_info.reference_tile(),
-            self.building_type,
+            self.station_type,
             self.dynamic_info
         )
     }
@@ -46,11 +46,11 @@ impl StationInfo {
         owner_id: PlayerId,
         id: StationId,
         reference_tile: TileCoordsXZ,
-        building_type: BuildingType,
+        station_type: StationType,
     ) -> Self {
         Self {
             id,
-            building_type,
+            station_type,
             static_info: BuildingStaticInfo::new(owner_id, reference_tile),
             dynamic_info: BuildingDynamicInfo::new(CargoMap::new()),
         }
@@ -62,15 +62,11 @@ impl StationInfo {
 
     #[must_use]
     pub fn station_exit_tile_tracks(&self) -> Vec<TileTrack> {
-        if let BuildingType::Station(station_type) = self.building_type() {
-            station_type
-                .exit_tile_tracks(self.reference_tile())
-                .into_iter()
-                .map(|(_, track)| track)
-                .collect()
-        } else {
-            vec![]
-        }
+        self.station_type
+            .exit_tile_tracks(self.reference_tile())
+            .into_iter()
+            .map(|(_, track)| track)
+            .collect()
     }
 
     #[must_use]
@@ -80,17 +76,13 @@ impl StationInfo {
         tile: TileCoordsXZ,
         direction: DirectionXZ,
     ) -> Option<TransportLocation> {
-        let station_type = match self.building_type() {
-            BuildingType::Industry(_) => None,
-            BuildingType::Station(station_type) => Some(station_type),
-        }?;
         let exit_track = self
             .station_exit_tile_tracks()
             .into_iter()
             .find(|track| track.tile_coords_xz == tile && track.pointing_in == direction)?;
         let diff: CoordsXZ = exit_track.pointing_in.reverse().into();
         let mut tile_path = vec![];
-        for i in 0 .. station_type.length_in_tiles {
+        for i in 0 .. self.station_type.length_in_tiles {
             let delta: CoordsXZ = diff * (i as i32);
             let delta_t: TileCoordsXZ = delta.into();
             let tile_coords_xz = exit_track.tile_coords_xz + delta_t;
@@ -111,8 +103,8 @@ impl StationInfo {
     }
 
     #[must_use]
-    pub fn building_type(&self) -> BuildingType {
-        self.building_type
+    pub fn station_type(&self) -> StationType {
+        self.station_type
     }
 
     #[must_use]
@@ -123,8 +115,8 @@ impl StationInfo {
     #[must_use]
     pub fn tile_tracks(&self) -> Vec<TileTrack> {
         let mut results = Vec::new();
-        for relative_tile in self.building_type().relative_tiles_used().to_set() {
-            for track_type in self.building_type().track_types_at(relative_tile) {
+        for relative_tile in self.station_type().relative_tiles_used().to_set() {
+            for track_type in self.station_type().track_types_at(relative_tile) {
                 for pointing_in in track_type.connections() {
                     results.push(TileTrack {
                         tile_coords_xz: self.reference_tile() + relative_tile,
@@ -139,7 +131,7 @@ impl StationInfo {
 
     #[must_use]
     pub(crate) fn station_track_types_at(&self, tile: TileCoordsXZ) -> Vec<TrackType> {
-        self.building_type()
+        self.station_type()
             .track_types_at(tile - self.reference_tile())
     }
 
@@ -150,12 +142,7 @@ impl StationInfo {
 
     #[must_use]
     pub fn station_shippable_cargo(&self) -> CargoMap {
-        match self.building_type() {
-            BuildingType::Station(_) => self.dynamic_info().cargo().clone(),
-            BuildingType::Industry(_) => {
-                unreachable!("Should not call this for industries");
-            },
-        }
+        self.dynamic_info().cargo().clone()
     }
 }
 
@@ -173,7 +160,7 @@ impl WithBuildingDynamicInfoMut for StationInfo {
 
 impl WithRelativeTileCoverage for StationInfo {
     fn relative_tiles_used(&self) -> TileCoverage {
-        self.building_type().relative_tiles_used()
+        self.station_type().relative_tiles_used()
     }
 }
 

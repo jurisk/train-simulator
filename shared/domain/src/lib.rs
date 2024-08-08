@@ -3,7 +3,6 @@
 use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 
-use building::building_type::BuildingType;
 use serde::{Deserialize, Serialize};
 use shared_util::random::generate_random_string;
 use transport::track_type::TrackType;

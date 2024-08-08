@@ -124,6 +124,7 @@ fn highlight_selected_tiles(
                 debug_draw_tile(&mut gizmos, *hovered_tile, tiles, PINK);
             }
 
+            // TODO HIGH: Show the tiles in different colour depending on whether we can or cannot build the selected building
             for tile in selected_mode.building_tiles(*hovered_tile).to_set() {
                 debug_draw_tile(&mut gizmos, tile, tiles, TOMATO);
             }

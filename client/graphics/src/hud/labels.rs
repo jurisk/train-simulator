@@ -18,7 +18,7 @@ fn industry_building_label(
 ) {
     let label = format!(
         "{:?} {:?}",
-        building.building_type(),
+        building.industry_type(),
         building.dynamic_info()
     );
     let id = format!("{:?}", building.id());
@@ -42,7 +42,7 @@ fn station_label(
 ) {
     let label = format!(
         "{:?} {:?}",
-        building.building_type(),
+        building.station_type(),
         building.dynamic_info()
     );
     let id = format!("{:?}", building.id());
