@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
 use crate::building::industry_building_info::IndustryBuildingInfo;
+use crate::building::resource_info::ResourceInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::cargo_map::CargoOps;
@@ -25,6 +26,7 @@ pub enum CanBuildResponse {
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
+    resources:            Vec<ResourceInfo>,
     tracks:               Vec<TrackInfo>,
     industry_buildings:   Vec<IndustryBuildingInfo>,
     stations:             Vec<StationInfo>,
@@ -41,11 +43,12 @@ impl Debug for BuildingState {
 
 impl BuildingState {
     #[must_use]
-    pub fn empty() -> Self {
+    pub fn with_resources(resources: Vec<ResourceInfo>) -> Self {
         Self {
-            tracks:               Vec::new(),
-            industry_buildings:   Vec::new(),
-            stations:             Vec::new(),
+            resources,
+            tracks: Vec::new(),
+            industry_buildings: Vec::new(),
+            stations: Vec::new(),
             closest_station_link: HashMap::new(),
         }
     }
