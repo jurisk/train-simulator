@@ -34,7 +34,7 @@ pub enum AuthenticationError {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct GameInfo {
     pub game_id: GameId,
-    pub players: HashMap<PlayerId, PlayerInfo>,
+    pub players: Vec<PlayerInfo>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -78,7 +78,7 @@ pub enum GameResponse {
     GameStateSnapshot(GameState),
 
     // Later: Actually, many of these should be sending `GameTime` (if it's not already included in other structures such as `GameState`), and it should be handled on the client.
-    PlayersUpdated(HashMap<PlayerId, PlayerInfo>),
+    PlayersUpdated(Vec<PlayerInfo>),
     IndustryBuildingsAdded(Vec<IndustryBuildingInfo>),
     StationsAdded(Vec<StationInfo>),
     TracksAdded(Vec<TrackInfo>),

@@ -1,14 +1,11 @@
-use std::collections::HashMap;
-
 use bevy::prelude::{Res, ResMut};
 use bevy::utils::default;
 use bevy_egui::EguiContexts;
 use egui::text::LayoutJob;
 use egui::{Color32, TextFormat, Ui};
 use shared_domain::building::building_state::BuildingState;
-use shared_domain::server_response::PlayerInfo;
+use shared_domain::players::player_state::PlayerState;
 use shared_domain::transport::transport_info::TransportInfo;
-use shared_domain::PlayerId;
 
 use crate::game::transport::ui::TransportsToShow;
 use crate::game::GameStateResource;
@@ -65,9 +62,9 @@ fn transport_info_panel(
 }
 
 #[allow(clippy::similar_names)]
-fn players_info_panel(ui: &mut Ui, players: &HashMap<PlayerId, PlayerInfo>) {
+fn players_info_panel(ui: &mut Ui, players: &PlayerState) {
     ui.heading("Players");
-    for player_info in players.values() {
+    for player_info in players.infos() {
         let colour = player_info.colour;
         let color = Color32::from_rgb(colour.r, colour.g, colour.b);
 

@@ -9,6 +9,62 @@ https://storage.googleapis.com/ts.krikis.online/single.html[Static version]
 
 == Useful commands
 
+=== Install Prerequisites
+
+On macOS:
+
+[source,bash]
+----
+brew install llvm
+----
+
+From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional[Enable Fast Compiles]:
+
+[source,bash]
+----
+cargo install -f cargo-binutils
+rustup component add llvm-tools-preview
+----
+
+From https://github.com/bevyengine/bevy/tree/main/examples#wasm[WASM examples]:
+
+[source,bash]
+----
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli
+----
+
+=== Running
+
+[NOTE]
+====
+Do not forget to use `--features bevy/dynamic_linking` when running from the IDE.
+====
+
+Controls:
+
+* `E`, `S`, `D`, `F` for camera movement
+* `W` and `R` for camera rotation
+* `C` for switch camera mode
+* `A` and `Z` for camera zoom
+* Number row `1`, `2`, `3` for "test objects" building
+* Click on transport buttons in the left panel to define transport orders
+
+==== Single player
+
+[source,bash]
+----
+cargo run --features bevy/dynamic_linking --package client-single-player --bin client_single_player
+----
+
+==== Multiplayer
+
+[source,bash]
+----
+cargo run --features bevy/dynamic_linking --package networking-server --bin server_console
+cargo run --features bevy/dynamic_linking --package networking-client --bin client_graphical -- ws://127.0.0.1:8080/ws ee6b4aa1-67e0-4d6b-a42c-56320f61390e
+----
+
 === Full Build
 
 On Windows:
@@ -50,46 +106,6 @@ Frequent:
 cargo +nightly fmt
 cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used
 cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used -W unused_crate_dependencies -W unused_extern_crates -W unused_lifetimes
-----
-
-=== Running
-
-[NOTE]
-====
-Do not forget to use `--features bevy/dynamic_linking` when running from the IDE.
-====
-
-[source,bash]
-----
-cargo build
-cargo run --features bevy/dynamic_linking --package networking-server --bin server_console
-cargo run --features bevy/dynamic_linking --package networking-client --bin client_graphical
-cargo run --features bevy/dynamic_linking --package client-single-player --bin client_single_player
-----
-
-=== Install Prerequisites
-
-On macOS:
-
-[source,bash]
-----
-brew install llvm
-----
-
-From https://bevyengine.org/learn/quick-start/getting-started/setup/#enable-fast-compiles-optional[Enable Fast Compiles]:
-
-[source,bash]
-----
-cargo install -f cargo-binutils
-rustup component add llvm-tools-preview
-----
-
-From https://github.com/bevyengine/bevy/tree/main/examples#wasm[WASM examples]:
-
-[source,bash]
-----
-rustup target add wasm32-unknown-unknown
-cargo install wasm-bindgen-cli
 ----
 
 === WASM build

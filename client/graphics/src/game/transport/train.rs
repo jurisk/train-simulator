@@ -4,7 +4,7 @@ use bevy::math::Vec3;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{default, BuildChildren, Color, Commands, Entity, ResMut, Transform};
 use shared_domain::map_level::MapLevel;
-use shared_domain::server_response::PlayerInfo;
+use shared_domain::server_response::Colour;
 use shared_domain::transport::transport_location::TransportLocation;
 use shared_domain::transport::transport_type::TrainComponentType;
 use shared_domain::TransportId;
@@ -43,7 +43,7 @@ pub(crate) fn calculate_train_component_transforms(
 #[allow(clippy::similar_names, clippy::too_many_arguments)]
 pub(crate) fn create_train(
     transport_id: TransportId,
-    player_info: &PlayerInfo,
+    colour: Colour,
     transport_location: &TransportLocation,
     train_components: &[TrainComponentType],
     commands: &mut Commands,
@@ -51,7 +51,6 @@ pub(crate) fn create_train(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
 ) -> Entity {
-    let colour = player_info.colour;
     let color = Color::srgb_u8(colour.r, colour.g, colour.b);
 
     let transforms =

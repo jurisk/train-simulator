@@ -4,20 +4,19 @@ mod train;
 pub mod train_layout;
 pub mod ui;
 
-use std::collections::HashMap;
-
 use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::pbr::StandardMaterial;
 use bevy::prelude::{
-    error, in_state, warn, Children, Commands, Component, Entity, EventReader, FixedUpdate,
+    in_state, warn, Children, Commands, Component, Entity, EventReader, FixedUpdate,
     IntoSystemConfigs, Plugin, Query, Res, ResMut, SpatialBundle, Transform, Update,
 };
 use shared_domain::map_level::MapLevel;
-use shared_domain::server_response::{GameResponse, PlayerInfo, ServerResponse};
+use shared_domain::players::player_state::PlayerState;
+use shared_domain::server_response::{GameResponse, ServerResponse};
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
-use shared_domain::{PlayerId, TransportId};
+use shared_domain::TransportId;
 
 use crate::assets::GameAssets;
 use crate::communication::domain::ServerMessageEvent;
@@ -27,7 +26,7 @@ use crate::game::transport::train::{calculate_train_component_transforms, create
 use crate::game::transport::ui::{
     select_station_to_add_to_movement_orders, show_transport_details, TransportsToShow,
 };
-use crate::game::GameStateResource;
+use crate::game::{player_colour, GameStateResource};
 use crate::states::ClientState;
 
 #[derive(Component)]
@@ -181,31 +180,24 @@ fn create_transport(
     transport_assets: &TransportAssets,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     map_level: &MapLevel,
-    players_info: &HashMap<PlayerId, PlayerInfo>,
+    players: &PlayerState,
 ) -> Option<Entity> {
-    match players_info.get(&transport_info.owner_id()) {
-        None => {
-            error!("Player with ID {:?} not found", transport_info.owner_id());
-            None
+    let colour = player_colour(players, transport_info.owner_id());
+    match &transport_info.transport_type() {
+        TransportType::Train(train_components) => {
+            Some(create_train(
+                transport_info.transport_id(),
+                colour,
+                transport_info.location(),
+                train_components,
+                commands,
+                transport_assets,
+                materials,
+                map_level,
+            ))
         },
-        Some(player_info) => {
-            match &transport_info.transport_type() {
-                TransportType::Train(train_components) => {
-                    Some(create_train(
-                        transport_info.transport_id(),
-                        player_info,
-                        transport_info.location(),
-                        train_components,
-                        commands,
-                        transport_assets,
-                        materials,
-                        map_level,
-                    ))
-                },
-                TransportType::RoadVehicle(_) | TransportType::Ship(_) => {
-                    None // TODO: Implement
-                },
-            }
+        TransportType::RoadVehicle(_) | TransportType::Ship(_) => {
+            None // TODO: Implement
         },
     }
 }

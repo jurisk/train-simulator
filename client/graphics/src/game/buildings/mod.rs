@@ -1,11 +1,5 @@
 #![allow(clippy::needless_pass_by_value, clippy::collapsible_match)]
 
-pub mod assets;
-pub mod building;
-pub mod tracks;
-
-use std::collections::HashMap;
-
 use bevy::prelude::{
     Assets, Commands, EventReader, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut,
     StandardMaterial, Update,
@@ -16,8 +10,8 @@ use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::map_level::MapLevel;
-use shared_domain::server_response::{Colour, GameResponse, PlayerInfo, ServerResponse};
-use shared_domain::PlayerId;
+use shared_domain::players::player_state::PlayerState;
+use shared_domain::server_response::{Colour, GameResponse, ServerResponse};
 
 use crate::assets::GameAssets;
 use crate::communication::domain::ServerMessageEvent;
@@ -27,6 +21,10 @@ use crate::game::buildings::building::{
 use crate::game::buildings::tracks::{build_tracks_when_mouse_released, create_rails};
 use crate::game::{player_colour, GameStateResource};
 use crate::states::ClientState;
+
+pub mod assets;
+pub mod building;
+pub mod tracks;
 
 pub(crate) struct BuildingsPlugin;
 
@@ -130,9 +128,9 @@ fn create_track(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     game_assets: &GameAssets,
     map_level: &MapLevel,
-    players_info: &HashMap<PlayerId, PlayerInfo>,
+    players: &PlayerState,
 ) {
-    let colour = player_colour(players_info, track_info.owner_id);
+    let colour = player_colour(players, track_info.owner_id);
     create_rails(
         colour,
         commands,
@@ -151,9 +149,9 @@ fn create_industry_building(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     game_assets: &GameAssets,
     map_level: &MapLevel,
-    players_info: &HashMap<PlayerId, PlayerInfo>,
+    players: &PlayerState,
 ) {
-    let colour = player_colour(players_info, building_info.owner_id());
+    let colour = player_colour(players, building_info.owner_id());
     let industry_type = building_info.industry_type();
     let mesh = game_assets.building_assets.industry_mesh_for(industry_type);
     create_building_entity(
@@ -174,9 +172,9 @@ fn create_station(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     game_assets: &GameAssets,
     map_level: &MapLevel,
-    players_info: &HashMap<PlayerId, PlayerInfo>,
+    players: &PlayerState,
 ) {
-    let colour = player_colour(players_info, building_info.owner_id());
+    let colour = player_colour(players, building_info.owner_id());
     for tile_track in building_info.tile_tracks() {
         let tile_coords = tile_track.tile_coords_xz;
         let track_type = tile_track.track_type;

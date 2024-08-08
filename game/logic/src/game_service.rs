@@ -228,7 +228,7 @@ impl GameService {
     }
 
     pub(crate) fn player_ids(&self) -> Vec<PlayerId> {
-        self.state.player_ids()
+        self.state.players().ids()
     }
 
     pub(crate) fn remove_player(
@@ -258,7 +258,7 @@ impl GameService {
             ),
             GameResponseWithAddress::new(
                 AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-                GameResponse::PlayersUpdated(self.state.players().clone()),
+                GameResponse::PlayersUpdated(self.state.players().infos_cloned()),
             ),
             GameResponseWithAddress::new(
                 AddressEnvelope::ToPlayer(player_id),
