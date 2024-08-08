@@ -253,6 +253,7 @@ impl BuildingState {
         valid_player_id && can_build
     }
 
+    // TODO: Needs test coverage
     pub(crate) fn can_build_track(
         &self,
         requesting_player_id: PlayerId,
@@ -264,8 +265,8 @@ impl BuildingState {
             return CanBuildResponse::Invalid;
         }
 
-        // TODO HIGH:   Actually, if the attempt is to build a track over tracks provided by a station,
-        //              we should allow it as CanBuildResponse::AlreadyExists
+        // TODO:    Likely, if the attempt is to build a track over tracks provided by a station,
+        //          we should allow it as CanBuildResponse::AlreadyExists. But this needs tests!
         let overlapping_buildings = self.building_at(track_info.tile);
         let invalid_overlaps = overlapping_buildings.is_some();
 
@@ -273,13 +274,27 @@ impl BuildingState {
             .iter()
             .any(|building| building.owner_id() != requesting_player_id);
 
-        let overlapping_tracks = self
-            .tracks_at(track_info.tile)
-            .into_iter()
-            .map(|other_track| other_track.track_type)
-            .collect::<HashSet<_>>();
+        let has_same_track = {
+            let overlapping_tracks_from_tracks = self
+                .tracks_at(track_info.tile)
+                .into_iter()
+                .map(|other_track| other_track.track_type)
+                .collect::<HashSet<_>>();
 
-        let has_same_track = overlapping_tracks.contains(&track_info.track_type);
+            let has_same_track_from_tracks =
+                overlapping_tracks_from_tracks.contains(&track_info.track_type);
+
+            let has_same_track_from_station =
+                if let Some(station) = self.station_at(track_info.tile) {
+                    station
+                        .station_track_types_at(track_info.tile)
+                        .contains(&track_info.track_type)
+                } else {
+                    false
+                };
+
+            has_same_track_from_tracks || has_same_track_from_station
+        };
 
         let vertex_coords = track_info.tile.vertex_coords();
 

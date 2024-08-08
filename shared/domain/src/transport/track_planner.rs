@@ -49,7 +49,10 @@ fn successors(
                     NON_PREFERRED_TILE_MALUS
                 };
 
-                // Later: Should we give a bonus in case the track already exists?
+                // Later:
+                //  - Should we give a bonus in case the track already exists?
+                //  - Bonus or malus if the existing track is provided by a station?
+                //  - Ignore the `preferred_tiles` altogether?
 
                 if matches!(
                     building_state.can_build_track(player_id, &track, map_level),
