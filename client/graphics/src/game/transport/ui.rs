@@ -11,7 +11,7 @@ use shared_domain::TransportId;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::GameStateResource;
-use crate::hud::domain::SelectedMode;
+use crate::hud::domain::{SelectType, SelectedMode};
 use crate::on_ui;
 use crate::selection::HoveredTile;
 
@@ -50,8 +50,8 @@ pub(crate) fn select_station_to_add_to_movement_orders(
 
     if let Some(game_state_resource) = game_state_resource {
         if mouse_buttons.just_released(MouseButton::Left) {
-            if let SelectedMode::SelectStationToAppendToTransportMovementInstructions(
-                transport_id,
+            if let SelectedMode::Select(
+                SelectType::StationToAppendToTransportMovementInstructions(transport_id),
             ) = *selected_mode
             {
                 let HoveredTile(hovered_tile) = hovered_tile.as_ref();
@@ -197,7 +197,7 @@ pub(crate) fn show_transport_details(
                                         "Transport {:?}: Switching to station selection in order to add to movement orders",
                                         transport.transport_id(),
                                     );
-                                    *selected_mode = SelectedMode::SelectStationToAppendToTransportMovementInstructions(transport.transport_id());
+                                    *selected_mode = SelectedMode::Select(SelectType::StationToAppendToTransportMovementInstructions(transport.transport_id()));
                                 };
                                 ui.end_row();
                             });

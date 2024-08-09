@@ -11,7 +11,6 @@ use crate::transport::tile_track::TileTrack;
 use crate::vertex_coords_xz::VertexCoordsXZ;
 use crate::TileCoordsXZ;
 
-// TODO: Make fields private
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Terrain {
     y_coef:         f32,

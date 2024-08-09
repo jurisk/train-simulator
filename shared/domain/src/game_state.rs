@@ -18,7 +18,7 @@ use crate::server_response::{GameInfo, PlayerInfo};
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::transport::transport_state::TransportState;
-use crate::{GameId, IndustryBuildingId, PlayerId, StationId, TransportId};
+use crate::{GameId, IndustryBuildingId, PlayerId, StationId, TrackId, TransportId};
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
 //          So the API gets quite busy because of this. There may be better ways.
@@ -154,27 +154,54 @@ impl GameState {
         &mut self,
         requesting_player_id: PlayerId,
         tracks: &[TrackInfo],
-    ) -> Result<(), ()> {
+    ) -> Result<Vec<TrackInfo>, ()> {
         self.buildings
             .build_tracks(requesting_player_id, tracks, &self.map_level)
     }
 
-    pub fn build_industry_buildings(
+    pub fn build_industry_building(
         &mut self,
         requesting_player_id: PlayerId,
-        buildings: &[IndustryBuildingInfo],
+        building: &IndustryBuildingInfo,
     ) -> Result<(), ()> {
         self.buildings
-            .build_industry_buildings(requesting_player_id, buildings, &self.map_level)
+            .build_industry_building(requesting_player_id, building, &self.map_level)
     }
 
-    pub fn build_stations(
+    pub fn build_station(
         &mut self,
         requesting_player_id: PlayerId,
-        stations: &[StationInfo],
+        station: &StationInfo,
     ) -> Result<(), ()> {
         self.buildings
-            .build_stations(requesting_player_id, stations, &self.map_level)
+            .build_station(requesting_player_id, station, &self.map_level)
+    }
+
+    pub fn remove_track(
+        &mut self,
+        requesting_player_id: PlayerId,
+        track_id: TrackId,
+    ) -> Result<(), ()> {
+        self.buildings
+            .attempt_to_remove_track(requesting_player_id, track_id)
+    }
+
+    pub fn remove_industry_building(
+        &mut self,
+        requesting_player_id: PlayerId,
+        industry_building_id: IndustryBuildingId,
+    ) -> Result<(), ()> {
+        self.buildings
+            .attempt_to_remove_industry_building(requesting_player_id, industry_building_id)
+    }
+
+    pub fn remove_station(
+        &mut self,
+        requesting_player_id: PlayerId,
+        station_id: StationId,
+    ) -> Result<(), ()> {
+        self.buildings
+            .attempt_to_remove_station(requesting_player_id, station_id)
     }
 
     #[must_use]

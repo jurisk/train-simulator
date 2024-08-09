@@ -1,3 +1,5 @@
+#![allow(clippy::missing_errors_doc, clippy::result_unit_err)]
+
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
 
@@ -14,7 +16,7 @@ use crate::game_time::GameTimeDiff;
 use crate::map_level::MapLevel;
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
-use crate::{IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackType};
+use crate::{IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackId, TrackType};
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum CanBuildResponse {
@@ -23,6 +25,7 @@ pub enum CanBuildResponse {
     Invalid,
 }
 
+// Later: There is a dual nature here to both be the "validator" (check if something can be built) and the "state" (store what has been built).
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
@@ -163,13 +166,13 @@ impl BuildingState {
         self.tracks.clone()
     }
 
-    pub fn append_industry_buildings(&mut self, additional: Vec<IndustryBuildingInfo>) {
-        self.industry_buildings.extend(additional);
+    pub fn append_industry_building(&mut self, additional: IndustryBuildingInfo) {
+        self.industry_buildings.push(additional);
         self.recalculate_cargo_forwarding_links();
     }
 
-    pub fn append_stations(&mut self, additional: Vec<StationInfo>) {
-        self.stations.extend(additional);
+    pub fn append_station(&mut self, additional: StationInfo) {
+        self.stations.push(additional);
         self.recalculate_cargo_forwarding_links();
     }
 
@@ -213,47 +216,52 @@ impl BuildingState {
             .collect()
     }
 
-    #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
-    pub fn can_build_buildings<T: BuildingInfo>(
+    pub fn can_build_building<T: BuildingInfo>(
         &mut self,
         requesting_player_id: PlayerId,
-        building_infos: &[T],
+        building_info: &T,
         map_level: &MapLevel,
     ) -> bool {
-        let valid_player_id = building_infos
-            .iter()
-            .all(|building_info| building_info.owner_id() == requesting_player_id);
+        let valid_player_id = building_info.owner_id() == requesting_player_id;
 
         // TODO: Check that this is a valid building and there is enough money to build it, subtract money
 
-        let can_build = building_infos.iter().all(|building_info| {
-            self.can_build_building(
-                requesting_player_id,
-                &building_info.covers_tiles(),
-                map_level,
-            ) == CanBuildResponse::Ok
-        });
+        let can_build = self.can_build_for_coverage(
+            requesting_player_id,
+            &building_info.covers_tiles(),
+            map_level,
+        ) == CanBuildResponse::Ok;
 
         valid_player_id && can_build
     }
 
-    #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
     pub fn can_build_tracks(
         &mut self,
         requesting_player_id: PlayerId,
         track_infos: &[TrackInfo],
         map_level: &MapLevel,
-    ) -> bool {
+    ) -> Option<Vec<TrackInfo>> {
         let valid_player_id = track_infos
             .iter()
             .all(|track_info| track_info.owner_id == requesting_player_id);
 
-        let can_build = track_infos.iter().all(|track_info| {
-            self.can_build_track(requesting_player_id, track_info, map_level)
-                == CanBuildResponse::Ok
-        });
-
-        valid_player_id && can_build
+        if valid_player_id {
+            let mut results = vec![];
+            for track_info in track_infos {
+                match self.can_build_track(requesting_player_id, track_info, map_level) {
+                    CanBuildResponse::Ok => {
+                        results.push(track_info.clone());
+                    },
+                    CanBuildResponse::AlreadyExists => {},
+                    CanBuildResponse::Invalid => {
+                        return None;
+                    },
+                }
+            }
+            Some(results)
+        } else {
+            None
+        }
     }
 
     // TODO: Needs test coverage
@@ -329,7 +337,7 @@ impl BuildingState {
     }
 
     #[allow(clippy::collapsible_else_if)]
-    pub(crate) fn can_build_building(
+    pub(crate) fn can_build_for_coverage(
         &self,
         requesting_player_id: PlayerId,
         tile_coverage: &TileCoverage,
@@ -381,48 +389,47 @@ impl BuildingState {
         }
     }
 
-    #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
-    pub(crate) fn build_industry_buildings(
+    pub(crate) fn build_industry_building(
         &mut self,
         requesting_player_id: PlayerId,
-        building_infos: &[IndustryBuildingInfo],
+        industry_building_info: &IndustryBuildingInfo,
         map_level: &MapLevel,
     ) -> Result<(), ()> {
-        if self.can_build_buildings(requesting_player_id, building_infos, map_level) {
-            self.append_industry_buildings(building_infos.to_vec());
+        if self.can_build_building(requesting_player_id, industry_building_info, map_level) {
+            self.append_industry_building(industry_building_info.clone());
             Ok(())
         } else {
             Err(())
         }
     }
 
-    #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
-    pub(crate) fn build_stations(
+    pub(crate) fn build_station(
         &mut self,
         requesting_player_id: PlayerId,
-        building_infos: &[StationInfo],
+        station_info: &StationInfo,
         map_level: &MapLevel,
     ) -> Result<(), ()> {
-        if self.can_build_buildings(requesting_player_id, building_infos, map_level) {
-            self.append_stations(building_infos.to_vec());
+        if self.can_build_building(requesting_player_id, station_info, map_level) {
+            self.append_station(station_info.clone());
             Ok(())
         } else {
             Err(())
         }
     }
 
-    #[allow(clippy::missing_errors_doc, clippy::result_unit_err)]
     pub fn build_tracks(
         &mut self,
         requesting_player_id: PlayerId,
         track_infos: &[TrackInfo],
         map_level: &MapLevel,
-    ) -> Result<(), ()> {
-        if self.can_build_tracks(requesting_player_id, track_infos, map_level) {
-            self.append_tracks(track_infos.to_vec());
-            Ok(())
-        } else {
-            Err(())
+    ) -> Result<Vec<TrackInfo>, ()> {
+        // Later: Actually, if we have multiple tracks at the same location in a batch, we end up building duplicate tracks!
+        match self.can_build_tracks(requesting_player_id, track_infos, map_level) {
+            None => Err(()),
+            Some(filtered) => {
+                self.append_tracks(filtered.clone());
+                Ok(filtered)
+            },
         }
     }
 
@@ -536,5 +543,78 @@ impl BuildingState {
         } else {
             warn!("Could not find station with id {:?}", station_id);
         }
+    }
+
+    pub fn remove_industry_building(&mut self, industry_building_id: IndustryBuildingId) {
+        self.industry_buildings
+            .retain(|building| building.id() != industry_building_id);
+        self.recalculate_cargo_forwarding_links();
+    }
+
+    pub fn remove_station(&mut self, station_id: StationId) {
+        self.stations.retain(|building| building.id() != station_id);
+        self.recalculate_cargo_forwarding_links();
+    }
+
+    pub fn attempt_to_remove_track(
+        &mut self,
+        requesting_player_id: PlayerId,
+        track_id: TrackId,
+    ) -> Result<(), ()> {
+        // TODO: Check there are no trains on (or near?) these tracks
+        let track = self
+            .tracks
+            .iter()
+            .find(|track| track.id() == track_id)
+            .ok_or(())?;
+
+        if track.owner_id == requesting_player_id {
+            self.remove_track(track_id);
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+
+    pub fn attempt_to_remove_industry_building(
+        &mut self,
+        requesting_player_id: PlayerId,
+        industry_building_id: IndustryBuildingId,
+    ) -> Result<(), ()> {
+        let industry_building = self
+            .industry_buildings
+            .iter()
+            .find(|building| building.id() == industry_building_id)
+            .ok_or(())?;
+
+        if industry_building.owner_id() == requesting_player_id {
+            self.remove_industry_building(industry_building_id);
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+
+    pub fn attempt_to_remove_station(
+        &mut self,
+        requesting_player_id: PlayerId,
+        station_id: StationId,
+    ) -> Result<(), ()> {
+        // TODO: Check there are no trains on (or near?) this station
+        let station = self
+            .stations
+            .iter()
+            .find(|building| building.id() == station_id)
+            .ok_or(())?;
+        if station.owner_id() == requesting_player_id {
+            self.remove_station(station_id);
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+
+    pub fn remove_track(&mut self, track_id: TrackId) {
+        self.tracks.retain(|track| track.id() != track_id);
     }
 }

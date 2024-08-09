@@ -94,7 +94,6 @@ impl Plugin for ClientGraphicsPlugin {
 }
 
 fn on_ui(egui_contexts: &mut EguiContexts) -> bool {
-    // Later: Actually, our labels are also Egui areas, so this may need improvement.
-    // Later: Actually, this does not seem to work as expected.
+    // Later: Actually, our labels are also Egui areas, so this may need improvement. And it's not clear if this works right.
     egui_contexts.ctx_mut().is_pointer_over_area()
 }

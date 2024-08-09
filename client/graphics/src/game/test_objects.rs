@@ -52,24 +52,32 @@ fn build_test_buildings(player_id: PlayerId) -> Vec<GameCommand> {
         (TileCoordsXZ::from_usizes(28, 94), IndustryType::Warehouse),
     ];
 
-    let stations = stations
+    let stations: Vec<_> = stations
         .into_iter()
         .map(|(tile, building_type)| {
             StationInfo::new(player_id, StationId::random(), tile, building_type)
         })
         .collect();
 
-    let industry_buildings = industry_buildings
+    let industry_buildings: Vec<_> = industry_buildings
         .into_iter()
         .map(|(tile, building_type)| {
             IndustryBuildingInfo::new(player_id, IndustryBuildingId::random(), tile, building_type)
         })
         .collect();
 
-    vec![
-        GameCommand::BuildStations(stations),
-        GameCommand::BuildIndustryBuildings(industry_buildings),
-    ]
+    let mut results = vec![];
+    results.extend(
+        stations
+            .into_iter()
+            .map(|station| GameCommand::BuildStation(station.clone())),
+    );
+    results.extend(
+        industry_buildings
+            .into_iter()
+            .map(|building| GameCommand::BuildIndustryBuilding(building.clone())),
+    );
+    results
 }
 
 #[allow(clippy::unnecessary_wraps)]
@@ -94,7 +102,7 @@ fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCom
         }
     }
 
-    let mut tracks = vec![];
+    let mut results = vec![];
     for (a, b) in connections {
         if let Some(route) = plan_tracks(
             player_id,
@@ -106,11 +114,11 @@ fn build_test_tracks(player_id: PlayerId, game_state: &GameState) -> Vec<GameCom
             game_state.building_state(),
             game_state.map_level(),
         ) {
-            tracks.extend(route);
+            results.push(GameCommand::BuildTracks(route));
         }
     }
 
-    vec![GameCommand::BuildTracks(tracks)]
+    results
 }
 
 fn find_station_id(building_state: &BuildingState, tile: TileCoordsXZ) -> StationId {

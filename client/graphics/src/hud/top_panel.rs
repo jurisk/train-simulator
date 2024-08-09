@@ -6,7 +6,7 @@ use shared_domain::building::station_type::{StationOrientation, StationType};
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::transport_type::TransportType;
 
-use crate::hud::domain::SelectedMode;
+use crate::hud::domain::{DemolishType, SelectedMode};
 
 const MIN_X: f32 = 200.0;
 const MIN_Y: f32 = 40.0;
@@ -161,15 +161,14 @@ fn trains_menu(selected_mode_res: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
-// TODO HIGH: Actually do the demolishing!
 fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     menu::menu_button(ui, "❎ Demolish", |ui| {
         set_font_size(ui, 24.0);
 
         for (name, mode) in [
-            ("🚉 Stations", SelectedMode::DemolishStation),
-            ("⚒ Industry", SelectedMode::DemolishIndustry),
-            ("🚆 Tracks", SelectedMode::DemolishTracks),
+            ("🚉 Stations", SelectedMode::Demolish(DemolishType::Station)),
+            ("⚒ Industry", SelectedMode::Demolish(DemolishType::Industry)),
+            ("🚆 Tracks", SelectedMode::Demolish(DemolishType::Tracks)),
         ] {
             if ui
                 .add(

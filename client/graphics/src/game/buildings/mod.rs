@@ -1,8 +1,8 @@
 #![allow(clippy::needless_pass_by_value, clippy::collapsible_match)]
 
 use bevy::prelude::{
-    Assets, Commands, EventReader, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut,
-    StandardMaterial, Update,
+    Assets, Commands, Component, Entity, EventReader, FixedUpdate, IntoSystemConfigs, Plugin,
+    Query, Res, ResMut, StandardMaterial, Update,
 };
 use bevy::state::condition::in_state;
 use shared_domain::building::building_info::BuildingInfo;
@@ -12,19 +12,31 @@ use shared_domain::building::track_info::TrackInfo;
 use shared_domain::map_level::MapLevel;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::server_response::{Colour, GameResponse, ServerResponse};
+use shared_domain::{IndustryBuildingId, StationId, TrackId};
 
 use crate::assets::GameAssets;
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::buildings::building::{
     build_building_when_mouse_released, create_building_entity,
 };
+use crate::game::buildings::demolishing::demolish_when_mouse_released;
 use crate::game::buildings::tracks::{build_tracks_when_mouse_released, create_rails};
 use crate::game::{player_colour, GameStateResource};
 use crate::states::ClientState;
 
 pub mod assets;
 pub mod building;
+mod demolishing;
 pub mod tracks;
+
+#[derive(Component)]
+struct StationIdComponent(StationId);
+
+#[derive(Component)]
+struct IndustryBuildingIdComponent(IndustryBuildingId);
+
+#[derive(Component)]
+struct TrackIdComponent(TrackId);
 
 pub(crate) struct BuildingsPlugin;
 
@@ -32,7 +44,7 @@ impl Plugin for BuildingsPlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.add_systems(
             FixedUpdate,
-            handle_buildings_or_tracks_added.run_if(in_state(ClientState::Playing)),
+            handle_buildings_or_tracks_changed.run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(
             Update,
@@ -42,16 +54,27 @@ impl Plugin for BuildingsPlugin {
             Update,
             build_building_when_mouse_released.run_if(in_state(ClientState::Playing)),
         );
+        app.add_systems(
+            Update,
+            demolish_when_mouse_released.run_if(in_state(ClientState::Playing)),
+        );
     }
 }
 
-#[allow(clippy::collapsible_match, clippy::match_same_arms)]
-fn handle_buildings_or_tracks_added(
+#[allow(
+    clippy::collapsible_match,
+    clippy::match_same_arms,
+    clippy::too_many_arguments
+)]
+fn handle_buildings_or_tracks_changed(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
     game_assets: Res<GameAssets>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut game_state_resource: ResMut<GameStateResource>,
+    track_query: Query<(Entity, &TrackIdComponent)>,
+    industry_building_query: Query<(Entity, &IndustryBuildingIdComponent)>,
+    station_query: Query<(Entity, &StationIdComponent)>,
 ) {
     let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
 
@@ -61,37 +84,33 @@ fn handle_buildings_or_tracks_added(
             match game_response {
                 GameResponse::GameStateSnapshot(_) => {},
                 GameResponse::PlayersUpdated(_) => {},
-                GameResponse::IndustryBuildingsAdded(building_infos) => {
+                GameResponse::IndustryBuildingAdded(building_info) => {
                     game_state
                         .building_state_mut()
-                        .append_industry_buildings(building_infos.clone());
+                        .append_industry_building(building_info.clone());
 
-                    for building_info in building_infos {
-                        create_industry_building(
-                            building_info,
-                            &mut commands,
-                            &mut materials,
-                            game_assets.as_ref(),
-                            &map_level,
-                            game_state.players(),
-                        );
-                    }
+                    create_industry_building(
+                        building_info,
+                        &mut commands,
+                        &mut materials,
+                        game_assets.as_ref(),
+                        &map_level,
+                        game_state.players(),
+                    );
                 },
-                GameResponse::StationsAdded(station_infos) => {
+                GameResponse::StationAdded(station_info) => {
                     game_state
                         .building_state_mut()
-                        .append_stations(station_infos.clone());
+                        .append_station(station_info.clone());
 
-                    for station_info in station_infos {
-                        create_station(
-                            station_info,
-                            &mut commands,
-                            &mut materials,
-                            game_assets.as_ref(),
-                            &map_level,
-                            game_state.players(),
-                        );
-                    }
+                    create_station(
+                        station_info,
+                        &mut commands,
+                        &mut materials,
+                        game_assets.as_ref(),
+                        &map_level,
+                        game_state.players(),
+                    );
                 },
                 GameResponse::TracksAdded(track_infos) => {
                     game_state
@@ -108,6 +127,27 @@ fn handle_buildings_or_tracks_added(
                             game_state.players(),
                         );
                     }
+                },
+                GameResponse::IndustryBuildingRemoved(industry_building_id) => {
+                    game_state
+                        .building_state_mut()
+                        .remove_industry_building(*industry_building_id);
+
+                    remove_industry_building_entities(
+                        *industry_building_id,
+                        &mut commands,
+                        &industry_building_query,
+                    );
+                },
+                GameResponse::StationRemoved(station_id) => {
+                    game_state.building_state_mut().remove_station(*station_id);
+
+                    remove_station_entities(*station_id, &mut commands, &station_query);
+                },
+                GameResponse::TrackRemoved(track_id) => {
+                    game_state.building_state_mut().remove_track(*track_id);
+
+                    remove_track_entities(*track_id, &mut commands, &track_query);
                 },
                 GameResponse::TransportsAdded(_) => {},
                 GameResponse::DynamicInfosSync(..) => {},
@@ -139,7 +179,22 @@ fn create_track(
         map_level,
         track_info.tile,
         track_info.track_type,
+        Some(track_info.id()),
+        None,
     );
+}
+
+fn remove_track_entities(
+    track_id: TrackId,
+    commands: &mut Commands,
+    query: &Query<(Entity, &TrackIdComponent)>,
+) {
+    for (entity, track_id_component) in query {
+        let TrackIdComponent(this_track_id) = track_id_component;
+        if *this_track_id == track_id {
+            commands.entity(entity).despawn();
+        }
+    }
 }
 
 #[allow(clippy::similar_names, clippy::match_same_arms)]
@@ -162,23 +217,38 @@ fn create_industry_building(
         materials,
         commands,
         map_level,
+        IndustryBuildingIdComponent(building_info.id()),
     );
+}
+
+fn remove_industry_building_entities(
+    industry_building_id: IndustryBuildingId,
+    commands: &mut Commands,
+    query: &Query<(Entity, &IndustryBuildingIdComponent)>,
+) {
+    for (entity, industry_building_id_component) in query {
+        let IndustryBuildingIdComponent(this_industry_building_id) = industry_building_id_component;
+        if *this_industry_building_id == industry_building_id {
+            commands.entity(entity).despawn();
+        }
+    }
 }
 
 #[allow(clippy::similar_names, clippy::match_same_arms)]
 fn create_station(
-    building_info: &StationInfo,
+    station_info: &StationInfo,
     commands: &mut Commands,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     game_assets: &GameAssets,
     map_level: &MapLevel,
     players: &PlayerState,
 ) {
-    let colour = player_colour(players, building_info.owner_id());
-    for tile_track in building_info.tile_tracks() {
+    let colour = player_colour(players, station_info.owner_id());
+    for tile_track in station_info.tile_tracks() {
         let tile_coords = tile_track.tile_coords_xz;
         let track_type = tile_track.track_type;
 
+        // Later: Instead of giving these tracks StationIdComponent, we could instead just make them children of the station entity and make sure they automatically de-spawn when demolished?
         create_rails(
             colour,
             commands,
@@ -187,18 +257,34 @@ fn create_station(
             map_level,
             tile_coords,
             track_type,
+            None,
+            Some(station_info.id()),
         );
     }
 
-    let station_type = building_info.station_type();
+    let station_type = station_info.station_type();
     let mesh = game_assets.building_assets.station_mesh_for(station_type);
     create_building_entity(
-        building_info,
+        station_info,
         format!("{station_type:?}"),
         STATION_BASE_COLOUR,
         mesh,
         materials,
         commands,
         map_level,
+        StationIdComponent(station_info.id()),
     );
+}
+
+fn remove_station_entities(
+    station_id: StationId,
+    commands: &mut Commands,
+    query: &Query<(Entity, &StationIdComponent)>,
+) {
+    for (entity, station_id_component) in query {
+        let StationIdComponent(this_station_id) = station_id_component;
+        if *this_station_id == station_id {
+            commands.entity(entity).despawn();
+        }
+    }
 }

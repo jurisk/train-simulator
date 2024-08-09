@@ -18,8 +18,10 @@ use shared_domain::terrain::DEFAULT_Y_COEF;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::track_planner::plan_tracks;
 use shared_domain::transport::track_type::TrackType;
+use shared_domain::{StationId, TrackId};
 
 use crate::communication::domain::ClientMessageEvent;
+use crate::game::buildings::{StationIdComponent, TrackIdComponent};
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
 use crate::on_ui;
@@ -119,7 +121,7 @@ impl TrackAssets {
 // Later: Make the rails round, they will look nicer. Look at Rise of Industry, for example.
 // Later: Consider what to do with the rails that right now go through the terrain.
 // Either prohibit such, or make them render better.
-#[allow(clippy::similar_names)]
+#[allow(clippy::similar_names, clippy::too_many_arguments)]
 pub(crate) fn create_rails(
     colour: Colour,
     commands: &mut Commands,
@@ -128,6 +130,8 @@ pub(crate) fn create_rails(
     map_level: &MapLevel,
     tile: TileCoordsXZ,
     track_type: TrackType,
+    track_id: Option<TrackId>,
+    station_id: Option<StationId>,
 ) {
     let terrain = &map_level.terrain();
 
@@ -149,6 +153,8 @@ pub(crate) fn create_rails(
         track_assets,
         materials,
         format!("Track A {track_type:?} at {tile:?}"),
+        track_id,
+        station_id,
     );
     spawn_rail(
         a2,
@@ -158,6 +164,8 @@ pub(crate) fn create_rails(
         track_assets,
         materials,
         format!("Track B {track_type:?} at {tile:?}"),
+        track_id,
+        station_id,
     );
 }
 
@@ -172,6 +180,7 @@ fn pick_rail_positions(a: Vec3, b: Vec3) -> (Vec3, Vec3) {
     (midpoint - offset, midpoint + offset)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn spawn_rail(
     a: Vec3,
     b: Vec3,
@@ -180,12 +189,14 @@ fn spawn_rail(
     track_assets: &TrackAssets,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     name: String,
+    track_id: Option<TrackId>,
+    station_id: Option<StationId>,
 ) {
     let direction = b - a;
     let length = direction.length();
     let direction = direction.normalize();
 
-    commands.spawn((
+    let mut entity_commands = commands.spawn((
         PbrBundle {
             transform: Transform {
                 translation: a + direction * length / 2.0,
@@ -198,6 +209,14 @@ fn spawn_rail(
         },
         Name::new(name),
     ));
+
+    if let Some(track_id) = track_id {
+        entity_commands.insert(TrackIdComponent(track_id));
+    }
+
+    if let Some(station_id) = station_id {
+        entity_commands.insert(StationIdComponent(station_id));
+    }
 }
 
 #[allow(clippy::too_many_arguments)]

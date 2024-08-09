@@ -1,6 +1,6 @@
 use bevy::prelude::{
-    Assets, ButtonInput, Color, Commands, EventWriter, Handle, Mesh, MouseButton, Name, PbrBundle,
-    Res, ResMut, StandardMaterial, Transform, Vec3,
+    Assets, Bundle, ButtonInput, Color, Commands, EventWriter, Handle, Mesh, MouseButton, Name,
+    PbrBundle, Res, ResMut, StandardMaterial, Transform, Vec3,
 };
 use bevy::utils::default;
 use bevy_egui::EguiContexts;
@@ -45,22 +45,22 @@ pub(crate) fn build_building_when_mouse_released(
 
             let command = match selected_mode {
                 SelectedMode::Stations(station_type) => {
-                    Some(GameCommand::BuildStations(vec![StationInfo::new(
+                    Some(GameCommand::BuildStation(StationInfo::new(
                         player_id,
                         StationId::random(),
                         *hovered_tile,
                         *station_type,
-                    )]))
+                    )))
                 },
                 SelectedMode::Industry(industry_type) => {
-                    Some(GameCommand::BuildIndustryBuildings(vec![
+                    Some(GameCommand::BuildIndustryBuilding(
                         IndustryBuildingInfo::new(
                             player_id,
                             IndustryBuildingId::random(),
                             *hovered_tile,
                             *industry_type,
                         ),
-                    ]))
+                    ))
                 },
                 _ => None,
             };
@@ -105,6 +105,7 @@ pub(crate) fn create_building_entity(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     commands: &mut Commands,
     map_level: &MapLevel,
+    additional: impl Bundle,
 ) {
     let center = center_vec3(building_info, map_level);
     let color = Color::srgb_u8(colour.r, colour.g, colour.b);
@@ -112,7 +113,7 @@ pub(crate) fn create_building_entity(
 
     // TODO: Make buildings distinguishable from each other - e.g. use `label` to also draw text on the sides / roof of the building
 
-    commands.spawn((
+    let mut commands = commands.spawn((
         PbrBundle {
             transform: Transform {
                 translation: center,
@@ -124,4 +125,5 @@ pub(crate) fn create_building_entity(
         },
         Name::new(label.clone()),
     ));
+    commands.insert(additional);
 }

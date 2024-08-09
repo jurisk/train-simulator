@@ -10,6 +10,7 @@ use crate::building::building_info::BuildingDynamicInfo;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
+use crate::client_command::DemolishSelector;
 use crate::game_state::GameState;
 use crate::game_time::GameTime;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
@@ -79,9 +80,12 @@ pub enum GameResponse {
 
     // Later: Actually, many of these should be sending `GameTime` (if it's not already included in other structures such as `GameState`), and it should be handled on the client.
     PlayersUpdated(Vec<PlayerInfo>),
-    IndustryBuildingsAdded(Vec<IndustryBuildingInfo>),
-    StationsAdded(Vec<StationInfo>),
+    IndustryBuildingAdded(IndustryBuildingInfo),
+    IndustryBuildingRemoved(IndustryBuildingId),
+    StationAdded(StationInfo),
+    StationRemoved(StationId),
     TracksAdded(Vec<TrackInfo>),
+    TrackRemoved(TrackId),
     TransportsAdded(Vec<TransportInfo>),
     DynamicInfosSync(
         GameTime,
@@ -98,9 +102,11 @@ pub enum GameResponse {
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub enum GameError {
     GameNotFound,
-    CannotBuildBuildings(Vec<StationId>, Vec<IndustryBuildingId>),
+    CannotBuildStation(StationId),
+    CannotBuildIndustryBuilding(IndustryBuildingId),
     CannotBuildTracks(Vec<TrackId>),
     CannotPurchase(TransportId),
+    CannotDemolish(DemolishSelector),
     UnspecifiedError,
 }
 
@@ -113,11 +119,11 @@ impl Debug for GameResponse {
             GameResponse::PlayersUpdated(players) => {
                 write!(f, "PlayersUpdated({} players)", players.len())
             },
-            GameResponse::IndustryBuildingsAdded(buildings) => {
-                write!(f, "IndustryBuildingsAdded({} buildings)", buildings.len())
+            GameResponse::IndustryBuildingAdded(building) => {
+                write!(f, "IndustryBuildingAdded({})", building.id())
             },
-            GameResponse::StationsAdded(stations) => {
-                write!(f, "StationsAdded({} stations)", stations.len())
+            GameResponse::StationAdded(station) => {
+                write!(f, "StationAdded({})", station.id())
             },
             GameResponse::TracksAdded(tracks) => {
                 write!(f, "TracksAdded({} tracks)", tracks.len())
@@ -147,6 +153,15 @@ impl Debug for GameResponse {
             GameResponse::GameLeft => write!(f, "GameLeft"),
             GameResponse::Error(error) => {
                 write!(f, "Error({error:?})")
+            },
+            GameResponse::IndustryBuildingRemoved(industry_building_id) => {
+                write!(f, "IndustryBuildingRemoved({industry_building_id:?})")
+            },
+            GameResponse::StationRemoved(station_id) => {
+                write!(f, "StationRemoved({station_id:?})")
+            },
+            GameResponse::TrackRemoved(track_id) => {
+                write!(f, "TrackRemoved({track_id:?})")
             },
         }
     }

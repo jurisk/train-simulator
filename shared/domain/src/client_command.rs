@@ -11,7 +11,7 @@ use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
-use crate::{ClientId, GameId, PlayerId, TransportId};
+use crate::{ClientId, GameId, IndustryBuildingId, PlayerId, StationId, TrackId, TransportId};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct AccessToken(String);
@@ -37,6 +37,23 @@ pub enum LobbyCommand {
     LeaveGame(GameId),
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
+pub enum DemolishSelector {
+    Track(TrackId),
+    Industry(IndustryBuildingId),
+    Station(StationId),
+}
+
+impl Debug for DemolishSelector {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DemolishSelector::Track(track_id) => write!(f, "Track({track_id:?})"),
+            DemolishSelector::Industry(industry_id) => write!(f, "Industry({industry_id:?})"),
+            DemolishSelector::Station(station_id) => write!(f, "Station({station_id:?})"),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameCommand {
     // These queries are separate due to some race conditions on the client, where the map level
@@ -44,11 +61,12 @@ pub enum GameCommand {
     QueryBuildings,
     QueryTracks,
     QueryTransports,
-    BuildIndustryBuildings(Vec<IndustryBuildingInfo>),
-    BuildStations(Vec<StationInfo>),
+    BuildIndustryBuilding(IndustryBuildingInfo),
+    BuildStation(StationInfo),
     BuildTracks(Vec<TrackInfo>),
     PurchaseTransport(TransportInfo),
     UpdateTransportMovementOrders(TransportId, MovementOrders),
+    Demolish(DemolishSelector),
 }
 
 impl Debug for GameCommand {
@@ -57,11 +75,11 @@ impl Debug for GameCommand {
             GameCommand::QueryBuildings => write!(f, "QueryBuildings"),
             GameCommand::QueryTracks => write!(f, "QueryTracks"),
             GameCommand::QueryTransports => write!(f, "QueryTransports"),
-            GameCommand::BuildIndustryBuildings(buildings) => {
-                write!(f, "BuildIndustryBuildings({} buildings)", buildings.len())
+            GameCommand::BuildIndustryBuilding(building) => {
+                write!(f, "BuildIndustryBuilding({})", building.id())
             },
-            GameCommand::BuildStations(stations) => {
-                write!(f, "BuildStations({} stations)", stations.len())
+            GameCommand::BuildStation(station) => {
+                write!(f, "BuildStation({})", station.id())
             },
             GameCommand::BuildTracks(tracks) => {
                 write!(f, "BuildTracks({} tracks)", tracks.len())
@@ -71,6 +89,9 @@ impl Debug for GameCommand {
             },
             GameCommand::UpdateTransportMovementOrders(transport_id, _) => {
                 write!(f, "UpdateTransportMovementOrders({transport_id:?})",)
+            },
+            GameCommand::Demolish(selector) => {
+                write!(f, "Demolish({selector:?})")
             },
         }
     }
