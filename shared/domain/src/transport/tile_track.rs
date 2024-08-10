@@ -4,7 +4,7 @@ use bevy_math::Vec3;
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
-use crate::terrain::Terrain;
+use crate::map_level::terrain::Terrain;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::progress_within_tile::ProgressWithinTile;
 use crate::transport::track_type::TrackType;

@@ -2,6 +2,7 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+/// In a way, it is also a "cargo type"
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum ResourceType {
     Coal,

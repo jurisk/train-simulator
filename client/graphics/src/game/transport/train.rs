@@ -3,7 +3,7 @@ use bevy::core::Name;
 use bevy::math::Vec3;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{default, BuildChildren, Color, Commands, Entity, ResMut, Transform};
-use shared_domain::map_level::MapLevel;
+use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::server_response::Colour;
 use shared_domain::transport::transport_location::TransportLocation;
 use shared_domain::transport::transport_type::TrainComponentType;

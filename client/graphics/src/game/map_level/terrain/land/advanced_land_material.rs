@@ -9,7 +9,7 @@ use bevy::render::mesh::MeshVertexBufferLayoutRef;
 use bevy::render::render_resource::{
     AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
 };
-use shared_domain::map_level::TerrainType;
+use shared_domain::map_level::map_level::TerrainType;
 
 use crate::game::map_level::terrain::land::ATTRIBUTE_TERRAIN_TYPE;
 

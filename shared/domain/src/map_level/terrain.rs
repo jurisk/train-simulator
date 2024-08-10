@@ -6,10 +6,10 @@ use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
-use crate::map_level::Height;
+use crate::map_level::map_level::Height;
+use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::tile_track::TileTrack;
 use crate::vertex_coords_xz::VertexCoordsXZ;
-use crate::TileCoordsXZ;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Terrain {

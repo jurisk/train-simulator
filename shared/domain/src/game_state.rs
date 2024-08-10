@@ -8,11 +8,10 @@ use serde::{Deserialize, Serialize};
 use crate::building::building_info::BuildingDynamicInfo;
 use crate::building::building_state::BuildingState;
 use crate::building::industry_building_info::IndustryBuildingInfo;
-use crate::building::resource_info::ResourceInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::game_time::{GameTime, GameTimeDiff};
-use crate::map_level::MapLevel;
+use crate::map_level::map_level::MapLevel;
 use crate::players::player_state::PlayerState;
 use crate::server_response::{GameInfo, PlayerInfo};
 use crate::transport::movement_orders::MovementOrders;
@@ -37,12 +36,11 @@ impl GameState {
     #[must_use]
     pub fn empty_from_level(map_level: MapLevel) -> Self {
         // TODO HIGH: Randomly distribute resources on the map in places where buildings can be built (3x3 level ground)
-        let resources: Vec<ResourceInfo> = vec![];
         let game_id = GameId::random();
         Self {
             game_id,
             map_level,
-            buildings: BuildingState::with_resources(resources),
+            buildings: BuildingState::new(),
             transports: TransportState::empty(),
             players: PlayerState::empty(),
             time: GameTime::new(),

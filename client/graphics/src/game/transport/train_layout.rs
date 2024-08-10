@@ -1,7 +1,7 @@
 use bevy::math::Vec3;
 use bevy::prelude::{trace, warn};
-use shared_domain::map_level::MapLevel;
-use shared_domain::terrain::Terrain;
+use shared_domain::map_level::map_level::MapLevel;
+use shared_domain::map_level::terrain::Terrain;
 use shared_domain::transport::progress_within_tile::ProgressWithinTile;
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::transport::transport_location::TransportLocation;

@@ -2,7 +2,8 @@ use std::fmt::Debug;
 
 use serde::{Deserialize, Serialize};
 
-use crate::terrain::Terrain;
+use crate::map_level::terrain::Terrain;
+use crate::map_level::zoning::Zoning;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::vertex_coords_xz::VertexCoordsXZ;
 use crate::water::Water;
@@ -70,6 +71,7 @@ impl Height {
 pub struct MapLevel {
     terrain: Terrain,
     water:   Water,
+    zoning:  Zoning,
 }
 
 impl MapLevel {
@@ -111,7 +113,7 @@ mod tests {
 
     #[test]
     fn test_default_terrain_can_be_deserialised() {
-        let level_json = include_str!("../../../assets/map_levels/default.json");
+        let level_json = include_str!("../../../../assets/map_levels/default.json");
         let level = serde_json::from_str::<MapLevel>(level_json)
             .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
         assert!(level.is_valid());

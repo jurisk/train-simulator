@@ -12,9 +12,9 @@ use bevy::prelude::{
 use bevy_egui::EguiContexts;
 use bigdecimal::BigDecimal;
 use shared_domain::client_command::{ClientCommand, GameCommand};
-use shared_domain::map_level::MapLevel;
+use shared_domain::map_level::map_level::MapLevel;
+use shared_domain::map_level::terrain::DEFAULT_Y_COEF;
 use shared_domain::server_response::Colour;
-use shared_domain::terrain::DEFAULT_Y_COEF;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::track_planner::plan_tracks;
 use shared_domain::transport::track_type::TrackType;

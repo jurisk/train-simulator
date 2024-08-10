@@ -8,7 +8,7 @@ use shared_domain::building::building_info::BuildingInfo;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
-use shared_domain::map_level::MapLevel;
+use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::server_response::Colour;
 use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::{IndustryBuildingId, StationId};

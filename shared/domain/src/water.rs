@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::map_level::Height;
+use crate::map_level::map_level::Height;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, PartialEq)]
 pub struct Water {

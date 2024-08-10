@@ -8,12 +8,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
 use crate::building::industry_building_info::IndustryBuildingInfo;
-use crate::building::resource_info::ResourceInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::cargo_map::CargoOps;
 use crate::game_time::GameTimeDiff;
-use crate::map_level::MapLevel;
+use crate::map_level::map_level::MapLevel;
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
 use crate::{IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackId, TrackType};
@@ -29,7 +28,6 @@ pub enum CanBuildResponse {
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
-    resources:            Vec<ResourceInfo>,
     tracks:               Vec<TrackInfo>,
     industry_buildings:   Vec<IndustryBuildingInfo>,
     stations:             Vec<StationInfo>,
@@ -46,12 +44,12 @@ impl Debug for BuildingState {
 
 impl BuildingState {
     #[must_use]
-    pub fn with_resources(resources: Vec<ResourceInfo>) -> Self {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
         Self {
-            resources,
-            tracks: Vec::new(),
-            industry_buildings: Vec::new(),
-            stations: Vec::new(),
+            tracks:               Vec::new(),
+            industry_buildings:   Vec::new(),
+            stations:             Vec::new(),
             closest_station_link: HashMap::new(),
         }
     }

@@ -9,7 +9,7 @@ use bevy::prelude::{
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
 use bevy_mod_raycast::prelude::RaycastMesh;
-use shared_domain::map_level::{MapLevel, TerrainType};
+use shared_domain::map_level::map_level::{MapLevel, TerrainType};
 use shared_domain::server_response::{GameResponse, ServerResponse};
 use shared_domain::vertex_coords_xz::VertexCoordsXZ;
 use shared_util::grid_xz::GridXZ;
@@ -150,7 +150,7 @@ pub(crate) fn create_land(
 #[cfg(test)]
 mod tests {
     use bevy::prelude::Vec3;
-    use shared_domain::terrain::Terrain;
+    use shared_domain::map_level::terrain::Terrain;
 
     use super::*;
 

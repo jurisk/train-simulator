@@ -11,7 +11,7 @@ use bevy::prelude::{
     in_state, warn, Children, Commands, Component, Entity, EventReader, FixedUpdate,
     IntoSystemConfigs, Plugin, Query, Res, ResMut, SpatialBundle, Transform, Update,
 };
-use shared_domain::map_level::MapLevel;
+use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::server_response::{GameResponse, ServerResponse};
 use shared_domain::transport::transport_info::TransportInfo;

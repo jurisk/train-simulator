@@ -6,7 +6,7 @@ use pathfinding::prelude::dijkstra;
 use crate::building::building_state::{BuildingState, CanBuildResponse};
 use crate::building::track_info::TrackInfo;
 use crate::edge_xz::EdgeXZ;
-use crate::map_level::MapLevel;
+use crate::map_level::map_level::MapLevel;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::tile_track::TileTrack;
 use crate::transport::track_length::TrackLength;

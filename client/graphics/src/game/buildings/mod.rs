@@ -9,7 +9,7 @@ use shared_domain::building::building_info::BuildingInfo;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::track_info::TrackInfo;
-use shared_domain::map_level::MapLevel;
+use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::server_response::{Colour, GameResponse, ServerResponse};
 use shared_domain::{IndustryBuildingId, StationId, TrackId};

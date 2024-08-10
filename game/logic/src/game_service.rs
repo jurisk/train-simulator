@@ -93,7 +93,7 @@ impl GameService {
         &mut self,
         requesting_player_id: PlayerId,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
-        // TODO HIGH: This is inefficient, however, it is also unneeded - we already send `GameStateSnapshot` message - and then just ignore most of it!
+        // TODO: This is inefficient, however, it is also unneeded - we already send `GameStateSnapshot` message - and then just ignore most of it!
         let mut results = vec![];
         for building in self.state.building_state().all_industry_buildings() {
             results.push(GameResponseWithAddress::new(

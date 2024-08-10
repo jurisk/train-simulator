@@ -21,7 +21,6 @@ pub mod map_level;
 pub mod players;
 pub mod resource_type;
 pub mod server_response;
-pub mod terrain;
 pub mod tile_coords_xz;
 pub mod tile_coverage;
 pub mod transport;

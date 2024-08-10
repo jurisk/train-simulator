@@ -5,7 +5,7 @@ use bevy::prelude::{
     default, AlphaMode, App, Assets, Color, Commands, EventReader, FixedUpdate, Mesh, PbrBundle,
     Plugin, Rectangle, ResMut, StandardMaterial, Transform,
 };
-use shared_domain::map_level::MapLevel;
+use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, ServerResponse};
 
 use crate::communication::domain::ServerMessageEvent;
