@@ -6,23 +6,34 @@ use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::WithRelativeTileCoverage;
+use crate::map_level::zoning::ZoningType::Deposit;
+use crate::resource_type::ResourceType;
+use crate::resource_type::ResourceType::{
+    Clay, Coal, Iron, Limestone, Nitrates, Oil, SandAndGravel, Sulfur, Wood,
+};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::ZoningId;
 
 #[derive(Serialize, Deserialize, Hash, Copy, Clone, Eq, PartialEq, Debug)]
 pub enum ZoningType {
-    CoalDeposit,
-    IronDeposit,
+    Deposit(ResourceType),
     Industrial,
 }
 
 impl ZoningType {
     #[must_use]
-    pub fn all() -> Vec<ZoningType> {
-        vec![
-            ZoningType::CoalDeposit,
-            ZoningType::IronDeposit,
+    pub const fn all() -> [ZoningType; 10] {
+        [
+            Deposit(Clay),
+            Deposit(Coal),
+            Deposit(Iron),
+            Deposit(Limestone),
+            Deposit(Nitrates),
+            Deposit(Oil),
+            Deposit(SandAndGravel),
+            Deposit(Sulfur),
+            Deposit(Wood),
             ZoningType::Industrial,
         ]
     }

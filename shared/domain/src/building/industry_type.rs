@@ -45,8 +45,8 @@ impl IndustryType {
     #[must_use]
     pub fn required_zoning(self) -> ZoningType {
         match self {
-            IndustryType::CoalMine => ZoningType::CoalDeposit,
-            IndustryType::IronMine => ZoningType::IronDeposit,
+            IndustryType::CoalMine => ZoningType::Deposit(ResourceType::Coal),
+            IndustryType::IronMine => ZoningType::Deposit(ResourceType::Iron),
             IndustryType::IronWorks => ZoningType::Industrial,
             IndustryType::Warehouse => ZoningType::Industrial,
         }

@@ -1,8 +1,17 @@
 digraph G {
     node [style = filled, fontcolor = white];
 
+    # Zoning
+    node [shape = box, color = blue, style = filled];
+    CoalDeposit [label = "Coal Deposit"];
+    IronDeposit [label = "Iron Deposit"];
+    Industrial [label = "Industrial"];
+    LimestoneDeposit [label = "Limestone Deposit"];
+
+    { rank = same; CoalDeposit; IronDeposit; Industrial; LimestoneDeposit; }
+
     # Raw materials extraction
-    node [shape = box, color = green];
+    node [shape = box, color = green, style = filled];
     CoalMine [label = "Coal Mine"];
     IronMine [label = "Iron Mine"];
     Forestry [label = "Forestry"];
@@ -30,6 +39,8 @@ digraph G {
 
     subgraph cluster_ExplosivesPlant {
         # This is being built together as otherwise it becomes too much micro-management
+        # Later: Should we be considering the TNT aspects too?
+        # See https://en.wikipedia.org/wiki/TNT#Preparation and https://en.wikipedia.org/wiki/Toluene#Production
         style = filled;
         color = "#a04000";
         fontcolor = white;
@@ -82,6 +93,10 @@ digraph G {
     Energy [label = "Energy"];
     TrainPoints [label = "Train Points"];
 
+    CoalDeposit -> CoalMine;
+    IronDeposit -> IronMine;
+    Industrial -> IronWorks;
+
     CoalMine -> Coal;
     Coal -> IronWorks;
     Coal -> CoalUsageByTrainMovement;
@@ -132,6 +147,7 @@ digraph G {
     TrainFactory -> TrainPoints;
     TrainPoints -> TrainBuilding;
 
+    LimestoneDeposit -> LimestoneMine;
     LimestoneMine -> Limestone;
     Limestone -> CementPlant;
 
