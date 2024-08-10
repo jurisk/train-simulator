@@ -156,16 +156,26 @@ impl GameState {
             .build_tracks(requesting_player_id, tracks, &self.map_level)
     }
 
+    #[must_use]
+    pub fn can_build_industry_building(
+        &self,
+        requesting_player_id: PlayerId,
+        building: &IndustryBuildingInfo,
+    ) -> bool {
+        self.map_level
+            .zoning()
+            .can_build_industry_building(building)
+            && self
+                .buildings
+                .can_build_building(requesting_player_id, building, &self.map_level)
+    }
+
     pub fn build_industry_building(
         &mut self,
         requesting_player_id: PlayerId,
         building: &IndustryBuildingInfo,
     ) -> Result<(), ()> {
-        if self
-            .map_level
-            .zoning()
-            .can_build_industry_building(building)
-        {
+        if self.can_build_industry_building(requesting_player_id, building) {
             self.buildings
                 .build_industry_building(requesting_player_id, building, &self.map_level)
         } else {
@@ -173,13 +183,25 @@ impl GameState {
         }
     }
 
+    #[must_use]
+    pub fn can_build_station(&self, requesting_player_id: PlayerId, station: &StationInfo) -> bool {
+        self.map_level.zoning().can_build_station(station)
+            && self
+                .buildings
+                .can_build_building(requesting_player_id, station, &self.map_level)
+    }
+
     pub fn build_station(
         &mut self,
         requesting_player_id: PlayerId,
         station: &StationInfo,
     ) -> Result<(), ()> {
-        self.buildings
-            .build_station(requesting_player_id, station, &self.map_level)
+        if self.can_build_station(requesting_player_id, station) {
+            self.buildings
+                .build_station(requesting_player_id, station, &self.map_level)
+        } else {
+            Err(())
+        }
     }
 
     pub fn remove_track(

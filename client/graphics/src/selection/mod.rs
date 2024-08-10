@@ -1,12 +1,13 @@
 #![allow(clippy::needless_pass_by_value)]
 
 use bevy::app::App;
+use bevy::color::palettes::basic::LIME;
 use bevy::color::palettes::css::{PINK, PURPLE, TOMATO};
 use bevy::input::ButtonInput;
 use bevy::math::Quat;
 use bevy::prelude::{
-    info, DetectChanges, Gizmos, MouseButton, Plugin, Query, Res, ResMut, Resource, Srgba,
-    TypePath, Update, Vec3,
+    in_state, info, DetectChanges, Gizmos, IntoSystemConfigs, MouseButton, Plugin, Query, Res,
+    ResMut, Resource, Srgba, TypePath, Update, Vec3,
 };
 use bevy_mod_raycast::deferred::RaycastSource;
 use bevy_mod_raycast::prelude::{DeferredRaycastingPlugin, RaycastPluginState};
@@ -16,7 +17,9 @@ use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::{Tile, Tiles};
+use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
+use crate::states::ClientState;
 
 #[derive(Resource, Default, Debug)]
 pub struct HoveredTile(pub Option<TileCoordsXZ>);
@@ -42,9 +45,18 @@ impl Plugin for SelectionPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(DeferredRaycastingPlugin::<()>::default());
         app.insert_resource(RaycastPluginState::<()>::default()); // Add .with_debug_cursor() for default debug cursor
-        app.add_systems(Update, update_selections::<()>);
-        app.add_systems(Update, highlight_selected_tiles);
-        app.add_systems(Update, highlight_selected_edges);
+        app.add_systems(
+            Update,
+            update_selections::<()>.run_if(in_state(ClientState::Playing)),
+        );
+        app.add_systems(
+            Update,
+            highlight_selected_tiles.run_if(in_state(ClientState::Playing)),
+        );
+        app.add_systems(
+            Update,
+            highlight_selected_edges.run_if(in_state(ClientState::Playing)),
+        );
         app.insert_resource(HoveredTile::default());
         app.insert_resource(SelectedTiles::default());
 
@@ -104,8 +116,13 @@ fn highlight_selected_tiles(
     hovered_tile: Res<HoveredTile>,
     mut gizmos: Gizmos,
     selected_mode: Res<SelectedMode>,
+    game_state_resource: Res<GameStateResource>,
+    player_id_resource: Res<PlayerIdResource>,
 ) {
     let selected_mode = selected_mode.as_ref();
+    let GameStateResource(game_state) = game_state_resource.as_ref();
+    let PlayerIdResource(player_id) = *player_id_resource;
+
     if let Some(tiles) = tiles {
         let tiles = &tiles.tiles;
 
@@ -124,9 +141,13 @@ fn highlight_selected_tiles(
                 debug_draw_tile(&mut gizmos, *hovered_tile, tiles, PINK);
             }
 
-            // TODO HIGH: Show the tiles in different colour depending on whether we can or cannot build the selected building
-            for tile in selected_mode.building_tiles(*hovered_tile).to_set() {
-                debug_draw_tile(&mut gizmos, tile, tiles, TOMATO);
+            if let Some((coverage, valid)) =
+                selected_mode.building_tiles(*hovered_tile, player_id, game_state)
+            {
+                let color = if valid { LIME } else { TOMATO };
+                for tile in coverage.to_set() {
+                    debug_draw_tile(&mut gizmos, tile, tiles, color);
+                }
             }
         }
     }

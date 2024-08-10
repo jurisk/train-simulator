@@ -1,11 +1,15 @@
 use bevy::prelude::Resource;
+use shared_domain::building::building_info::WithTileCoverage;
+use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
+use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::station_type::StationType;
-use shared_domain::building::WithRelativeTileCoverage;
+use shared_domain::client_command::GameCommand;
+use shared_domain::game_state::GameState;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::transport::transport_type::TransportType;
-use shared_domain::TransportId;
+use shared_domain::{IndustryBuildingId, PlayerId, StationId, TransportId};
 
 #[derive(Resource, Eq, PartialEq, Debug, Clone, Copy)]
 pub enum DemolishType {
@@ -55,13 +59,55 @@ impl SelectedMode {
     }
 
     #[must_use]
-    pub fn building_tiles(&self, reference_tile: TileCoordsXZ) -> TileCoverage {
-        let relative_tiles = match self {
-            SelectedMode::Stations(station_type) => Some(station_type.relative_tiles_used()),
-            SelectedMode::Industry(industry_type) => Some(industry_type.relative_tiles_used()),
+    pub fn build_building_command(
+        &self,
+        player_id: PlayerId,
+        tile: TileCoordsXZ,
+    ) -> Option<GameCommand> {
+        match self {
+            SelectedMode::Stations(station_type) => {
+                Some(GameCommand::BuildStation(StationInfo::new(
+                    player_id,
+                    StationId::random(),
+                    tile,
+                    *station_type,
+                )))
+            },
+            SelectedMode::Industry(industry_type) => {
+                Some(GameCommand::BuildIndustryBuilding(
+                    IndustryBuildingInfo::new(
+                        player_id,
+                        IndustryBuildingId::random(),
+                        tile,
+                        *industry_type,
+                    ),
+                ))
+            },
             _ => None,
-        };
+        }
+    }
 
-        relative_tiles.map_or(TileCoverage::Empty, |tiles| tiles.offset_by(reference_tile))
+    #[must_use]
+    pub fn building_tiles(
+        &self,
+        reference_tile: TileCoordsXZ,
+        player_id: PlayerId,
+        game_state: &GameState,
+    ) -> Option<(TileCoverage, bool)> {
+        match self.build_building_command(player_id, reference_tile) {
+            Some(GameCommand::BuildStation(station_info)) => {
+                Some((
+                    station_info.covers_tiles(),
+                    game_state.can_build_station(player_id, &station_info),
+                ))
+            },
+            Some(GameCommand::BuildIndustryBuilding(industry_info)) => {
+                Some((
+                    industry_info.covers_tiles(),
+                    game_state.can_build_industry_building(player_id, &industry_info),
+                ))
+            },
+            _ => None,
+        }
     }
 }

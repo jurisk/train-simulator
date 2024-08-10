@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
+use crate::building::station_info::StationInfo;
 use crate::building::WithRelativeTileCoverage;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
@@ -79,6 +80,11 @@ impl Zoning {
             },
             None => false,
         }
+    }
+
+    #[must_use]
+    pub fn can_build_station(&self, _station_info: &StationInfo) -> bool {
+        true
     }
 }
 

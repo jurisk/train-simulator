@@ -1,9 +1,6 @@
 use bevy::prelude::{ButtonInput, EventWriter, MouseButton, Res};
 use bevy_egui::EguiContexts;
-use shared_domain::building::industry_building_info::IndustryBuildingInfo;
-use shared_domain::building::station_info::StationInfo;
-use shared_domain::client_command::{ClientCommand, GameCommand};
-use shared_domain::{IndustryBuildingId, StationId};
+use shared_domain::client_command::ClientCommand;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
@@ -35,27 +32,7 @@ pub(crate) fn build_building_when_mouse_released(
 
             let game_id = game_state.game_id();
 
-            let command = match selected_mode {
-                SelectedMode::Stations(station_type) => {
-                    Some(GameCommand::BuildStation(StationInfo::new(
-                        player_id,
-                        StationId::random(),
-                        *hovered_tile,
-                        *station_type,
-                    )))
-                },
-                SelectedMode::Industry(industry_type) => {
-                    Some(GameCommand::BuildIndustryBuilding(
-                        IndustryBuildingInfo::new(
-                            player_id,
-                            IndustryBuildingId::random(),
-                            *hovered_tile,
-                            *industry_type,
-                        ),
-                    ))
-                },
-                _ => None,
-            };
+            let command = selected_mode.build_building_command(player_id, *hovered_tile);
 
             // Later: Check we can build this? And that check is different for stations, as they can be built on top of fully straight tracks with no branching.
 

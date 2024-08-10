@@ -217,7 +217,7 @@ impl BuildingState {
     }
 
     pub fn can_build_building<T: BuildingInfo>(
-        &mut self,
+        &self,
         requesting_player_id: PlayerId,
         building_info: &T,
         map_level: &MapLevel,

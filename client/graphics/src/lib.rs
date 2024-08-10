@@ -94,6 +94,6 @@ impl Plugin for ClientGraphicsPlugin {
 }
 
 fn on_ui(egui_contexts: &mut EguiContexts) -> bool {
-    // Later: Actually, our labels are also Egui areas, so this may need improvement. And it's not clear if this works right.
+    // TODO HIGH: Labels are Egui areas, so this means that actually building buildings is sometimes difficult, as you have to click on the center tile, but outside of a label!
     egui_contexts.ctx_mut().is_pointer_over_area()
 }

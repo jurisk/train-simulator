@@ -185,7 +185,6 @@ pub(crate) fn player_colour(players_info: &PlayerState, player_id: PlayerId) -> 
 pub fn center_vec3(object: &dyn WithTileCoverage, map_level: &MapLevel) -> Vec3 {
     let terrain = map_level.terrain();
     let (nw, se) = match object.covers_tiles() {
-        TileCoverage::Empty => panic!("Unexpectedly - no tiles found"),
         TileCoverage::Single(tile) => (tile, tile),
         TileCoverage::Rectangular {
             north_west_inclusive,

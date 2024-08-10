@@ -6,7 +6,6 @@ use crate::tile_coords_xz::TileCoordsXZ;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub enum TileCoverage {
-    Empty,
     Single(TileCoordsXZ),
     Rectangular {
         north_west_inclusive: TileCoordsXZ,
@@ -19,7 +18,6 @@ impl TileCoverage {
     #[must_use]
     pub fn to_set(&self) -> HashSet<TileCoordsXZ> {
         match self {
-            TileCoverage::Empty => HashSet::new(),
             TileCoverage::Single(tile) => HashSet::from([*tile]),
             TileCoverage::Rectangular {
                 north_west_inclusive,
@@ -39,7 +37,6 @@ impl TileCoverage {
     #[must_use]
     pub fn contains(&self, tile: TileCoordsXZ) -> bool {
         match self {
-            TileCoverage::Empty => false,
             TileCoverage::Single(single_tile) => *single_tile == tile,
             TileCoverage::Rectangular {
                 north_west_inclusive,
@@ -56,7 +53,6 @@ impl TileCoverage {
     #[must_use]
     pub fn offset_by(self, tile: TileCoordsXZ) -> Self {
         match self {
-            TileCoverage::Empty => TileCoverage::Empty,
             TileCoverage::Single(single_tile) => TileCoverage::Single(single_tile + tile),
             TileCoverage::Rectangular {
                 north_west_inclusive,
