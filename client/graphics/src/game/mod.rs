@@ -1,20 +1,29 @@
 #![allow(clippy::module_name_repetitions)]
 
+use bevy::asset::{Assets, Handle};
+use bevy::color::Color;
+use bevy::core::Name;
 use bevy::log::error;
+use bevy::math::Vec3;
+use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
-    in_state, info, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, NextState,
-    OnEnter, Plugin, Res, ResMut, Resource, Time, Update,
+    default, in_state, info, Bundle, Commands, EventReader, EventWriter, FixedUpdate,
+    IntoSystemConfigs, Mesh, NextState, OnEnter, Plugin, Res, ResMut, Resource, Time, Transform,
+    Update,
 };
+use shared_domain::building::building_info::WithTileCoverage;
 use shared_domain::client_command::GameCommand::{QueryBuildings, QueryTracks, QueryTransports};
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
 };
 use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTimeDiff;
+use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::server_response::{
     AuthenticationResponse, Colour, GameResponse, ServerResponse,
 };
+use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::{GameId, PlayerId};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
@@ -169,4 +178,56 @@ pub(crate) fn player_colour(players_info: &PlayerState, player_id: PlayerId) -> 
         },
         Some(player_info) => player_info.colour,
     }
+}
+
+#[must_use]
+#[allow(clippy::missing_panics_doc)]
+pub fn center_vec3(object: &dyn WithTileCoverage, map_level: &MapLevel) -> Vec3 {
+    let terrain = map_level.terrain();
+    let (nw, se) = match object.covers_tiles() {
+        TileCoverage::Empty => panic!("Unexpectedly - no tiles found"),
+        TileCoverage::Single(tile) => (tile, tile),
+        TileCoverage::Rectangular {
+            north_west_inclusive,
+            south_east_inclusive,
+        } => (north_west_inclusive, south_east_inclusive),
+    };
+    let nw = nw.vertex_coords_nw();
+    let se = se.vertex_coords_se();
+    let nw = terrain.logical_to_world(nw);
+    let se = terrain.logical_to_world(se);
+
+    (se + nw) / 2.0
+}
+
+#[allow(clippy::too_many_arguments, clippy::similar_names)]
+pub fn create_object_entity(
+    object: &dyn WithTileCoverage,
+    label: String,
+    colour: Colour,
+    mesh: Handle<Mesh>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    commands: &mut Commands,
+    map_level: &MapLevel,
+    additional: impl Bundle,
+) {
+    let center = center_vec3(object, map_level);
+    let color = Color::srgb_u8(colour.r, colour.g, colour.b);
+    let material = materials.add(color);
+
+    // TODO: Make buildings distinguishable from each other - e.g. use `label` to also draw text on the sides / roof of the building
+
+    let mut commands = commands.spawn((
+        PbrBundle {
+            transform: Transform {
+                translation: center,
+                ..default()
+            },
+            material,
+            mesh,
+            ..default()
+        },
+        Name::new(label),
+    ));
+    commands.insert(additional);
 }

@@ -1,60 +1,22 @@
 use bevy::prelude::{Camera, GlobalTransform, Query, Res, Vec3};
 use bevy_egui::EguiContexts;
 use egui::{Align2, Context, Id, Pos2};
-use shared_domain::building::building_info::WithBuildingDynamicInfo;
-use shared_domain::building::industry_building_info::IndustryBuildingInfo;
-use shared_domain::building::station_info::StationInfo;
+use shared_domain::building::building_info::{WithBuildingDynamicInfo, WithTileCoverage};
 use shared_domain::game_state::GameState;
 
-use crate::game::buildings::building::center_vec3;
-use crate::game::GameStateResource;
+use crate::game::{center_vec3, GameStateResource};
 
-fn industry_building_label(
-    building: &IndustryBuildingInfo,
+fn with_tile_coverage_label(
+    id: String,
+    label: String,
+    with_tile_coverage: &dyn WithTileCoverage,
     game_state: &GameState,
     context: &mut Context,
     camera: &Camera,
     camera_transform: &GlobalTransform,
 ) {
-    let label = format!(
-        "{:?} {:?}",
-        building.industry_type(),
-        building.dynamic_info()
-    );
-    let id = format!("{:?}", building.id());
-    let building_position_3d = center_vec3(building, game_state.map_level());
-    draw_label(
-        building_position_3d,
-        label,
-        id,
-        context,
-        camera,
-        camera_transform,
-    );
-}
-
-fn station_label(
-    building: &StationInfo,
-    game_state: &GameState,
-    context: &mut Context,
-    camera: &Camera,
-    camera_transform: &GlobalTransform,
-) {
-    let label = format!(
-        "{:?} {:?}",
-        building.station_type(),
-        building.dynamic_info()
-    );
-    let id = format!("{:?}", building.id());
-    let building_position_3d = center_vec3(building, game_state.map_level());
-    draw_label(
-        building_position_3d,
-        label,
-        id,
-        context,
-        camera,
-        camera_transform,
-    );
+    let position_3d = center_vec3(with_tile_coverage, game_state.map_level());
+    draw_label(position_3d, label, id, context, camera, camera_transform);
 }
 
 #[allow(clippy::needless_pass_by_value, clippy::module_name_repetitions)]
@@ -72,8 +34,35 @@ pub fn draw_labels(
             let context = contexts.ctx_mut();
             let buildings = game_state.building_state();
 
+            for zoning_info in game_state.map_level().zoning().all_zonings() {
+                if buildings
+                    .industry_building_at(zoning_info.reference_tile())
+                    .is_none()
+                {
+                    with_tile_coverage_label(
+                        format!("{:?}", zoning_info.id()),
+                        format!("{:?}", zoning_info.zoning_type()),
+                        zoning_info,
+                        game_state,
+                        context,
+                        camera,
+                        camera_transform,
+                    );
+                }
+            }
+
             for industry_building in buildings.all_industry_buildings() {
-                industry_building_label(
+                let id = format!("{:?}", industry_building.id());
+
+                let label = format!(
+                    "{:?} {:?}",
+                    industry_building.industry_type(),
+                    industry_building.dynamic_info()
+                );
+
+                with_tile_coverage_label(
+                    id,
+                    label,
                     industry_building,
                     game_state,
                     context,
@@ -83,7 +72,18 @@ pub fn draw_labels(
             }
 
             for station in buildings.all_stations() {
-                station_label(station, game_state, context, camera, camera_transform);
+                let id = format!("{:?}", station.id());
+                let label = format!("{:?} {:?}", station.station_type(), station.dynamic_info());
+
+                with_tile_coverage_label(
+                    id,
+                    label,
+                    station,
+                    game_state,
+                    context,
+                    camera,
+                    camera_transform,
+                );
             }
 
             let transports = game_state.transport_infos();

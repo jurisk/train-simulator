@@ -92,6 +92,11 @@ impl MapLevel {
     }
 
     #[must_use]
+    pub fn zoning(&self) -> &Zoning {
+        &self.zoning
+    }
+
+    #[must_use]
     pub fn height_at(&self, vertex_coords_xz: VertexCoordsXZ) -> Height {
         self.terrain.height_at(vertex_coords_xz)
     }

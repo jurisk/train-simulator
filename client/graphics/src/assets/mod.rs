@@ -5,6 +5,7 @@ use bevy::prelude::{Assets, Mesh, ResMut, Resource, Startup};
 
 use crate::game::buildings::assets::BuildingAssets;
 use crate::game::buildings::tracks::TrackAssets;
+use crate::game::map_level::assets::MapAssets;
 use crate::game::transport::assets::TransportAssets;
 // Later: Use https://github.com/NiklasEi/bevy_asset_loader? Or perhaps not.
 
@@ -13,6 +14,7 @@ pub struct GameAssets {
     pub track_assets:     TrackAssets,
     pub building_assets:  BuildingAssets,
     pub transport_assets: TransportAssets,
+    pub map_assets:       MapAssets,
 }
 
 pub struct GameAssetsPlugin;
@@ -29,5 +31,6 @@ fn setup_assets(mut commands: bevy::prelude::Commands, mut meshes: ResMut<Assets
         track_assets:     TrackAssets::new(meshes),
         building_assets:  BuildingAssets::new(meshes),
         transport_assets: TransportAssets::new(meshes),
+        map_assets:       MapAssets::new(meshes),
     });
 }

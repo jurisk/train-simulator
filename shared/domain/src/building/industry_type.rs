@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::building::WithRelativeTileCoverage;
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
+use crate::map_level::zoning::ZoningType;
 use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
@@ -39,6 +40,16 @@ impl IndustryType {
             IndustryType::IronWorks,
             IndustryType::Warehouse,
         ]
+    }
+
+    #[must_use]
+    pub fn required_zoning(self) -> ZoningType {
+        match self {
+            IndustryType::CoalMine => ZoningType::CoalDeposit,
+            IndustryType::IronMine => ZoningType::IronDeposit,
+            IndustryType::IronWorks => ZoningType::Industrial,
+            IndustryType::Warehouse => ZoningType::Industrial,
+        }
     }
 
     #[must_use]

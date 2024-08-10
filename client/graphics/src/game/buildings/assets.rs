@@ -6,9 +6,6 @@ use shared_domain::building::station_type::{StationOrientation, StationType};
 
 use crate::util::shift_mesh;
 
-const PRODUCTION_HEIGHT: f32 = 0.5;
-const STATION_HEIGHT: f32 = 0.01;
-
 pub struct BuildingAssets {
     fallback:        Handle<Mesh>,
     industry_meshes: HashMap<IndustryType, Handle<Mesh>>,
@@ -17,12 +14,13 @@ pub struct BuildingAssets {
 
 impl BuildingAssets {
     #[must_use]
-    #[allow(clippy::cast_precision_loss)]
+    #[allow(clippy::cast_precision_loss, clippy::items_after_statements)]
     pub fn new(meshes: &mut Assets<Mesh>) -> Self {
         let fallback = meshes.add(Mesh::from(Sphere::default()));
 
         let mut industry_meshes = HashMap::new();
 
+        const PRODUCTION_HEIGHT: f32 = 0.5;
         for industry_type in IndustryType::all() {
             let mut mesh = Mesh::from(Cuboid::new(3.0, PRODUCTION_HEIGHT, 3.0));
             shift_mesh(&mut mesh, Vec3::new(0.0, PRODUCTION_HEIGHT / 2.0, 0.0));
@@ -32,6 +30,7 @@ impl BuildingAssets {
 
         let mut station_meshes = HashMap::new();
 
+        const STATION_HEIGHT: f32 = 0.01;
         for station_type in StationType::all() {
             let (x, z) = match station_type.orientation {
                 StationOrientation::NorthToSouth => {

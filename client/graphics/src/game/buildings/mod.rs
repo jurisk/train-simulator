@@ -5,7 +5,7 @@ use bevy::prelude::{
     Query, Res, ResMut, StandardMaterial, Update,
 };
 use bevy::state::condition::in_state;
-use shared_domain::building::building_info::BuildingInfo;
+use shared_domain::building::building_info::WithOwner;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::track_info::TrackInfo;
@@ -16,12 +16,10 @@ use shared_domain::{IndustryBuildingId, StationId, TrackId};
 
 use crate::assets::GameAssets;
 use crate::communication::domain::ServerMessageEvent;
-use crate::game::buildings::building::{
-    build_building_when_mouse_released, create_building_entity,
-};
+use crate::game::buildings::building::build_building_when_mouse_released;
 use crate::game::buildings::demolishing::demolish_when_mouse_released;
 use crate::game::buildings::tracks::{build_tracks_when_mouse_released, create_rails};
-use crate::game::{player_colour, GameStateResource};
+use crate::game::{create_object_entity, player_colour, GameStateResource};
 use crate::states::ClientState;
 
 pub mod assets;
@@ -209,7 +207,7 @@ fn create_industry_building(
     let colour = player_colour(players, building_info.owner_id());
     let industry_type = building_info.industry_type();
     let mesh = game_assets.building_assets.industry_mesh_for(industry_type);
-    create_building_entity(
+    create_object_entity(
         building_info,
         format!("{industry_type:?}"),
         colour,
@@ -264,7 +262,7 @@ fn create_station(
 
     let station_type = station_info.station_type();
     let mesh = game_assets.building_assets.station_mesh_for(station_type);
-    create_building_entity(
+    create_object_entity(
         station_info,
         format!("{station_type:?}"),
         STATION_BASE_COLOUR,

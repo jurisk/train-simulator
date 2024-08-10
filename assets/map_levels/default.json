@@ -111,5 +111,46 @@
   "water": {
     "between": [6, 7]
   },
-  "zoning": []
+  "zoning": [
+    {
+      "id": "c1e9794c-bea0-4278-b759-5a16c4b20fed",
+      "zoning_type": "IronDeposit",
+      "reference_tile": {
+        "x": 40,
+        "z": 31
+      }
+    },
+    {
+      "id": "54a735e0-0bc6-4b5d-8ff5-898cfd3b00ee",
+      "zoning_type": "IronDeposit",
+      "reference_tile": {
+        "x": 55,
+        "z": 36
+      }
+    },
+    {
+      "id": "b0510bde-2322-4001-8dd8-5ac878f96aa6",
+      "zoning_type": "CoalDeposit",
+      "reference_tile": {
+        "x": 7,
+        "z": 39
+      }
+    },
+    {
+      "id": "89b127a6-5616-44e5-9139-c8f4b9f6d669",
+      "zoning_type": "Industrial",
+      "reference_tile": {
+        "x": 12,
+        "z": 82
+      }
+    },
+    {
+      "id": "55d451eb-b961-4381-85cb-3e8cb0f02eff",
+      "zoning_type": "Industrial",
+      "reference_tile": {
+        "x": 28,
+        "z": 94
+      }
+    }
+  ]
 }

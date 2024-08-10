@@ -7,8 +7,13 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::PlayerId;
 
-pub trait BuildingInfo {
+pub trait BuildingInfo: WithOwner + WithTileCoverage {}
+
+pub trait WithOwner {
     fn owner_id(&self) -> PlayerId;
+}
+
+pub trait WithTileCoverage {
     fn covers_tiles(&self) -> TileCoverage;
 }
 

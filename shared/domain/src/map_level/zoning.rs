@@ -2,22 +2,99 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::building::building_info::WithTileCoverage;
+use crate::building::industry_building_info::IndustryBuildingInfo;
+use crate::building::WithRelativeTileCoverage;
 use crate::tile_coords_xz::TileCoordsXZ;
-use crate::ResourceId;
+use crate::tile_coverage::TileCoverage;
+use crate::ZoningId;
 
-#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Debug)]
-enum ZoningType {
+#[derive(Serialize, Deserialize, Hash, Copy, Clone, Eq, PartialEq, Debug)]
+pub enum ZoningType {
     CoalDeposit,
     IronDeposit,
-    IndustrialBuilding,
+    Industrial,
+}
+
+impl ZoningType {
+    #[must_use]
+    pub fn all() -> Vec<ZoningType> {
+        vec![
+            ZoningType::CoalDeposit,
+            ZoningType::IronDeposit,
+            ZoningType::Industrial,
+        ]
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct ZoningInfo {
-    id:             ResourceId,
+    id:             ZoningId,
     zoning_type:    ZoningType,
     reference_tile: TileCoordsXZ,
 }
 
+impl ZoningInfo {
+    #[must_use]
+    pub fn id(&self) -> ZoningId {
+        self.id
+    }
+
+    #[must_use]
+    pub fn zoning_type(&self) -> ZoningType {
+        self.zoning_type
+    }
+
+    #[must_use]
+    pub fn reference_tile(&self) -> TileCoordsXZ {
+        self.reference_tile
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Zoning(Vec<ZoningInfo>);
+
+impl Zoning {
+    #[must_use]
+    pub fn all_zonings(&self) -> &Vec<ZoningInfo> {
+        &self.0
+    }
+
+    #[must_use]
+    pub fn zoning_at(&self, tile: TileCoordsXZ) -> Option<&ZoningInfo> {
+        self.all_zonings()
+            .iter()
+            .find(|zoning_info| zoning_info.reference_tile == tile)
+    }
+
+    #[must_use]
+    pub fn can_build_industry_building(
+        &self,
+        industry_building_info: &IndustryBuildingInfo,
+    ) -> bool {
+        let zoning_info = self.zoning_at(industry_building_info.reference_tile());
+        match zoning_info {
+            Some(zoning_info) => {
+                industry_building_info.required_zoning() == zoning_info.zoning_type
+            },
+            None => false,
+        }
+    }
+}
+
+impl WithRelativeTileCoverage for ZoningType {
+    fn relative_tiles_used(&self) -> TileCoverage {
+        TileCoverage::Rectangular {
+            north_west_inclusive: TileCoordsXZ::new(-1, -1),
+            south_east_inclusive: TileCoordsXZ::new(1, 1),
+        }
+    }
+}
+
+impl WithTileCoverage for ZoningInfo {
+    fn covers_tiles(&self) -> TileCoverage {
+        self.zoning_type
+            .relative_tiles_used()
+            .offset_by(self.reference_tile)
+    }
+}

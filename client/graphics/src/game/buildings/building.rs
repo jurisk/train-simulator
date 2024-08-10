@@ -1,16 +1,8 @@
-use bevy::prelude::{
-    Assets, Bundle, ButtonInput, Color, Commands, EventWriter, Handle, Mesh, MouseButton, Name,
-    PbrBundle, Res, ResMut, StandardMaterial, Transform, Vec3,
-};
-use bevy::utils::default;
+use bevy::prelude::{ButtonInput, EventWriter, MouseButton, Res};
 use bevy_egui::EguiContexts;
-use shared_domain::building::building_info::BuildingInfo;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
-use shared_domain::map_level::map_level::MapLevel;
-use shared_domain::server_response::Colour;
-use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::{IndustryBuildingId, StationId};
 
 use crate::communication::domain::ClientMessageEvent;
@@ -74,56 +66,4 @@ pub(crate) fn build_building_when_mouse_released(
             }
         }
     }
-}
-
-#[must_use]
-#[allow(clippy::missing_panics_doc)]
-pub fn center_vec3(building_info: &dyn BuildingInfo, map_level: &MapLevel) -> Vec3 {
-    let terrain = map_level.terrain();
-    let (nw, se) = match building_info.covers_tiles() {
-        TileCoverage::Empty => panic!("Building has no tiles"),
-        TileCoverage::Single(tile) => (tile, tile),
-        TileCoverage::Rectangular {
-            north_west_inclusive,
-            south_east_inclusive,
-        } => (north_west_inclusive, south_east_inclusive),
-    };
-    let nw = nw.vertex_coords_nw();
-    let se = se.vertex_coords_se();
-    let nw = terrain.logical_to_world(nw);
-    let se = terrain.logical_to_world(se);
-
-    (se + nw) / 2.0
-}
-
-#[allow(clippy::too_many_arguments, clippy::similar_names)]
-pub(crate) fn create_building_entity(
-    building_info: &dyn BuildingInfo,
-    label: String,
-    colour: Colour,
-    mesh: Handle<Mesh>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    commands: &mut Commands,
-    map_level: &MapLevel,
-    additional: impl Bundle,
-) {
-    let center = center_vec3(building_info, map_level);
-    let color = Color::srgb_u8(colour.r, colour.g, colour.b);
-    let material = materials.add(color);
-
-    // TODO: Make buildings distinguishable from each other - e.g. use `label` to also draw text on the sides / roof of the building
-
-    let mut commands = commands.spawn((
-        PbrBundle {
-            transform: Transform {
-                translation: center,
-                ..default()
-            },
-            material,
-            mesh,
-            ..default()
-        },
-        Name::new(label.clone()),
-    ));
-    commands.insert(additional);
 }

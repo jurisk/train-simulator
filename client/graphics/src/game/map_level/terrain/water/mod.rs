@@ -45,7 +45,7 @@ fn handle_game_state_snapshot(
     clippy::needless_pass_by_value,
     clippy::cast_lossless
 )]
-pub(crate) fn create_water(
+fn create_water(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,

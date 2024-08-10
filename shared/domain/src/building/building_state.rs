@@ -6,7 +6,9 @@ use std::fmt::{Debug, Formatter};
 use log::warn;
 use serde::{Deserialize, Serialize};
 
-use crate::building::building_info::{BuildingDynamicInfo, BuildingInfo};
+use crate::building::building_info::{
+    BuildingDynamicInfo, BuildingInfo, WithOwner, WithTileCoverage,
+};
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;

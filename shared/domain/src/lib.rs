@@ -134,4 +134,4 @@ newtype_uuid!(TrackId, "T");
 newtype_uuid!(StationId, "S");
 newtype_uuid!(IndustryBuildingId, "IB");
 newtype_uuid!(TransportId, "T");
-newtype_uuid!(ResourceId, "R");
+newtype_uuid!(ZoningId, "Z");

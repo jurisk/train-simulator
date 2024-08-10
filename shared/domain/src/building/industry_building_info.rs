@@ -5,12 +5,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::building::building_info::{
     BuildingDynamicInfo, BuildingInfo, BuildingStaticInfo, WithBuildingDynamicInfo,
-    WithBuildingDynamicInfoMut,
+    WithBuildingDynamicInfoMut, WithOwner, WithTileCoverage,
 };
 use crate::building::industry_type::IndustryType;
 use crate::building::WithRelativeTileCoverage;
 use crate::cargo_map::{CargoMap, WithCargo, WithCargoMut};
 use crate::game_time::GameTimeDiff;
+use crate::map_level::zoning::ZoningType;
 use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
@@ -78,6 +79,11 @@ impl IndustryBuildingInfo {
     }
 
     #[must_use]
+    pub fn required_zoning(&self) -> ZoningType {
+        self.industry_type.required_zoning()
+    }
+
+    #[must_use]
     #[allow(clippy::match_same_arms)]
     pub fn industry_transform_inputs(&self) -> HashSet<ResourceType> {
         let mut result = HashSet::new();
@@ -137,11 +143,15 @@ impl WithRelativeTileCoverage for IndustryBuildingInfo {
     }
 }
 
-impl BuildingInfo for IndustryBuildingInfo {
+impl BuildingInfo for IndustryBuildingInfo {}
+
+impl WithOwner for IndustryBuildingInfo {
     fn owner_id(&self) -> PlayerId {
         self.static_info.owner_id()
     }
+}
 
+impl WithTileCoverage for IndustryBuildingInfo {
     fn covers_tiles(&self) -> TileCoverage {
         self.relative_tiles_used().offset_by(self.reference_tile())
     }

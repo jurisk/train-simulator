@@ -6,7 +6,7 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::building::building_info::{
     BuildingDynamicInfo, BuildingInfo, BuildingStaticInfo, WithBuildingDynamicInfo,
-    WithBuildingDynamicInfoMut,
+    WithBuildingDynamicInfoMut, WithOwner, WithTileCoverage,
 };
 use crate::building::station_type::StationType;
 use crate::building::WithRelativeTileCoverage;
@@ -164,11 +164,15 @@ impl WithRelativeTileCoverage for StationInfo {
     }
 }
 
-impl BuildingInfo for StationInfo {
+impl BuildingInfo for StationInfo {}
+
+impl WithOwner for StationInfo {
     fn owner_id(&self) -> PlayerId {
         self.static_info.owner_id()
     }
+}
 
+impl WithTileCoverage for StationInfo {
     fn covers_tiles(&self) -> TileCoverage {
         self.relative_tiles_used().offset_by(self.reference_tile())
     }

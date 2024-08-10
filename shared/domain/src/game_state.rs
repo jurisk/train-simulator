@@ -35,7 +35,6 @@ pub struct GameState {
 impl GameState {
     #[must_use]
     pub fn empty_from_level(map_level: MapLevel) -> Self {
-        // TODO HIGH: Randomly distribute resources on the map in places where buildings can be built (3x3 level ground)
         let game_id = GameId::random();
         Self {
             game_id,
@@ -162,8 +161,16 @@ impl GameState {
         requesting_player_id: PlayerId,
         building: &IndustryBuildingInfo,
     ) -> Result<(), ()> {
-        self.buildings
-            .build_industry_building(requesting_player_id, building, &self.map_level)
+        if self
+            .map_level
+            .zoning()
+            .can_build_industry_building(building)
+        {
+            self.buildings
+                .build_industry_building(requesting_player_id, building, &self.map_level)
+        } else {
+            Err(())
+        }
     }
 
     pub fn build_station(
