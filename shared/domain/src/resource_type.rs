@@ -13,6 +13,7 @@ pub enum ResourceType {
     // Raw
     Clay,
     Coal,
+    FarmProducts,
     Iron,
     Limestone,
     Nitrates,
@@ -25,7 +26,6 @@ pub enum ResourceType {
     Cellulose,
     Cement,
     Concrete,
-    FarmProducts,
     Food,
     Fuel,
     Nitrocellulose,
@@ -41,6 +41,7 @@ impl ResourceType {
             // Raw
             Clay,
             Coal,
+            FarmProducts,
             Iron,
             Limestone,
             Nitrates,
@@ -53,7 +54,6 @@ impl ResourceType {
             Cellulose,
             Cement,
             Concrete,
-            FarmProducts,
             Food,
             Fuel,
             Nitrocellulose,

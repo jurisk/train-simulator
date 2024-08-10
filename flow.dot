@@ -1,7 +1,5 @@
 digraph G {
-    node [style = filled, fontcolor = white];
-
-    # Zoning
+    // Zoning
     node [shape = box, color = blue, style = filled];
     CoalDeposit [label = "Coal Deposit"];
     IronDeposit [label = "Iron Deposit"];
@@ -10,7 +8,7 @@ digraph G {
 
     { rank = same; CoalDeposit; IronDeposit; Industrial; LimestoneDeposit; }
 
-    # Raw materials extraction
+    // Raw materials extraction
     node [shape = box, color = green, style = filled];
     CoalMine [label = "Coal Mine"];
     IronMine [label = "Iron Mine"];
@@ -25,7 +23,7 @@ digraph G {
     { rank = same; CoalMine; IronMine; Forestry; SulfurMine; NitrateMine; OilWell; LimestoneMine; ClayPit; SandAndGravelQuarry; Farm; }
 
     node [shape = box, color = "#a04000"];
-    # https://en.wikipedia.org/wiki/Basic_oxygen_steelmaking
+    // https://en.wikipedia.org/wiki/Basic_oxygen_steelmaking
     IronWorks [label = "Iron Works"];
     WeaponsFactory [label = "Weapons Factory"];
     TrainFactory [label = "Train Factory"];
@@ -36,11 +34,12 @@ digraph G {
     ConcretePlant [label = "Concrete Plant"];
     FoodProcessingPlant [label = "Food Processing Plant"];
     PowerPlant [label = "Power Plant"];
+    CoalToOilPlant [label = "Coal to Oil Plant"];
 
     subgraph cluster_ExplosivesPlant {
-        # This is being built together as otherwise it becomes too much micro-management
-        # Later: Should we be considering the TNT aspects too?
-        # See https://en.wikipedia.org/wiki/TNT#Preparation and https://en.wikipedia.org/wiki/Toluene#Production
+        // This is being built together as otherwise it becomes too much micro-management
+        // Later: Should we be considering the TNT aspects too?
+        // See https://en.wikipedia.org/wiki/TNT#Preparation and https://en.wikipedia.org/wiki/Toluene#Production
         style = filled;
         color = "#a04000";
         fontcolor = white;
@@ -56,7 +55,7 @@ digraph G {
         SulfuricAcid [label = "Sulfuric Acid"];
     }
 
-    # Final consumers
+    // Final consumers
     node [shape = box, color = "#4A5F6D"];
     Construction [label = "Construction"];
     Military [label = "Military"];
@@ -64,8 +63,8 @@ digraph G {
     TrainBuilding [label = "Train Building"];
     PowerPlant [label = "Power Plant"];
     City [label = "City"];
-    EnergyUsageByFactories [label = "Energy Usage by Factories"];
-    { rank = same; Construction; Military; CoalUsageByTrainMovement; TrainBuilding; EnergyUsageByFactories; City; }
+    EnergyUsageByIndustry [label = "Energy Usage by Industry"];
+    { rank = same; Construction; Military; CoalUsageByTrainMovement; TrainBuilding; EnergyUsageByIndustry; City; }
 
     node [shape = ellipse, color = "#D8DBE2", fontcolor = black];
     Coal [label = "Coal"];
@@ -102,7 +101,7 @@ digraph G {
     Coal -> CoalUsageByTrainMovement;
     Coal -> PowerPlant;
     PowerPlant -> Energy;
-    Energy -> EnergyUsageByFactories;
+    Energy -> EnergyUsageByIndustry;
 
     IronMine -> Iron;
     Iron -> IronWorks;
@@ -168,4 +167,7 @@ digraph G {
     FoodProcessingPlant -> Food;
     Food -> Military;
     Food -> City;
+
+    Coal -> CoalToOilPlant;
+    CoalToOilPlant -> Oil;
 }
