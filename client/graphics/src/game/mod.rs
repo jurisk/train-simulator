@@ -12,7 +12,6 @@ use bevy::prelude::{
     Update,
 };
 use shared_domain::building::building_info::WithTileCoverage;
-use shared_domain::client_command::GameCommand::{QueryBuildings, QueryTracks, QueryTransports};
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
 };
@@ -140,27 +139,14 @@ fn handle_players_updated(
 #[allow(clippy::collapsible_match)]
 fn handle_game_state_snapshot(
     mut server_messages: EventReader<ServerMessageEvent>,
-    mut client_messages: EventWriter<ClientMessageEvent>,
     mut client_state: ResMut<NextState<ClientState>>,
     mut commands: Commands,
 ) {
     for message in server_messages.read() {
-        if let ServerResponse::Game(game_id, game_response) = &message.response {
+        if let ServerResponse::Game(_game_id, game_response) = &message.response {
             if let GameResponse::GameStateSnapshot(game_state) = game_response {
                 commands.insert_resource(GameStateResource(game_state.clone()));
                 client_state.set(ClientState::Playing);
-
-                // Later:   We do it like this, because we need the `GameStateSnapshot` to be set
-                //          before we can render buildings, so we don't want to receive them too
-                //          early. Also, this way we actually create the client-side graphical
-                //          objects using the same update mechanism, instead of immediately, now.
-                //          This should be improved as we basically send buildings & transports
-                //          twice now.
-                for query in [QueryBuildings, QueryTracks, QueryTransports] {
-                    client_messages.send(ClientMessageEvent {
-                        command: ClientCommand::Game(*game_id, query),
-                    });
-                }
             }
         }
     }

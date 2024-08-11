@@ -114,7 +114,13 @@ impl Debug for GameResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             GameResponse::GameStateSnapshot(game_state) => {
-                write!(f, "GameStateSnapshot({:?} time)", game_state.time())
+                write!(
+                    f,
+                    "GameStateSnapshot({:?}, {:?}, {:?})",
+                    game_state.time(),
+                    game_state.building_state(),
+                    game_state.transport_state()
+                )
             },
             GameResponse::PlayersUpdated(players) => {
                 write!(f, "PlayersUpdated({} players)", players.len())

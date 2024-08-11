@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Formatter};
+
 use serde::{Deserialize, Serialize};
 
 use crate::building::building_state::BuildingState;
@@ -7,9 +9,15 @@ use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::TransportId;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportState {
     transports: Vec<TransportInfo>,
+}
+
+impl Debug for TransportState {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "TransportState({} transports)", self.transports.len())
+    }
 }
 
 impl TransportState {

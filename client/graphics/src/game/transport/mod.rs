@@ -11,6 +11,7 @@ use bevy::prelude::{
     in_state, warn, Children, Commands, Component, Entity, EventReader, FixedUpdate,
     IntoSystemConfigs, Plugin, Query, Res, ResMut, SpatialBundle, Transform, Update,
 };
+use shared_domain::game_state::GameState;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::server_response::{GameResponse, ServerResponse};
@@ -39,6 +40,7 @@ pub struct TransportPlugin;
 
 impl Plugin for TransportPlugin {
     fn build(&self, app: &mut App) {
+        app.add_systems(FixedUpdate, handle_game_state_snapshot);
         app.add_systems(
             FixedUpdate,
             handle_transport_created.run_if(in_state(ClientState::Playing)),
@@ -135,7 +137,42 @@ fn handle_transports_sync(
     }
 }
 
-#[allow(clippy::collapsible_match, clippy::needless_pass_by_value)]
+#[allow(
+    clippy::collapsible_match,
+    clippy::single_match,
+    clippy::needless_pass_by_value
+)]
+fn handle_game_state_snapshot(
+    mut server_messages: EventReader<ServerMessageEvent>,
+    mut commands: Commands,
+    game_assets: Res<GameAssets>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for message in server_messages.read() {
+        if let ServerResponse::Game(_game_id, game_response) = &message.response {
+            match game_response {
+                GameResponse::GameStateSnapshot(game_state) => {
+                    for transport_info in game_state.transport_infos() {
+                        create_transport(
+                            transport_info,
+                            &mut commands,
+                            &game_assets,
+                            &mut materials,
+                            game_state,
+                        );
+                    }
+                },
+                _ => {},
+            }
+        }
+    }
+}
+
+#[allow(
+    clippy::collapsible_match,
+    clippy::needless_pass_by_value,
+    clippy::single_match
+)]
 fn handle_transport_created(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
@@ -144,37 +181,56 @@ fn handle_transport_created(
     mut game_state_resource: ResMut<GameStateResource>,
 ) {
     let GameStateResource(game_state) = game_state_resource.as_mut();
-    let map_level = game_state.map_level().clone();
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
-            if let GameResponse::TransportsAdded(transport_infos) = game_response {
-                for transport_info in transport_infos {
-                    game_state.upsert_transport(transport_info.clone());
+            match game_response {
+                GameResponse::TransportsAdded(transport_infos) => {
+                    for transport_info in transport_infos {
+                        game_state.upsert_transport(transport_info.clone());
 
-                    let entity = create_transport(
-                        transport_info,
-                        &mut commands,
-                        &game_assets.transport_assets,
-                        &mut materials,
-                        &map_level,
-                        game_state.players(),
-                    );
-
-                    if let Some(entity) = entity {
-                        commands
-                            .entity(entity)
-                            .insert(SpatialBundle::default()) // For https://bevyengine.org/learn/errors/b0004/
-                            .insert(TransportIdComponent(transport_info.transport_id()));
+                        create_transport(
+                            transport_info,
+                            &mut commands,
+                            &game_assets,
+                            &mut materials,
+                            game_state,
+                        );
                     }
-                }
+                },
+                _ => {},
             }
         }
     }
 }
 
 #[allow(clippy::similar_names)]
-#[must_use]
 fn create_transport(
+    transport_info: &TransportInfo,
+    commands: &mut Commands,
+    game_assets: &GameAssets,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    game_state: &GameState,
+) {
+    let entity = create_transport_internal(
+        transport_info,
+        commands,
+        &game_assets.transport_assets,
+        materials,
+        game_state.map_level(),
+        game_state.players(),
+    );
+
+    if let Some(entity) = entity {
+        commands
+            .entity(entity)
+            .insert(SpatialBundle::default()) // For https://bevyengine.org/learn/errors/b0004/
+            .insert(TransportIdComponent(transport_info.transport_id()));
+    }
+}
+
+#[allow(clippy::similar_names)]
+#[must_use]
+fn create_transport_internal(
     transport_info: &TransportInfo,
     commands: &mut Commands,
     transport_assets: &TransportAssets,

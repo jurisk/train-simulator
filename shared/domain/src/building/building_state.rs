@@ -40,7 +40,13 @@ pub struct BuildingState {
 
 impl Debug for BuildingState {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("BuildingState").finish()
+        write!(
+            f,
+            "BuildingState({} tracks, {} industry buildings, {} stations)",
+            self.tracks.len(),
+            self.industry_buildings.len(),
+            self.stations.len()
+        )
     }
 }
 
@@ -161,9 +167,8 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn track_infos(&self) -> Vec<TrackInfo> {
-        // TODO: Stop cloning all the time?
-        self.tracks.clone()
+    pub fn all_tracks(&self) -> &Vec<TrackInfo> {
+        &self.tracks
     }
 
     pub fn append_industry_building(&mut self, additional: IndustryBuildingInfo) {

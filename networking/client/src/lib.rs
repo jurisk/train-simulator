@@ -9,7 +9,7 @@ use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEv
 use client_graphics::states::ClientState;
 use enfync::builtin::Handle;
 use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
-use shared_domain::server_response::ServerResponse;
+use shared_domain::server_response::{GameResponse, ServerResponse};
 use url::Url;
 
 pub type GameClientEvent = ClientEventFrom<GameChannel>;
@@ -81,7 +81,15 @@ fn read_on_client(
             GameClientEvent::Msg(EncodedServerMsg(message)) => {
                 match bincode::deserialize::<ServerResponse>(&message) {
                     Ok(response) => {
-                        info!("Received server message: {response:?}");
+                        if matches!(
+                            response,
+                            ServerResponse::Game(_, GameResponse::DynamicInfosSync(_, _, _, _))
+                        ) {
+                            trace!("Received server message: {response:?}");
+                        } else {
+                            info!("Received server message: {response:?}");
+                        }
+
                         server_messages.send(ServerMessageEvent::new(response));
                     },
                     Err(error) => {

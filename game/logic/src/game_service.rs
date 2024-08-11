@@ -116,7 +116,7 @@ impl GameService {
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         Ok(vec![GameResponseWithAddress::new(
             AddressEnvelope::ToPlayer(requesting_player_id),
-            GameResponse::TracksAdded(self.state.track_infos()),
+            GameResponse::TracksAdded(self.state.track_infos().clone()),
         )])
     }
 

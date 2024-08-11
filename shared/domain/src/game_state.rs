@@ -108,8 +108,8 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn track_infos(&self) -> Vec<TrackInfo> {
-        self.buildings.track_infos()
+    pub fn track_infos(&self) -> &Vec<TrackInfo> {
+        self.buildings.all_tracks()
     }
 
     #[must_use]
@@ -270,5 +270,10 @@ impl GameState {
     #[must_use]
     pub fn get_transport_info(&self, transport_id: TransportId) -> Option<&TransportInfo> {
         self.transports.info_by_id(transport_id)
+    }
+
+    #[must_use]
+    pub fn transport_state(&self) -> &TransportState {
+        &self.transports
     }
 }

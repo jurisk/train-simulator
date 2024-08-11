@@ -40,6 +40,7 @@ pub(crate) struct BuildingsPlugin;
 
 impl Plugin for BuildingsPlugin {
     fn build(&self, app: &mut bevy::app::App) {
+        app.add_systems(FixedUpdate, handle_game_state_snapshot);
         app.add_systems(
             FixedUpdate,
             handle_buildings_or_tracks_changed.run_if(in_state(ClientState::Playing)),
@@ -56,6 +57,58 @@ impl Plugin for BuildingsPlugin {
             Update,
             demolish_when_mouse_released.run_if(in_state(ClientState::Playing)),
         );
+    }
+}
+
+#[allow(clippy::single_match)]
+fn handle_game_state_snapshot(
+    mut server_messages: EventReader<ServerMessageEvent>,
+    mut commands: Commands,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    game_assets: Res<GameAssets>,
+) {
+    for message in server_messages.read() {
+        if let ServerResponse::Game(_game_id, game_response) = &message.response {
+            match game_response {
+                GameResponse::GameStateSnapshot(game_state) => {
+                    for industry_building_info in
+                        game_state.building_state().all_industry_buildings()
+                    {
+                        create_industry_building(
+                            industry_building_info,
+                            &mut commands,
+                            &mut materials,
+                            game_assets.as_ref(),
+                            game_state.map_level(),
+                            game_state.players(),
+                        );
+                    }
+
+                    for station_info in game_state.building_state().all_stations() {
+                        create_station(
+                            station_info,
+                            &mut commands,
+                            &mut materials,
+                            game_assets.as_ref(),
+                            game_state.map_level(),
+                            game_state.players(),
+                        );
+                    }
+
+                    for track in game_state.building_state().all_tracks() {
+                        create_track(
+                            track,
+                            &mut commands,
+                            &mut materials,
+                            game_assets.as_ref(),
+                            game_state.map_level(),
+                            game_state.players(),
+                        );
+                    }
+                },
+                _ => {},
+            }
+        }
     }
 }
 
