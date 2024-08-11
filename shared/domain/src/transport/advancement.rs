@@ -1,4 +1,4 @@
-use log::{debug, error, warn};
+use log::{debug, error};
 
 use crate::building::building_state::BuildingState;
 use crate::cargo_map::CargoOps;
@@ -12,7 +12,7 @@ use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::transport::transport_location::TransportLocation;
 use crate::transport::transport_type::TransportType;
 
-fn jump_tile(transport_info: &mut TransportInfo, building_state: &BuildingState) {
+fn jump_tile(transport_info: &mut TransportInfo, building_state: &BuildingState) -> Result<(), ()> {
     debug!("Jumping tile: {:?}", transport_info);
 
     let transport_type = transport_info.transport_type().clone();
@@ -26,14 +26,11 @@ fn jump_tile(transport_info: &mut TransportInfo, building_state: &BuildingState)
     // The first one is the current tile, so we take the second one
     match route.unwrap_or_default().get(1) {
         None => {
-            transport_info
-                .dynamic_info
-                .movement_orders
-                .set_force_stop(true);
-            warn!(
-                "No route found for orders {current_order:?} for transport {:?}, stopping: {transport_info:?}",
+            debug!(
+                "No route found for orders {current_order:?} for transport {:?}",
                 transport_info.transport_id()
             );
+            Err(())
         },
         Some(next_tile_track) => {
             perform_jump(
@@ -42,8 +39,9 @@ fn jump_tile(transport_info: &mut TransportInfo, building_state: &BuildingState)
                 *next_tile_track,
             );
             debug!("Finished jump: {:?}", transport_info);
+            Ok(())
         },
-    };
+    }
 }
 
 fn at_location(
@@ -121,8 +119,10 @@ fn advance_internal(
                 GameTimeDiff::ZERO
             }
         } else {
-            jump_tile(transport_info, building_state);
-            diff
+            match jump_tile(transport_info, building_state) {
+                Ok(()) => diff,
+                Err(()) => GameTimeDiff::ZERO,
+            }
         }
     } else {
         advance_within_tile(transport_info, diff)
