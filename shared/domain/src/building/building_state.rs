@@ -117,7 +117,7 @@ impl BuildingState {
         let results: Vec<_> = self
             .industry_buildings
             .iter()
-            .filter(|station| station.covers_tiles().contains(tile))
+            .filter(|industry_building| industry_building.covers_tiles().contains(tile))
             .collect();
 
         if results.len() > 1 {
@@ -226,11 +226,8 @@ impl BuildingState {
 
         // TODO: Check that this is a valid building and there is enough money to build it, subtract money
 
-        let can_build = self.can_build_for_coverage(
-            requesting_player_id,
-            &building_info.covers_tiles(),
-            map_level,
-        ) == CanBuildResponse::Ok;
+        let can_build = self.can_build_for_coverage(&building_info.covers_tiles(), map_level)
+            == CanBuildResponse::Ok;
 
         valid_player_id && can_build
     }
@@ -339,7 +336,6 @@ impl BuildingState {
     #[allow(clippy::collapsible_else_if)]
     pub(crate) fn can_build_for_coverage(
         &self,
-        requesting_player_id: PlayerId,
         tile_coverage: &TileCoverage,
         map_level: &MapLevel,
     ) -> CanBuildResponse {
@@ -357,10 +353,6 @@ impl BuildingState {
             .into_iter()
             .filter_map(|tile| self.building_at(tile))
             .collect::<Vec<_>>();
-
-        let overlapping_other_players = overlapping_buildings
-            .iter()
-            .any(|building| building.owner_id() != requesting_player_id);
 
         let invalid_overlaps = !overlapping_buildings.is_empty();
 
@@ -381,8 +373,7 @@ impl BuildingState {
 
         let valid_heights = vertex_heights.len() == 1;
 
-        if overlapping_other_players || invalid_overlaps || any_vertex_under_water || !valid_heights
-        {
+        if invalid_overlaps || any_vertex_under_water || !valid_heights {
             CanBuildResponse::Invalid
         } else {
             CanBuildResponse::Ok
