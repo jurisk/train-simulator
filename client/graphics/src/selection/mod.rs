@@ -165,6 +165,18 @@ fn highlight_selected_tiles(
     }
 }
 
+#[allow(unused)]
+#[cfg(target_arch = "wasm32")]
+fn debug_draw_edge(
+    gizmos: &mut Gizmos,
+    edge: EdgeXZ,
+    tiles: &GridXZ<TileCoordsXZ, Tile>,
+    color: Srgba,
+) {
+    // Later: Temporarily skipped because of https://github.com/bevyengine/bevy/issues/14696
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 fn debug_draw_edge(
     gizmos: &mut Gizmos,
     edge: EdgeXZ,
