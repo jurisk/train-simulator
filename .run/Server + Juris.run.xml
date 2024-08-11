@@ -1,7 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Server + Juris" type="CompoundRunConfigurationType">
-    <toRun name="client Juris" type="CargoCommandRunConfiguration" />
-    <toRun name="server" type="CargoCommandRunConfiguration" />
-    <method v="2" />
-  </configuration>
-</component>
