@@ -58,9 +58,6 @@ impl Debug for DemolishSelector {
 pub enum GameCommand {
     // These queries are separate due to some race conditions on the client, where the map level
     // was not available yet, so received buildings / transports got ignored.
-    QueryBuildings,
-    QueryTracks,
-    QueryTransports,
     BuildIndustryBuilding(IndustryBuildingInfo),
     BuildStation(StationInfo),
     BuildTracks(Vec<TrackInfo>),
@@ -72,9 +69,6 @@ pub enum GameCommand {
 impl Debug for GameCommand {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            GameCommand::QueryBuildings => write!(f, "QueryBuildings"),
-            GameCommand::QueryTracks => write!(f, "QueryTracks"),
-            GameCommand::QueryTransports => write!(f, "QueryTransports"),
             GameCommand::BuildIndustryBuilding(building) => {
                 write!(f, "BuildIndustryBuilding({})", building.id())
             },

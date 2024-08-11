@@ -63,9 +63,6 @@ impl GameService {
             GameCommand::BuildTracks(track_infos) => {
                 self.process_build_tracks(requesting_player_id, track_infos)
             },
-            GameCommand::QueryBuildings => self.process_query_buildings(requesting_player_id),
-            GameCommand::QueryTracks => self.process_query_tracks(requesting_player_id),
-            GameCommand::QueryTransports => self.process_query_transports(requesting_player_id),
             GameCommand::UpdateTransportMovementOrders(transport_id, movement_orders) => {
                 self.process_update_transport_movement_orders(
                     requesting_player_id,
@@ -77,47 +74,6 @@ impl GameService {
                 self.process_demolish(requesting_player_id, *demolish_selector)
             },
         }
-    }
-
-    fn process_query_transports(
-        &mut self,
-        requesting_player_id: PlayerId,
-    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
-        Ok(vec![GameResponseWithAddress::new(
-            AddressEnvelope::ToPlayer(requesting_player_id),
-            GameResponse::TransportsAdded(self.state.transport_infos().clone()),
-        )])
-    }
-
-    fn process_query_buildings(
-        &mut self,
-        requesting_player_id: PlayerId,
-    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
-        // TODO: This is inefficient, however, it is also unneeded - we already send `GameStateSnapshot` message - and then just ignore most of it!
-        let mut results = vec![];
-        for building in self.state.building_state().all_industry_buildings() {
-            results.push(GameResponseWithAddress::new(
-                AddressEnvelope::ToPlayer(requesting_player_id),
-                GameResponse::IndustryBuildingAdded(building.clone()),
-            ));
-        }
-        for building in self.state.building_state().all_stations() {
-            results.push(GameResponseWithAddress::new(
-                AddressEnvelope::ToPlayer(requesting_player_id),
-                GameResponse::StationAdded(building.clone()),
-            ));
-        }
-        Ok(results)
-    }
-
-    fn process_query_tracks(
-        &mut self,
-        requesting_player_id: PlayerId,
-    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
-        Ok(vec![GameResponseWithAddress::new(
-            AddressEnvelope::ToPlayer(requesting_player_id),
-            GameResponse::TracksAdded(self.state.track_infos().clone()),
-        )])
     }
 
     fn process_build_industry_building(
