@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
+use crate::building::track_info::TrackInfo;
 use crate::building::WithRelativeTileCoverage;
 use crate::map_level::zoning::ZoningType::{Deposit, Provision};
 use crate::resource_type::ResourceType;
@@ -75,10 +76,17 @@ impl Zoning {
     }
 
     #[must_use]
-    pub fn zoning_at(&self, tile: TileCoordsXZ) -> Option<&ZoningInfo> {
+    pub fn zoning_at_reference_tile(&self, tile: TileCoordsXZ) -> Option<&ZoningInfo> {
         self.all_zonings()
             .iter()
             .find(|zoning_info| zoning_info.reference_tile == tile)
+    }
+
+    #[must_use]
+    pub fn zoning_at_tile(&self, tile: TileCoordsXZ) -> Option<&ZoningInfo> {
+        self.all_zonings()
+            .iter()
+            .find(|zoning_info| zoning_info.covers_tiles().contains(tile))
     }
 
     #[must_use]
@@ -86,7 +94,7 @@ impl Zoning {
         &self,
         industry_building_info: &IndustryBuildingInfo,
     ) -> bool {
-        let zoning_info = self.zoning_at(industry_building_info.reference_tile());
+        let zoning_info = self.zoning_at_reference_tile(industry_building_info.reference_tile());
         match zoning_info {
             Some(zoning_info) => {
                 industry_building_info.required_zoning() == zoning_info.zoning_type
@@ -96,8 +104,17 @@ impl Zoning {
     }
 
     #[must_use]
-    pub fn can_build_station(&self, _station_info: &StationInfo) -> bool {
-        true
+    pub fn can_build_track(&self, track_info: &TrackInfo) -> bool {
+        self.zoning_at_tile(track_info.tile).is_none()
+    }
+
+    #[must_use]
+    pub fn can_build_station(&self, station_info: &StationInfo) -> bool {
+        station_info
+            .covers_tiles()
+            .to_set()
+            .iter()
+            .all(|tile| self.zoning_at_tile(*tile).is_none())
     }
 }
 

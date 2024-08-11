@@ -245,7 +245,7 @@ impl BuildingState {
     ) -> Option<Vec<TrackInfo>> {
         let valid_player_id = track_infos
             .iter()
-            .all(|track_info| track_info.owner_id == requesting_player_id);
+            .all(|track_info| track_info.owner_id() == requesting_player_id);
 
         if valid_player_id {
             let mut results = vec![];
@@ -283,13 +283,14 @@ impl BuildingState {
         let overlapping_buildings = self.building_at(track_info.tile);
         let invalid_overlaps = overlapping_buildings.is_some();
 
-        let overlapping_other_players = overlapping_buildings
+        let overlapping_tracks = self.tracks_at(track_info.tile);
+
+        let overlapping_other_players_tracks = overlapping_tracks
             .iter()
-            .any(|building| building.owner_id() != requesting_player_id);
+            .any(|track| track.owner_id() != requesting_player_id);
 
         let has_same_track = {
-            let overlapping_tracks_from_tracks = self
-                .tracks_at(track_info.tile)
+            let overlapping_tracks_from_tracks = overlapping_tracks
                 .into_iter()
                 .map(|other_track| other_track.track_type)
                 .collect::<HashSet<_>>();
@@ -328,7 +329,10 @@ impl BuildingState {
                 height_a == height_b
             });
 
-        if overlapping_other_players || invalid_overlaps || any_vertex_under_water || !valid_heights
+        if overlapping_other_players_tracks
+            || invalid_overlaps
+            || any_vertex_under_water
+            || !valid_heights
         {
             CanBuildResponse::Invalid
         } else if has_same_track {
@@ -564,7 +568,7 @@ impl BuildingState {
             .find(|track| track.id() == track_id)
             .ok_or(())?;
 
-        if track.owner_id == requesting_player_id {
+        if track.owner_id() == requesting_player_id {
             self.remove_track(track_id);
             Ok(())
         } else {

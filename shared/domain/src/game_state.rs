@@ -6,7 +6,7 @@ use log::trace;
 use serde::{Deserialize, Serialize};
 
 use crate::building::building_info::BuildingDynamicInfo;
-use crate::building::building_state::BuildingState;
+use crate::building::building_state::{BuildingState, CanBuildResponse};
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
@@ -152,8 +152,32 @@ impl GameState {
         requesting_player_id: PlayerId,
         tracks: &[TrackInfo],
     ) -> Result<Vec<TrackInfo>, ()> {
-        self.buildings
-            .build_tracks(requesting_player_id, tracks, &self.map_level)
+        if self.can_build_tracks(requesting_player_id, tracks) {
+            self.buildings
+                .build_tracks(requesting_player_id, tracks, &self.map_level)
+        } else {
+            Err(())
+        }
+    }
+
+    fn can_build_tracks(&self, requesting_player_id: PlayerId, tracks: &[TrackInfo]) -> bool {
+        tracks.iter().all(|track| {
+            self.can_build_track(requesting_player_id, track) != CanBuildResponse::Invalid
+        })
+    }
+
+    fn can_build_track(
+        &self,
+        requesting_player_id: PlayerId,
+        track: &TrackInfo,
+    ) -> CanBuildResponse {
+        // Later: We do some duplicate invocations here...
+        if self.map_level.zoning().can_build_track(track) {
+            self.buildings
+                .can_build_track(requesting_player_id, track, &self.map_level)
+        } else {
+            CanBuildResponse::Invalid
+        }
     }
 
     #[must_use]

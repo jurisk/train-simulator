@@ -7,7 +7,7 @@ use crate::{PlayerId, TrackId};
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct TrackInfo {
     id:             TrackId,
-    pub owner_id:   PlayerId,
+    owner_id:       PlayerId,
     pub tile:       TileCoordsXZ,
     pub track_type: TrackType,
 }
@@ -31,5 +31,10 @@ impl TrackInfo {
     #[must_use]
     pub fn id(&self) -> TrackId {
         self.id
+    }
+
+    #[must_use]
+    pub fn owner_id(&self) -> PlayerId {
+        self.owner_id
     }
 }

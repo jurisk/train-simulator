@@ -221,7 +221,7 @@ fn create_track(
     map_level: &MapLevel,
     players: &PlayerState,
 ) {
-    let colour = player_colour(players, track_info.owner_id);
+    let colour = player_colour(players, track_info.owner_id());
     create_rails(
         colour,
         commands,
