@@ -230,10 +230,6 @@ pub(crate) fn build_tracks_when_mouse_released(
     selected_mode_resource: Res<SelectedMode>,
     mut egui_contexts: EguiContexts,
 ) {
-    if on_ui(&mut egui_contexts) {
-        return;
-    }
-
     if selected_mode_resource.as_ref() != &SelectedMode::Tracks {
         return;
     }
@@ -242,21 +238,18 @@ pub(crate) fn build_tracks_when_mouse_released(
     let game_id = game_state.game_id();
 
     if mouse_buttons.just_released(MouseButton::Left) {
+        let ordered_selected_tiles = selected_tiles.take();
+        let ordered_selected_edges = selected_edges.take();
+
+        if on_ui(&mut egui_contexts) {
+            return;
+        }
+
         let PlayerIdResource(player_id) = *player_id_resource;
-        let selected_tiles = selected_tiles.as_mut();
-        let SelectedTiles {
-            ordered: ordered_selected_tiles,
-        } = selected_tiles;
-
-        let selected_edges = selected_edges.as_mut();
-        let SelectedEdges {
-            ordered: ordered_selected_edges,
-        } = selected_edges;
-
         if let Some(tracks) = plan_tracks(
             player_id,
-            ordered_selected_tiles,
-            ordered_selected_edges,
+            &ordered_selected_tiles,
+            &ordered_selected_edges,
             game_state.building_state(),
             game_state.map_level(),
         ) {
@@ -267,8 +260,5 @@ pub(crate) fn build_tracks_when_mouse_released(
         } else {
             debug!("Could not build track.");
         }
-
-        ordered_selected_tiles.clear();
-        ordered_selected_edges.clear();
     }
 }

@@ -33,10 +33,22 @@ pub struct SelectedTiles {
     pub ordered: Vec<TileCoordsXZ>,
 }
 
+impl SelectedTiles {
+    pub fn take(&mut self) -> Vec<TileCoordsXZ> {
+        std::mem::take(&mut self.ordered)
+    }
+}
+
 #[derive(Resource, Default)]
 pub struct SelectedEdges {
     // Ordered on purpose instead of a set, because we care about which one was selected first
     pub ordered: Vec<EdgeXZ>,
+}
+
+impl SelectedEdges {
+    pub fn take(&mut self) -> Vec<EdgeXZ> {
+        std::mem::take(&mut self.ordered)
+    }
 }
 
 pub(crate) struct SelectionPlugin;
