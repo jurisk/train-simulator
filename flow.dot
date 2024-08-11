@@ -1,12 +1,20 @@
 digraph G {
-    // Zoning
-    node [shape = box, color = blue, style = filled];
-    CoalDeposit [label = "Coal Deposit"];
-    IronDeposit [label = "Iron Deposit"];
-    Industrial [label = "Industrial"];
-    LimestoneDeposit [label = "Limestone Deposit"];
+    node [style = filled, fontcolor = white];
 
-    { rank = same; CoalDeposit; IronDeposit; Industrial; LimestoneDeposit; }
+    // Zoning
+    node [shape = box, color = blue];
+    ClayDeposit [label = "Clay Deposit"];
+    CoalDeposit [label = "Coal Deposit"];
+    FarmLand [label = "Farm Land"];
+    IronDeposit [label = "Iron Deposit"];
+    LimestoneDeposit [label = "Limestone Deposit"];
+    NitrateDeposit [label = "Nitrate Deposit"];
+    OilDeposit [label = "Oil Deposit"];
+    SandAndGravelDeposit [label = "Sand & Gravel Deposit"];
+    SulfurDeposit [label = "Sulfur Deposit"];
+    Forest [label = "Forest"];
+
+    { rank = same; ClayDeposit; CoalDeposit; FarmLand; IronDeposit; LimestoneDeposit; NitrateDeposit; OilDeposit; SandAndGravelDeposit; SulfurDeposit; Forest; }
 
     // Raw materials extraction
     node [shape = box, color = green, style = filled];
@@ -23,8 +31,8 @@ digraph G {
     { rank = same; CoalMine; IronMine; Forestry; SulfurMine; NitrateMine; OilWell; LimestoneMine; ClayPit; SandAndGravelQuarry; Farm; }
 
     node [shape = box, color = "#a04000"];
-    // https://en.wikipedia.org/wiki/Basic_oxygen_steelmaking
-    IronWorks [label = "Iron Works"];
+    // https://en.wikipedia.org/wiki/Ferrous_metallurgy
+    SteelMill [label = "Steel Mill"];
     WeaponsFactory [label = "Weapons Factory"];
     TrainFactory [label = "Train Factory"];
     LumberMill [label = "Lumber Mill"];
@@ -67,13 +75,17 @@ digraph G {
     { rank = same; Construction; Military; CoalUsageByTrainMovement; TrainBuilding; EnergyUsageByIndustry; City; }
 
     node [shape = ellipse, color = "#D8DBE2", fontcolor = black];
+    // Later: There is also https://en.wikipedia.org/wiki/Coke_(fuel)
     Coal [label = "Coal"];
     Iron [label = "Iron"];
     Oil [label = "Oil"];
     Fuel [label = "Fuel"];
+    // Later: What about https://en.wikipedia.org/wiki/Nitrogen_fixation#Industrial_processes and https://en.wikipedia.org/wiki/Haber_process ?
+    // Should it be `Nitrates` or perhaps `Ammonia`?
     Nitrates [label = "Nitrates"];
     Sulfur [label = "Sulfur"];
-    Nitrocellulose [label = "Nitrocellulose"];
+    // It is `Nitrocellulose` and `TNT`
+    Explosives [label = "Explosives"];
     Timber [label = "Timber"];
     Cellulose [label = "Cellulose"];
     Concrete [label = "Concrete"];
@@ -87,25 +99,32 @@ digraph G {
     FarmProducts [label = "Farm Products"];
     Wood [label = "Wood"];
     Food [label = "Food"];
+    { rank = same; Coal; Iron; Nitrates; Sulfur; FarmProducts; Nitrates; Sulfur; Wood; Limestone; Clay; SandAndGravel; }
+    { rank = same; Energy; TrainBuildingCapacity; Weapons; Ammunition; Food; Concrete; }
+    // TODO HIGH: What about `Troops` as cargo being transported?
+    // Later: What about Tanks & Armored Vehicles?
+    // Later: What about Horses & Mules?
+    // Later: What about Rubber & Textiles?
+    // Later: Lead and other metals?
 
     node [color = "darkblue", fontcolor = white];
     Energy [label = "Energy"];
-    TrainPoints [label = "Train Points"];
+    TrainBuildingCapacity [label = "Train Building Capacity"];
 
     CoalDeposit -> CoalMine;
     IronDeposit -> IronMine;
-    Industrial -> IronWorks;
 
     CoalMine -> Coal;
-    Coal -> IronWorks;
+    Coal -> SteelMill;
     Coal -> CoalUsageByTrainMovement;
     Coal -> PowerPlant;
     PowerPlant -> Energy;
     Energy -> EnergyUsageByIndustry;
 
     IronMine -> Iron;
-    Iron -> IronWorks;
+    Iron -> SteelMill;
 
+    OilDeposit -> OilWell;
     OilWell -> Oil;
     Oil -> OilRefinery;
     OilRefinery -> Fuel;
@@ -117,6 +136,7 @@ digraph G {
     SulfurMine -> Sulfur;
     Sulfur -> SulfuricAcidPlant;
 
+    Forest -> Forestry;
     Forestry -> Wood;
     Wood -> LumberMill;
     LumberMill -> Cellulose;
@@ -124,44 +144,49 @@ digraph G {
     LumberMill -> Timber;
     Timber -> Construction;
 
+    NitrateDeposit -> NitrateMine;
     NitricAcidPlant -> NitricAcid;
     NitricAcid -> NitrationPlant;
 
+    SulfurDeposit -> SulfurMine;
     SulfuricAcidPlant -> SulfuricAcid;
     SulfuricAcid -> NitrationPlant;
 
-    NitrationPlant -> Nitrocellulose;
-    Nitrocellulose -> AmmunitionFactory;
+    NitrationPlant -> Explosives;
+    Explosives -> AmmunitionFactory;
 
     AmmunitionFactory -> Ammunition;
     Ammunition -> Military;
     WeaponsFactory -> Weapons;
     Weapons -> Military;
 
-    IronWorks -> Steel;
+    SteelMill -> Steel;
     Steel -> AmmunitionFactory;
     Steel -> WeaponsFactory;
     Steel -> Construction;
     Steel -> TrainFactory;
-    TrainFactory -> TrainPoints;
-    TrainPoints -> TrainBuilding;
+    TrainFactory -> TrainBuildingCapacity;
+    TrainBuildingCapacity -> TrainBuilding;
 
     LimestoneDeposit -> LimestoneMine;
     LimestoneMine -> Limestone;
     Limestone -> CementPlant;
 
+    ClayDeposit -> ClayPit;
     ClayPit -> Clay;
     Clay -> CementPlant;
 
     CementPlant -> Cement;
     Cement -> ConcretePlant;
 
+    SandAndGravelDeposit -> SandAndGravelQuarry;
     SandAndGravelQuarry -> SandAndGravel;
     SandAndGravel -> ConcretePlant;
 
     ConcretePlant -> Concrete;
     Concrete -> Construction;
 
+    FarmLand -> Farm;
     Farm -> FarmProducts;
     FarmProducts -> FoodProcessingPlant;
     FoodProcessingPlant -> Food;

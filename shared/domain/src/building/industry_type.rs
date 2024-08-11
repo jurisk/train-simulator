@@ -16,7 +16,7 @@ use crate::tile_coverage::TileCoverage;
 pub enum IndustryType {
     CoalMine,
     IronMine,
-    IronWorks,
+    SteelMill,
     Warehouse,
 }
 
@@ -25,7 +25,7 @@ impl Debug for IndustryType {
         match self {
             IndustryType::CoalMine => write!(f, "CoalMine"),
             IndustryType::IronMine => write!(f, "IronMine"),
-            IndustryType::IronWorks => write!(f, "IronWorks"),
+            IndustryType::SteelMill => write!(f, "SteelMill"),
             IndustryType::Warehouse => write!(f, "Warehouse"),
         }
     }
@@ -37,7 +37,7 @@ impl IndustryType {
         [
             IndustryType::CoalMine,
             IndustryType::IronMine,
-            IndustryType::IronWorks,
+            IndustryType::SteelMill,
             IndustryType::Warehouse,
         ]
     }
@@ -47,7 +47,7 @@ impl IndustryType {
         match self {
             IndustryType::CoalMine => ZoningType::Deposit(ResourceType::Coal),
             IndustryType::IronMine => ZoningType::Deposit(ResourceType::Iron),
-            IndustryType::IronWorks => ZoningType::Industrial,
+            IndustryType::SteelMill => ZoningType::Industrial,
             IndustryType::Warehouse => ZoningType::Industrial,
         }
     }
@@ -57,7 +57,7 @@ impl IndustryType {
         match self {
             IndustryType::CoalMine => vec![],
             IndustryType::IronMine => vec![],
-            IndustryType::IronWorks => vec![ResourceType::Iron, ResourceType::Coal],
+            IndustryType::SteelMill => vec![ResourceType::Iron, ResourceType::Coal],
             IndustryType::Warehouse => vec![ResourceType::Steel],
         }
     }
@@ -84,7 +84,7 @@ impl IndustryType {
                     )],
                 )
             },
-            IndustryType::IronWorks => {
+            IndustryType::SteelMill => {
                 // https://marketrealist.com/2015/01/coke-fit-steelmaking-process/
                 ResourceTransform::new(
                     vec![
@@ -182,7 +182,7 @@ mod tests {
 
     #[test]
     fn test_iron_works_empty() {
-        let transform = IndustryType::IronWorks.transform_per_second();
+        let transform = IndustryType::SteelMill.transform_per_second();
         let cargo = CargoMap::new();
         let utilisation = transform.calculate_utilisation_percentage(&cargo, 0.5);
         assert_eq!(utilisation, 0.0);
@@ -190,7 +190,7 @@ mod tests {
 
     #[test]
     fn test_iron_works_one_component_only_other_empty() {
-        let transform = IndustryType::IronWorks.transform_per_second();
+        let transform = IndustryType::SteelMill.transform_per_second();
         let mut cargo = CargoMap::new();
         cargo.add(ResourceType::Coal, CargoAmount::new(4.0));
         let utilisation = transform.calculate_utilisation_percentage(&cargo, 0.5);
@@ -199,7 +199,7 @@ mod tests {
 
     #[test]
     fn test_iron_abundance() {
-        let transform = IndustryType::IronWorks.transform_per_second();
+        let transform = IndustryType::SteelMill.transform_per_second();
         let mut cargo = CargoMap::new();
         cargo.add(ResourceType::Coal, CargoAmount::new(4.0));
         cargo.add(ResourceType::Iron, CargoAmount::new(4.0));
@@ -209,7 +209,7 @@ mod tests {
 
     #[test]
     fn test_iron_partial() {
-        let transform = IndustryType::IronWorks.transform_per_second();
+        let transform = IndustryType::SteelMill.transform_per_second();
         let mut cargo = CargoMap::new();
         cargo.add(ResourceType::Coal, CargoAmount::new(0.025));
         cargo.add(ResourceType::Iron, CargoAmount::new(4.0));

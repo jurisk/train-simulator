@@ -28,7 +28,7 @@ impl ZoningType {
         [
             Deposit(Clay),
             Deposit(Coal),
-            Provision(FarmProducts),
+            Provision(FarmProducts), // Farm-land?
             Deposit(Iron),
             Deposit(Limestone),
             Deposit(Nitrates),

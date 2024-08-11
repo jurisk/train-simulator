@@ -48,7 +48,7 @@ fn build_test_buildings(player_id: PlayerId) -> Vec<GameCommand> {
         (TileCoordsXZ::from_usizes(40, 31), IndustryType::IronMine),
         (TileCoordsXZ::from_usizes(55, 36), IndustryType::IronMine),
         (TileCoordsXZ::from_usizes(7, 39), IndustryType::CoalMine),
-        (TileCoordsXZ::from_usizes(12, 82), IndustryType::IronWorks),
+        (TileCoordsXZ::from_usizes(12, 82), IndustryType::SteelMill),
         (TileCoordsXZ::from_usizes(28, 94), IndustryType::Warehouse),
     ];
 

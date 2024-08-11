@@ -103,7 +103,7 @@ fn industry_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
             let symbol = match industry_type {
                 IndustryType::IronMine => "⚒",
                 IndustryType::CoalMine => "⛏",
-                IndustryType::IronWorks => "🏭",
+                IndustryType::SteelMill => "🏭",
                 IndustryType::Warehouse => "📦",
             };
             if ui
