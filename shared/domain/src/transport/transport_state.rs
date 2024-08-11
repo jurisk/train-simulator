@@ -80,7 +80,8 @@ impl TransportState {
         Err(())
     }
 
-    pub(crate) fn info_by_id(&self, transport_id: TransportId) -> Option<&TransportInfo> {
+    #[must_use]
+    pub fn info_by_id(&self, transport_id: TransportId) -> Option<&TransportInfo> {
         self.transports
             .iter()
             .find(|transport| transport.transport_id() == transport_id)

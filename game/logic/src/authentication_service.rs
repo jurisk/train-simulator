@@ -40,7 +40,7 @@ impl AuthenticationService {
                 (
                     PlayerId::new(uuid!("e4eca11c-f88b-4b45-8046-ae93b99fa9df")),
                     PlayerName::new("Арцём".to_string()),
-                    Colour::rgb(0, 153, 0),
+                    Colour::rgb(153, 0, 0),
                 ),
                 (
                     PlayerId::new(uuid!("c11f557b-57d8-4820-a363-615fe024155d")),

@@ -181,18 +181,25 @@ impl GameService {
 
     fn process_update_transport_movement_orders(
         &mut self,
-        _requesting_player_id: PlayerId,
+        requesting_player_id: PlayerId,
         transport_id: TransportId,
         movement_orders: &MovementOrders,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
-        // TODO: Check this is the right player
-
-        match self
+        let transport = self
             .state
-            .update_transport_movement_orders(transport_id, movement_orders)
-        {
-            Err(()) => Err(GameError::UnspecifiedError),
-            Ok(()) => Ok(vec![self.create_dynamic_info_sync()]),
+            .transport_state()
+            .info_by_id(transport_id)
+            .ok_or(GameError::UnspecifiedError)?;
+        if transport.owner_id() == requesting_player_id {
+            match self
+                .state
+                .update_transport_movement_orders(transport_id, movement_orders)
+            {
+                Err(()) => Err(GameError::UnspecifiedError),
+                Ok(()) => Ok(vec![self.create_dynamic_info_sync()]),
+            }
+        } else {
+            Err(GameError::UnspecifiedError)
         }
     }
 
