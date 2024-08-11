@@ -133,6 +133,26 @@
       }
     },
     {
+      "id": "600d1c6b-f955-4ab2-9e0f-36ebedcddf2b",
+      "zoning_type": {
+        "Deposit": "Iron"
+      },
+      "reference_tile": {
+        "x": 9,
+        "z": 72
+      }
+    },
+    {
+      "id": "ea5e7dfb-e4cd-4697-89e3-a95f5ebbcecd",
+      "zoning_type": {
+        "Deposit": "Iron"
+      },
+      "reference_tile": {
+        "x": 34,
+        "z": 73
+      }
+    },
+    {
       "id": "b0510bde-2322-4001-8dd8-5ac878f96aa6",
       "zoning_type": {
         "Deposit": "Coal"
@@ -143,11 +163,37 @@
       }
     },
     {
+      "id": "7fc7eb71-da0b-4e33-9110-7fcafb32352b",
+      "zoning_type": {
+        "Deposit": "Coal"
+      },
+      "reference_tile": {
+        "x": 10,
+        "z": 92
+      }
+    },
+    {
       "id": "89b127a6-5616-44e5-9139-c8f4b9f6d669",
       "zoning_type": "Industrial",
       "reference_tile": {
         "x": 12,
         "z": 82
+      }
+    },
+    {
+      "id": "6c271d57-d995-47b8-b548-cf46225111e6",
+      "zoning_type": "Industrial",
+      "reference_tile": {
+        "x": 45,
+        "z": 22
+      }
+    },
+    {
+      "id": "e9dc35b7-aa07-4846-b274-7a75841779d8",
+      "zoning_type": "Industrial",
+      "reference_tile": {
+        "x": 64,
+        "z": 29
       }
     },
     {
