@@ -8,17 +8,17 @@ use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTime;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::server_response::{
-    AddressEnvelope, GameError, GameResponse, LobbyResponse, PlayerInfo, ServerResponse,
-    ServerResponseWithAddress,
+    AddressEnvelope, GameError, GameResponse, LobbyResponse, PlayerInfo, ServerError,
+    ServerResponse, ServerResponseWithAddress,
 };
-use shared_domain::{GameId, PlayerId};
+use shared_domain::{GameId, MapId, PlayerId};
 
 use crate::game_service::{GameResponseWithAddress, GameService};
 
 // This is also, in a way, `Lobby`. Should we rename it? Split into two somehow? Not sure yet...
 pub(crate) struct GamesService {
-    game_map:       HashMap<GameId, GameService>,
-    game_prototype: GameState,
+    game_map:        HashMap<GameId, GameService>,
+    game_prototypes: HashMap<MapId, GameState>,
 }
 
 impl GamesService {
@@ -31,10 +31,14 @@ impl GamesService {
         assert!(default_level.is_valid());
 
         let game_prototype = GameState::empty_from_level(default_level);
+        let mut game_prototypes = HashMap::new();
+        for map_id in MapId::all() {
+            game_prototypes.insert(map_id, game_prototype.clone());
+        }
 
         Self {
             game_map: HashMap::new(),
-            game_prototype,
+            game_prototypes,
         }
     }
 
@@ -80,9 +84,15 @@ impl GamesService {
     pub(crate) fn create_and_join_game(
         &mut self,
         requesting_player_info: &PlayerInfo,
+        map_id: &MapId,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         // Later: Don't allow starting a game if is already a part of another game?
-        let mut game_service = GameService::from_prototype(&self.game_prototype);
+        let prototype = self.game_prototypes.get(map_id).ok_or_else(|| {
+            Box::new(ServerResponse::Error(ServerError::MapNotFound(
+                map_id.clone(),
+            )))
+        })?;
+        let mut game_service = GameService::from_prototype(prototype);
         let game_id = game_service.game_id();
         let results = game_service
             .join_game(requesting_player_info)
@@ -164,7 +174,7 @@ impl GamesService {
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match lobby_command {
             LobbyCommand::ListGames => self.create_game_infos(player_info.id),
-            LobbyCommand::CreateGame => self.create_and_join_game(player_info),
+            LobbyCommand::CreateGame(map_id) => self.create_and_join_game(player_info, map_id),
             LobbyCommand::JoinExistingGame(game_id) => {
                 let game_service = self.lookup_game_service_mut(*game_id)?;
                 Self::convert_game_response_to_server_response(

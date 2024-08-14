@@ -14,6 +14,7 @@ use shared_domain::client_command::{AccessToken, ClientCommandWithClientId};
 use shared_domain::game_time::GameTime;
 use shared_domain::{ClientId, PlayerId};
 
+// TODO: Use https://github.com/TeXitoi/structopt for game launch params
 #[allow(clippy::expect_used)]
 fn main() {
     let args: Vec<_> = args().collect();
@@ -31,6 +32,7 @@ fn main() {
             player_id,
             access_token: AccessToken::new("valid-token".to_string()),
             game_id: None,
+            map_id: None,
         },
     });
     app.insert_state(ClientState::LoggingIn);

@@ -28,7 +28,10 @@ fn handle_available_games(
             let command = match game_id {
                 None => {
                     match games.first() {
-                        None => LobbyCommand::CreateGame,
+                        None => {
+                            let map_id = game_launch_params.map_id.clone().unwrap_or_default();
+                            LobbyCommand::CreateGame(map_id)
+                        },
                         Some(game_info) => LobbyCommand::JoinExistingGame(game_info.game_id),
                     }
                 },

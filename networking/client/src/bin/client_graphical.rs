@@ -11,6 +11,8 @@ use networking_client::MultiplayerSimpleNetClientPlugin;
 use shared_domain::client_command::AccessToken;
 use shared_domain::PlayerId;
 
+// TODO HIGH: Have ability to join specific game / specific map from the Web UI for easier testing
+
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn start(url: &str, player_id: &str) {
@@ -25,6 +27,7 @@ fn main() {
 
 #[allow(clippy::expect_used)]
 #[cfg(not(target_arch = "wasm32"))]
+// TODO: Use https://github.com/TeXitoi/structopt for game launch params
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let url: String = args
@@ -59,6 +62,7 @@ fn run_with_url(url: url::Url, player_id: PlayerId) {
             player_id,
             access_token: AccessToken::new("valid-token".to_string()),
             game_id: None,
+            map_id: None,
         },
     });
     app.insert_state(ClientState::ConnectingToServer);

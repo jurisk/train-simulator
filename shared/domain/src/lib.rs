@@ -135,3 +135,24 @@ newtype_uuid!(StationId, "S");
 newtype_uuid!(IndustryBuildingId, "IB");
 newtype_uuid!(TransportId, "T");
 newtype_uuid!(ZoningId, "Z");
+
+#[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord, Debug)]
+pub struct MapId(String);
+
+impl Default for MapId {
+    #[allow(clippy::unwrap_used)]
+    fn default() -> Self {
+        MapId::all().first().unwrap().clone()
+    }
+}
+
+impl MapId {
+    #[must_use]
+    pub fn all() -> Vec<MapId> {
+        vec![
+            // TODO: Use more real maps, e.g. "europe" and "usa"
+            MapId("map1".to_string()),
+            MapId("map2".to_string()),
+        ]
+    }
+}

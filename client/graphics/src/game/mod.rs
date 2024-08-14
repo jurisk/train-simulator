@@ -23,7 +23,7 @@ use shared_domain::server_response::{
     AuthenticationResponse, Colour, GameResponse, ServerResponse,
 };
 use shared_domain::tile_coverage::TileCoverage;
-use shared_domain::{GameId, PlayerId};
+use shared_domain::{GameId, MapId, PlayerId};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;
@@ -50,6 +50,7 @@ pub struct GameLaunchParams {
     pub player_id:    PlayerId,
     pub access_token: AccessToken,
     pub game_id:      Option<GameId>,
+    pub map_id:       Option<MapId>,
 }
 
 impl Plugin for GamePlugin {

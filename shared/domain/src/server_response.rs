@@ -15,7 +15,8 @@ use crate::game_state::GameState;
 use crate::game_time::GameTime;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::{
-    ClientId, GameId, IndustryBuildingId, PlayerId, PlayerName, StationId, TrackId, TransportId,
+    ClientId, GameId, IndustryBuildingId, MapId, PlayerId, PlayerName, StationId, TrackId,
+    TransportId,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -179,6 +180,7 @@ pub enum ServerError {
     LeaveFailedNotInGame,
     GameNotFound,
     NotAuthorized,
+    MapNotFound(MapId),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
