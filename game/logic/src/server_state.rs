@@ -107,8 +107,9 @@ impl ServerState {
                 let requesting_player_id =
                     self.authentication_service.lookup_player_id(client_id)?;
                 self.games_service.process_lobby_command(
-                    &self.authentication_service,
-                    requesting_player_id,
+                    &self
+                        .authentication_service
+                        .player_info(requesting_player_id),
                     lobby_command,
                 )
             },

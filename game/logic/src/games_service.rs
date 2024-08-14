@@ -13,7 +13,6 @@ use shared_domain::server_response::{
 };
 use shared_domain::{GameId, PlayerId};
 
-use crate::authentication_service::AuthenticationService;
 use crate::game_service::{GameResponseWithAddress, GameService};
 
 // This is also, in a way, `Lobby`. Should we rename it? Split into two somehow? Not sure yet...
@@ -80,7 +79,7 @@ impl GamesService {
 
     pub(crate) fn create_and_join_game(
         &mut self,
-        requesting_player_info: PlayerInfo,
+        requesting_player_info: &PlayerInfo,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         // Later: Don't allow starting a game if is already a part of another game?
         let mut game_service = GameService::from_prototype(&self.game_prototype);
@@ -157,25 +156,20 @@ impl GamesService {
         }
     }
 
-    // Later: Reconsider whether you can provide the `AuthenticationService` better
     #[allow(clippy::needless_pass_by_value)]
     pub(crate) fn process_lobby_command(
         &mut self,
-        authentication_service: &AuthenticationService,
-        requesting_player_id: PlayerId,
+        player_info: &PlayerInfo,
         lobby_command: &LobbyCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match lobby_command {
-            LobbyCommand::ListGames => self.create_game_infos(requesting_player_id),
-            LobbyCommand::CreateGame => {
-                self.create_and_join_game(authentication_service.player_info(requesting_player_id))
-            },
+            LobbyCommand::ListGames => self.create_game_infos(player_info.id),
+            LobbyCommand::CreateGame => self.create_and_join_game(player_info),
             LobbyCommand::JoinExistingGame(game_id) => {
                 let game_service = self.lookup_game_service_mut(*game_id)?;
                 Self::convert_game_response_to_server_response(
                     *game_id,
-                    game_service
-                        .join_game(authentication_service.player_info(requesting_player_id)),
+                    game_service.join_game(player_info),
                 )
             },
             LobbyCommand::LeaveGame(game_id) => {
@@ -183,7 +177,7 @@ impl GamesService {
                 let game_service = self.lookup_game_service_mut(*game_id)?;
                 Self::convert_game_response_to_server_response(
                     *game_id,
-                    game_service.remove_player(requesting_player_id),
+                    game_service.remove_player(player_info.id),
                 )
             },
         }

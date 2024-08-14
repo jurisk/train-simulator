@@ -58,6 +58,7 @@ impl AuthenticationService {
         match self.player_infos.get(&player_id) {
             None => {
                 info!("Failed to find player_name for {player_id:?}, returning a random name.");
+                // Later: This is just for debug, we should stop doing this
                 PlayerInfo {
                     id:     player_id,
                     name:   PlayerName::random(player_id.hash_to_u64()),

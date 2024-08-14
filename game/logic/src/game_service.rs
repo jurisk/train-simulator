@@ -228,12 +228,12 @@ impl GameService {
 
     pub(crate) fn join_game(
         &mut self,
-        requesting_player_info: PlayerInfo,
+        requesting_player_info: &PlayerInfo,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
-        // Later: Don't allow joining multiple games
+        // Later: Don't allow joining multiple games at once
 
         let player_id = requesting_player_info.id;
-        self.state.insert_player(requesting_player_info);
+        self.state.insert_player(requesting_player_info.clone());
 
         Ok(vec![
             GameResponseWithAddress::new(
