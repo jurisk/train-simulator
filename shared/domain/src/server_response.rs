@@ -35,6 +35,7 @@ pub enum AuthenticationError {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct GameInfo {
+    pub map_id:  MapId,
     pub game_id: GameId,
     pub players: Vec<PlayerInfo>,
 }

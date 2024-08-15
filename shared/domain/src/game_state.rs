@@ -17,13 +17,14 @@ use crate::server_response::{GameInfo, PlayerInfo};
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::transport::transport_state::TransportState;
-use crate::{GameId, IndustryBuildingId, PlayerId, StationId, TrackId, TransportId};
+use crate::{GameId, IndustryBuildingId, MapId, PlayerId, StationId, TrackId, TransportId};
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
 //          So the API gets quite busy because of this. There may be better ways.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct GameState {
     game_id:    GameId,
+    map_id:     MapId,
     map_level:  MapLevel,
     buildings:  BuildingState,
     transports: TransportState,
@@ -34,10 +35,11 @@ pub struct GameState {
 
 impl GameState {
     #[must_use]
-    pub fn empty_from_level(map_level: MapLevel) -> Self {
+    pub fn empty_from_level(map_id: MapId, map_level: MapLevel) -> Self {
         let game_id = GameId::random();
         Self {
             game_id,
+            map_id,
             map_level,
             buildings: BuildingState::new(),
             transports: TransportState::empty(),
@@ -57,6 +59,7 @@ impl GameState {
         let game_id = GameId::random();
         Self {
             game_id,
+            map_id: prototype.map_id.clone(),
             map_level: prototype.map_level.clone(),
             buildings: prototype.buildings.clone(),
             transports: prototype.transports.clone(),
@@ -87,6 +90,7 @@ impl GameState {
     #[must_use]
     pub fn create_game_info(&self) -> GameInfo {
         GameInfo {
+            map_id:  self.map_id.clone(),
             game_id: self.game_id,
             players: self.players.infos_cloned(),
         }

@@ -23,16 +23,33 @@ pub(crate) struct GamesService {
 
 impl GamesService {
     #[must_use]
-    #[allow(clippy::missing_panics_doc, clippy::new_without_default)]
+    #[allow(
+        clippy::missing_panics_doc,
+        clippy::new_without_default,
+        clippy::match_same_arms
+    )]
     pub(crate) fn new() -> Self {
-        let level_json = include_str!("../../../assets/map_levels/default.json");
-        let default_level = serde_json::from_str::<MapLevel>(level_json)
-            .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
-        assert!(default_level.is_valid());
+        // Later: Eventually, eliminate the Sample map level
+        let sample_level_json = include_str!("../../../assets/map_levels/sample.json");
+        // TODO: Have a Europe map and use that
+        let europe_level_json = include_str!("../../../assets/map_levels/sample.json");
+        // TODO: Have a USA map and use that
+        let usa_level_json = include_str!("../../../assets/map_levels/sample.json");
 
-        let game_prototype = GameState::empty_from_level(default_level);
         let mut game_prototypes = HashMap::new();
         for map_id in MapId::all() {
+            let MapId(map_name) = &map_id;
+            let level_json = match map_name.as_str() {
+                "sample" => sample_level_json,
+                "europe" => europe_level_json,
+                "usa" => usa_level_json,
+                _ => sample_level_json,
+            };
+            let map_level = serde_json::from_str::<MapLevel>(level_json)
+                .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
+            assert!(map_level.is_valid());
+            let game_prototype = GameState::empty_from_level(map_id.clone(), map_level);
+
             game_prototypes.insert(map_id, game_prototype.clone());
         }
 

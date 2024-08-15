@@ -10,6 +10,7 @@ rust-version.workspace = true
 networking-shared = { path = "../shared" }
 client-graphics = {  path = "../../client/graphics" }
 shared-domain = { path = "../../shared/domain" }
+shared-util = { path = "../../shared/util" }
 bevy.workspace = true
 url.workspace = true
 bincode.workspace = true

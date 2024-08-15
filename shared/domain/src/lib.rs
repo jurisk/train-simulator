@@ -137,7 +137,7 @@ newtype_uuid!(TransportId, "T");
 newtype_uuid!(ZoningId, "Z");
 
 #[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord, Debug)]
-pub struct MapId(String);
+pub struct MapId(pub String);
 
 impl Default for MapId {
     #[allow(clippy::unwrap_used)]
@@ -150,9 +150,20 @@ impl MapId {
     #[must_use]
     pub fn all() -> Vec<MapId> {
         vec![
-            // TODO: Use more real maps, e.g. "europe" and "usa"
-            MapId("map1".to_string()),
-            MapId("map2".to_string()),
+            MapId("sample".to_string()),
+            MapId("europe".to_string()),
+            MapId("usa".to_string()),
         ]
+    }
+}
+
+impl FromStr for MapId {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        MapId::all()
+            .into_iter()
+            .find(|MapId(map_id)| map_id == s)
+            .ok_or(())
     }
 }

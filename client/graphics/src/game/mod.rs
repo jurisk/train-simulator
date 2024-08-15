@@ -45,6 +45,7 @@ pub struct GamePlugin {
     pub game_launch_params: GameLaunchParams,
 }
 
+// Later: Improve to make invalid combinations impossible on type level
 #[derive(Resource, Clone)]
 pub struct GameLaunchParams {
     pub player_id:    PlayerId,

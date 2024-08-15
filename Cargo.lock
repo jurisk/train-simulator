@@ -3253,6 +3253,7 @@ dependencies = [
  "fastrand",
  "networking-shared",
  "shared-domain",
+ "shared-util",
  "url",
  "wasm-bindgen",
 ]

@@ -4,3 +4,4 @@ pub mod geometry;
 pub mod grid_xz;
 pub mod non_empty_circular_list;
 pub mod random;
+pub mod tap;
