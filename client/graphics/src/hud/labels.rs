@@ -39,6 +39,7 @@ pub fn draw_labels(
                     .industry_building_at(zoning_info.reference_tile())
                     .is_none()
                 {
+                    // TODO HIGH: Make these into menu buttons to build the relevant industry buildings
                     with_tile_coverage_label(
                         format!("{:?}", zoning_info.id()),
                         format!("{:?}", zoning_info.zoning_type()),

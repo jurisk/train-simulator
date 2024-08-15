@@ -12,8 +12,6 @@ use shared_domain::client_command::AccessToken;
 use shared_domain::{GameId, MapId, PlayerId};
 use shared_util::tap::TapErr;
 
-// TODO HIGH: Have ability to join specific game / specific map from the Web UI for easier testing
-
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn start(url: &str, player_id: &str, map_id: &str, game_id: &str) {
@@ -28,7 +26,7 @@ fn main() {
 
 #[allow(clippy::expect_used)]
 #[cfg(not(target_arch = "wasm32"))]
-// TODO HIGH: Use https://github.com/TeXitoi/structopt for game launch params
+// TODO HIGH: Use https://github.com/TeXitoi/structopt for game launch params for the command line
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let url: String = args

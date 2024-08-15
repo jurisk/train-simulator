@@ -101,7 +101,7 @@ digraph G {
     Food [label = "Food"];
     { rank = same; Coal; Iron; Nitrates; Sulfur; FarmProducts; Nitrates; Sulfur; Wood; Limestone; Clay; SandAndGravel; }
     { rank = same; Energy; TrainBuildingCapacity; Weapons; Ammunition; Food; Concrete; }
-    // TODO HIGH: What about `Troops` as cargo being transported?
+    // TODO: What about `Troops` as cargo being transported?
     // Later: What about Tanks & Armored Vehicles?
     // Later: What about Horses & Mules?
     // Later: What about Rubber & Textiles?
