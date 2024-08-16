@@ -7,9 +7,19 @@
 </head>
 <body>
     <script type="module">
-        // TODO HIGH: Also allow switching maps in single-player
-        import init from './wasm-build/client_single_player.js'
-        init()
+        import init, { start } from './wasm-build/client_single_player.js';
+        await init();
+
+        console.log('WASM init() finished.');
+        const currentUrl = window.location;
+
+        const searchParams = new URL(currentUrl).searchParams;
+        const playerId = searchParams.get('playerId');
+        const mapId = searchParams.get('mapId')
+        const gameId = searchParams.get('gameId');
+
+        console.log(`Starting client: playerId: ${playerId}, mapId: ${mapId}, gameId: ${gameId}`);
+        start(playerId, mapId, gameId);
     </script>
     <div>
         ESDF to move

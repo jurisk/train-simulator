@@ -1,6 +1,5 @@
 use std::str::FromStr;
 
-use bevy::log::warn;
 use bevy::prelude::AppExtStates;
 use bevy::prelude::{info, App};
 use client_graphics::game::GameLaunchParams;
@@ -8,9 +7,7 @@ use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
 use fastrand as _;
 use networking_client::MultiplayerSimpleNetClientPlugin;
-use shared_domain::client_command::AccessToken;
-use shared_domain::{GameId, MapId, PlayerId};
-use shared_util::tap::TapErr;
+use shared_domain::PlayerId;
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen::prelude::wasm_bindgen]
@@ -45,36 +42,17 @@ fn main() {
 fn run_with_string(url: &str, player_id: &str, map_id: &str, game_id: &str) {
     let parsed_url =
         url::Url::parse(url).unwrap_or_else(|err| panic!("Invalid URL {url:?}: {err}"));
-    let parsed_player_id = PlayerId::from_str(player_id).unwrap_or_else(|err| {
-        warn!("Invalid player ID {player_id:?}: {err}");
-        PlayerId::random()
-    });
-    let parsed_map_id = MapId::from_str(map_id)
-        .tap_err(|err| warn!("Invalid map ID {map_id:?}: {err:?}"))
-        .ok();
-    let parsed_game_id = GameId::from_str(game_id)
-        .tap_err(|err| warn!("Invalid game ID {game_id:?}: {err:?}"))
-        .ok();
-    run_with_url(parsed_url, parsed_player_id, parsed_map_id, parsed_game_id);
+    let access_token = "valid-token";
+    let game_launch_params = GameLaunchParams::new(player_id, access_token, map_id, game_id);
+
+    run_with_url(parsed_url, game_launch_params);
 }
 
-fn run_with_url(
-    url: url::Url,
-    player_id: PlayerId,
-    map_id: Option<MapId>,
-    game_id: Option<GameId>,
-) {
-    info!("Starting client with URL: {url}");
+fn run_with_url(url: url::Url, game_launch_params: GameLaunchParams) {
+    info!("Starting client: {url} {game_launch_params:?}");
     let mut app = App::new();
 
-    app.add_plugins(ClientGraphicsPlugin {
-        game_launch_params: GameLaunchParams {
-            player_id,
-            access_token: AccessToken::new("valid-token".to_string()),
-            game_id,
-            map_id,
-        },
-    });
+    app.add_plugins(ClientGraphicsPlugin { game_launch_params });
     app.insert_state(ClientState::ConnectingToServer);
 
     app.add_plugins(MultiplayerSimpleNetClientPlugin { url });

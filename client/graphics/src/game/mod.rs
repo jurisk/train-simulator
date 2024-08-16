@@ -1,9 +1,11 @@
 #![allow(clippy::module_name_repetitions)]
 
+use std::str::FromStr;
+
 use bevy::asset::{Assets, Handle};
 use bevy::color::Color;
 use bevy::core::Name;
-use bevy::log::error;
+use bevy::log::{error, warn};
 use bevy::math::Vec3;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
@@ -24,6 +26,7 @@ use shared_domain::server_response::{
 };
 use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::{GameId, MapId, PlayerId};
+use shared_util::tap::TapErr;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;
@@ -46,12 +49,36 @@ pub struct GamePlugin {
 }
 
 // Later: Improve to make invalid combinations impossible on type level
-#[derive(Resource, Clone)]
+#[derive(Resource, Clone, Debug)]
 pub struct GameLaunchParams {
     pub player_id:    PlayerId,
     pub access_token: AccessToken,
     pub game_id:      Option<GameId>,
     pub map_id:       Option<MapId>,
+}
+
+impl GameLaunchParams {
+    #[must_use]
+    pub fn new(player_id: &str, access_token: &str, map_id: &str, game_id: &str) -> Self {
+        let player_id = PlayerId::from_str(player_id).unwrap_or_else(|err| {
+            warn!("Invalid player ID {player_id:?}: {err}");
+            PlayerId::random()
+        });
+        let access_token = AccessToken::new(access_token.to_string());
+        let map_id = MapId::from_str(map_id)
+            .tap_err(|err| warn!("Invalid map ID {map_id:?}: {err:?}"))
+            .ok();
+        let game_id = GameId::from_str(game_id)
+            .tap_err(|err| warn!("Invalid game ID {game_id:?}: {err:?}"))
+            .ok();
+
+        Self {
+            player_id,
+            access_token,
+            game_id,
+            map_id,
+        }
+    }
 }
 
 impl Plugin for GamePlugin {

@@ -12,3 +12,6 @@ game-logic = { path = "../../game/logic"}
 shared-domain = { path = "../../shared/domain" }
 
 bevy.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies.wasm-bindgen]
+workspace = true

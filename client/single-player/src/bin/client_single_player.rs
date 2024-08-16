@@ -1,40 +1,42 @@
-use std::env::args;
-use std::str::FromStr;
-
-use bevy::prelude::AppExtStates;
 use bevy::prelude::{
     debug, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time,
 };
+use bevy::prelude::{info, AppExtStates};
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::game::GameLaunchParams;
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
 use game_logic::server_state::ServerState;
-use shared_domain::client_command::{AccessToken, ClientCommandWithClientId};
+use shared_domain::client_command::ClientCommandWithClientId;
 use shared_domain::game_time::GameTime;
-use shared_domain::{ClientId, PlayerId};
+use shared_domain::ClientId;
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn start(player_id: &str, map_id: &str, game_id: &str) {
+    run_with_string(player_id, map_id, game_id);
+}
+
+fn run_with_string(player_id: &str, map_id: &str, game_id: &str) {
+    let access_token = "valid-token";
+    let game_launch_params = GameLaunchParams::new(player_id, access_token, map_id, game_id);
+
+    run(game_launch_params);
+}
 
 // TODO: Use https://github.com/TeXitoi/structopt for game launch params
 #[allow(clippy::expect_used)]
 fn main() {
-    let args: Vec<_> = args().collect();
-    let player_id = match args.get(1).cloned() {
-        None => PlayerId::random(),
-        Some(player_id) => PlayerId::from_str(player_id.as_str()).expect("Failed to parse UUID"),
-    };
+    run_with_string("", "", "");
+}
 
+fn run(game_launch_params: GameLaunchParams) {
+    info!("Starting client: {game_launch_params:?}");
     let mut app = App::new();
     let client_id = ClientId::random();
     app.insert_resource(ClientIdResource(client_id));
     app.insert_resource(ServerStateResource(ServerState::new()));
-    app.add_plugins(ClientGraphicsPlugin {
-        game_launch_params: GameLaunchParams {
-            player_id,
-            access_token: AccessToken::new("valid-token".to_string()),
-            game_id: None,
-            map_id: None,
-        },
-    });
+    app.add_plugins(ClientGraphicsPlugin { game_launch_params });
     app.insert_state(ClientState::LoggingIn);
     app.add_systems(FixedUpdate, process_messages_locally);
     app.add_systems(FixedUpdate, advance_time_locally);
