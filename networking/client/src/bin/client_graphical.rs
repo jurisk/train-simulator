@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use bevy::prelude::AppExtStates;
 use bevy::prelude::{info, App};
 use clap::Parser;
@@ -8,7 +6,6 @@ use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
 use fastrand as _;
 use networking_client::MultiplayerSimpleNetClientPlugin;
-use shared_domain::PlayerId;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

@@ -14,6 +14,7 @@ use shared_domain::ClientId;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
+#[allow(clippy::struct_field_names)]
 struct Args {
     #[clap(short, long)]
     player_id: Option<String>,

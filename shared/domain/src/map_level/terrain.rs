@@ -37,8 +37,8 @@ impl Terrain {
         }
     }
 
-    #[must_use]
-    pub fn is_valid(&self) -> bool {
+    #[allow(clippy::missing_errors_doc)]
+    pub fn is_valid(&self) -> Result<(), String> {
         self.vertex_heights.is_valid()
     }
 

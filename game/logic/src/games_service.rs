@@ -31,8 +31,8 @@ impl GamesService {
     pub(crate) fn new() -> Self {
         // Later: Eventually, eliminate the Sample map level
         let sample_level_json = include_str!("../../../assets/map_levels/sample.json");
-        // TODO: Have a Europe map and use that
-        let europe_level_json = include_str!("../../../assets/map_levels/sample.json");
+        // TODO HIGH: Make `europe.json` work!
+        let europe_level_json = include_str!("../../../assets/map_levels/europe.json");
         // TODO: Have a USA map and use that
         let usa_level_json = include_str!("../../../assets/map_levels/sample.json");
 
@@ -47,7 +47,7 @@ impl GamesService {
             };
             let map_level = serde_json::from_str::<MapLevel>(level_json)
                 .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
-            assert!(map_level.is_valid());
+            assert_eq!(map_level.is_valid(), Ok(()));
             let game_prototype = GameState::empty_from_level(map_id.clone(), map_level);
 
             game_prototypes.insert(map_id, game_prototype.clone());

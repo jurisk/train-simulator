@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="single-player" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --package client-single-player --bin client_single_player --features bevy/dynamic_linking -- --player-id ee6b4aa1-67e0-4d6b-a42c-56320f61390e" />
+  <configuration default="false" name="single-player europe" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+    <option name="command" value="run --package client-single-player --bin client_single_player --features bevy/dynamic_linking -- --player-id ee6b4aa1-67e0-4d6b-a42c-56320f61390e --map-id europe" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />
     <option name="emulateTerminal" value="true" />

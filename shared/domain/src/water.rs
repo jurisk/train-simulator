@@ -8,10 +8,16 @@ pub struct Water {
 }
 
 impl Water {
-    #[must_use]
-    pub fn is_valid(&self) -> bool {
+    #[allow(clippy::missing_errors_doc)]
+    pub fn is_valid(&self) -> Result<(), String> {
         let (below, above) = &self.between;
-        below.as_u8() + 1 == above.as_u8()
+        if below.as_u8() + 1 == above.as_u8() {
+            Ok(())
+        } else {
+            Err(format!(
+                "Water height range is invalid: {below:?} - {above:?}",
+            ))
+        }
     }
 
     #[must_use]

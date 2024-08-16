@@ -76,9 +76,11 @@ pub struct MapLevel {
 
 impl MapLevel {
     // Could eventually move to some `Validated` instead
-    #[must_use]
-    pub fn is_valid(&self) -> bool {
-        self.terrain.is_valid() && self.water.is_valid()
+    #[allow(clippy::missing_errors_doc)]
+    pub fn is_valid(&self) -> Result<(), String> {
+        self.terrain.is_valid()?;
+        self.water.is_valid()?;
+        Ok(())
     }
 
     #[must_use]

@@ -46,9 +46,21 @@ impl<K, V> GridXZ<K, V> {
         }
     }
 
-    #[must_use]
-    pub fn is_valid(&self) -> bool {
-        self.data.len() == self.size_z && self.data.iter().all(|row| row.len() == self.size_x)
+    #[allow(clippy::missing_errors_doc)]
+    pub fn is_valid(&self) -> Result<(), String> {
+        if self.data.len() == self.size_z {
+            if self.data.iter().all(|row| row.len() == self.size_x) {
+                Ok(())
+            } else {
+                Err("GridXZ size_x mismatch".to_string())
+            }
+        } else {
+            Err(format!(
+                "GridXZ size_z mismatch: expected {}, got {}",
+                self.size_z,
+                self.data.len()
+            ))
+        }
     }
 
     pub fn map<F, U>(&self, f: F) -> GridXZ<K, U>
