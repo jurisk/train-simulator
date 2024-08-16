@@ -62,7 +62,7 @@ cargo run --features bevy/dynamic_linking --package client-single-player --bin c
 [source,bash]
 ----
 cargo run --features bevy/dynamic_linking --package networking-server --bin server_console
-cargo run --features bevy/dynamic_linking --package networking-client --bin client_graphical -- ws://127.0.0.1:8080/ws ee6b4aa1-67e0-4d6b-a42c-56320f61390e
+cargo run --features bevy/dynamic_linking --package networking-client --bin client_graphical -- --url ws://127.0.0.1:8080/ws --player-id ee6b4aa1-67e0-4d6b-a42c-56320f61390e
 ----
 
 === Full Build

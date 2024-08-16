@@ -2,6 +2,7 @@ use bevy::prelude::{
     debug, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time,
 };
 use bevy::prelude::{info, AppExtStates};
+use clap::Parser;
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::game::GameLaunchParams;
 use client_graphics::states::ClientState;
@@ -10,6 +11,17 @@ use game_logic::server_state::ServerState;
 use shared_domain::client_command::ClientCommandWithClientId;
 use shared_domain::game_time::GameTime;
 use shared_domain::ClientId;
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[clap(short, long)]
+    player_id: Option<String>,
+    #[clap(short, long)]
+    map_id:    Option<String>,
+    #[clap(short, long)]
+    game_id:   Option<String>,
+}
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen::prelude::wasm_bindgen]
@@ -24,10 +36,14 @@ fn run_with_string(player_id: &str, map_id: &str, game_id: &str) {
     run(game_launch_params);
 }
 
-// TODO: Use https://github.com/TeXitoi/structopt for game launch params
 #[allow(clippy::expect_used)]
 fn main() {
-    run_with_string("", "", "");
+    let args = Args::parse();
+    run_with_string(
+        &args.player_id.unwrap_or_default(),
+        &args.map_id.unwrap_or_default(),
+        &args.game_id.unwrap_or_default(),
+    );
 }
 
 fn run(game_launch_params: GameLaunchParams) {

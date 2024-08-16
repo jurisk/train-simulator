@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="client Арцём to game-server.ts.krikis.online" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --package networking-client --bin client_graphical --features bevy/dynamic_linking -- ws://game-server.ts.krikis.online:8080/ws e4eca11c-f88b-4b45-8046-ae93b99fa9df" />
+    <option name="command" value="run --package networking-client --bin client_graphical --features bevy/dynamic_linking -- --url ws://game-server.ts.krikis.online:8080/ws --player-id e4eca11c-f88b-4b45-8046-ae93b99fa9df" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />
     <option name="emulateTerminal" value="true" />

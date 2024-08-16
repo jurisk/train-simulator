@@ -2,12 +2,26 @@ use std::str::FromStr;
 
 use bevy::prelude::AppExtStates;
 use bevy::prelude::{info, App};
+use clap::Parser;
 use client_graphics::game::GameLaunchParams;
 use client_graphics::states::ClientState;
 use client_graphics::ClientGraphicsPlugin;
 use fastrand as _;
 use networking_client::MultiplayerSimpleNetClientPlugin;
 use shared_domain::PlayerId;
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[clap(short, long)]
+    url:       Option<String>,
+    #[clap(short, long)]
+    player_id: Option<String>,
+    #[clap(short, long)]
+    map_id:    Option<String>,
+    #[clap(short, long)]
+    game_id:   Option<String>,
+}
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen::prelude::wasm_bindgen]
@@ -23,20 +37,18 @@ fn main() {
 
 #[allow(clippy::expect_used)]
 #[cfg(not(target_arch = "wasm32"))]
-// TODO HIGH: Use https://github.com/TeXitoi/structopt for game launch params for the command line
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    let url: String = args
-        .get(1)
-        .cloned()
+    let args = Args::parse();
+    let url = args
+        .url
         .unwrap_or_else(|| format!("ws://127.0.0.1:{}/ws", networking_shared::PORT));
 
-    let player_id = match args.get(2).cloned() {
-        None => PlayerId::random(),
-        Some(player_id) => PlayerId::from_str(player_id.as_str()).expect("Failed to parse UUID"),
-    };
-
-    run_with_string(url.as_str(), player_id.to_string().as_str(), "", "");
+    run_with_string(
+        url.as_str(),
+        &args.player_id.unwrap_or_default(),
+        &args.map_id.unwrap_or_default(),
+        &args.game_id.unwrap_or_default(),
+    );
 }
 
 fn run_with_string(url: &str, player_id: &str, map_id: &str, game_id: &str) {

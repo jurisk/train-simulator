@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="client Juris to local" type="CargoCommandRunConfiguration" factoryName="Cargo Command" singleton="false">
-    <option name="command" value="run --package networking-client --bin client_graphical --features bevy/dynamic_linking -- ws://127.0.0.1:8080/ws ee6b4aa1-67e0-4d6b-a42c-56320f61390e" />
+    <option name="command" value="run --package networking-client --bin client_graphical --features bevy/dynamic_linking -- --url ws://127.0.0.1:8080/ws --player-id ee6b4aa1-67e0-4d6b-a42c-56320f61390e" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs />
     <option name="emulateTerminal" value="true" />
