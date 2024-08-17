@@ -148,8 +148,8 @@
         "Deposit": "Iron"
       },
       "reference_tile": {
-        "x": 34,
-        "z": 73
+        "x": 67,
+        "z": 67
       }
     },
     {
@@ -176,8 +176,8 @@
       "id": "89b127a6-5616-44e5-9139-c8f4b9f6d669",
       "zoning_type": "Industrial",
       "reference_tile": {
-        "x": 12,
-        "z": 82
+        "x": 23,
+        "z": 57
       }
     },
     {
