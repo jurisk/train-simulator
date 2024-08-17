@@ -1,5 +1,6 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, KeyCode, Res};
+use bevy_egui::EguiContexts;
 use shared_domain::building::building_state::BuildingState;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
@@ -19,6 +20,7 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
+use crate::on_ui;
 
 const IRON_MINE_A: TileCoordsXZ = TileCoordsXZ::from_usizes(42, 30);
 const IRON_MINE_B: TileCoordsXZ = TileCoordsXZ::from_usizes(53, 35);
@@ -191,7 +193,14 @@ pub(crate) fn build_test_objects(
     player_id_resource: Res<PlayerIdResource>,
     game_state_resource: Res<GameStateResource>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut egui_contexts: EguiContexts,
 ) {
+    if on_ui(&mut egui_contexts) {
+        // Trying to avoid the situation where we cannot update values in inspector as typing digits
+        // triggers test object building.
+        return;
+    }
+
     let PlayerIdResource(player_id) = *player_id_resource;
     let GameStateResource(game_state) = game_state_resource.as_ref();
 
