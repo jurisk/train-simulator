@@ -187,6 +187,7 @@ fn build_test_transports(player_id: PlayerId, game_state: &GameState) -> Vec<Gam
     results
 }
 
+// TODO HIGH: Put this under a menu, remove all hard-coding, make it act more as an "AI"
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn build_test_objects(
     mut client_messages: EventWriter<ClientMessageEvent>,
