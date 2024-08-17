@@ -9,7 +9,7 @@ use bevy::prelude::{
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
 use bevy_mod_raycast::prelude::RaycastMesh;
-use shared_domain::map_level::map_level::{MapLevel, TerrainType};
+use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, ServerResponse};
 use shared_domain::vertex_coords_xz::VertexCoordsXZ;
 use shared_util::grid_xz::GridXZ;
@@ -100,7 +100,7 @@ pub(crate) fn create_land(
         half_z,
         data_slice,
         ATTRIBUTE_TERRAIN_TYPE,
-        |coords: VertexCoordsXZ| TerrainType::default_from_height(terrain.height_at(coords)) as u32,
+        |coords: VertexCoordsXZ| terrain.terrain_at(coords) as u32,
     );
 
     commands.insert_resource(tiles);

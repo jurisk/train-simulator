@@ -6,7 +6,7 @@ use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
-use crate::map_level::map_level::Height;
+use crate::map_level::map_level::{Height, TerrainType};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::tile_track::TileTrack;
 use crate::vertex_coords_xz::VertexCoordsXZ;
@@ -83,6 +83,24 @@ impl Terrain {
         match self.vertex_heights.get(vertex_coords_xz) {
             Some(&height) => height,
             None => Height::fallback(),
+        }
+    }
+
+    #[must_use]
+    pub fn terrain_at(&self, vertex_coords_xz: VertexCoordsXZ) -> TerrainType {
+        let height = self.height_at(vertex_coords_xz);
+        self.terrain_from_height(height)
+    }
+
+    #[must_use]
+    pub fn terrain_from_height(&self, height: Height) -> TerrainType {
+        // TODO HIGH: Refactor to be more flexible
+        if height.as_u8() <= 9 {
+            TerrainType::Sand
+        } else if height.as_u8() <= 15 {
+            TerrainType::Grass
+        } else {
+            TerrainType::Rocks
         }
     }
 

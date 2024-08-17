@@ -15,20 +15,6 @@ pub enum TerrainType {
     Rocks = 2,
 }
 
-impl TerrainType {
-    #[must_use]
-    // TODO HIGH: Make flexible, probably encoded in the map
-    pub fn default_from_height(height: Height) -> Self {
-        if height.0 <= 9 {
-            TerrainType::Sand
-        } else if height.0 <= 15 {
-            TerrainType::Grass
-        } else {
-            TerrainType::Rocks
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub struct Height(u8);
 
