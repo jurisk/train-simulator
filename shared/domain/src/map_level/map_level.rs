@@ -17,6 +17,7 @@ pub enum TerrainType {
 
 impl TerrainType {
     #[must_use]
+    // TODO HIGH: Make flexible, probably encoded in the map
     pub fn default_from_height(height: Height) -> Self {
         if height.0 <= 9 {
             TerrainType::Sand

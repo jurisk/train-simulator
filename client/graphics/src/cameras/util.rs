@@ -108,7 +108,7 @@ fn flatten_in_y_plane(direction: Dir3) -> Vec3 {
 // scrolling too quickly when we are very zoomed in.
 fn camera_movement_speed(transform: &Transform) -> f32 {
     // Later: This could be improved as it still doesn't feel right.
-    const CAMERA_MOVEMENT_SPEED: f32 = 1000.0;
+    const CAMERA_MOVEMENT_SPEED: f32 = 4_000.0;
     CAMERA_MOVEMENT_SPEED / transform.translation.y
 }
 
