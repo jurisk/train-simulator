@@ -32,7 +32,7 @@ fn create_camera(mut commands: Commands) {
 
     let height = 60.0;
     // Note - if `y` is too low you get clipping
-    let from = Transform::from_xyz(-20.0, 400.0, -20.0);
+    let from = Transform::from_xyz(-200.0, 400.0, -200.0);
     let target = Vec3::ZERO;
 
     commands.spawn((

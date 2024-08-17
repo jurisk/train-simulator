@@ -317,7 +317,7 @@ impl BuildingState {
             .any(|vertex| map_level.under_water(vertex));
 
         // Later: Consider allowing more: https://wiki.openttd.org/en/Archive/Manual/Settings/Build%20on%20slopes .
-        // Later: Consider not allowing slopes that are too steep
+        // TODO HIGH: Don't allow slopes that are too steep!
         let valid_heights = track_info
             .track_type
             .connections()
