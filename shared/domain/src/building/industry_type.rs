@@ -54,63 +54,31 @@ impl IndustryType {
 
     #[must_use]
     pub fn resources_accepted(self) -> Vec<ResourceType> {
-        match self {
-            IndustryType::CoalMine => vec![],
-            IndustryType::IronMine => vec![],
-            IndustryType::SteelMill => vec![ResourceType::Iron, ResourceType::Coal],
-            IndustryType::Warehouse => vec![ResourceType::Steel],
-        }
+        self.transform_per_second()
+            .inputs
+            .iter()
+            .map(|item| item.resource)
+            .collect()
     }
 
     #[must_use]
     pub fn transform_per_second(self) -> ResourceTransform {
-        const CARGO_PER_SECOND: f32 = 0.1f32;
         match self {
             IndustryType::CoalMine => {
-                ResourceTransform::new(
-                    vec![],
-                    vec![ResourceTransformItem::new(
-                        ResourceType::Coal,
-                        CargoAmount::new(CARGO_PER_SECOND),
-                    )],
-                )
+                ResourceTransform::make(vec![], vec![(ResourceType::Coal, 1.0)])
             },
             IndustryType::IronMine => {
-                ResourceTransform::new(
-                    vec![],
-                    vec![ResourceTransformItem::new(
-                        ResourceType::Iron,
-                        CargoAmount::new(CARGO_PER_SECOND),
-                    )],
-                )
+                ResourceTransform::make(vec![], vec![(ResourceType::Iron, 1.0)])
             },
             IndustryType::SteelMill => {
                 // https://marketrealist.com/2015/01/coke-fit-steelmaking-process/
-                ResourceTransform::new(
-                    vec![
-                        ResourceTransformItem::new(
-                            ResourceType::Iron,
-                            CargoAmount::new(CARGO_PER_SECOND * 2.0),
-                        ),
-                        ResourceTransformItem::new(
-                            ResourceType::Coal,
-                            CargoAmount::new(CARGO_PER_SECOND),
-                        ),
-                    ],
-                    vec![ResourceTransformItem::new(
-                        ResourceType::Steel,
-                        CargoAmount::new(CARGO_PER_SECOND),
-                    )],
+                ResourceTransform::make(
+                    vec![(ResourceType::Iron, 2.0), (ResourceType::Coal, 1.0)],
+                    vec![(ResourceType::Steel, 1.0)],
                 )
             },
             IndustryType::Warehouse => {
-                ResourceTransform::new(
-                    vec![ResourceTransformItem::new(
-                        ResourceType::Steel,
-                        CargoAmount::ZERO,
-                    )],
-                    vec![],
-                )
+                ResourceTransform::make(vec![(ResourceType::Steel, 0.0)], vec![])
             },
         }
     }
@@ -144,6 +112,32 @@ pub struct ResourceTransform {
 }
 
 impl ResourceTransform {
+    const CARGO_PER_SECOND: f32 = 0.1f32;
+
+    #[must_use]
+    pub fn make(inputs: Vec<(ResourceType, f32)>, outputs: Vec<(ResourceType, f32)>) -> Self {
+        ResourceTransform::new(
+            inputs
+                .into_iter()
+                .map(|(resource, coef)| {
+                    ResourceTransformItem::new(
+                        resource,
+                        CargoAmount::new(Self::CARGO_PER_SECOND * coef),
+                    )
+                })
+                .collect(),
+            outputs
+                .into_iter()
+                .map(|(resource, coef)| {
+                    ResourceTransformItem::new(
+                        resource,
+                        CargoAmount::new(Self::CARGO_PER_SECOND * coef),
+                    )
+                })
+                .collect(),
+        )
+    }
+
     // Later: How do we handle when the stock is too full, and we should stop producing due to that?
     #[must_use]
     pub fn calculate_utilisation_percentage(&self, cargo: &CargoMap, seconds: f32) -> f32 {

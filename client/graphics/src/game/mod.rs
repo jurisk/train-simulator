@@ -103,7 +103,7 @@ impl Plugin for GamePlugin {
         // TODO HIGH: Move this to menu and make it way more "dynamic" (not hard-coded to one map). Disabled for now.
         // app.add_systems(
         //     Update,
-        //     build_test_objects.run_if(in_state(ClientState::Playing)),
+        //     test_objects::build_test_objects.run_if(in_state(ClientState::Playing)),
         // );
     }
 }
