@@ -38,7 +38,9 @@ bevy_simplenet = { version = "0.12", default-features = false, features = [] }
 # https://crates.io/crates/bevy-inspector-egui/versions
 # Pulls in egui and that has to match with other egui versions used!
 
-bevy-inspector-egui = {  version = "0.25", features = ["highlight_changes", "bevy_pbr"] }
+# TODO: Depends on migration to `bevy_egui` 0.29 as otherwise compilation breaks
+# bevy-inspector-egui = { version = "0.25", features = ["highlight_changes", "bevy_pbr"] }
+bevy-inspector-egui = { git = "https://github.com/jurisk/bevy-inspector-egui.git", features = ["highlight_changes", "bevy_pbr"] }
 
 bevy_egui = "0.29"
 egui = "0.28"

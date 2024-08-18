@@ -479,8 +479,7 @@ dependencies = [
 [[package]]
 name = "bevy-inspector-egui"
 version = "0.25.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b66b51a66c0be92604c13cd490509d77676c05406f4f4b046672aaffdcc925f"
+source = "git+https://github.com/jurisk/bevy-inspector-egui.git#8385934392cff603e6e81f00abec8a5619921bd1"
 dependencies = [
  "bevy-inspector-egui-derive",
  "bevy_app",
@@ -489,7 +488,7 @@ dependencies = [
  "bevy_core",
  "bevy_core_pipeline",
  "bevy_ecs",
- "bevy_egui 0.28.0",
+ "bevy_egui",
  "bevy_hierarchy",
  "bevy_log",
  "bevy_math",
@@ -512,8 +511,7 @@ dependencies = [
 [[package]]
 name = "bevy-inspector-egui-derive"
 version = "0.25.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "791acfac11e3d5a750952c5201dc0d414b88431260118b46949bf6b159c5a19c"
+source = "git+https://github.com/jurisk/bevy-inspector-egui.git#8385934392cff603e6e81f00abec8a5619921bd1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -734,28 +732,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.75",
-]
-
-[[package]]
-name = "bevy_egui"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e4a90f30f2849a07d91e393b10c0cc05df09b5773c010ddde57dd8b583be230"
-dependencies = [
- "arboard",
- "bevy",
- "bytemuck",
- "console_log",
- "crossbeam-channel",
- "egui",
- "js-sys",
- "log",
- "thread_local",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "webbrowser",
- "winit",
 ]
 
 [[package]]
@@ -1654,7 +1630,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
- "bevy_egui 0.29.0",
+ "bevy_egui",
  "bevy_mod_raycast",
  "bigdecimal",
  "egui",
