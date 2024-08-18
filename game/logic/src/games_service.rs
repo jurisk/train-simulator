@@ -31,7 +31,6 @@ impl GamesService {
     pub(crate) fn new() -> Self {
         // Later: Eventually, eliminate the Sample map level
         let sample_level_json = include_str!("../../../assets/map_levels/sample.json");
-        // TODO HIGH: Improve `europe.json` so that it has zonings
         let europe_level_json = include_str!("../../../assets/map_levels/europe.json");
         // TODO: Have a USA map and use that
         let usa_level_json = include_str!("../../../assets/map_levels/usa_east.json");

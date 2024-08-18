@@ -64,9 +64,14 @@ fn move_camera(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<(&mut Transform, &CameraComponent, &Camera)>,
 ) {
+    const BOOST: f32 = 4f32; // Later: Crude hack as somehow the camera was too slow.
     for (mut transform, camera_component, camera) in &mut query {
         if camera_component.id == CameraId::Orthographic && camera.is_active {
-            movement_and_rotation(time.delta_seconds(), &keyboard_input, &mut transform);
+            movement_and_rotation(
+                time.delta_seconds() * BOOST,
+                &keyboard_input,
+                &mut transform,
+            );
         }
     }
 }

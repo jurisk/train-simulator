@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, KeyCode, Res};
 use bevy_egui::EguiContexts;
