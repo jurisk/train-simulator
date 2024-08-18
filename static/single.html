@@ -14,9 +14,9 @@
         const currentUrl = window.location;
 
         const searchParams = new URL(currentUrl).searchParams;
-        const playerId = searchParams.get('playerId');
-        const mapId = searchParams.get('mapId')
-        const gameId = searchParams.get('gameId');
+        const playerId = searchParams.get('playerId')  || '';
+        const mapId = searchParams.get('mapId')  || '';
+        const gameId = searchParams.get('gameId')  || '';
 
         console.log(`Starting client: playerId: ${playerId}, mapId: ${mapId}, gameId: ${gameId}`);
         start(playerId, mapId, gameId);

@@ -1,7 +1,7 @@
+use bevy::prelude::AppExtStates;
 use bevy::prelude::{
     debug, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time,
 };
-use bevy::prelude::{info, AppExtStates};
 use clap::Parser;
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::game::GameLaunchParams;
@@ -48,7 +48,7 @@ fn main() {
 }
 
 fn run(game_launch_params: GameLaunchParams) {
-    info!("Starting client: {game_launch_params:?}");
+    println!("Starting client: {game_launch_params:?}");
     let mut app = App::new();
     let client_id = ClientId::random();
     app.insert_resource(ClientIdResource(client_id));

@@ -1,5 +1,5 @@
+use bevy::prelude::App;
 use bevy::prelude::AppExtStates;
-use bevy::prelude::{info, App};
 use clap::Parser;
 use client_graphics::game::GameLaunchParams;
 use client_graphics::states::ClientState;
@@ -58,7 +58,7 @@ fn run_with_string(url: &str, player_id: &str, map_id: &str, game_id: &str) {
 }
 
 fn run_with_url(url: url::Url, game_launch_params: GameLaunchParams) {
-    info!("Starting client: {url} {game_launch_params:?}");
+    println!("Starting client: {url} {game_launch_params:?}");
     let mut app = App::new();
 
     app.add_plugins(ClientGraphicsPlugin { game_launch_params });
