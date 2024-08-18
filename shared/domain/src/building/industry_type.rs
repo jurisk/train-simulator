@@ -1,54 +1,133 @@
-#![allow(clippy::match_same_arms)]
+#![allow(clippy::match_same_arms, clippy::enum_glob_use)]
 
 use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::building::industry_type::IndustryType::*;
 use crate::building::WithRelativeTileCoverage;
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::map_level::zoning::ZoningType;
+use crate::map_level::zoning::ZoningType::{Industrial, Source};
 use crate::resource_type::ResourceType;
+use crate::resource_type::ResourceType::*;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum IndustryType {
     CoalMine,
+    OilWell,
     IronMine,
+    NitrateMine,
+    SulfurMine,
+    Farm,
+    Forestry,
+    ClayPit,
+    LimestoneMine,
+    SandAndGravelQuarry,
+    PowerPlant,
+    CoalToOilPlant,
     SteelMill,
+    ExplosivesPlant,
+    FoodProcessingPlant,
+    LumberMill,
+    CementPlant,
+    OilRefinery,
+    ConcretePlant,
+    TrainFactory,
+    WeaponsFactory,
+    AmmunitionFactory,
     Warehouse,
 }
 
 impl Debug for IndustryType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            IndustryType::CoalMine => write!(f, "CoalMine"),
-            IndustryType::IronMine => write!(f, "IronMine"),
-            IndustryType::SteelMill => write!(f, "SteelMill"),
-            IndustryType::Warehouse => write!(f, "Warehouse"),
+            CoalMine => write!(f, "CoalMine"),
+            OilWell => write!(f, "OilWell"),
+            IronMine => write!(f, "IronMine"),
+            NitrateMine => write!(f, "NitrateMine"),
+            SulfurMine => write!(f, "SulfurMine"),
+            Farm => write!(f, "Farm"),
+            Forestry => write!(f, "Forestry"),
+            ClayPit => write!(f, "ClayPit"),
+            LimestoneMine => write!(f, "LimestoneMine"),
+            SandAndGravelQuarry => write!(f, "SandAndGravelQuarry"),
+            PowerPlant => write!(f, "PowerPlant"),
+            CoalToOilPlant => write!(f, "CoalToOilPlant"),
+            SteelMill => write!(f, "SteelMill"),
+            ExplosivesPlant => write!(f, "ExplosivesPlant"),
+            FoodProcessingPlant => write!(f, "FoodProcessingPlant"),
+            LumberMill => write!(f, "LumberMill"),
+            CementPlant => write!(f, "CementPlant"),
+            OilRefinery => write!(f, "OilRefinery"),
+            ConcretePlant => write!(f, "ConcretePlant"),
+            TrainFactory => write!(f, "TrainFactory"),
+            WeaponsFactory => write!(f, "WeaponsFactory"),
+            AmmunitionFactory => write!(f, "AmmunitionFactory"),
+            Warehouse => write!(f, "Warehouse"),
         }
     }
 }
 
 impl IndustryType {
     #[must_use]
-    pub const fn all() -> [Self; 4] {
+    pub const fn all() -> [Self; 23] {
         [
-            IndustryType::CoalMine,
-            IndustryType::IronMine,
-            IndustryType::SteelMill,
-            IndustryType::Warehouse,
+            CoalMine,
+            OilWell,
+            IronMine,
+            NitrateMine,
+            SulfurMine,
+            Farm,
+            Forestry,
+            ClayPit,
+            LimestoneMine,
+            SandAndGravelQuarry,
+            PowerPlant,
+            CoalToOilPlant,
+            SteelMill,
+            ExplosivesPlant,
+            FoodProcessingPlant,
+            LumberMill,
+            CementPlant,
+            OilRefinery,
+            ConcretePlant,
+            TrainFactory,
+            WeaponsFactory,
+            AmmunitionFactory,
+            Warehouse,
         ]
     }
 
     #[must_use]
     pub fn required_zoning(self) -> ZoningType {
         match self {
-            IndustryType::CoalMine => ZoningType::Deposit(ResourceType::Coal),
-            IndustryType::IronMine => ZoningType::Deposit(ResourceType::Iron),
-            IndustryType::SteelMill => ZoningType::Industrial,
-            IndustryType::Warehouse => ZoningType::Industrial,
+            CoalMine => Source(Coal),
+            OilWell => Source(Oil),
+            IronMine => Source(Iron),
+            NitrateMine => Source(Nitrates),
+            SulfurMine => Source(Sulfur),
+            Farm => Source(FarmProducts),
+            Forestry => Source(Wood),
+            ClayPit => Source(Clay),
+            LimestoneMine => Source(Limestone),
+            SandAndGravelQuarry => Source(SandAndGravel),
+            PowerPlant => Industrial,
+            CoalToOilPlant => Industrial,
+            SteelMill => Industrial,
+            ExplosivesPlant => Industrial,
+            FoodProcessingPlant => Industrial,
+            LumberMill => Industrial,
+            CementPlant => Industrial,
+            OilRefinery => Industrial,
+            ConcretePlant => Industrial,
+            TrainFactory => Industrial,
+            WeaponsFactory => Industrial,
+            AmmunitionFactory => Industrial,
+            Warehouse => Industrial,
         }
     }
 
@@ -63,22 +142,51 @@ impl IndustryType {
 
     #[must_use]
     pub fn transform_per_second(self) -> ResourceTransform {
+        const X0: f32 = 0.0;
+        const X1: f32 = 1.0;
+        const X2: f32 = 2.0;
+
         match self {
-            IndustryType::CoalMine => {
-                ResourceTransform::make(vec![], vec![(ResourceType::Coal, 1.0)])
-            },
-            IndustryType::IronMine => {
-                ResourceTransform::make(vec![], vec![(ResourceType::Iron, 1.0)])
-            },
-            IndustryType::SteelMill => {
+            SteelMill => {
                 // https://marketrealist.com/2015/01/coke-fit-steelmaking-process/
+                ResourceTransform::make(vec![(Iron, X2), (Coal, X1)], vec![(Steel, X1)])
+            },
+            PowerPlant => ResourceTransform::make(vec![(Coal, X1)], vec![]),
+            CoalToOilPlant => ResourceTransform::make(vec![(Coal, X1)], vec![(Oil, X1)]),
+            ExplosivesPlant => {
                 ResourceTransform::make(
-                    vec![(ResourceType::Iron, 2.0), (ResourceType::Coal, 1.0)],
-                    vec![(ResourceType::Steel, 1.0)],
+                    vec![(Nitrates, X1), (Sulfur, X1), (Cellulose, X1)],
+                    vec![(Explosives, X1)],
                 )
             },
-            IndustryType::Warehouse => {
-                ResourceTransform::make(vec![(ResourceType::Steel, 0.0)], vec![])
+            FoodProcessingPlant => {
+                ResourceTransform::make(vec![(FarmProducts, X1)], vec![(Food, X1)])
+            },
+            LumberMill => {
+                ResourceTransform::make(vec![(Wood, X1)], vec![(Cellulose, X1), (Timber, X1)])
+            },
+            CementPlant => {
+                ResourceTransform::make(vec![(Clay, X1), (Limestone, X1)], vec![(Cement, X1)])
+            },
+            OilRefinery => ResourceTransform::make(vec![(Oil, X1)], vec![(Fuel, X1)]),
+            ConcretePlant => ResourceTransform::make(vec![(Cement, X1)], vec![(Concrete, X1)]),
+            TrainFactory => ResourceTransform::make(vec![(Steel, X1)], vec![]),
+            WeaponsFactory => ResourceTransform::make(vec![(Steel, X1)], vec![(Weapons, X1)]),
+            AmmunitionFactory => {
+                ResourceTransform::make(vec![(Steel, X1), (Explosives, X1)], vec![(Ammunition, X1)])
+            },
+            Warehouse => {
+                // TODO HIGH: Update warehouse to actually accept various resources, and not instantly (time for unloading)
+                ResourceTransform::make(vec![(Steel, X0)], vec![])
+            },
+            IronMine | CoalMine | OilWell | NitrateMine | SulfurMine | Farm | Forestry
+            | ClayPit | LimestoneMine | SandAndGravelQuarry => {
+                match self.required_zoning() {
+                    Source(resource) => ResourceTransform::make(vec![], vec![(resource, X1)]),
+                    Industrial => {
+                        unreachable!("{self:?} should not be in Industrial zoning")
+                    },
+                }
             },
         }
     }

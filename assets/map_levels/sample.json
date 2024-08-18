@@ -115,7 +115,7 @@
     {
       "id": "c1e9794c-bea0-4278-b759-5a16c4b20fed",
       "zoning_type": {
-        "Deposit": "Iron"
+        "Source": "Iron"
       },
       "reference_tile": {
         "x": 40,
@@ -125,7 +125,7 @@
     {
       "id": "54a735e0-0bc6-4b5d-8ff5-898cfd3b00ee",
       "zoning_type": {
-        "Deposit": "Iron"
+        "Source": "Iron"
       },
       "reference_tile": {
         "x": 55,
@@ -135,7 +135,7 @@
     {
       "id": "600d1c6b-f955-4ab2-9e0f-36ebedcddf2b",
       "zoning_type": {
-        "Deposit": "Iron"
+        "Source": "Iron"
       },
       "reference_tile": {
         "x": 9,
@@ -145,7 +145,7 @@
     {
       "id": "ea5e7dfb-e4cd-4697-89e3-a95f5ebbcecd",
       "zoning_type": {
-        "Deposit": "Iron"
+        "Source": "Iron"
       },
       "reference_tile": {
         "x": 67,
@@ -155,7 +155,7 @@
     {
       "id": "b0510bde-2322-4001-8dd8-5ac878f96aa6",
       "zoning_type": {
-        "Deposit": "Coal"
+        "Source": "Coal"
       },
       "reference_tile": {
         "x": 7,
@@ -165,7 +165,7 @@
     {
       "id": "7fc7eb71-da0b-4e33-9110-7fcafb32352b",
       "zoning_type": {
-        "Deposit": "Coal"
+        "Source": "Coal"
       },
       "reference_tile": {
         "x": 10,
