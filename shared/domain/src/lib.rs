@@ -152,7 +152,7 @@ impl MapId {
         vec![
             MapId("sample".to_string()),
             MapId("europe".to_string()),
-            MapId("usa".to_string()),
+            MapId("usa_east".to_string()),
         ]
     }
 }

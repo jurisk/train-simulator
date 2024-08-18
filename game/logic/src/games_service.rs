@@ -34,7 +34,7 @@ impl GamesService {
         // TODO HIGH: Improve `europe.json` so that it has zonings
         let europe_level_json = include_str!("../../../assets/map_levels/europe.json");
         // TODO: Have a USA map and use that
-        let usa_level_json = include_str!("../../../assets/map_levels/sample.json");
+        let usa_level_json = include_str!("../../../assets/map_levels/usa_east.json");
 
         let mut game_prototypes = HashMap::new();
         for map_id in MapId::all() {
@@ -42,7 +42,7 @@ impl GamesService {
             let level_json = match map_name.as_str() {
                 "sample" => sample_level_json,
                 "europe" => europe_level_json,
-                "usa" => usa_level_json,
+                "usa_east" => usa_level_json,
                 _ => sample_level_json,
             };
             let map_level = serde_json::from_str::<MapLevel>(level_json)
