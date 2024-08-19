@@ -140,7 +140,7 @@ fn industry_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
-// Later: Fixed artillery, movable artillery, troops, trenches? Need to think carefully about the model and what's needed and what's not.
+// TODO HIGH: Fixed artillery, movable artillery, troops, trenches? Need to think carefully about the model and what's needed and what's not.
 fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     menu::menu_button(ui, "⚔ Military", |ui| {
         set_font_size(ui, 24.0);

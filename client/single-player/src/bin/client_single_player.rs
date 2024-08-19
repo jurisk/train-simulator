@@ -37,6 +37,13 @@ fn run_with_string(player_id: &str, map_id: &str, game_id: &str) {
     run(game_launch_params);
 }
 
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    // Deliberately empty as we actually want `start` called with a parameter from WASM
+    println!("WASM main() called");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 #[allow(clippy::expect_used)]
 fn main() {
     let args = Args::parse();
