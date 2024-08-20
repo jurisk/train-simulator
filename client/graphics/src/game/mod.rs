@@ -135,6 +135,7 @@ fn handle_login_successful(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut client_messages: EventWriter<ClientMessageEvent>,
     mut commands: Commands,
+    mut client_state: ResMut<NextState<ClientState>>,
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(player_id)) =
@@ -142,6 +143,8 @@ fn handle_login_successful(
         {
             info!("Login successful, player_id: {player_id:?}");
             commands.insert_resource(PlayerIdResource(*player_id));
+
+            client_state.set(ClientState::JoiningGame);
 
             client_messages.send(ClientMessageEvent::new(ClientCommand::Lobby(
                 LobbyCommand::ListGames,
