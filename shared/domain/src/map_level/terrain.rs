@@ -13,10 +13,12 @@ use crate::vertex_coords_xz::VertexCoordsXZ;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct Terrain {
-    y_coef:         f32,
-    vertex_heights: GridXZ<VertexCoordsXZ, Height>,
+    y_coef:          f32,
+    vertex_heights:  GridXZ<VertexCoordsXZ, Height>,
+    vertex_terrains: GridXZ<VertexCoordsXZ, TerrainType>,
 }
 
+#[allow(clippy::missing_fields_in_debug)]
 impl Debug for Terrain {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Terrain")
@@ -30,10 +32,15 @@ impl Debug for Terrain {
 pub const DEFAULT_Y_COEF: f32 = 0.5;
 impl Terrain {
     #[must_use]
-    pub fn new(vertex_heights: Vec<Vec<u8>>) -> Self {
+    pub fn new(
+        y_coef: f32,
+        vertex_heights: GridXZ<VertexCoordsXZ, Height>,
+        vertex_terrains: GridXZ<VertexCoordsXZ, TerrainType>,
+    ) -> Self {
         Self {
-            y_coef:         DEFAULT_Y_COEF,
-            vertex_heights: GridXZ::new(vertex_heights).map(|&height| Height::from_u8(height)),
+            y_coef,
+            vertex_heights,
+            vertex_terrains,
         }
     }
 
@@ -88,8 +95,10 @@ impl Terrain {
 
     #[must_use]
     pub fn terrain_at(&self, vertex_coords_xz: VertexCoordsXZ) -> TerrainType {
-        let height = self.height_at(vertex_coords_xz);
-        self.terrain_from_height(height)
+        match self.vertex_terrains.get(vertex_coords_xz) {
+            Some(&terrain_type) => terrain_type,
+            None => TerrainType::fallback(),
+        }
     }
 
     #[must_use]

@@ -1,6 +1,11 @@
 {
   "terrain": {
     "y_coef": 0.5,
+    "vertex_terrains": {
+      "size_x": 0,
+      "size_z": 0,
+      "data": []
+    },
     "vertex_heights": {
       "size_x": 100,
       "size_z": 100,

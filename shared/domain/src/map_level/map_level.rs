@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
-use serde::{Deserialize, Serialize};
+use serde::de::Error;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::map_level::terrain::Terrain;
 use crate::map_level::zoning::Zoning;
@@ -8,11 +9,66 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::vertex_coords_xz::VertexCoordsXZ;
 use crate::water::Water;
 
-#[repr(u32)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum TerrainType {
-    Sand  = 0,
-    Grass = 1,
-    Rocks = 2,
+    Sand,
+    Grass,
+    Rocks,
+}
+
+impl TerrainType {
+    #[must_use]
+    pub fn as_char(&self) -> char {
+        match self {
+            TerrainType::Sand => 'S',
+            TerrainType::Grass => 'G',
+            TerrainType::Rocks => 'R',
+        }
+    }
+
+    #[must_use]
+    pub fn from_char(c: char) -> Option<Self> {
+        match c {
+            'S' => Some(Self::Sand),
+            'G' => Some(Self::Grass),
+            'R' => Some(Self::Rocks),
+            _ => None,
+        }
+    }
+
+    // Have to match the indices for `./assets/textures/land.ktx2`
+    #[must_use]
+    pub fn as_u32(&self) -> u32 {
+        match self {
+            TerrainType::Sand => 0,
+            TerrainType::Grass => 1,
+            TerrainType::Rocks => 2,
+        }
+    }
+
+    #[must_use]
+    pub fn fallback() -> Self {
+        Self::Grass
+    }
+}
+
+impl Serialize for TerrainType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.as_char().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for TerrainType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let c = char::deserialize(deserializer)?;
+        Self::from_char(c).ok_or_else(|| Error::custom("Invalid terrain type"))
+    }
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]

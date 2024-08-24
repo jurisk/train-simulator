@@ -150,13 +150,18 @@ pub(crate) fn create_land(
 #[cfg(test)]
 mod tests {
     use bevy::prelude::Vec3;
-    use shared_domain::map_level::terrain::Terrain;
+    use shared_domain::map_level::map_level::Height;
+    use shared_domain::map_level::terrain::{Terrain, DEFAULT_Y_COEF};
 
     use super::*;
 
     #[test]
     fn test_logical_to_world() {
-        let terrain = Terrain::new(vec![vec![0, 1, 2], vec![3, 1, 5], vec![6, 7, 2]]);
+        let vertex_heights = vec![vec![0, 1, 2], vec![3, 1, 5], vec![6, 7, 2]];
+        let vertex_heights = GridXZ::new(vertex_heights).map(|&height| Height::from_u8(height));
+
+        let terrain = Terrain::new(DEFAULT_Y_COEF, vertex_heights, GridXZ::new(vec![]));
+
         assert_eq!(
             terrain.logical_to_world(VertexCoordsXZ::from_usizes(0, 0)),
             Vec3::new(-1.0, 0.0, -1.0)

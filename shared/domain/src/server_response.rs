@@ -76,6 +76,7 @@ pub struct PlayerInfo {
     pub colour: Colour,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
     GameStateSnapshot(GameState),

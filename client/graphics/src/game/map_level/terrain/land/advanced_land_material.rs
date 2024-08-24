@@ -78,9 +78,9 @@ pub(crate) fn create_advanced_land_material(
             ..default()
         },
         extension: LandExtension {
-            sand_terrain_type: TerrainType::Sand as u32,
-            grass_terrain_type: TerrainType::Grass as u32,
-            rocks_terrain_type: TerrainType::Rocks as u32,
+            sand_terrain_type: TerrainType::Sand.as_u32(),
+            grass_terrain_type: TerrainType::Grass.as_u32(),
+            rocks_terrain_type: TerrainType::Rocks.as_u32(),
             land_textures,
         },
     }
