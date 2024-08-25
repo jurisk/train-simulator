@@ -6,12 +6,17 @@ use shared_domain::building::station_type::{StationOrientation, StationType};
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::transport_type::TransportType;
 
+use crate::ai::ArtificialIntelligenceTimer;
 use crate::hud::domain::{DemolishType, SelectedMode};
 
 const MIN_X: f32 = 200.0;
 const MIN_Y: f32 = 40.0;
 
-pub(crate) fn show_top_panel(mut contexts: EguiContexts, mut selected_mode: ResMut<SelectedMode>) {
+pub(crate) fn show_top_panel(
+    mut contexts: EguiContexts,
+    mut selected_mode: ResMut<SelectedMode>,
+    mut ai_timer: ResMut<ArtificialIntelligenceTimer>,
+) {
     // Later: We need to better depict the current building mode in the main menu, in case it's a sub-menu item that is selected
 
     egui::TopBottomPanel::top("hud_top_panel").show(contexts.ctx_mut(), |ui| {
@@ -27,6 +32,7 @@ pub(crate) fn show_top_panel(mut contexts: EguiContexts, mut selected_mode: ResM
             military_menu(&mut selected_mode, ui);
             trains_menu(&mut selected_mode, ui);
             demolish_menu(&mut selected_mode, ui);
+            ai_menu(&mut ai_timer, ui);
         });
     });
 }
@@ -200,6 +206,37 @@ fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
                 *selected_mode.as_mut() = mode;
                 ui.close_menu();
             }
+        }
+    });
+}
+
+fn ai_menu(ai_timer: &mut ResMut<ArtificialIntelligenceTimer>, ui: &mut Ui) {
+    // Later: Could disable the currently selected AI mode, but that does not matter much
+    menu::menu_button(ui, "🖥 AI", |ui| {
+        set_font_size(ui, 24.0);
+
+        if ui
+            .add(egui::Button::new("❎ Disable").min_size(egui::vec2(MIN_X, MIN_Y)))
+            .clicked()
+        {
+            ai_timer.as_mut().disable();
+            ui.close_menu();
+        }
+
+        if ui
+            .add(egui::Button::new("☑ Enable 100 milliseconds").min_size(egui::vec2(MIN_X, MIN_Y)))
+            .clicked()
+        {
+            ai_timer.as_mut().enable(0.1);
+            ui.close_menu();
+        }
+
+        if ui
+            .add(egui::Button::new("☑ Enable 1 second").min_size(egui::vec2(MIN_X, MIN_Y)))
+            .clicked()
+        {
+            ai_timer.as_mut().enable(1.0);
+            ui.close_menu();
         }
     });
 }

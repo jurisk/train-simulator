@@ -19,6 +19,7 @@ use crate::lobby::LobbyHandlerPlugin;
 use crate::network::client_ping::ClientPingPlugin;
 use crate::selection::SelectionPlugin;
 
+mod ai;
 pub mod assets;
 mod cameras;
 pub mod communication;

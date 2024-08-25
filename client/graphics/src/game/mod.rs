@@ -28,6 +28,7 @@ use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::{GameId, MapId, PlayerId};
 use shared_util::tap::TapErr;
 
+use crate::ai::ArtificialIntelligencePlugin;
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;
 use crate::game::map_level::MapLevelPlugin;
@@ -86,6 +87,7 @@ impl Plugin for GamePlugin {
         app.add_plugins(BuildingsPlugin);
         app.add_plugins(TransportPlugin);
         app.add_plugins(MapLevelPlugin);
+        app.add_plugins(ArtificialIntelligencePlugin);
         app.add_systems(OnEnter(ClientState::LoggingIn), initiate_login);
         app.add_systems(
             FixedUpdate,
@@ -100,11 +102,6 @@ impl Plugin for GamePlugin {
             Update,
             client_side_time_advance.run_if(in_state(ClientState::Playing)),
         );
-        // TODO HIGH: Move this to menu and make it way more "dynamic" (not hard-coded to one map). Disabled for now.
-        // app.add_systems(
-        //     Update,
-        //     test_objects::build_test_objects.run_if(in_state(ClientState::Playing)),
-        // );
     }
 }
 
