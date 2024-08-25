@@ -176,8 +176,13 @@ impl IndustryType {
                 ResourceTransform::make(vec![(Steel, X1), (Explosives, X1)], vec![(Ammunition, X1)])
             },
             Warehouse => {
-                // TODO HIGH: Update warehouse to actually accept various resources, and not instantly (time for unloading)
-                ResourceTransform::make(vec![(Steel, X0)], vec![])
+                // TODO HIGH: Test that this actually works. And rethink the idea of warehouses, as right now they are just a "black hole" for resources.
+                // TODO: Not all of the resources "accepted" are "final" - `Steel` is also used in some supply chains
+                let inputs = [Ammunition, Concrete, Food, Fuel, Steel, Timber, Weapons]
+                    .into_iter()
+                    .map(|resource| (resource, X0))
+                    .collect();
+                ResourceTransform::make(inputs, vec![])
             },
             IronMine | CoalMine | OilWell | NitrateMine | SulfurMine | Farm | Forestry
             | ClayPit | LimestoneMine | SandAndGravelQuarry => {
