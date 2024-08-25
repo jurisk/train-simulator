@@ -102,18 +102,6 @@ impl Terrain {
     }
 
     #[must_use]
-    pub fn terrain_from_height(&self, height: Height) -> TerrainType {
-        // TODO HIGH: Refactor to be more flexible
-        if height.as_u8() <= 9 {
-            TerrainType::Sand
-        } else if height.as_u8() <= 15 {
-            TerrainType::Grass
-        } else {
-            TerrainType::Rocks
-        }
-    }
-
-    #[must_use]
     #[allow(clippy::cast_precision_loss, clippy::cast_lossless)]
     pub fn logical_to_world(&self, vertex_coords_xz: VertexCoordsXZ) -> Vec3 {
         let height = self.vertex_heights[vertex_coords_xz].as_f32();
