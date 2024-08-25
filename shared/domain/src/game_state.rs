@@ -12,6 +12,7 @@ use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::map_level::MapLevel;
+use crate::map_level::zoning::ZoningInfo;
 use crate::players::player_state::PlayerState;
 use crate::server_response::{GameInfo, PlayerInfo};
 use crate::transport::movement_orders::MovementOrders;
@@ -303,5 +304,19 @@ impl GameState {
     #[must_use]
     pub fn transport_state(&self) -> &TransportState {
         &self.transports
+    }
+
+    #[must_use]
+    pub fn all_free_zonings(&self) -> Vec<&ZoningInfo> {
+        self.map_level
+            .zoning()
+            .all_zonings()
+            .iter()
+            .filter(|zoning| {
+                self.building_state()
+                    .industry_building_at(zoning.reference_tile())
+                    .is_none()
+            })
+            .collect()
     }
 }

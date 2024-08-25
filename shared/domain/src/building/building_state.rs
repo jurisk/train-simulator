@@ -10,6 +10,7 @@ use crate::building::building_info::{
     BuildingDynamicInfo, BuildingInfo, WithOwner, WithTileCoverage,
 };
 use crate::building::industry_building_info::IndustryBuildingInfo;
+use crate::building::industry_type::IndustryType;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::cargo_map::CargoOps;
@@ -448,6 +449,20 @@ impl BuildingState {
         self.industry_buildings
             .iter()
             .find(|building| building.id() == industry_building_id)
+    }
+
+    #[must_use]
+    pub fn find_industry_building_by_owner_and_type(
+        &self,
+        owner_id: PlayerId,
+        industry_type: IndustryType,
+    ) -> Vec<&IndustryBuildingInfo> {
+        self.industry_buildings
+            .iter()
+            .filter(|building| {
+                building.owner_id() == owner_id && building.industry_type() == industry_type
+            })
+            .collect()
     }
 
     #[must_use]

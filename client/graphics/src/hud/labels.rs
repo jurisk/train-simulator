@@ -66,44 +66,37 @@ fn draw_zoning_buttons(
     camera_transform: &GlobalTransform,
     client_messages: &mut EventWriter<ClientMessageEvent>,
 ) {
-    let buildings = game_state.building_state();
-    for zoning_info in game_state.map_level().zoning().all_zonings() {
-        if buildings
-            .industry_building_at(zoning_info.reference_tile())
-            .is_none()
-        {
-            let id = format!("{:?}", zoning_info.id());
-            let game_id = game_state.game_id();
-            let label = format!("{:?}", zoning_info.zoning_type());
-            let position_3d = center_vec3(zoning_info, game_state.map_level());
-            let mut sub_buttons: BTreeMap<String, Box<dyn FnOnce() -> GameCommand>> =
-                BTreeMap::new();
-            for industry_type in IndustryType::all() {
-                let hypothetical_building = IndustryBuildingInfo::new(
-                    player_id,
-                    IndustryBuildingId::random(),
-                    zoning_info.reference_tile(),
-                    industry_type,
-                );
-                if game_state.can_build_industry_building(player_id, &hypothetical_building) {
-                    sub_buttons.insert(
-                        format!("Build {industry_type:?}"),
-                        Box::new(|| GameCommand::BuildIndustryBuilding(hypothetical_building)),
-                    );
-                }
-            }
-            draw_menu(
-                label,
-                position_3d,
-                id,
-                context,
-                camera,
-                camera_transform,
-                game_id,
-                sub_buttons,
-                client_messages,
+    for zoning_info in game_state.all_free_zonings() {
+        let id = format!("{:?}", zoning_info.id());
+        let game_id = game_state.game_id();
+        let label = format!("{:?}", zoning_info.zoning_type());
+        let position_3d = center_vec3(zoning_info, game_state.map_level());
+        let mut sub_buttons: BTreeMap<String, Box<dyn FnOnce() -> GameCommand>> = BTreeMap::new();
+        for industry_type in IndustryType::all() {
+            let hypothetical_building = IndustryBuildingInfo::new(
+                player_id,
+                IndustryBuildingId::random(),
+                zoning_info.reference_tile(),
+                industry_type,
             );
+            if game_state.can_build_industry_building(player_id, &hypothetical_building) {
+                sub_buttons.insert(
+                    format!("Build {industry_type:?}"),
+                    Box::new(|| GameCommand::BuildIndustryBuilding(hypothetical_building)),
+                );
+            }
         }
+        draw_menu(
+            label,
+            position_3d,
+            id,
+            context,
+            camera,
+            camera_transform,
+            game_id,
+            sub_buttons,
+            client_messages,
+        );
     }
 }
 
