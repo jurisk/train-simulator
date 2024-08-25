@@ -32,81 +32,113 @@ pub fn draw_labels(
             let GameStateResource(game_state) = game_state_resource.as_ref();
 
             let context = contexts.ctx_mut();
-            let buildings = game_state.building_state();
 
-            for zoning_info in game_state.map_level().zoning().all_zonings() {
-                if buildings
-                    .industry_building_at(zoning_info.reference_tile())
-                    .is_none()
-                {
-                    // TODO HIGH: Make these into menu buttons to build the relevant industry buildings
-                    with_tile_coverage_label(
-                        format!("{:?}", zoning_info.id()),
-                        format!("{:?}", zoning_info.zoning_type()),
-                        zoning_info,
-                        game_state,
-                        context,
-                        camera,
-                        camera_transform,
-                    );
-                }
-            }
-
-            for industry_building in buildings.all_industry_buildings() {
-                let id = format!("{:?}", industry_building.id());
-
-                let label = format!(
-                    "{:?} {:?}",
-                    industry_building.industry_type(),
-                    industry_building.dynamic_info()
-                );
-
-                with_tile_coverage_label(
-                    id,
-                    label,
-                    industry_building,
-                    game_state,
-                    context,
-                    camera,
-                    camera_transform,
-                );
-            }
-
-            for station in buildings.all_stations() {
-                let id = format!("{:?}", station.id());
-                let label = format!("{:?} {:?}", station.station_type(), station.dynamic_info());
-
-                with_tile_coverage_label(
-                    id,
-                    label,
-                    station,
-                    game_state,
-                    context,
-                    camera,
-                    camera_transform,
-                );
-            }
-
-            let transports = game_state.transport_infos();
-            for transport in transports {
-                // TODO: The cargo label could actually be "I 1.0 of 2.0" or similar
-                let label = transport.cargo_as_string();
-                let id = format!("{:?}", transport.transport_id());
-                let transport_location = transport.location();
-                let transport_position_3d = transport_location.tile_path[0].progress_coordinates(
-                    transport_location.progress_within_tile,
-                    game_state.map_level().terrain(),
-                );
-                draw_label(
-                    transport_position_3d,
-                    label,
-                    id,
-                    context,
-                    camera,
-                    camera_transform,
-                );
-            }
+            draw_zoning_buttons(game_state, context, camera, camera_transform);
+            draw_industry_labels(game_state, context, camera, camera_transform);
+            draw_station_labels(game_state, context, camera, camera_transform);
+            draw_transport_labels(game_state, context, camera, camera_transform);
         }
+    }
+}
+
+fn draw_zoning_buttons(
+    game_state: &GameState,
+    context: &mut Context,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+) {
+    let buildings = game_state.building_state();
+    for zoning_info in game_state.map_level().zoning().all_zonings() {
+        if buildings
+            .industry_building_at(zoning_info.reference_tile())
+            .is_none()
+        {
+            // TODO HIGH: Make these into menu buttons to build the relevant industry buildings
+            with_tile_coverage_label(
+                format!("{:?}", zoning_info.id()),
+                format!("{:?}", zoning_info.zoning_type()),
+                zoning_info,
+                game_state,
+                context,
+                camera,
+                camera_transform,
+            );
+        }
+    }
+}
+
+fn draw_industry_labels(
+    game_state: &GameState,
+    context: &mut Context,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+) {
+    for industry_building in game_state.building_state().all_industry_buildings() {
+        let id = format!("{:?}", industry_building.id());
+
+        let label = format!(
+            "{:?} {:?}",
+            industry_building.industry_type(),
+            industry_building.dynamic_info()
+        );
+
+        with_tile_coverage_label(
+            id,
+            label,
+            industry_building,
+            game_state,
+            context,
+            camera,
+            camera_transform,
+        );
+    }
+}
+
+fn draw_station_labels(
+    game_state: &GameState,
+    context: &mut Context,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+) {
+    for station in game_state.building_state().all_stations() {
+        let id = format!("{:?}", station.id());
+        let label = format!("{:?} {:?}", station.station_type(), station.dynamic_info());
+
+        with_tile_coverage_label(
+            id,
+            label,
+            station,
+            game_state,
+            context,
+            camera,
+            camera_transform,
+        );
+    }
+}
+
+fn draw_transport_labels(
+    game_state: &GameState,
+    context: &mut Context,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+) {
+    for transport in game_state.transport_infos() {
+        // TODO: The cargo label could actually be "I 1.0 of 2.0" or similar
+        let label = transport.cargo_as_string();
+        let id = format!("{:?}", transport.transport_id());
+        let transport_location = transport.location();
+        let transport_position_3d = transport_location.tile_path[0].progress_coordinates(
+            transport_location.progress_within_tile,
+            game_state.map_level().terrain(),
+        );
+        draw_label(
+            transport_position_3d,
+            label,
+            id,
+            context,
+            camera,
+            camera_transform,
+        );
     }
 }
 
