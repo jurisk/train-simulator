@@ -149,11 +149,7 @@ impl Default for MapId {
 impl MapId {
     #[must_use]
     pub fn all() -> Vec<MapId> {
-        vec![
-            MapId("sample".to_string()),
-            MapId("europe".to_string()),
-            MapId("usa_east".to_string()),
-        ]
+        vec![MapId("usa_east".to_string()), MapId("europe".to_string())]
     }
 }
 

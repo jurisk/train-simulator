@@ -162,12 +162,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_default_terrain_can_be_deserialised() {
-        let level_json = include_str!("../../../../assets/map_levels/sample.json");
-        let level = serde_json::from_str::<MapLevel>(level_json)
-            .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
-        assert_eq!(level.is_valid(), Ok(()));
-        assert_eq!(level.terrain.vertex_count_x(), 100);
-        assert_eq!(level.terrain.vertex_count_z(), 100);
+    fn test_map_levels_can_be_deserialised() {
+        let levels = [
+            include_str!("../../../../assets/map_levels/usa_east.json"),
+            include_str!("../../../../assets/map_levels/europe.json"),
+        ];
+        for level_json in levels {
+            let level = serde_json::from_str::<MapLevel>(level_json).unwrap_or_else(|err| {
+                panic!("Failed to deserialise:\n\n{level_json}\n\nError: {err}")
+            });
+            assert_eq!(level.is_valid(), Ok(()));
+        }
     }
 }

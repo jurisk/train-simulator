@@ -30,7 +30,6 @@ impl GamesService {
     )]
     pub(crate) fn new() -> Self {
         // Later: Eventually, eliminate the Sample map level
-        let sample_level_json = include_str!("../../../assets/map_levels/sample.json");
         let europe_level_json = include_str!("../../../assets/map_levels/europe.json");
         // TODO: Have a USA map and use that
         let usa_level_json = include_str!("../../../assets/map_levels/usa_east.json");
@@ -39,10 +38,9 @@ impl GamesService {
         for map_id in MapId::all() {
             let MapId(map_name) = &map_id;
             let level_json = match map_name.as_str() {
-                "sample" => sample_level_json,
                 "europe" => europe_level_json,
                 "usa_east" => usa_level_json,
-                _ => sample_level_json,
+                _ => usa_level_json,
             };
             let map_level = serde_json::from_str::<MapLevel>(level_json)
                 .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
