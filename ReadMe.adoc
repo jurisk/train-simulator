@@ -47,7 +47,7 @@ Controls:
 * `W` and `R` for camera rotation
 * `C` for switch camera mode
 * `A` and `Z` for camera zoom
-* Number row `1`, `2`, `3` for "test objects" building
+* Use `AI` menu to enable "AI" (automatic actions) for the player
 * Click on transport buttons in the left panel to define transport orders
 
 ==== Single player

@@ -7,9 +7,13 @@ use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
+use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
+use shared_domain::resource_type::ResourceType;
+use shared_domain::transport::tile_track::TileTrack;
+use shared_domain::transport::track_planner::plan_tracks;
 use shared_domain::{IndustryBuildingId, PlayerId, StationId};
-use shared_util::random::choose_unsafe;
+use shared_util::random::choose;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
@@ -82,10 +86,10 @@ fn ai_step(
     game_state: &GameState,
     client_messages: &mut EventWriter<ClientMessageEvent>,
 ) {
-    let commands = try_building_industry_buildings(player_id, game_state)
-        .or_else(|| try_building_stations(player_id, game_state))
+    let commands = try_building_transports(player_id, game_state)
         .or_else(|| try_building_tracks(player_id, game_state))
-        .or_else(|| try_building_transports(player_id, game_state));
+        .or_else(|| try_building_stations(player_id, game_state))
+        .or_else(|| try_building_industry_buildings(player_id, game_state));
 
     if let Some(commands) = commands {
         for command in commands {
@@ -147,20 +151,72 @@ fn try_building_stations(player_id: PlayerId, game_state: &GameState) -> Option<
             .filter(|station_info| game_state.can_build_station(player_id, station_info))
             .collect::<Vec<_>>();
 
-        if options.is_empty() {
-            debug!("No station locations for {:?}", industry_building);
-        } else {
-            // Later: Don't choose randomly, but the "best" (not sure what that means yet) location
-            let selected = choose_unsafe(&options);
-            return Some(vec![GameCommand::BuildStation(selected.clone())]);
+        // Later: Don't choose randomly, but the "best" (not sure what that means yet) location
+        match choose(&options) {
+            None => {
+                debug!("No station locations for {:?}", industry_building);
+            },
+            Some(selected) => {
+                return Some(vec![GameCommand::BuildStation(selected.clone())]);
+            },
         }
     }
 
     None
 }
 
-fn try_building_tracks(_player_id: PlayerId, _game_state: &GameState) -> Option<Vec<GameCommand>> {
+fn logistics_links(
+    player_id: PlayerId,
+    game_state: &GameState,
+) -> Vec<(StationId, ResourceType, StationId)> {
+    let mut results = vec![];
     // TODO HIGH: Implement
+    results
+}
+
+fn track_connections(
+    game_state: &GameState,
+    links: Vec<(StationId, ResourceType, StationId)>,
+) -> Vec<(TileTrack, TileTrack)> {
+    let mut results = vec![];
+    for (from_station_id, _, to_station_id) in links {
+        let from_station = game_state.building_state().find_station(from_station_id);
+        let to_station = game_state.building_state().find_station(to_station_id);
+        let from_tracks = from_station
+            .map(StationInfo::station_exit_tile_tracks)
+            .unwrap_or_default();
+        let to_tracks = to_station
+            .map(StationInfo::station_exit_tile_tracks)
+            .unwrap_or_default();
+        for from_track in &from_tracks {
+            for to_track in &to_tracks {
+                results.push((*from_track, *to_track));
+            }
+        }
+    }
+    results
+}
+
+#[allow(clippy::redundant_else)]
+fn try_building_tracks(player_id: PlayerId, game_state: &GameState) -> Option<Vec<GameCommand>> {
+    let connections = track_connections(game_state, logistics_links(player_id, game_state));
+    // TODO HIGH: Don't do choose unsafe, do safe choose
+    let (a, b) = choose(&connections)?;
+    // TODO HIGH: If route already exists (empty results from `plan_tracks`?!), no need to build it again, try the next one!
+    if let Some(route) = plan_tracks(
+        player_id,
+        &[],
+        &[
+            EdgeXZ::from_tile_and_direction(a.tile_coords_xz, a.pointing_in),
+            EdgeXZ::from_tile_and_direction(b.tile_coords_xz, b.pointing_in),
+        ],
+        game_state.building_state(),
+        game_state.map_level(),
+    ) {
+        return Some(vec![GameCommand::BuildTracks(route)]);
+    } else {
+        debug!("No route found for {:?} -> {:?}", a, b);
+    }
     None
 }
 
