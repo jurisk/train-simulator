@@ -67,7 +67,7 @@ fn successors(
     results
 }
 
-// Later:   This should be TrackTile- instead of EdgeXZ-based!
+// TODO HIGH: Just ignore `ordered_selected_tiles` and `ordered_selected_edges`, it leads to confusing results
 #[must_use]
 pub fn plan_tracks(
     player_id: PlayerId,
@@ -121,7 +121,7 @@ pub fn plan_tracks(
                     },
                     CanBuildResponse::Invalid => {
                         warn!(
-                            "Unexpected state - our found path includes invalid buildings: {:?}",
+                            "Unexpected state - our found path includes invalid tracks: {:?}",
                             track,
                         );
                     },
