@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
 use std::ops::{AddAssign, Mul, Neg, Sub, SubAssign};
 
@@ -82,6 +82,17 @@ impl CargoMap {
             })
             .collect();
         Self { map }
+    }
+
+    #[must_use]
+    pub fn resource_types_present(&self) -> HashSet<ResourceType> {
+        let mut result = HashSet::new();
+        for resource in ResourceType::all() {
+            if self.get(resource) != CargoAmount::ZERO {
+                result.insert(resource);
+            }
+        }
+        result
     }
 }
 

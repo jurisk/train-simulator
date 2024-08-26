@@ -132,12 +132,24 @@ impl IndustryType {
     }
 
     #[must_use]
-    pub fn resources_accepted(self) -> Vec<ResourceType> {
-        self.transform_per_second()
-            .inputs
+    fn something_resource_types<F>(self, f: F) -> Vec<ResourceType>
+    where
+        F: FnOnce(ResourceTransform) -> Vec<ResourceTransformItem>,
+    {
+        f(self.transform_per_second())
             .iter()
             .map(|item| item.resource)
             .collect()
+    }
+
+    #[must_use]
+    pub fn input_resource_types(self) -> Vec<ResourceType> {
+        self.something_resource_types(|transform| transform.inputs)
+    }
+
+    #[must_use]
+    pub fn output_resource_types(self) -> Vec<ResourceType> {
+        self.something_resource_types(|transform| transform.outputs)
     }
 
     #[must_use]
@@ -176,8 +188,8 @@ impl IndustryType {
                 ResourceTransform::make(vec![(Steel, X1), (Explosives, X1)], vec![(Ammunition, X1)])
             },
             Warehouse => {
-                // TODO HIGH: Test that this actually works. And rethink the idea of warehouses, as right now they are just a "black hole" for resources.
-                // TODO: Not all of the resources "accepted" are "final" - `Steel` is also used in some supply chains
+                // TODO HIGH: Test that this actually works, as perhaps it does not. And rethink the idea of warehouses, as right now they are just a "black hole" for resources.
+                // TODO: Not all of the resources "accepted" are "final" - `Steel` is also used in some supply chains. Should `Steel` + `Timber` result in `TrackBuildingCapacity`?
                 let inputs = [Ammunition, Concrete, Food, Fuel, Steel, Timber, Weapons]
                     .into_iter()
                     .map(|resource| (resource, X0))

@@ -102,6 +102,7 @@ impl Plugin for GamePlugin {
             Update,
             client_side_time_advance.run_if(in_state(ClientState::Playing)),
         );
+        app.add_systems(FixedUpdate, handle_errors);
     }
 }
 
@@ -177,6 +178,23 @@ fn handle_game_state_snapshot(
                 commands.insert_resource(GameStateResource(game_state.clone()));
                 client_state.set(ClientState::Playing);
             }
+        }
+    }
+}
+
+fn handle_errors(mut server_messages: EventReader<ServerMessageEvent>) {
+    for message in server_messages.read() {
+        match &message.response {
+            ServerResponse::Authentication(AuthenticationResponse::Error(error)) => {
+                error!("Authentication error: {error:?}");
+            },
+            ServerResponse::Game(_, GameResponse::Error(error)) => {
+                error!("Game error: {error:?}");
+            },
+            ServerResponse::Error(error) => {
+                error!("Server error: {error:?}");
+            },
+            _ => {},
         }
     }
 }

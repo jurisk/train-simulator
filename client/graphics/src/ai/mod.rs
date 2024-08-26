@@ -1,11 +1,12 @@
 use bevy::app::{App, FixedUpdate};
 use bevy::prelude::{
-    debug, in_state, info, EventWriter, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time,
-    Timer, TimerMode,
+    debug, in_state, info, trace, EventWriter, IntoSystemConfigs, Plugin, Res, ResMut, Resource,
+    Time, Timer, TimerMode,
 };
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
+use shared_domain::cargo_map::WithCargo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
@@ -93,14 +94,14 @@ fn ai_step(
 
     if let Some(commands) = commands {
         for command in commands {
-            debug!("AI chose command: {:?}", command);
+            info!("AI chose command: {:?}", command);
             client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                 game_state.game_id(),
                 command,
             )));
         }
     } else {
-        debug!("AI has nothing to do");
+        trace!("AI has nothing to do");
     }
 }
 
@@ -170,7 +171,19 @@ fn logistics_links(
     game_state: &GameState,
 ) -> Vec<(StationId, ResourceType, StationId)> {
     let mut results = vec![];
-    // TODO HIGH: Implement
+    let buildings = game_state.building_state();
+    let stations = buildings.find_players_stations(player_id);
+    for from_station in &stations {
+        for to_station in &stations {
+            if from_station.id() != to_station.id() {
+                let from_resources = from_station.cargo().resource_types_present();
+                let to_resources = buildings.resource_types_accepted_by_station(to_station.id());
+                for resource_type in from_resources.intersection(&to_resources) {
+                    results.push((from_station.id(), *resource_type, to_station.id()));
+                }
+            }
+        }
+    }
     results
 }
 
@@ -178,8 +191,12 @@ fn track_connections(
     game_state: &GameState,
     links: Vec<(StationId, ResourceType, StationId)>,
 ) -> Vec<(TileTrack, TileTrack)> {
+    let unique_station_pairs = links
+        .into_iter()
+        .map(|(from, _, to)| (from, to))
+        .collect::<std::collections::HashSet<_>>();
     let mut results = vec![];
-    for (from_station_id, _, to_station_id) in links {
+    for (from_station_id, to_station_id) in unique_station_pairs {
         let from_station = game_state.building_state().find_station(from_station_id);
         let to_station = game_state.building_state().find_station(to_station_id);
         let from_tracks = from_station
@@ -197,26 +214,31 @@ fn track_connections(
     results
 }
 
+// TODO HIGH: This is flaky - it sometimes works and sometimes fails on the server
 #[allow(clippy::redundant_else)]
 fn try_building_tracks(player_id: PlayerId, game_state: &GameState) -> Option<Vec<GameCommand>> {
     let connections = track_connections(game_state, logistics_links(player_id, game_state));
-    // TODO HIGH: Don't do choose unsafe, do safe choose
-    let (a, b) = choose(&connections)?;
-    // TODO HIGH: If route already exists (empty results from `plan_tracks`?!), no need to build it again, try the next one!
-    if let Some(route) = plan_tracks(
-        player_id,
-        &[],
-        &[
-            EdgeXZ::from_tile_and_direction(a.tile_coords_xz, a.pointing_in),
-            EdgeXZ::from_tile_and_direction(b.tile_coords_xz, b.pointing_in),
-        ],
-        game_state.building_state(),
-        game_state.map_level(),
-    ) {
-        return Some(vec![GameCommand::BuildTracks(route)]);
-    } else {
-        debug!("No route found for {:?} -> {:?}", a, b);
+    // Later: Should we do this in random order?
+    for (a, b) in connections {
+        if let Some(route) = plan_tracks(
+            player_id,
+            &[],
+            &[
+                EdgeXZ::from_tile_and_direction(a.tile_coords_xz, a.pointing_in),
+                EdgeXZ::from_tile_and_direction(b.tile_coords_xz, b.pointing_in),
+            ],
+            game_state.building_state(),
+            game_state.map_level(),
+        ) {
+            if !route.is_empty() {
+                // If it's empty, it means it's already built
+                return Some(vec![GameCommand::BuildTracks(route)]);
+            }
+        } else {
+            debug!("No route found for {:?} -> {:?}", a, b);
+        }
     }
+
     None
 }
 

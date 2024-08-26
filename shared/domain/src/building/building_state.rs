@@ -148,7 +148,7 @@ impl BuildingState {
         for (industry_building_id, linked_station_id) in self.closest_station_link.clone() {
             if station_id == linked_station_id {
                 if let Some(building) = self.find_industry_building(industry_building_id) {
-                    for resource_type in building.industry_type().resources_accepted() {
+                    for resource_type in building.industry_type().input_resource_types() {
                         results.insert(resource_type);
                     }
                 }
@@ -160,6 +160,14 @@ impl BuildingState {
     #[must_use]
     pub fn all_stations(&self) -> &Vec<StationInfo> {
         &self.stations
+    }
+
+    #[must_use]
+    pub fn find_players_stations(&self, player_id: PlayerId) -> Vec<&StationInfo> {
+        self.stations
+            .iter()
+            .filter(|station| station.owner_id() == player_id)
+            .collect()
     }
 
     #[must_use]
