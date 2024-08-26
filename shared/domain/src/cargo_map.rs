@@ -96,7 +96,7 @@ impl Debug for CargoMap {
             }
         }
         if results.is_empty() {
-            write!(f, "Empty")
+            write!(f, " ")
         } else {
             write!(f, "{}", results.join(", "))
         }

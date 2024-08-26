@@ -1641,6 +1641,7 @@ dependencies = [
  "bigdecimal",
  "egui",
  "fastrand",
+ "log",
  "serde",
  "serde_json",
  "shared-domain",

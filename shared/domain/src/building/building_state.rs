@@ -215,6 +215,20 @@ impl BuildingState {
             .min_by_key(|(_, distance)| *distance)
     }
 
+    #[must_use]
+    pub fn find_players_industry_buildings_without_linked_stations(
+        &self,
+        player_id: PlayerId,
+    ) -> Vec<&IndustryBuildingInfo> {
+        self.industry_buildings
+            .iter()
+            .filter(|building| {
+                building.owner_id() == player_id
+                    && !self.closest_station_link.contains_key(&building.id())
+            })
+            .collect()
+    }
+
     fn stations_owned_by(&self, owner_id: PlayerId) -> Vec<&StationInfo> {
         self.stations
             .iter()

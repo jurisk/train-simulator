@@ -5,9 +5,11 @@ use bevy::prelude::{
 };
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
+use shared_domain::building::station_info::StationInfo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::game_state::GameState;
-use shared_domain::{IndustryBuildingId, PlayerId};
+use shared_domain::{IndustryBuildingId, PlayerId, StationId};
+use shared_util::random::choose_unsafe;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
@@ -131,11 +133,29 @@ fn try_building_industry_buildings(
     None
 }
 
-fn try_building_stations(
-    _player_id: PlayerId,
-    _game_state: &GameState,
-) -> Option<Vec<GameCommand>> {
-    // TODO HIGH: Implement
+fn try_building_stations(player_id: PlayerId, game_state: &GameState) -> Option<Vec<GameCommand>> {
+    for industry_building in game_state
+        .building_state()
+        .find_players_industry_buildings_without_linked_stations(player_id)
+    {
+        let options = industry_building
+            .candidate_station_locations()
+            .into_iter()
+            .map(|(tile, station_type)| {
+                StationInfo::new(player_id, StationId::random(), tile, station_type)
+            })
+            .filter(|station_info| game_state.can_build_station(player_id, station_info))
+            .collect::<Vec<_>>();
+
+        if options.is_empty() {
+            debug!("No station locations for {:?}", industry_building);
+        } else {
+            // Later: Don't choose randomly, but the "best" (not sure what that means yet) location
+            let selected = choose_unsafe(&options);
+            return Some(vec![GameCommand::BuildStation(selected.clone())]);
+        }
+    }
+
     None
 }
 

@@ -52,20 +52,20 @@ impl Debug for StationType {
 }
 
 impl StationType {
+    pub const EW_1_4: StationType = StationType {
+        orientation:     StationOrientation::EastToWest,
+        platforms:       1,
+        length_in_tiles: 4,
+    };
+    pub const NS_1_4: StationType = StationType {
+        orientation:     StationOrientation::NorthToSouth,
+        platforms:       1,
+        length_in_tiles: 4,
+    };
+
     #[must_use]
     pub const fn all() -> [Self; 2] {
-        [
-            StationType {
-                orientation:     StationOrientation::NorthToSouth,
-                platforms:       1,
-                length_in_tiles: 4,
-            },
-            StationType {
-                orientation:     StationOrientation::EastToWest,
-                platforms:       1,
-                length_in_tiles: 4,
-            },
-        ]
+        [Self::NS_1_4, Self::EW_1_4]
     }
 
     /// These are the last `TileTrack`-s in a station, so if a train is parked `about_to_exit` on
