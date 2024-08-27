@@ -143,6 +143,14 @@ impl MovementOrders {
     pub fn remove_by_index(&mut self, index: usize) {
         self.orders.remove_by_index(index);
     }
+
+    #[must_use]
+    pub fn contains_station(&self, station_id: StationId) -> bool {
+        self.orders.iter().any(|order| {
+            let MovementOrderLocation::Station(order_station_id) = order.go_to;
+            order_station_id == station_id
+        })
+    }
 }
 
 pub struct MovementOrdersIterator<'a> {

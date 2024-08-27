@@ -11,9 +11,12 @@ use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
+use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::transport::track_planner::plan_tracks;
-use shared_domain::{IndustryBuildingId, PlayerId, StationId};
+use shared_domain::transport::transport_info::TransportInfo;
+use shared_domain::transport::transport_type::TransportType;
+use shared_domain::{IndustryBuildingId, PlayerId, StationId, TransportId};
 use shared_util::random::choose;
 
 use crate::communication::domain::ClientMessageEvent;
@@ -242,10 +245,71 @@ fn try_building_tracks(player_id: PlayerId, game_state: &GameState) -> Option<Ve
     None
 }
 
+fn matching_transport_exists(
+    transports: &[&TransportInfo],
+    from_station: StationId,
+    resource_type: ResourceType,
+    to_station: StationId,
+) -> bool {
+    transports.iter().any(|transport| {
+        let matching_resource = transport
+            .cargo_capacity()
+            .resource_types_present()
+            .contains(&resource_type);
+        let orders = transport.movement_orders();
+        let matching_from = orders.contains_station(from_station);
+        let matching_to = orders.contains_station(to_station);
+        matching_resource && matching_from && matching_to
+    })
+}
+
+fn purchase_transport_command(
+    player_id: PlayerId,
+    game_state: &GameState,
+    from_station: StationId,
+    resource_type: ResourceType,
+    to_station: StationId,
+) -> Option<GameCommand> {
+    let mut movement_orders = MovementOrders::one(MovementOrder::stop_at_station(from_station));
+    movement_orders.push(MovementOrder::stop_at_station(to_station));
+
+    let from_station = game_state.building_state().find_station(from_station)?;
+    let tile_tracks = from_station.station_exit_tile_tracks();
+    let tile_track = tile_tracks.first()?;
+    let transport_location = from_station
+        .transport_location_at_station(tile_track.tile_coords_xz, tile_track.pointing_in)?;
+
+    let command = GameCommand::PurchaseTransport(TransportInfo::new(
+        TransportId::random(),
+        player_id,
+        TransportType::cargo_train(resource_type),
+        transport_location,
+        movement_orders,
+    ));
+
+    Some(command)
+}
+
 fn try_building_transports(
-    _player_id: PlayerId,
-    _game_state: &GameState,
+    player_id: PlayerId,
+    game_state: &GameState,
 ) -> Option<Vec<GameCommand>> {
-    // TODO HIGH: Implement
+    let transports = game_state
+        .transport_state()
+        .find_players_transports(player_id);
+
+    for (from_station, resource_type, to_station) in logistics_links(player_id, game_state) {
+        if !matching_transport_exists(&transports, from_station, resource_type, to_station) {
+            return purchase_transport_command(
+                player_id,
+                game_state,
+                from_station,
+                resource_type,
+                to_station,
+            )
+            .map(|command| vec![command]);
+        }
+    }
+
     None
 }

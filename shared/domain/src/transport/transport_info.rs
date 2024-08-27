@@ -81,11 +81,7 @@ impl TransportInfo {
         let mut results = vec![];
         for resource in ResourceType::all() {
             let amount = self.dynamic_info.cargo_loaded.get(resource);
-            let capacity = self
-                .static_info
-                .transport_type
-                .cargo_capacity()
-                .get(resource);
+            let capacity = self.cargo_capacity().get(resource);
             if capacity != CargoAmount::ZERO {
                 let amount_string = if amount == CargoAmount::ZERO {
                     "―".to_string()
@@ -110,8 +106,13 @@ impl TransportInfo {
     }
 
     #[must_use]
+    pub fn cargo_capacity(&self) -> CargoMap {
+        self.static_info.transport_type.cargo_capacity()
+    }
+
+    #[must_use]
     pub fn remaining_cargo_capacity(&self) -> CargoMap {
-        self.static_info.transport_type.cargo_capacity() - self.dynamic_info.cargo_loaded.clone()
+        self.cargo_capacity() - self.dynamic_info.cargo_loaded.clone()
     }
 
     pub fn update_dynamic_info(&mut self, dynamic_info: &TransportDynamicInfo) {

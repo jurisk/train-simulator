@@ -73,7 +73,7 @@ impl<T: Clone> NonEmptyCircularList<T> {
 
     #[must_use]
     #[allow(dead_code)]
-    fn iter(&self) -> NonEmptyCircularListIterator<'_, T> {
+    pub fn iter(&self) -> NonEmptyCircularListIterator<'_, T> {
         <&Self as IntoIterator>::into_iter(self)
     }
 }

@@ -7,7 +7,7 @@ use crate::game_time::GameTimeDiff;
 use crate::transport::advancement::advance;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
-use crate::TransportId;
+use crate::{PlayerId, TransportId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct TransportState {
@@ -31,6 +31,14 @@ impl TransportState {
     #[must_use]
     pub fn all_transports(&self) -> &Vec<TransportInfo> {
         &self.transports
+    }
+
+    #[must_use]
+    pub fn find_players_transports(&self, player_id: PlayerId) -> Vec<&TransportInfo> {
+        self.transports
+            .iter()
+            .filter(|transport| transport.owner_id() == player_id)
+            .collect()
     }
 
     pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff, buildings: &mut BuildingState) {

@@ -37,7 +37,6 @@ use crate::states::ClientState;
 
 pub mod buildings;
 pub mod map_level;
-mod test_objects;
 pub mod transport;
 
 #[derive(Resource)]
