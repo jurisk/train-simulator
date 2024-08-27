@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fmt::Debug;
+use std::fmt::{Debug, Formatter};
 use std::time::Duration;
 
 use fastrand::Rng;
@@ -102,7 +102,7 @@ pub enum GameResponse {
     Error(GameError),
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameError {
     GameNotFound,
     CannotBuildStation(StationId),
@@ -111,6 +111,30 @@ pub enum GameError {
     CannotPurchase(TransportId),
     CannotDemolish(DemolishSelector),
     UnspecifiedError,
+}
+
+impl Debug for GameError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GameError::GameNotFound => write!(f, "GameNotFound"),
+            GameError::CannotBuildStation(station_id) => {
+                write!(f, "CannotBuildStation({station_id:?})")
+            },
+            GameError::CannotBuildIndustryBuilding(industry_building_id) => {
+                write!(f, "CannotBuildIndustryBuilding({industry_building_id:?})")
+            },
+            GameError::CannotBuildTracks(track_ids) => {
+                write!(f, "CannotBuildTracks({} tracks)", track_ids.len())
+            },
+            GameError::CannotPurchase(transport_id) => {
+                write!(f, "CannotPurchase({transport_id:?})")
+            },
+            GameError::CannotDemolish(demolish_selector) => {
+                write!(f, "CannotDemolish({demolish_selector:?})")
+            },
+            GameError::UnspecifiedError => write!(f, "UnspecifiedError"),
+        }
+    }
 }
 
 impl Debug for GameResponse {

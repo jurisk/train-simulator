@@ -136,10 +136,10 @@ fn process_client_command_with_client_id_events(
 }
 
 fn send_responses_to_clients(server: &Server<GameChannel>, response: &ServerResponseWithClientIds) {
+    info!("Sending {response:?}...");
     for client_id in &*response.client_ids {
         match bincode::serialize(&response.response) {
             Ok(encoded) => {
-                info!("Sending {response:?} to {client_id:?}...");
                 server.send(client_id.as_u128(), EncodedServerMsg(encoded));
             },
             Err(error) => {
