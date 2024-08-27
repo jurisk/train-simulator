@@ -223,20 +223,18 @@ fn ai_menu(ai_timer: &mut ResMut<ArtificialIntelligenceTimer>, ui: &mut Ui) {
             ui.close_menu();
         }
 
-        if ui
-            .add(egui::Button::new("☑ Enable 100 milliseconds").min_size(egui::vec2(MIN_X, MIN_Y)))
-            .clicked()
-        {
-            ai_timer.as_mut().enable(0.1);
-            ui.close_menu();
-        }
-
-        if ui
-            .add(egui::Button::new("☑ Enable 1 second").min_size(egui::vec2(MIN_X, MIN_Y)))
-            .clicked()
-        {
-            ai_timer.as_mut().enable(1.0);
-            ui.close_menu();
+        for (name, seconds) in [
+            ("☑ Enable 100 milliseconds", 0.1),
+            ("☑ Enable 1 second", 1.0),
+            ("☑ Enable 10 seconds", 10.0),
+        ] {
+            if ui
+                .add(egui::Button::new(name).min_size(egui::vec2(MIN_X, MIN_Y)))
+                .clicked()
+            {
+                ai_timer.as_mut().enable(seconds);
+                ui.close_menu();
+            }
         }
     });
 }
