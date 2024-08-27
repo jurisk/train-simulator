@@ -1,5 +1,5 @@
 use bevy::math::Vec3;
-use bevy::prelude::{trace, warn};
+use bevy::prelude::{debug, trace};
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::map_level::terrain::Terrain;
 use shared_domain::transport::progress_within_tile::ProgressWithinTile;
@@ -33,8 +33,8 @@ fn recursive_calculate_tail(
     max_progress_within_tile: Option<ProgressWithinTile>,
 ) -> LogicalPositionOnTilePath {
     if tile_path_offset >= tile_path.len() {
-        warn!("Ran out of tile path while calculating train component tails");
-        // Later: Improve this somehow?
+        // Later: Improve this somehow? As this does happen - possibly because the default train is longer (or same, but can be longer due to floating point lack of precision) than the default station.
+        debug!("Ran out of tile path while calculating train component tails");
         return LogicalPositionOnTilePath {
             tile_path_offset: tile_path.len() - 1,
             pointing_in,

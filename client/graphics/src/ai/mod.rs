@@ -230,8 +230,7 @@ fn try_building_tracks(player_id: PlayerId, game_state: &GameState) -> Option<Ve
                 EdgeXZ::from_tile_and_direction(a.tile_coords_xz, a.pointing_in),
                 EdgeXZ::from_tile_and_direction(b.tile_coords_xz, b.pointing_in),
             ],
-            game_state.building_state(),
-            game_state.map_level(),
+            game_state,
         ) {
             if !route.is_empty() {
                 // If it's empty, it means it's already built

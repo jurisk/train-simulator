@@ -171,7 +171,7 @@ impl GameState {
         })
     }
 
-    fn can_build_track(
+    pub(crate) fn can_build_track(
         &self,
         requesting_player_id: PlayerId,
         track: &TrackInfo,

@@ -3,10 +3,10 @@ use std::collections::HashSet;
 use log::warn;
 use pathfinding::prelude::dijkstra;
 
-use crate::building::building_state::{BuildingState, CanBuildResponse};
+use crate::building::building_state::CanBuildResponse;
 use crate::building::track_info::TrackInfo;
 use crate::edge_xz::EdgeXZ;
-use crate::map_level::map_level::MapLevel;
+use crate::game_state::GameState;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::tile_track::TileTrack;
 use crate::transport::track_length::TrackLength;
@@ -25,9 +25,8 @@ use crate::{PlayerId, TrackId};
 fn successors(
     edge: EdgeXZ,
     preferred_tiles: &HashSet<TileCoordsXZ>,
-    building_state: &BuildingState,
+    game_state: &GameState,
     player_id: PlayerId,
-    map_level: &MapLevel,
 ) -> Vec<(EdgeXZ, TrackLength)> {
     let mut results = vec![];
 
@@ -55,7 +54,7 @@ fn successors(
                 //  - Ignore the `preferred_tiles` altogether?
 
                 if matches!(
-                    building_state.can_build_track(player_id, &track, map_level),
+                    game_state.can_build_track(player_id, &track),
                     CanBuildResponse::Ok | CanBuildResponse::AlreadyExists
                 ) {
                     results.push((neighbour, tile_track.track_type.length() * malus));
@@ -73,8 +72,7 @@ pub fn plan_tracks(
     player_id: PlayerId,
     ordered_selected_tiles: &[TileCoordsXZ],
     ordered_selected_edges: &[EdgeXZ],
-    building_state: &BuildingState,
-    map_level: &MapLevel,
+    game_state: &GameState,
 ) -> Option<Vec<TrackInfo>> {
     let head = *ordered_selected_edges.first()?;
     let tail = *ordered_selected_edges.last()?;
@@ -85,15 +83,7 @@ pub fn plan_tracks(
     // Later: Consider switching to `a_star` or `dijkstra_all`
     let path: Option<(Vec<EdgeXZ>, TrackLength)> = dijkstra(
         &head,
-        |edge| {
-            successors(
-                *edge,
-                &preferred_tiles,
-                building_state,
-                player_id,
-                map_level,
-            )
-        },
+        |edge| successors(*edge, &preferred_tiles, game_state, player_id),
         |edge| *edge == tail,
     );
 
@@ -112,7 +102,7 @@ pub fn plan_tracks(
                     tile_track.track_type,
                 );
 
-                match building_state.can_build_track(player_id, &track, map_level) {
+                match game_state.can_build_track(player_id, &track) {
                     CanBuildResponse::Ok => {
                         tracks.push(track);
                     },

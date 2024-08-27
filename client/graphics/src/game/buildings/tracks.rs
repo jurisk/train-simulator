@@ -250,8 +250,7 @@ pub(crate) fn build_tracks_when_mouse_released(
             player_id,
             &ordered_selected_tiles,
             &ordered_selected_edges,
-            game_state.building_state(),
-            game_state.map_level(),
+            game_state,
         ) {
             client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                 game_id,
