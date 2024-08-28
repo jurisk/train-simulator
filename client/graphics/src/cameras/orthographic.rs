@@ -5,7 +5,8 @@ use bevy::input::mouse::MouseWheel;
 use bevy::math::Vec3;
 use bevy::prelude::{
     default, ButtonInput, Camera, Camera3dBundle, Commands, EventReader, KeyCode,
-    OrthographicProjection, Plugin, Projection, Query, Res, Startup, Time, Transform, Update,
+    OrthographicProjection, Plugin, PostUpdate, Projection, Query, Res, Startup, Time, Transform,
+    Update,
 };
 use bevy::render::camera::ScalingMode;
 use bevy_egui::EguiContexts;
@@ -18,9 +19,10 @@ pub(crate) struct OrthographicCameraPlugin;
 
 impl Plugin for OrthographicCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, create_camera)
-            .add_systems(Update, move_camera)
-            .add_systems(Update, zoom_orthographic_camera);
+        app.add_systems(Startup, create_camera);
+        app.add_systems(Update, move_camera);
+        // Has to be PostUpdate as otherwise Egui areas are not calculated yet
+        app.add_systems(PostUpdate, zoom_orthographic_camera);
     }
 }
 

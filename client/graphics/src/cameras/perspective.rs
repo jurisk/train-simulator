@@ -4,8 +4,8 @@ use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::input::mouse::MouseWheel;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, ButtonInput, Camera, Camera3dBundle, Commands, EventReader, KeyCode, Plugin, Query,
-    Res, Startup, Time, Transform, Update,
+    default, ButtonInput, Camera, Camera3dBundle, Commands, EventReader, KeyCode, Plugin,
+    PostUpdate, Query, Res, Startup, Time, Transform,
 };
 use bevy::render::view::ColorGrading;
 use bevy_egui::EguiContexts;
@@ -18,8 +18,9 @@ pub(crate) struct PerspectiveCameraPlugin;
 
 impl Plugin for PerspectiveCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, create_camera)
-            .add_systems(Update, move_camera);
+        app.add_systems(Startup, create_camera);
+        // Has to be PostUpdate as otherwise Egui areas are not calculated yet
+        app.add_systems(PostUpdate, move_camera);
     }
 }
 
