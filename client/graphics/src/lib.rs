@@ -94,10 +94,9 @@ impl Plugin for ClientGraphicsPlugin {
     }
 }
 
-// This needs to be called from `PostUpdate` as otherwise Egui areas are not calculated yet and it won't work reliably
+// This needs to be called from `PostUpdate` as otherwise Egui areas are not calculated yet, and thus it won't work reliably
 fn on_ui(egui_contexts: &mut EguiContexts) -> bool {
     // TODO HIGH: Labels are Egui areas, so this means that actually building buildings is sometimes difficult, as you have to click on the center tile, but outside of a label!
-    // TODO HIGH: This doesn't work right as when we are on the left panel it returns `false` so zooming the map still happens
     let ctx = egui_contexts.ctx_mut();
     ctx.is_pointer_over_area()
         || ctx.is_using_pointer()
