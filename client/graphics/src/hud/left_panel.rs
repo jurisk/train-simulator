@@ -1,4 +1,4 @@
-use bevy::prelude::{Res, ResMut};
+use bevy::prelude::{info, Res, ResMut};
 use bevy::utils::default;
 use bevy_egui::EguiContexts;
 use egui::text::LayoutJob;
@@ -25,31 +25,37 @@ pub(crate) fn show_left_panel(
             let GameStateResource(game_state) = game_state_resource.as_ref();
 
             egui::SidePanel::left("hud_left_panel").show(contexts.ctx_mut(), |ui| {
-                players_info_panel(ui, game_state.players());
-                buildings_info_panel(ui, *player_id, game_state.building_state());
-                transport_info_panel(
-                    ui,
-                    *player_id,
-                    game_state.transport_infos(),
-                    &mut transport_to_show,
-                );
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    players_info_panel(ui, *player_id, game_state.players());
+                    buildings_info_panel(ui, *player_id, game_state.building_state());
+                    transport_info_panel(
+                        ui,
+                        *player_id,
+                        game_state.transport_infos(),
+                        &mut transport_to_show,
+                    );
+                });
             });
         }
     }
 }
 
-#[allow(clippy::match_same_arms)]
+#[allow(clippy::match_same_arms, clippy::collapsible_if)]
 fn buildings_info_panel(ui: &mut Ui, player_id: PlayerId, buildings: &BuildingState) {
     ui.heading("Industry");
     for building in buildings.all_industry_buildings() {
         if building.owner_id() == player_id {
-            ui.label(format!("{building:?}"));
+            if ui.button(format!("{building:?}")).clicked() {
+                // TODO: Open industry panel or navigate to industry
+            }
         }
     }
     ui.heading("Stations");
     for building in buildings.all_stations() {
         if building.owner_id() == player_id {
-            ui.label(format!("{building:?}"));
+            if ui.button(format!("{building:?}")).clicked() {
+                // TODO: Open station panel or navigate to station
+            }
         }
     }
 }
@@ -81,7 +87,7 @@ fn transport_info_panel(
 }
 
 #[allow(clippy::similar_names)]
-fn players_info_panel(ui: &mut Ui, players: &PlayerState) {
+fn players_info_panel(ui: &mut Ui, player_id: PlayerId, players: &PlayerState) {
     ui.heading("Players");
     for player_info in players.infos() {
         let colour = player_info.colour;
@@ -93,9 +99,15 @@ fn players_info_panel(ui: &mut Ui, players: &PlayerState) {
         job.append(
             format!("{}", player_info.name).as_str(),
             0.0,
-            TextFormat { ..default() },
+            TextFormat::default(),
         );
 
-        ui.label(job);
+        if player_info.id == player_id {
+            job.append(" ⬅", 0.0, TextFormat::default());
+        }
+        if ui.button(job).clicked() {
+            // TODO: Open player panel
+            info!("Player panel for player: {:?}", player_info);
+        }
     }
 }
