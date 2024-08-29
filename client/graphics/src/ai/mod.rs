@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+
 use bevy::app::{App, FixedUpdate};
 use bevy::prelude::{
     debug, in_state, info, trace, EventWriter, IntoSystemConfigs, Plugin, Res, ResMut, Resource,
@@ -13,6 +15,7 @@ use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::tile_track::TileTrack;
+use shared_domain::transport::track_pathfinding::find_route_to_tile_tracks;
 use shared_domain::transport::track_planner::plan_tracks;
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
@@ -193,12 +196,12 @@ fn logistics_links(
 fn track_connections(
     game_state: &GameState,
     links: Vec<(StationId, ResourceType, StationId)>,
-) -> Vec<(TileTrack, TileTrack)> {
+) -> HashMap<TileTrack, Vec<TileTrack>> {
     let unique_station_pairs = links
         .into_iter()
         .map(|(from, _, to)| (from, to))
-        .collect::<std::collections::HashSet<_>>();
-    let mut results = vec![];
+        .collect::<HashSet<_>>();
+    let mut results = HashMap::new();
     for (from_station_id, to_station_id) in unique_station_pairs {
         let from_station = game_state.building_state().find_station(from_station_id);
         let to_station = game_state.building_state().find_station(to_station_id);
@@ -209,35 +212,37 @@ fn track_connections(
             .map(StationInfo::station_exit_tile_tracks)
             .unwrap_or_default();
         for from_track in &from_tracks {
-            for to_track in &to_tracks {
-                results.push((*from_track, *to_track));
-            }
+            results.insert(*from_track, to_tracks.clone());
         }
     }
     results
 }
 
-// TODO HIGH: This is flaky - it sometimes works and sometimes fails on the server
 #[allow(clippy::redundant_else)]
 fn try_building_tracks(player_id: PlayerId, game_state: &GameState) -> Option<Vec<GameCommand>> {
+    // TODO HIGH: The tracks are not being built in both directions sometimes, we have one-way train bringing Coal to PowerPlant and that's it, it stays there. Same with the Warehouse, trains get stuck there.
     let connections = track_connections(game_state, logistics_links(player_id, game_state));
     // Later: Should we do this in random order?
-    for (a, b) in connections {
-        if let Some(route) = plan_tracks(
-            player_id,
-            &[],
-            &[
-                EdgeXZ::from_tile_and_direction(a.tile_coords_xz, a.pointing_in),
-                EdgeXZ::from_tile_and_direction(b.tile_coords_xz, b.pointing_in),
-            ],
-            game_state,
-        ) {
-            if !route.is_empty() {
-                // If it's empty, it means it's already built
-                return Some(vec![GameCommand::BuildTracks(route)]);
+    for (source, targets) in connections {
+        if find_route_to_tile_tracks(source, &targets, game_state.building_state()).is_none() {
+            // Later: Is picking just one of the targets the right thing to do?
+            let target = targets.first()?;
+            if let Some(route) = plan_tracks(
+                player_id,
+                &[],
+                &[
+                    EdgeXZ::from_tile_and_direction(source.tile_coords_xz, source.pointing_in),
+                    EdgeXZ::from_tile_and_direction(target.tile_coords_xz, target.pointing_in),
+                ],
+                game_state,
+            ) {
+                if !route.is_empty() {
+                    // If it's empty, it means it's already built
+                    return Some(vec![GameCommand::BuildTracks(route)]);
+                }
+            } else {
+                debug!("No route found for {:?} -> {:?}", source, target);
             }
-        } else {
-            debug!("No route found for {:?} -> {:?}", a, b);
         }
     }
 

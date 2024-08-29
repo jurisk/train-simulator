@@ -66,7 +66,7 @@ fn successors(
     results
 }
 
-// TODO HIGH: Just ignore `ordered_selected_tiles` and `ordered_selected_edges`, it leads to confusing results
+// TODO HIGH: Just ignore `ordered_selected_tiles` and `ordered_selected_edges`, it leads to confusing results. However, increase the reuse of existing tracks (but pass the coefficient for that in, as a parameter).
 #[must_use]
 pub fn plan_tracks(
     player_id: PlayerId,

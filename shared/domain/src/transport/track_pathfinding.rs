@@ -64,6 +64,15 @@ pub fn find_route_to(
         "Doing pathfinding. Current: {current_tile_track:?}, Go to: {go_to:?}, Targets: {targets:?}"
     );
 
+    find_route_to_tile_tracks(current_tile_track, &targets, building_state)
+}
+
+#[must_use]
+pub fn find_route_to_tile_tracks(
+    current_tile_track: TileTrack,
+    targets: &[TileTrack],
+    building_state: &BuildingState,
+) -> Option<Vec<TileTrack>> {
     let (path, _length) = dijkstra(
         &current_tile_track,
         |tile_track| successors(*tile_track, building_state),
