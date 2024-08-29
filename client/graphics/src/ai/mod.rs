@@ -2,8 +2,8 @@ use std::collections::{HashMap, HashSet};
 
 use bevy::app::{App, FixedUpdate};
 use bevy::prelude::{
-    debug, in_state, info, trace, EventWriter, IntoSystemConfigs, Plugin, Res, ResMut, Resource,
-    Time, Timer, TimerMode,
+    debug, in_state, info, EventWriter, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time,
+    Timer, TimerMode,
 };
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
@@ -107,7 +107,7 @@ fn ai_step(
             )));
         }
     } else {
-        trace!("AI has nothing to do");
+        info!("AI has nothing to do");
     }
 }
 
@@ -199,7 +199,8 @@ fn track_connections(
 ) -> HashMap<TileTrack, Vec<TileTrack>> {
     let unique_station_pairs = links
         .into_iter()
-        .map(|(from, _, to)| (from, to))
+        // If we don't do bidirectional links then we never bring the empty train back to the source
+        .flat_map(|(from, _, to)| vec![(from, to), (to, from)])
         .collect::<HashSet<_>>();
     let mut results = HashMap::new();
     for (from_station_id, to_station_id) in unique_station_pairs {
@@ -220,7 +221,6 @@ fn track_connections(
 
 #[allow(clippy::redundant_else)]
 fn try_building_tracks(player_id: PlayerId, game_state: &GameState) -> Option<Vec<GameCommand>> {
-    // TODO HIGH: The tracks are not being built in both directions sometimes, we have one-way train bringing Coal to PowerPlant and that's it, it stays there. Same with the Warehouse, trains get stuck there.
     let connections = track_connections(game_state, logistics_links(player_id, game_state));
     // Later: Should we do this in random order?
     for (source, targets) in connections {
