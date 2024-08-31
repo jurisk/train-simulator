@@ -5,6 +5,7 @@ use egui::text::LayoutJob;
 use egui::{Color32, TextFormat, Ui};
 use shared_domain::building::building_info::WithOwner;
 use shared_domain::building::building_state::BuildingState;
+use shared_domain::cargo_map::WithCargo;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::PlayerId;
@@ -45,7 +46,12 @@ fn buildings_info_panel(ui: &mut Ui, player_id: PlayerId, buildings: &BuildingSt
     ui.heading("Industry");
     for building in buildings.all_industry_buildings() {
         if building.owner_id() == player_id {
-            if ui.button(format!("{building:?}")).clicked() {
+            let label = format!(
+                "{:?} {:?}",
+                building.reference_tile(),
+                building.industry_type()
+            );
+            if ui.button(label).clicked() {
                 // TODO: Open industry panel or navigate to industry
             }
         }
@@ -53,7 +59,8 @@ fn buildings_info_panel(ui: &mut Ui, player_id: PlayerId, buildings: &BuildingSt
     ui.heading("Stations");
     for building in buildings.all_stations() {
         if building.owner_id() == player_id {
-            if ui.button(format!("{building:?}")).clicked() {
+            let label = format!("{:?} {:?}", building.reference_tile(), building.cargo());
+            if ui.button(label).clicked() {
                 // TODO: Open station panel or navigate to station
             }
         }
@@ -72,8 +79,9 @@ fn transport_info_panel(
             let id = transport_info.transport_id();
             let selected = transports_to_show.contains(id);
 
+            let label = format!("{:?} {}", id, transport_info.cargo_as_string());
             if ui
-                .add(egui::Button::new(format!("{transport_info:?}")).selected(selected))
+                .add(egui::Button::new(label).selected(selected))
                 .clicked()
             {
                 if selected {

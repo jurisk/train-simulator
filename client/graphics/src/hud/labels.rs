@@ -3,9 +3,10 @@ use std::collections::BTreeMap;
 use bevy::prelude::{Camera, EventWriter, GlobalTransform, Query, Res, Vec3};
 use bevy_egui::EguiContexts;
 use egui::{Align2, Context, Id, Pos2};
-use shared_domain::building::building_info::{WithBuildingDynamicInfo, WithTileCoverage};
+use shared_domain::building::building_info::WithTileCoverage;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
+use shared_domain::cargo_map::WithCargo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::game_state::GameState;
 use shared_domain::{GameId, IndustryBuildingId, PlayerId};
@@ -112,7 +113,7 @@ fn draw_industry_labels(
         let label = format!(
             "{:?} {:?}",
             industry_building.industry_type(),
-            industry_building.dynamic_info()
+            industry_building.cargo(),
         );
 
         with_tile_coverage_label(
@@ -135,7 +136,7 @@ fn draw_station_labels(
 ) {
     for station in game_state.building_state().all_stations() {
         let id = format!("{:?}", station.id());
-        let label = format!("{:?} {:?}", station.station_type(), station.dynamic_info());
+        let label = format!("{:?} {:?}", station.reference_tile(), station.cargo());
 
         with_tile_coverage_label(
             id,
@@ -156,7 +157,6 @@ fn draw_transport_labels(
     camera_transform: &GlobalTransform,
 ) {
     for transport in game_state.transport_infos() {
-        // TODO: The cargo label could actually be "I 1.0 of 2.0" or similar
         let label = transport.cargo_as_string();
         let id = format!("{:?}", transport.transport_id());
         let transport_location = transport.location();

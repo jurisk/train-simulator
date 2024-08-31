@@ -100,7 +100,7 @@ impl TileCoordsXZ {
 impl Debug for TileCoordsXZ {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let coords = <TileCoordsXZ as Into<CoordsXZ>>::into(*self);
-        write!(f, "T-{}-{}", coords.x, coords.z)
+        write!(f, "x{:03}-z{:03}", coords.x, coords.z)
     }
 }
 
