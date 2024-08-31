@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use bevy::prelude::{Camera, EventWriter, GlobalTransform, Query, Res, Vec3};
+use bevy::prelude::{Camera, EventWriter, GlobalTransform, Query, Res, ResMut, Vec3};
 use bevy_egui::EguiContexts;
 use egui::{Align2, Context, Id, Pos2};
 use shared_domain::building::building_info::WithTileCoverage;
@@ -12,8 +12,10 @@ use shared_domain::game_state::GameState;
 use shared_domain::{GameId, IndustryBuildingId, PlayerId};
 
 use crate::communication::domain::ClientMessageEvent;
+use crate::game::transport::ui::TransportsToShow;
 use crate::game::{center_vec3, GameStateResource, PlayerIdResource};
 
+// TODO HIGH: This looks ugly and often breaks. And it's on top of left-side menu. Consider using https://docs.rs/egui/latest/egui/struct.Painter.html instead? Or https://bevyengine.org/examples/2d-rendering/text2d/ or https://github.com/kulkalkul/bevy_mod_billboard?
 fn with_tile_coverage_label(
     id: String,
     label: String,
@@ -23,8 +25,10 @@ fn with_tile_coverage_label(
     camera: &Camera,
     camera_transform: &GlobalTransform,
 ) {
-    let position_3d = center_vec3(with_tile_coverage, game_state.map_level());
-    draw_label(label, position_3d, id, context, camera, camera_transform);
+    let position = center_vec3(with_tile_coverage, game_state.map_level());
+    draw_in_position(position, id, context, camera, camera_transform, |ui| {
+        ui.colored_label(egui::Color32::WHITE, label);
+    });
 }
 
 #[allow(clippy::needless_pass_by_value, clippy::module_name_repetitions)]
@@ -33,6 +37,7 @@ pub fn draw_labels(
     game_state_resource: Option<Res<GameStateResource>>,
     player_id_resource: Res<PlayerIdResource>,
     camera_query: Query<(&GlobalTransform, &Camera)>,
+    mut show_transport_details: ResMut<TransportsToShow>,
     mut client_messages: EventWriter<ClientMessageEvent>,
 ) {
     if let Some((camera_transform, camera)) =
@@ -54,7 +59,13 @@ pub fn draw_labels(
             );
             draw_industry_labels(game_state, context, camera, camera_transform);
             draw_station_labels(game_state, context, camera, camera_transform);
-            draw_transport_labels(game_state, context, camera, camera_transform);
+            draw_transport_labels(
+                game_state,
+                context,
+                camera,
+                camera_transform,
+                &mut show_transport_details,
+            );
         }
     }
 }
@@ -155,23 +166,32 @@ fn draw_transport_labels(
     context: &mut Context,
     camera: &Camera,
     camera_transform: &GlobalTransform,
+    show_transport_details: &mut ResMut<TransportsToShow>,
 ) {
     for transport in game_state.transport_infos() {
+        let id = transport.transport_id();
         let label = transport.cargo_as_string();
-        let id = format!("{:?}", transport.transport_id());
+        let label_id = format!("{id:?}");
         let transport_location = transport.location();
-        let transport_position_3d = transport_location.tile_path[0].progress_coordinates(
+        let position = transport_location.tile_path[0].progress_coordinates(
             transport_location.progress_within_tile,
             game_state.map_level().terrain(),
         );
-        // TODO HIGH: This should be a button which opens/closes the transport menu
-        draw_label(
-            label,
-            transport_position_3d,
-            id,
+        draw_in_position(
+            position,
+            label_id,
             context,
             camera,
             camera_transform,
+            |ui| {
+                let selected = show_transport_details.contains(id);
+                if ui
+                    .add(egui::Button::new(label).selected(selected))
+                    .clicked()
+                {
+                    show_transport_details.toggle(id);
+                };
+            },
         );
     }
 }
@@ -193,20 +213,6 @@ fn draw_in_position<F>(
         .pivot(Align2::CENTER_CENTER)
         .constrain(false)
         .show(context, f);
-}
-
-// TODO HIGH: This looks ugly and often breaks. Consider using https://docs.rs/egui/latest/egui/struct.Painter.html instead? Or https://bevyengine.org/examples/2d-rendering/text2d/ or https://github.com/kulkalkul/bevy_mod_billboard?
-fn draw_label(
-    label: String,
-    position: Vec3,
-    id: String,
-    context: &mut Context,
-    camera: &Camera,
-    camera_transform: &GlobalTransform,
-) {
-    draw_in_position(position, id, context, camera, camera_transform, |ui| {
-        ui.colored_label(egui::Color32::WHITE, label);
-    });
 }
 
 #[allow(clippy::too_many_arguments)]

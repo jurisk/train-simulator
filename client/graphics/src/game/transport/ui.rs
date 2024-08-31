@@ -31,6 +31,14 @@ impl TransportsToShow {
     pub fn remove(&mut self, transport_id: TransportId) {
         self.0.remove(&transport_id);
     }
+
+    pub fn toggle(&mut self, transport_id: TransportId) {
+        if self.contains(transport_id) {
+            self.remove(transport_id);
+        } else {
+            self.insert(transport_id);
+        }
+    }
 }
 
 #[allow(clippy::needless_pass_by_value)]
@@ -94,7 +102,7 @@ pub(crate) fn select_station_to_add_to_movement_orders(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::needless_pass_by_value, clippy::too_many_lines)]
 pub(crate) fn show_transport_details(
     mut contexts: EguiContexts,
     game_state_resource: Option<Res<GameStateResource>>,
@@ -114,6 +122,9 @@ pub(crate) fn show_transport_details(
                         // Later: More properly use the Window::open() method for a close button in the title bar
                         if ui.button("Close").clicked() {
                             show_transport_details.remove(transport.transport_id());
+                        }
+                        if ui.button("Find").clicked() {
+                            // TODO HIGH: Focus on transport's current location. Likely use even system.
                         }
                         egui::Grid::new("transport_details")
                             .num_columns(2)
