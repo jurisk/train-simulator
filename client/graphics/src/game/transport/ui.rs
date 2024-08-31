@@ -9,6 +9,7 @@ use shared_domain::transport::movement_orders::{
 };
 use shared_domain::TransportId;
 
+use crate::cameras::CameraControlEvent;
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::GameStateResource;
 use crate::hud::domain::{SelectType, SelectedMode};
@@ -109,6 +110,7 @@ pub(crate) fn show_transport_details(
     mut show_transport_details: ResMut<TransportsToShow>,
     mut client_messages: EventWriter<ClientMessageEvent>,
     mut selected_mode: ResMut<SelectedMode>,
+    mut camera_control_events: EventWriter<CameraControlEvent>,
 ) {
     if let Some(game_state_resource) = game_state_resource {
         let GameStateResource(game_state) = game_state_resource.as_ref();
@@ -124,7 +126,7 @@ pub(crate) fn show_transport_details(
                             show_transport_details.remove(transport.transport_id());
                         }
                         if ui.button("Find").clicked() {
-                            // TODO HIGH: Focus on transport's current location. Likely use even system.
+                            camera_control_events.send(CameraControlEvent::FocusOnTile(transport.location().next_tile_in_path().tile_coords_xz));
                         }
                         egui::Grid::new("transport_details")
                             .num_columns(2)

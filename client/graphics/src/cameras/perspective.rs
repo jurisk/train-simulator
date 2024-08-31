@@ -1,7 +1,8 @@
-use bevy::app::App;
+use bevy::app::{App, Update};
 use bevy::core::Name;
 use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::input::mouse::MouseWheel;
+use bevy::log::info;
 use bevy::math::Vec3;
 use bevy::prelude::{
     default, ButtonInput, Camera, Camera3dBundle, Commands, EventReader, KeyCode, Plugin,
@@ -11,7 +12,7 @@ use bevy::render::view::ColorGrading;
 use bevy_egui::EguiContexts;
 
 use crate::cameras::util::{movement_and_rotation, zoom_value};
-use crate::cameras::{CameraComponent, CameraId};
+use crate::cameras::{CameraComponent, CameraControlEvent, CameraId};
 use crate::constants::UP;
 
 pub(crate) struct PerspectiveCameraPlugin;
@@ -21,6 +22,18 @@ impl Plugin for PerspectiveCameraPlugin {
         app.add_systems(Startup, create_camera);
         // Has to be PostUpdate as otherwise Egui areas are not calculated yet
         app.add_systems(PostUpdate, move_camera);
+        app.add_systems(Update, process_camera_control_events);
+    }
+}
+
+fn process_camera_control_events(mut events: EventReader<CameraControlEvent>) {
+    for event in events.read() {
+        match event {
+            CameraControlEvent::FocusOnTile(tile_coords) => {
+                // TODO HIGH: Implement
+                info!("Focus on tile: {:?}", tile_coords);
+            },
+        }
     }
 }
 

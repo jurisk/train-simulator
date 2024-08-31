@@ -4,7 +4,7 @@ use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::input::mouse::MouseWheel;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    default, ButtonInput, Camera, Camera3dBundle, Commands, EventReader, KeyCode,
+    default, info, ButtonInput, Camera, Camera3dBundle, Commands, EventReader, KeyCode,
     OrthographicProjection, Plugin, PostUpdate, Projection, Query, Res, Startup, Time, Transform,
     Update,
 };
@@ -12,7 +12,7 @@ use bevy::render::camera::ScalingMode;
 use bevy_egui::EguiContexts;
 
 use crate::cameras::util::{movement_and_rotation, zoom_value};
-use crate::cameras::{CameraComponent, CameraId};
+use crate::cameras::{CameraComponent, CameraControlEvent, CameraId};
 use crate::constants::UP;
 
 pub(crate) struct OrthographicCameraPlugin;
@@ -23,6 +23,18 @@ impl Plugin for OrthographicCameraPlugin {
         app.add_systems(Update, move_camera);
         // Has to be PostUpdate as otherwise Egui areas are not calculated yet
         app.add_systems(PostUpdate, zoom_orthographic_camera);
+        app.add_systems(Update, process_camera_control_events);
+    }
+}
+
+fn process_camera_control_events(mut events: EventReader<CameraControlEvent>) {
+    for event in events.read() {
+        match event {
+            CameraControlEvent::FocusOnTile(tile_coords) => {
+                // TODO HIGH: Implement
+                info!("Focus on tile: {:?}", tile_coords);
+            },
+        }
     }
 }
 

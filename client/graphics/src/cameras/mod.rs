@@ -1,9 +1,10 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{
-    info, App, Camera, Commands, Component, Entity, KeyCode, Plugin, PostStartup, Query, Res,
-    Update,
+    info, App, Camera, Commands, Component, Entity, Event, KeyCode, Plugin, PostStartup, Query,
+    Res, Update,
 };
 use bevy_mod_raycast::deferred::RaycastSource;
+use shared_domain::tile_coords_xz::TileCoordsXZ;
 
 use crate::cameras::orthographic::OrthographicCameraPlugin;
 use crate::cameras::perspective::PerspectiveCameraPlugin;
@@ -18,6 +19,11 @@ pub(crate) struct CameraPlugin;
 enum CameraId {
     Orthographic,
     Perspective,
+}
+
+#[derive(Event)]
+pub enum CameraControlEvent {
+    FocusOnTile(TileCoordsXZ),
 }
 
 impl CameraId {
@@ -49,6 +55,7 @@ impl Plugin for CameraPlugin {
         app.add_plugins(PerspectiveCameraPlugin);
         app.add_systems(Update, switch_camera);
         app.add_systems(PostStartup, enable_random_camera);
+        app.add_event::<CameraControlEvent>();
     }
 }
 

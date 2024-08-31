@@ -1,4 +1,4 @@
-use bevy::prelude::{info, Res, ResMut};
+use bevy::prelude::{info, EventWriter, Res, ResMut};
 use bevy::utils::default;
 use bevy_egui::EguiContexts;
 use egui::text::LayoutJob;
@@ -10,6 +10,7 @@ use shared_domain::players::player_state::PlayerState;
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::PlayerId;
 
+use crate::cameras::CameraControlEvent;
 use crate::game::transport::ui::TransportsToShow;
 use crate::game::{GameStateResource, PlayerIdResource};
 
@@ -19,6 +20,7 @@ pub(crate) fn show_left_panel(
     game_state_resource: Option<Res<GameStateResource>>,
     mut transport_to_show: ResMut<TransportsToShow>,
     player_id_resource: Option<Res<PlayerIdResource>>,
+    mut camera_control_events: EventWriter<CameraControlEvent>,
 ) {
     if let Some(player_id_resource) = player_id_resource {
         let PlayerIdResource(player_id) = player_id_resource.as_ref();
@@ -28,7 +30,12 @@ pub(crate) fn show_left_panel(
             egui::SidePanel::left("hud_left_panel").show(contexts.ctx_mut(), |ui| {
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     players_info_panel(ui, *player_id, game_state.players());
-                    buildings_info_panel(ui, *player_id, game_state.building_state());
+                    buildings_info_panel(
+                        ui,
+                        *player_id,
+                        game_state.building_state(),
+                        &mut camera_control_events,
+                    );
                     transport_info_panel(
                         ui,
                         *player_id,
@@ -42,7 +49,12 @@ pub(crate) fn show_left_panel(
 }
 
 #[allow(clippy::match_same_arms, clippy::collapsible_if)]
-fn buildings_info_panel(ui: &mut Ui, player_id: PlayerId, buildings: &BuildingState) {
+fn buildings_info_panel(
+    ui: &mut Ui,
+    player_id: PlayerId,
+    buildings: &BuildingState,
+    camera_control_events: &mut EventWriter<CameraControlEvent>,
+) {
     ui.heading("Industry");
     for building in buildings.all_industry_buildings() {
         if building.owner_id() == player_id {
@@ -52,7 +64,8 @@ fn buildings_info_panel(ui: &mut Ui, player_id: PlayerId, buildings: &BuildingSt
                 building.industry_type()
             );
             if ui.button(label).clicked() {
-                // TODO: Open industry panel or navigate to industry
+                camera_control_events
+                    .send(CameraControlEvent::FocusOnTile(building.reference_tile()));
             }
         }
     }
@@ -61,7 +74,8 @@ fn buildings_info_panel(ui: &mut Ui, player_id: PlayerId, buildings: &BuildingSt
         if building.owner_id() == player_id {
             let label = format!("{:?} {:?}", building.reference_tile(), building.cargo());
             if ui.button(label).clicked() {
-                // TODO: Open station panel or navigate to station
+                camera_control_events
+                    .send(CameraControlEvent::FocusOnTile(building.reference_tile()));
             }
         }
     }
