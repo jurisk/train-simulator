@@ -28,6 +28,15 @@ pub struct Quad {
 
 impl Quad {
     #[must_use]
+    pub fn average_position(&self) -> Vec3 {
+        (self.top_left.position
+            + self.top_right.position
+            + self.bottom_left.position
+            + self.bottom_right.position)
+            / 4.0
+    }
+
+    #[must_use]
     pub fn average_distance_to(&self, point: Vec3) -> f32 {
         let top_left = self.top_left.position;
         let top_right = self.top_right.position;

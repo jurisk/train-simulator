@@ -6,19 +6,20 @@ use bevy::prelude::{
 use bevy_mod_raycast::deferred::RaycastSource;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 
-use crate::cameras::orthographic::OrthographicCameraPlugin;
 use crate::cameras::perspective::PerspectiveCameraPlugin;
+use crate::cameras::top_down::TopDownCameraPlugin;
 
-mod orthographic;
 mod perspective;
+mod top_down;
 mod util;
 
 pub(crate) struct CameraPlugin;
 
-#[derive(Eq, PartialEq, Copy, Clone, Debug)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug, Default)]
 enum CameraId {
-    Orthographic,
+    #[default]
     Perspective,
+    TopDown,
 }
 
 #[derive(Event)]
@@ -27,23 +28,10 @@ pub enum CameraControlEvent {
 }
 
 impl CameraId {
-    // This is just for testing purposes, so we keep using both cameras so don't break one of them.
-    // Eventually, we read it from user settings.
-    #[must_use]
-    fn random() -> CameraId {
-        if fastrand::bool() {
-            CameraId::Orthographic
-        } else {
-            CameraId::Perspective
-        }
-    }
-}
-
-impl CameraId {
     fn next(self) -> Self {
         match self {
-            CameraId::Orthographic => CameraId::Perspective,
-            CameraId::Perspective => CameraId::Orthographic,
+            CameraId::TopDown => CameraId::Perspective,
+            CameraId::Perspective => CameraId::TopDown,
         }
     }
 }
@@ -51,10 +39,10 @@ impl CameraId {
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         // Not sure if this works with game states correctly, but it can be solved later
-        app.add_plugins(OrthographicCameraPlugin);
+        app.add_plugins(TopDownCameraPlugin);
         app.add_plugins(PerspectiveCameraPlugin);
         app.add_systems(Update, switch_camera);
-        app.add_systems(PostStartup, enable_random_camera);
+        app.add_systems(PostStartup, enable_default_camera);
         app.add_event::<CameraControlEvent>();
     }
 }
@@ -64,11 +52,11 @@ struct CameraComponent {
     id: CameraId,
 }
 
-fn enable_random_camera(
+fn enable_default_camera(
     mut query: Query<(Entity, &mut Camera, &CameraComponent)>,
     mut commands: Commands,
 ) {
-    let camera_id = CameraId::random();
+    let camera_id = CameraId::default();
     switch_to_camera(&mut query, &mut commands, camera_id);
 }
 
