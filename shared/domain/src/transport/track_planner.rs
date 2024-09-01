@@ -39,11 +39,18 @@ fn successors(
                 // Later:
                 //  - Bonus or malus if the existing track is provided by a station?
 
-                if matches!(
-                    game_state.can_build_track(player_id, &track),
-                    CanBuildResponse::Ok | CanBuildResponse::AlreadyExists
-                ) {
-                    results.push((neighbour, tile_track.track_type.length()));
+                let result = game_state.can_build_track(player_id, &track);
+
+                let length = tile_track.track_type.length();
+                let coef = match result {
+                    CanBuildResponse::Ok => Some(1f32),
+                    CanBuildResponse::AlreadyExists => Some(1f32 / 4f32),
+                    CanBuildResponse::Invalid => None,
+                };
+
+                if let Some(coef) = coef {
+                    let adjusted_length = length * coef;
+                    results.push((neighbour, adjusted_length));
                 }
             }
         }
@@ -52,7 +59,6 @@ fn successors(
     results
 }
 
-// TODO HIGH: Increase the reuse of existing tracks (but pass the coefficient for that in, as a parameter).
 #[must_use]
 pub fn plan_tracks(
     player_id: PlayerId,
