@@ -16,12 +16,21 @@ pub fn plan_tracks_edge_to_edge(
     head: EdgeXZ,
     tail: EdgeXZ,
     game_state: &GameState,
+    already_exists_coef: f32,
 ) -> Option<Vec<TrackInfo>> {
     let head_options = possible_tile_tracks(head, EdgeType::StartingFrom, player_id, game_state);
     let tail_options = possible_tile_tracks(tail, EdgeType::FinishingIn, player_id, game_state);
     head_options
         .into_iter()
-        .filter_map(|head_option| plan_tracks(player_id, head_option, &tail_options, game_state))
+        .filter_map(|head_option| {
+            plan_tracks(
+                player_id,
+                head_option,
+                &tail_options,
+                game_state,
+                already_exists_coef,
+            )
+        })
         .min_by_key(|(_, length)| *length)
         .map(|(tracks, _)| tracks)
 }
@@ -39,32 +48,27 @@ fn possible_tile_tracks(
     game_state: &GameState,
 ) -> Vec<TileTrack> {
     let (a, b) = edge.ordered_tiles();
-    let mut ok_results = vec![];
-    let mut already_exists_results = vec![];
+    let mut results = vec![];
     for tile in [a, b] {
         for track_type in TrackType::all() {
-            for pointing_in in track_type.connections() {
-                // TODO HIGH: This is quite broken and doesn't build exactly what is requested
-                let other = track_type.other_end_unsafe(pointing_in);
+            for a in track_type.connections() {
+                let b = track_type.other_end_unsafe(a);
                 let comparison_direction = match edge_type {
-                    EdgeType::StartingFrom => pointing_in,
-                    EdgeType::FinishingIn => other,
+                    EdgeType::StartingFrom => a,
+                    EdgeType::FinishingIn => b,
                 };
                 let comparison_edge = EdgeXZ::from_tile_and_direction(tile, comparison_direction);
                 if edge == comparison_edge {
                     let tile_track = TileTrack {
                         tile_coords_xz: tile,
                         track_type,
-                        pointing_in: comparison_direction,
+                        pointing_in: b,
                     };
                     let track_info = TrackInfo::from_tile_track(player_id, tile_track);
                     let response = game_state.can_build_track(player_id, &track_info);
                     match response {
-                        CanBuildResponse::Ok => {
-                            ok_results.push(tile_track);
-                        },
-                        CanBuildResponse::AlreadyExists => {
-                            already_exists_results.push(tile_track);
+                        CanBuildResponse::Ok | CanBuildResponse::AlreadyExists => {
+                            results.push(tile_track);
                         },
                         CanBuildResponse::Invalid => {},
                     }
@@ -73,18 +77,14 @@ fn possible_tile_tracks(
         }
     }
 
-    // We prefer existing tracks over fully new ones
-    if already_exists_results.is_empty() {
-        ok_results
-    } else {
-        already_exists_results
-    }
+    results
 }
 
 fn successors(
     current_tile_track: TileTrack,
     player_id: PlayerId,
     game_state: &GameState,
+    already_exists_coef: f32,
 ) -> Vec<(TileTrack, TrackLength)> {
     let next_tile_coords = current_tile_track.next_tile_coords();
 
@@ -98,7 +98,7 @@ fn successors(
             };
             let track_info = TrackInfo::from_tile_track(player_id, tile_track);
             let response = game_state.can_build_track(player_id, &track_info);
-            let coef = response_to_coef(response);
+            let coef = response_to_coef(response, already_exists_coef);
             if let Some(coef) = coef {
                 let adjusted_length = tile_track.track_type.length() * coef;
                 results.push((tile_track, adjusted_length));
@@ -110,10 +110,10 @@ fn successors(
     results
 }
 
-fn response_to_coef(can_build_response: CanBuildResponse) -> Option<f32> {
+fn response_to_coef(can_build_response: CanBuildResponse, already_exists_coef: f32) -> Option<f32> {
     match can_build_response {
         CanBuildResponse::Ok => Some(1f32),
-        CanBuildResponse::AlreadyExists => Some(1f32 / 4f32),
+        CanBuildResponse::AlreadyExists => Some(already_exists_coef),
         CanBuildResponse::Invalid => None,
     }
 }
@@ -124,11 +124,12 @@ pub fn plan_tracks(
     current_tile_track: TileTrack,
     targets: &[TileTrack],
     game_state: &GameState,
+    already_exists_coef: f32,
 ) -> Option<(Vec<TrackInfo>, TrackLength)> {
     debug!("Planning tracks for {player_id:?} from {current_tile_track:?} to {targets:?}");
     let path: Option<(Vec<TileTrack>, TrackLength)> = dijkstra(
         &current_tile_track,
-        |tile_track| successors(*tile_track, player_id, game_state),
+        |tile_track| successors(*tile_track, player_id, game_state, already_exists_coef),
         |tile_track| targets.contains(tile_track),
     );
 

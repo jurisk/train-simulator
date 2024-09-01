@@ -239,7 +239,9 @@ fn try_building_tracks(
                 // We have built this before...
                 continue;
             }
-            if let Some((route, _length)) = plan_tracks(player_id, source, &[target], game_state) {
+            if let Some((route, _length)) =
+                plan_tracks(player_id, source, &[target], game_state, 0.8f32)
+            {
                 ai_state.track_connections_built.insert(edge_set);
                 if !route.is_empty() {
                     // If it's empty, it means it's already built

@@ -240,7 +240,7 @@ fn try_plan_tracks(
     (head == tail).then_none()?;
 
     let PlayerIdResource(player_id) = *player_id_resource;
-    plan_tracks_edge_to_edge(player_id, *head, *tail, game_state)
+    plan_tracks_edge_to_edge(player_id, *head, *tail, game_state, 0.8f32)
 }
 
 pub(crate) fn show_track_preview(
