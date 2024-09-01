@@ -9,7 +9,7 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::progress_within_tile::ProgressWithinTile;
 use crate::transport::track_type::TrackType;
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash, Ord, PartialOrd)]
 pub struct TileTrack {
     pub tile_coords_xz: TileCoordsXZ,
     pub track_type:     TrackType,
@@ -37,5 +37,10 @@ impl TileTrack {
         let track_length = (exit - entry).length();
         let direction = (exit - entry).normalize();
         entry + direction * progress_within_tile.as_f32() * track_length
+    }
+
+    #[must_use]
+    pub fn next_tile_coords(&self) -> TileCoordsXZ {
+        self.tile_coords_xz + self.pointing_in
     }
 }

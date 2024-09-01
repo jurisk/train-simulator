@@ -32,7 +32,7 @@ impl TransportLocation {
         let current_tile_track = self.tile_path[0];
         current_tile_track
             .track_type
-            .other_end(current_tile_track.pointing_in)
+            .other_end_unsafe(current_tile_track.pointing_in)
     }
 
     #[must_use]

@@ -8,9 +8,9 @@ use bevy::prelude::{
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
+use shared_domain::building::track_info::TrackInfo;
 use shared_domain::cargo_map::WithCargo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
-use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
@@ -49,7 +49,7 @@ impl ArtificialIntelligenceTimer {
 
 #[derive(Resource, Default)]
 pub struct ArtificialIntelligenceState {
-    track_connections_built: HashSet<BTreeSet<EdgeXZ>>,
+    track_connections_built: HashSet<BTreeSet<TileTrack>>,
 }
 
 pub struct ArtificialIntelligencePlugin;
@@ -235,19 +235,20 @@ fn try_building_tracks(
     let connections = track_connections(game_state, logistics_links(player_id, game_state));
     for (source, targets) in connections {
         for target in targets {
-            let source = EdgeXZ::from_tile_and_direction(source.tile_coords_xz, source.pointing_in);
-            let target = EdgeXZ::from_tile_and_direction(target.tile_coords_xz, target.pointing_in);
             let edge_set = BTreeSet::from_iter([source, target]);
             if ai_state.track_connections_built.contains(&edge_set) {
                 // We have built this before...
                 continue;
             }
-            // TODO HIGH: This still fails as our timber train got stuck in warehouse after unloading... Because track planning is EdgeXZ and not TileTrack based!
-            if let Some(route) = plan_tracks(player_id, source, target, game_state) {
+            if let Some(route) = plan_tracks(player_id, source, &[target], game_state) {
                 ai_state.track_connections_built.insert(edge_set);
                 if !route.is_empty() {
                     // If it's empty, it means it's already built
-                    return Some(vec![GameCommand::BuildTracks(route)]);
+                    let tracks = route
+                        .into_iter()
+                        .map(|track| TrackInfo::from_tile_track(player_id, track))
+                        .collect();
+                    return Some(vec![GameCommand::BuildTracks(tracks)]);
                 }
             } else {
                 debug!("No route found for {:?} -> {:?}", source, target);

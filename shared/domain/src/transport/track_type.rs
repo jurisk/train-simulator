@@ -11,7 +11,7 @@ use crate::tile_coverage::TileCoverage;
 use crate::transport::track_length::TrackLength;
 
 // Later: Possibly rename to `ConnectionType` or something. And `TrackType` thus has multiple of these `ConnectionType`-s.
-#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash, Ord, PartialOrd)]
 pub enum TrackType {
     NorthEast,
     NorthSouth,
@@ -49,26 +49,32 @@ impl TrackType {
         ]
     }
 
-    #[allow(clippy::match_same_arms, clippy::missing_panics_doc)]
+    #[allow(clippy::match_same_arms)]
     #[must_use]
-    pub fn other_end(self, direction: DirectionXZ) -> DirectionXZ {
+    pub fn other_end(self, direction: DirectionXZ) -> Option<DirectionXZ> {
         match (self, direction) {
-            (TrackType::NorthEast, DirectionXZ::North) => DirectionXZ::East,
-            (TrackType::NorthEast, DirectionXZ::East) => DirectionXZ::North,
-            (TrackType::NorthSouth, DirectionXZ::North) => DirectionXZ::South,
-            (TrackType::NorthSouth, DirectionXZ::South) => DirectionXZ::North,
-            (TrackType::NorthWest, DirectionXZ::North) => DirectionXZ::West,
-            (TrackType::NorthWest, DirectionXZ::West) => DirectionXZ::North,
-            (TrackType::EastWest, DirectionXZ::East) => DirectionXZ::West,
-            (TrackType::EastWest, DirectionXZ::West) => DirectionXZ::East,
-            (TrackType::SouthEast, DirectionXZ::South) => DirectionXZ::East,
-            (TrackType::SouthEast, DirectionXZ::East) => DirectionXZ::South,
-            (TrackType::SouthWest, DirectionXZ::South) => DirectionXZ::West,
-            (TrackType::SouthWest, DirectionXZ::West) => DirectionXZ::South,
-            _ => {
-                panic!("Invalid track type {self:?} and direction {direction:?} combination",)
-            },
+            (TrackType::NorthEast, DirectionXZ::North) => Some(DirectionXZ::East),
+            (TrackType::NorthEast, DirectionXZ::East) => Some(DirectionXZ::North),
+            (TrackType::NorthSouth, DirectionXZ::North) => Some(DirectionXZ::South),
+            (TrackType::NorthSouth, DirectionXZ::South) => Some(DirectionXZ::North),
+            (TrackType::NorthWest, DirectionXZ::North) => Some(DirectionXZ::West),
+            (TrackType::NorthWest, DirectionXZ::West) => Some(DirectionXZ::North),
+            (TrackType::EastWest, DirectionXZ::East) => Some(DirectionXZ::West),
+            (TrackType::EastWest, DirectionXZ::West) => Some(DirectionXZ::East),
+            (TrackType::SouthEast, DirectionXZ::South) => Some(DirectionXZ::East),
+            (TrackType::SouthEast, DirectionXZ::East) => Some(DirectionXZ::South),
+            (TrackType::SouthWest, DirectionXZ::South) => Some(DirectionXZ::West),
+            (TrackType::SouthWest, DirectionXZ::West) => Some(DirectionXZ::South),
+            _ => None,
         }
+    }
+
+    #[allow(clippy::missing_panics_doc)]
+    #[must_use]
+    pub fn other_end_unsafe(self, direction: DirectionXZ) -> DirectionXZ {
+        self.other_end(direction).unwrap_or_else(|| {
+            panic!("Invalid track type {self:?} and direction {direction:?} combination")
+        })
     }
 
     #[must_use]

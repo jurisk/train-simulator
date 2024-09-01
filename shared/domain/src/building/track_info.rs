@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::edge_xz::EdgeXZ;
 use crate::tile_coords_xz::TileCoordsXZ;
+use crate::transport::tile_track::TileTrack;
 use crate::transport::track_type::TrackType;
 use crate::{PlayerId, TrackId};
 
@@ -15,17 +16,12 @@ pub struct TrackInfo {
 
 impl TrackInfo {
     #[must_use]
-    pub fn new(
-        track_id: TrackId,
-        owner_id: PlayerId,
-        tile: TileCoordsXZ,
-        track_type: TrackType,
-    ) -> Self {
+    pub fn from_tile_track(owner_id: PlayerId, tile_track: TileTrack) -> Self {
         Self {
-            id: track_id,
+            id: TrackId::random(),
             owner_id,
-            tile,
-            track_type,
+            tile: tile_track.tile_coords_xz,
+            track_type: tile_track.track_type,
         }
     }
 

@@ -290,6 +290,7 @@ impl BuildingState {
     }
 
     // TODO: Needs test coverage
+    // TODO: Move to `GameState` as it anyway takes `MapLevel`
     pub(crate) fn can_build_track(
         &self,
         requesting_player_id: PlayerId,
@@ -301,10 +302,19 @@ impl BuildingState {
             return CanBuildResponse::Invalid;
         }
 
-        // TODO:    Likely, if the attempt is to build a track over tracks provided by a station,
-        //          we should allow it as CanBuildResponse::AlreadyExists. But this needs tests!
-        let overlapping_buildings = self.building_at(track_info.tile);
-        let invalid_overlaps = overlapping_buildings.is_some();
+        let overlapping_station = self.station_at(track_info.tile);
+        let has_same_track_from_station = if let Some(station) = overlapping_station {
+            station
+                .station_track_types_at(track_info.tile)
+                .contains(&track_info.track_type)
+        } else {
+            false
+        };
+
+        let overlapping_industry = self.industry_building_at(track_info.tile);
+        let invalid_station_overlap = !has_same_track_from_station && overlapping_station.is_some();
+        let invalid_industry_overlap = overlapping_industry.is_some();
+        let invalid_overlaps = invalid_industry_overlap || invalid_station_overlap;
 
         let overlapping_tracks = self.tracks_at(track_info.tile);
 
@@ -320,15 +330,6 @@ impl BuildingState {
 
             let has_same_track_from_tracks =
                 overlapping_tracks_from_tracks.contains(&track_info.track_type);
-
-            let has_same_track_from_station =
-                if let Some(station) = self.station_at(track_info.tile) {
-                    station
-                        .station_track_types_at(track_info.tile)
-                        .contains(&track_info.track_type)
-                } else {
-                    false
-                };
 
             has_same_track_from_tracks || has_same_track_from_station
         };

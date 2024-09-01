@@ -7,7 +7,7 @@ use crate::coords_xz::CoordsXZ;
 // SW = X axis, smaller is W, larger is E
 // NS = Z axis, smaller is N, larger is S
 // Thus smallest coords are NW, and largest are SE.
-#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
 pub enum DirectionXZ {
     North,
     East,

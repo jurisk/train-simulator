@@ -56,7 +56,7 @@ fn recursive_calculate_tail(
         None => {
             let this_tile_type = tile_path[tile_path_offset].track_type;
             let next_tile_path_offset = tile_path_offset + 1;
-            let next_pointing_in = this_tile_type.other_end(pointing_in).reverse();
+            let next_pointing_in = this_tile_type.other_end_unsafe(pointing_in).reverse();
 
             recursive_calculate_tail(
                 head,
