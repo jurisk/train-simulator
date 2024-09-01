@@ -200,6 +200,7 @@ fn track_connections(
     let unique_station_pairs = links
         .into_iter()
         // If we don't do bidirectional links then we never bring the empty train back to the source
+        // TODO HIGH: This still fails as our timber train got stuck in warehouse after unloading... not sure why!?
         .flat_map(|(from, _, to)| vec![(from, to), (to, from)])
         .collect::<HashSet<_>>();
     let mut results = HashMap::new();
@@ -224,6 +225,7 @@ fn try_building_tracks(player_id: PlayerId, game_state: &GameState) -> Option<Ve
     let connections = track_connections(game_state, logistics_links(player_id, game_state));
     // Later: Should we do this in random order?
     for (source, targets) in connections {
+        // TODO HIGH: This is sub-optimal, as any very length connection now satisfies this condition, so we don't build tracks in cases when we should
         if find_route_to_tile_tracks(source, &targets, game_state.building_state()).is_none() {
             // Later: Is picking just one of the targets the right thing to do?
             let target = targets.first()?;

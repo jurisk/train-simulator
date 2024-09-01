@@ -274,7 +274,7 @@ pub(crate) fn show_track_preview(
 }
 
 fn debug_draw_track(track_info: TrackInfo, gizmos: &mut Gizmos, tiles: &Tiles) {
-    // TODO HIGH: Actually draw a debug version of tracks, not just edges
+    // TODO: Actually draw a debug version of tracks, not just edges
     track_info
         .edges_clockwise()
         .iter()

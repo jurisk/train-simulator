@@ -188,7 +188,7 @@ impl IndustryType {
                 ResourceTransform::make(vec![(Steel, X1), (Explosives, X1)], vec![(Ammunition, X1)])
             },
             Warehouse => {
-                // TODO HIGH: Test that this actually works, as perhaps it does not. And rethink the idea of warehouses, as right now they are just a "black hole" for resources.
+                // TODO: Rethink the idea of warehouses, as right now they are just a "black hole" for resources.
                 // TODO: Not all of the resources "accepted" are "final" - `Steel` is also used in some supply chains. Should `Steel` + `Timber` result in `TrackBuildingCapacity`?
                 let inputs = [Ammunition, Concrete, Food, Fuel, Steel, Timber, Weapons]
                     .into_iter()

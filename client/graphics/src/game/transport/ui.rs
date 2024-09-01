@@ -155,6 +155,7 @@ pub(crate) fn show_transport_details(
                                 ui.end_row();
                             });
                         let movement_orders = transport.movement_orders();
+                        // TODO HIGH: Add more info here about waypoints - both ability to jump to that station, and what cargo is there, and its location...
                         egui::Grid::new("transport_movement_orders")
                             .num_columns(4)
                             .striped(true)
