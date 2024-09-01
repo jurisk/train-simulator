@@ -7,7 +7,7 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::vertex_coords_xz::VertexCoordsXZ;
 
-#[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone, Ord, PartialOrd)]
 pub struct TileCoordsXZ {
     pub x: i32,
     pub z: i32,

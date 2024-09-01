@@ -2,7 +2,7 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::tile_coords_xz::TileCoordsXZ;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum EdgeXZ {
     Horizontal { west: TileCoordsXZ },
     Vertical { north: TileCoordsXZ },

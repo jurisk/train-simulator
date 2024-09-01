@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use bevy::app::{App, FixedUpdate};
 use bevy::prelude::{
@@ -15,7 +15,6 @@ use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::tile_track::TileTrack;
-use shared_domain::transport::track_pathfinding::find_route_to_tile_tracks;
 use shared_domain::transport::track_planner::plan_tracks;
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
@@ -48,6 +47,11 @@ impl ArtificialIntelligenceTimer {
     }
 }
 
+#[derive(Resource, Default)]
+pub struct ArtificialIntelligenceState {
+    track_connections_built: HashSet<BTreeSet<EdgeXZ>>,
+}
+
 pub struct ArtificialIntelligencePlugin;
 
 impl Plugin for ArtificialIntelligencePlugin {
@@ -61,6 +65,7 @@ impl Plugin for ArtificialIntelligencePlugin {
             FixedUpdate,
             act_upon_timer.run_if(in_state(ClientState::Playing)),
         );
+        app.insert_resource(ArtificialIntelligenceState::default());
     }
 }
 
@@ -77,13 +82,14 @@ fn act_upon_timer(
     mut client_messages: EventWriter<ClientMessageEvent>,
     player_id_resource: Res<PlayerIdResource>,
     game_state_resource: Res<GameStateResource>,
+    mut ai_state: ResMut<ArtificialIntelligenceState>,
 ) {
     if let Some(ref timer) = timer.timer {
         if timer.just_finished() {
             let PlayerIdResource(player_id) = *player_id_resource;
             let GameStateResource(game_state) = game_state_resource.as_ref();
 
-            ai_step(player_id, game_state, &mut client_messages);
+            ai_step(player_id, game_state, &mut client_messages, &mut ai_state);
         }
     }
 }
@@ -92,9 +98,10 @@ fn ai_step(
     player_id: PlayerId,
     game_state: &GameState,
     client_messages: &mut EventWriter<ClientMessageEvent>,
+    ai_state: &mut ArtificialIntelligenceState,
 ) {
     let commands = try_building_transports(player_id, game_state)
-        .or_else(|| try_building_tracks(player_id, game_state))
+        .or_else(|| try_building_tracks(ai_state, player_id, game_state))
         .or_else(|| try_building_stations(player_id, game_state))
         .or_else(|| try_building_industry_buildings(player_id, game_state));
 
@@ -200,7 +207,6 @@ fn track_connections(
     let unique_station_pairs = links
         .into_iter()
         // If we don't do bidirectional links then we never bring the empty train back to the source
-        // TODO HIGH: This still fails as our timber train got stuck in warehouse after unloading... not sure why!?
         .flat_map(|(from, _, to)| vec![(from, to), (to, from)])
         .collect::<HashSet<_>>();
     let mut results = HashMap::new();
@@ -221,20 +227,24 @@ fn track_connections(
 }
 
 #[allow(clippy::redundant_else)]
-fn try_building_tracks(player_id: PlayerId, game_state: &GameState) -> Option<Vec<GameCommand>> {
+fn try_building_tracks(
+    ai_state: &mut ArtificialIntelligenceState,
+    player_id: PlayerId,
+    game_state: &GameState,
+) -> Option<Vec<GameCommand>> {
     let connections = track_connections(game_state, logistics_links(player_id, game_state));
-    // Later: Should we do this in random order?
     for (source, targets) in connections {
-        // TODO HIGH: This is sub-optimal, as any very length connection now satisfies this condition, so we don't build tracks in cases when we should
-        if find_route_to_tile_tracks(source, &targets, game_state.building_state()).is_none() {
-            // Later: Is picking just one of the targets the right thing to do?
-            let target = targets.first()?;
-            if let Some(route) = plan_tracks(
-                player_id,
-                EdgeXZ::from_tile_and_direction(source.tile_coords_xz, source.pointing_in),
-                EdgeXZ::from_tile_and_direction(target.tile_coords_xz, target.pointing_in),
-                game_state,
-            ) {
+        for target in targets {
+            let source = EdgeXZ::from_tile_and_direction(source.tile_coords_xz, source.pointing_in);
+            let target = EdgeXZ::from_tile_and_direction(target.tile_coords_xz, target.pointing_in);
+            let edge_set = BTreeSet::from_iter([source, target]);
+            if ai_state.track_connections_built.contains(&edge_set) {
+                // We have built this before...
+                continue;
+            }
+            // TODO HIGH: This still fails as our timber train got stuck in warehouse after unloading... Because track planning is EdgeXZ and not TileTrack based!
+            if let Some(route) = plan_tracks(player_id, source, target, game_state) {
+                ai_state.track_connections_built.insert(edge_set);
                 if !route.is_empty() {
                     // If it's empty, it means it's already built
                     return Some(vec![GameCommand::BuildTracks(route)]);
