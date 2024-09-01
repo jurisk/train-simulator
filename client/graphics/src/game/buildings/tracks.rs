@@ -1,17 +1,21 @@
 use std::collections::HashMap;
 
 use bevy::asset::Assets;
+use bevy::color::palettes::basic::BLUE;
 use bevy::core::Name;
 use bevy::input::ButtonInput;
 use bevy::math::{Quat, Vec3};
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
-    debug, default, info, warn, Color, Commands, Cuboid, EventWriter, Handle, Mesh, MouseButton,
+    default, info, warn, Color, Commands, Cuboid, EventWriter, Gizmos, Handle, Mesh, MouseButton,
     Res, ResMut, Transform,
 };
 use bevy_egui::EguiContexts;
 use bigdecimal::BigDecimal;
+use shared_domain::building::track_info::TrackInfo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
+use shared_domain::edge_xz::EdgeXZ;
+use shared_domain::game_state::GameState;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::map_level::terrain::DEFAULT_Y_COEF;
 use shared_domain::server_response::Colour;
@@ -19,9 +23,12 @@ use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::track_planner::plan_tracks;
 use shared_domain::transport::track_type::TrackType;
 use shared_domain::{StationId, TrackId};
+use shared_util::bool_ops::BoolOps;
 
 use crate::communication::domain::ClientMessageEvent;
+use crate::debug::drawing::debug_draw_edge;
 use crate::game::buildings::{StationIdComponent, TrackIdComponent};
+use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::Tiles;
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
 use crate::on_ui;
@@ -219,6 +226,61 @@ fn spawn_rail(
     }
 }
 
+fn try_plan_tracks(
+    player_id_resource: Res<PlayerIdResource>,
+    game_state: &GameState,
+    ordered_selected_edges: &[EdgeXZ],
+    mut egui_contexts: EguiContexts,
+) -> Option<Vec<TrackInfo>> {
+    on_ui(&mut egui_contexts).then_none()?;
+
+    let head = ordered_selected_edges.first()?;
+    let tail = ordered_selected_edges.last()?;
+
+    (head == tail).then_none()?;
+
+    let PlayerIdResource(player_id) = *player_id_resource;
+    plan_tracks(player_id, *head, *tail, game_state)
+}
+
+pub(crate) fn show_track_preview(
+    selected_edges: Res<SelectedEdges>,
+    player_id_resource: Res<PlayerIdResource>,
+    game_state_resource: Res<GameStateResource>,
+    selected_mode_resource: Res<SelectedMode>,
+    egui_contexts: EguiContexts,
+    mut gizmos: Gizmos,
+    tiles: Res<Tiles>,
+) {
+    if selected_mode_resource.as_ref() != &SelectedMode::Tracks {
+        return;
+    }
+
+    let GameStateResource(game_state) = game_state_resource.as_ref();
+
+    let ordered_selected_edges = &selected_edges.as_ref().ordered;
+    let tiles = tiles.as_ref();
+
+    if let Some(tracks) = try_plan_tracks(
+        player_id_resource,
+        game_state,
+        ordered_selected_edges,
+        egui_contexts,
+    ) {
+        for track in tracks {
+            debug_draw_track(track, &mut gizmos, tiles);
+        }
+    }
+}
+
+fn debug_draw_track(track_info: TrackInfo, gizmos: &mut Gizmos, tiles: &Tiles) {
+    // TODO HIGH: Actually draw a debug version of tracks, not just edges
+    track_info
+        .edges_clockwise()
+        .iter()
+        .for_each(|edge| debug_draw_edge(gizmos, *edge, &tiles.tiles, BLUE));
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn build_tracks_when_mouse_released(
     mut selected_tiles: ResMut<SelectedTiles>,
@@ -228,36 +290,29 @@ pub(crate) fn build_tracks_when_mouse_released(
     player_id_resource: Res<PlayerIdResource>,
     game_state_resource: Res<GameStateResource>,
     selected_mode_resource: Res<SelectedMode>,
-    mut egui_contexts: EguiContexts,
+    egui_contexts: EguiContexts,
 ) {
     if selected_mode_resource.as_ref() != &SelectedMode::Tracks {
         return;
     }
 
-    let GameStateResource(game_state) = game_state_resource.as_ref();
-    let game_id = game_state.game_id();
-
     if mouse_buttons.just_released(MouseButton::Left) {
-        let ordered_selected_tiles = selected_tiles.take();
+        // Later: Could this clearing of selections be done more elegantly elsewhere?
+        let _ordered_selected_tiles = selected_tiles.take();
         let ordered_selected_edges = selected_edges.take();
 
-        if on_ui(&mut egui_contexts) {
-            return;
-        }
+        let GameStateResource(game_state) = game_state_resource.as_ref();
 
-        let PlayerIdResource(player_id) = *player_id_resource;
-        if let Some(tracks) = plan_tracks(
-            player_id,
-            &ordered_selected_tiles,
-            &ordered_selected_edges,
+        if let Some(tracks) = try_plan_tracks(
+            player_id_resource,
             game_state,
+            &ordered_selected_edges,
+            egui_contexts,
         ) {
             client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
-                game_id,
+                game_state.game_id(),
                 GameCommand::BuildTracks(tracks),
             )));
-        } else {
-            debug!("Could not build track.");
         }
     }
 }

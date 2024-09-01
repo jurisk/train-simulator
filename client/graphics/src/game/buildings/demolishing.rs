@@ -2,6 +2,7 @@ use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, MouseButton, Res};
 use bevy_egui::EguiContexts;
 use shared_domain::client_command::{ClientCommand, DemolishSelector, GameCommand};
+use shared_util::bool_ops::BoolOps;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::GameStateResource;
@@ -35,17 +36,10 @@ fn demolish_command(
     hovered_tile: Res<HoveredTile>,
     mut egui_contexts: EguiContexts,
 ) -> Option<ClientMessageEvent> {
-    // TODO: Can we do this conversion from `bool` to `Option<()>` in a more elegant way?
-    if on_ui(&mut egui_contexts) {
-        None
-    } else {
-        Some(())
-    }?;
-    if mouse_buttons.just_released(MouseButton::Left) {
-        Some(())
-    } else {
-        None
-    }?;
+    on_ui(&mut egui_contexts).then_none()?;
+    mouse_buttons
+        .just_released(MouseButton::Left)
+        .then_some_unit()?;
 
     let selected_mode = selected_mode_resource.as_ref();
     let HoveredTile(hovered_tile) = hovered_tile.as_ref();
@@ -58,10 +52,10 @@ fn demolish_command(
     let game_id = game_state.game_id();
 
     let demolish_type = if let SelectedMode::Demolish(demolish_type) = selected_mode {
-        *demolish_type
+        Some(*demolish_type)
     } else {
-        return None;
-    };
+        None
+    }?;
 
     let command = match demolish_type {
         DemolishType::Industry => {

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::edge_xz::EdgeXZ;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::track_type::TrackType;
 use crate::{PlayerId, TrackId};
@@ -36,5 +37,14 @@ impl TrackInfo {
     #[must_use]
     pub fn owner_id(&self) -> PlayerId {
         self.owner_id
+    }
+
+    #[must_use]
+    pub fn edges_clockwise(&self) -> [EdgeXZ; 2] {
+        let (a, b) = self.track_type.connections_clockwise();
+        [
+            EdgeXZ::from_tile_and_direction(self.tile, a),
+            EdgeXZ::from_tile_and_direction(self.tile, b),
+        ]
     }
 }

@@ -10,6 +10,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use crate::debug::test_axis::TestAxisPlugin;
 use crate::key_map;
 
+pub mod drawing;
 mod test_axis;
 
 #[derive(Resource)]

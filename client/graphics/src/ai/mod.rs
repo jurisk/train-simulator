@@ -229,11 +229,8 @@ fn try_building_tracks(player_id: PlayerId, game_state: &GameState) -> Option<Ve
             let target = targets.first()?;
             if let Some(route) = plan_tracks(
                 player_id,
-                &[],
-                &[
-                    EdgeXZ::from_tile_and_direction(source.tile_coords_xz, source.pointing_in),
-                    EdgeXZ::from_tile_and_direction(target.tile_coords_xz, target.pointing_in),
-                ],
+                EdgeXZ::from_tile_and_direction(source.tile_coords_xz, source.pointing_in),
+                EdgeXZ::from_tile_and_direction(target.tile_coords_xz, target.pointing_in),
                 game_state,
             ) {
                 if !route.is_empty() {

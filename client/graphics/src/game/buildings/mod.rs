@@ -18,7 +18,9 @@ use crate::assets::GameAssets;
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::buildings::building::build_building_when_mouse_released;
 use crate::game::buildings::demolishing::demolish_when_mouse_released;
-use crate::game::buildings::tracks::{build_tracks_when_mouse_released, create_rails};
+use crate::game::buildings::tracks::{
+    build_tracks_when_mouse_released, create_rails, show_track_preview,
+};
 use crate::game::{create_object_entity, player_colour, GameStateResource};
 use crate::states::ClientState;
 
@@ -48,6 +50,10 @@ impl Plugin for BuildingsPlugin {
         app.add_systems(
             Update,
             build_tracks_when_mouse_released.run_if(in_state(ClientState::Playing)),
+        );
+        app.add_systems(
+            Update,
+            show_track_preview.run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(
             Update,

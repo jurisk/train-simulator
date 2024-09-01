@@ -37,10 +37,11 @@ pub enum SelectedMode {
     Select(SelectType),
 }
 
+// Later: Since we are no longer showing selected edges or tiles in any mode, we could simplify this. But think carefully - you may need it later.
 impl SelectedMode {
     #[must_use]
     pub fn show_selected_edges(&self) -> bool {
-        matches!(self, SelectedMode::Tracks)
+        false
     }
 
     #[must_use]
@@ -50,7 +51,7 @@ impl SelectedMode {
 
     #[must_use]
     pub fn show_selected_tiles(&self) -> bool {
-        matches!(self, SelectedMode::Tracks)
+        false
     }
 
     #[must_use]
