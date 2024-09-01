@@ -8,7 +8,6 @@ use bevy::prelude::{
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
-use shared_domain::building::track_info::TrackInfo;
 use shared_domain::cargo_map::WithCargo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::game_state::GameState;
@@ -240,15 +239,11 @@ fn try_building_tracks(
                 // We have built this before...
                 continue;
             }
-            if let Some(route) = plan_tracks(player_id, source, &[target], game_state) {
+            if let Some((route, _length)) = plan_tracks(player_id, source, &[target], game_state) {
                 ai_state.track_connections_built.insert(edge_set);
                 if !route.is_empty() {
                     // If it's empty, it means it's already built
-                    let tracks = route
-                        .into_iter()
-                        .map(|track| TrackInfo::from_tile_track(player_id, track))
-                        .collect();
-                    return Some(vec![GameCommand::BuildTracks(tracks)]);
+                    return Some(vec![GameCommand::BuildTracks(route)]);
                 }
             } else {
                 debug!("No route found for {:?} -> {:?}", source, target);

@@ -10,45 +10,6 @@ use crate::transport::track_length::TrackLength;
 use crate::transport::track_type::TrackType;
 use crate::PlayerId;
 
-// TODO HIGH:   This actually allows turns that the trains cannot actually make (e.g. crossing rails),
-//              so we should consider the direction of the train when planning the track.
-//              Reuse the `plan_tracks` code also for track building, except you probably have
-//              to run this multiple times for various start-end `TrackTile` combos.
-#[allow(
-    clippy::items_after_statements,
-    clippy::cast_possible_truncation,
-    clippy::cast_sign_loss
-)]
-fn edge_successors(
-    edge: EdgeXZ,
-    game_state: &GameState,
-    player_id: PlayerId,
-) -> Vec<(EdgeXZ, TrackLength)> {
-    let mut results = vec![];
-
-    for tile in edge.ordered_tiles() {
-        for neighbour in EdgeXZ::for_tile(tile) {
-            for tile_track in track_types_that_fit(edge, neighbour) {
-                let track = TrackInfo::from_tile_track(player_id, tile_track);
-
-                // Later:
-                //  - Bonus or malus if the existing track is provided by a station?
-
-                let response = game_state.can_build_track(player_id, &track);
-                let coef = response_to_coef(response);
-
-                if let Some(coef) = coef {
-                    let length = tile_track.track_type.length();
-                    let adjusted_length = length * coef;
-                    results.push((neighbour, adjusted_length));
-                }
-            }
-        }
-    }
-
-    results
-}
-
 #[must_use]
 pub fn plan_tracks_edge_to_edge(
     player_id: PlayerId,
@@ -56,70 +17,68 @@ pub fn plan_tracks_edge_to_edge(
     tail: EdgeXZ,
     game_state: &GameState,
 ) -> Option<Vec<TrackInfo>> {
-    // Later: If `tail` is under water, no sense to plan?
-    // Later: Consider switching to `a_star` or `dijkstra_all`
-    let path: Option<(Vec<EdgeXZ>, TrackLength)> = dijkstra(
-        &head,
-        |edge| edge_successors(*edge, game_state, player_id),
-        |edge| *edge == tail,
-    );
+    let head_options = possible_tile_tracks(head, EdgeType::StartingFrom, player_id, game_state);
+    let tail_options = possible_tile_tracks(tail, EdgeType::FinishingIn, player_id, game_state);
+    head_options
+        .into_iter()
+        .filter_map(|head_option| plan_tracks(player_id, head_option, &tail_options, game_state))
+        .min_by_key(|(_, length)| *length)
+        .map(|(tracks, _)| tracks)
+}
 
-    path.map(|(path, _length)| {
-        let mut tracks = vec![];
+#[derive(Copy, Clone)]
+enum EdgeType {
+    StartingFrom,
+    FinishingIn,
+}
 
-        for w in path.windows(2) {
-            let a = w[0];
-            let b = w[1];
-
-            for tile_track in track_types_that_fit(a, b) {
-                let track = TrackInfo::from_tile_track(player_id, tile_track);
-
-                match game_state.can_build_track(player_id, &track) {
-                    CanBuildResponse::Ok => {
-                        tracks.push(track);
-                    },
-                    CanBuildResponse::AlreadyExists => {
-                        // Expected if we are building an addition to existing track
-                    },
-                    CanBuildResponse::Invalid => {
-                        warn!(
-                            "Unexpected state - our found path includes invalid tracks: {:?}",
-                            track,
-                        );
-                    },
+fn possible_tile_tracks(
+    edge: EdgeXZ,
+    edge_type: EdgeType,
+    player_id: PlayerId,
+    game_state: &GameState,
+) -> Vec<TileTrack> {
+    let (a, b) = edge.ordered_tiles();
+    let mut ok_results = vec![];
+    let mut already_exists_results = vec![];
+    for tile in [a, b] {
+        for track_type in TrackType::all() {
+            for pointing_in in track_type.connections() {
+                // TODO HIGH: This is quite broken and doesn't build exactly what is requested
+                let other = track_type.other_end_unsafe(pointing_in);
+                let comparison_direction = match edge_type {
+                    EdgeType::StartingFrom => pointing_in,
+                    EdgeType::FinishingIn => other,
+                };
+                let comparison_edge = EdgeXZ::from_tile_and_direction(tile, comparison_direction);
+                if edge == comparison_edge {
+                    let tile_track = TileTrack {
+                        tile_coords_xz: tile,
+                        track_type,
+                        pointing_in: comparison_direction,
+                    };
+                    let track_info = TrackInfo::from_tile_track(player_id, tile_track);
+                    let response = game_state.can_build_track(player_id, &track_info);
+                    match response {
+                        CanBuildResponse::Ok => {
+                            ok_results.push(tile_track);
+                        },
+                        CanBuildResponse::AlreadyExists => {
+                            already_exists_results.push(tile_track);
+                        },
+                        CanBuildResponse::Invalid => {},
+                    }
                 }
             }
         }
+    }
 
-        tracks
-    })
-}
-
-fn track_types_that_fit(a: EdgeXZ, b: EdgeXZ) -> Vec<TileTrack> {
-    EdgeXZ::common_tile(a, b)
-        .into_iter()
-        .flat_map(|tile| {
-            TrackType::all()
-                .into_iter()
-                .flat_map(|track_type| {
-                    let (da, db) = track_type.connections_clockwise();
-                    let ea = EdgeXZ::from_tile_and_direction(tile, da);
-                    let eb = EdgeXZ::from_tile_and_direction(tile, db);
-                    // This track fits!
-                    if (ea == a && eb == b) || (ea == b && eb == a) {
-                        let tile_track = TileTrack {
-                            tile_coords_xz: tile,
-                            track_type,
-                            pointing_in: db,
-                        };
-                        vec![tile_track]
-                    } else {
-                        vec![]
-                    }
-                })
-                .collect::<Vec<_>>()
-        })
-        .collect::<Vec<_>>()
+    // We prefer existing tracks over fully new ones
+    if already_exists_results.is_empty() {
+        ok_results
+    } else {
+        already_exists_results
+    }
 }
 
 fn successors(
@@ -165,7 +124,7 @@ pub fn plan_tracks(
     current_tile_track: TileTrack,
     targets: &[TileTrack],
     game_state: &GameState,
-) -> Option<Vec<TileTrack>> {
+) -> Option<(Vec<TrackInfo>, TrackLength)> {
     debug!("Planning tracks for {player_id:?} from {current_tile_track:?} to {targets:?}");
     let path: Option<(Vec<TileTrack>, TrackLength)> = dijkstra(
         &current_tile_track,
@@ -173,15 +132,15 @@ pub fn plan_tracks(
         |tile_track| targets.contains(tile_track),
     );
 
-    path.map(|(path, _length)| {
+    path.map(|(path, length)| {
         let mut tracks = vec![];
 
         for tile_track in path {
-            let track = TrackInfo::from_tile_track(player_id, tile_track);
+            let track_info = TrackInfo::from_tile_track(player_id, tile_track);
 
-            match game_state.can_build_track(player_id, &track) {
+            match game_state.can_build_track(player_id, &track_info) {
                 CanBuildResponse::Ok => {
-                    tracks.push(tile_track);
+                    tracks.push(track_info);
                 },
                 CanBuildResponse::AlreadyExists => {
                     // Expected if we are building an addition to existing track
@@ -189,12 +148,12 @@ pub fn plan_tracks(
                 CanBuildResponse::Invalid => {
                     warn!(
                         "Unexpected state - our found path includes invalid tracks: {:?}",
-                        track,
+                        tile_track,
                     );
                 },
             }
         }
 
-        tracks
+        (tracks, length)
     })
 }

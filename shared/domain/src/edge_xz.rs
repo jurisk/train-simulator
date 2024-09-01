@@ -56,28 +56,28 @@ impl EdgeXZ {
     }
 
     #[must_use]
-    pub fn ordered_tiles(self) -> [TileCoordsXZ; 2] {
+    pub fn ordered_tiles(self) -> (TileCoordsXZ, TileCoordsXZ) {
         match self {
-            EdgeXZ::Horizontal { west } => [west, west + DirectionXZ::East],
-            EdgeXZ::Vertical { north } => [north, north + DirectionXZ::South],
+            EdgeXZ::Horizontal { west } => (west, west + DirectionXZ::East),
+            EdgeXZ::Vertical { north } => (north, north + DirectionXZ::South),
         }
     }
 
     #[allow(clippy::if_same_then_else)]
     #[must_use]
     pub fn common_tile(a: EdgeXZ, b: EdgeXZ) -> Option<TileCoordsXZ> {
-        let a_tiles = a.ordered_tiles();
-        let b_tiles = b.ordered_tiles();
+        let (a_0, a_1) = a.ordered_tiles();
+        let (b_0, b_1) = b.ordered_tiles();
         if a == b {
             None // That means there are two common tiles, not a tile.
-        } else if a_tiles[0] == b_tiles[0] {
-            Some(a_tiles[0])
-        } else if a_tiles[0] == b_tiles[1] {
-            Some(a_tiles[0])
-        } else if a_tiles[1] == b_tiles[0] {
-            Some(a_tiles[1])
-        } else if a_tiles[1] == b_tiles[1] {
-            Some(a_tiles[1])
+        } else if a_0 == b_0 {
+            Some(a_0)
+        } else if a_0 == b_1 {
+            Some(a_0)
+        } else if a_1 == b_0 {
+            Some(a_1)
+        } else if a_1 == b_1 {
+            Some(a_1)
         } else {
             None
         }
