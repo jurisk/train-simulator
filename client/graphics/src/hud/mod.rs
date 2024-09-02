@@ -1,6 +1,10 @@
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{in_state, IntoSystemConfigs};
+use bevy::prelude::{default, in_state, IntoSystemConfigs};
 use bevy_egui::EguiPlugin;
+use egui::text::LayoutJob;
+use egui::{Color32, TextFormat};
+use shared_domain::server_response::PlayerInfo;
+use shared_domain::PlayerId;
 
 use crate::hud::domain::SelectedMode;
 use crate::hud::labels::draw_labels;
@@ -44,4 +48,26 @@ impl Plugin for HudPlugin {
                 .run_if(in_state(ClientState::Playing)),
         );
     }
+}
+
+#[allow(clippy::similar_names)]
+#[must_use]
+pub fn player_layout_job(own_player_id: PlayerId, player_info: &PlayerInfo) -> LayoutJob {
+    let colour = player_info.colour;
+    let color = Color32::from_rgb(colour.r, colour.g, colour.b);
+
+    let mut job = LayoutJob::default();
+    job.append("⬛", 0.0, TextFormat { color, ..default() });
+
+    job.append(
+        format!("{}", player_info.name).as_str(),
+        0.0,
+        TextFormat::default(),
+    );
+
+    if player_info.id == own_player_id {
+        job.append(" ⬅", 0.0, TextFormat::default());
+    }
+
+    job
 }

@@ -1,8 +1,6 @@
 use bevy::prelude::{info, EventWriter, Res, ResMut};
-use bevy::utils::default;
 use bevy_egui::EguiContexts;
-use egui::text::LayoutJob;
-use egui::{Color32, TextFormat, Ui};
+use egui::Ui;
 use shared_domain::building::building_info::WithOwner;
 use shared_domain::building::building_state::BuildingState;
 use shared_domain::cargo_map::WithCargo;
@@ -13,6 +11,7 @@ use shared_domain::PlayerId;
 use crate::cameras::CameraControlEvent;
 use crate::game::transport::ui::TransportsToShow;
 use crate::game::{GameStateResource, PlayerIdResource};
+use crate::hud::player_layout_job;
 
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn show_left_panel(
@@ -109,24 +108,10 @@ fn transport_info_panel(
 }
 
 #[allow(clippy::similar_names)]
-fn players_info_panel(ui: &mut Ui, player_id: PlayerId, players: &PlayerState) {
+fn players_info_panel(ui: &mut Ui, own_player_id: PlayerId, players: &PlayerState) {
     ui.heading("Players");
     for player_info in players.infos() {
-        let colour = player_info.colour;
-        let color = Color32::from_rgb(colour.r, colour.g, colour.b);
-
-        let mut job = LayoutJob::default();
-        job.append("⬛", 0.0, TextFormat { color, ..default() });
-
-        job.append(
-            format!("{}", player_info.name).as_str(),
-            0.0,
-            TextFormat::default(),
-        );
-
-        if player_info.id == player_id {
-            job.append(" ⬅", 0.0, TextFormat::default());
-        }
+        let job = player_layout_job(own_player_id, player_info);
         if ui.button(job).clicked() {
             // TODO: Open player panel
             info!("Player panel for player: {:?}", player_info);

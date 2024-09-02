@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use bevy::input::ButtonInput;
 use bevy::prelude::{info, EventWriter, MouseButton, Res, ResMut, Resource};
 use bevy_egui::EguiContexts;
+use shared_domain::cargo_map::WithCargo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::transport::movement_orders::{
     LoadAction, MovementOrder, MovementOrderAction, MovementOrderLocation, UnloadAction,
@@ -11,8 +12,9 @@ use shared_domain::TransportId;
 
 use crate::cameras::CameraControlEvent;
 use crate::communication::domain::ClientMessageEvent;
-use crate::game::GameStateResource;
+use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::{SelectType, SelectedMode};
+use crate::hud::player_layout_job;
 use crate::on_ui;
 use crate::selection::HoveredTile;
 
@@ -103,7 +105,11 @@ pub(crate) fn select_station_to_add_to_movement_orders(
     }
 }
 
-#[allow(clippy::needless_pass_by_value, clippy::too_many_lines)]
+#[allow(
+    clippy::needless_pass_by_value,
+    clippy::too_many_lines,
+    clippy::unwrap_used
+)]
 pub(crate) fn show_transport_details(
     mut contexts: EguiContexts,
     game_state_resource: Option<Res<GameStateResource>>,
@@ -111,22 +117,23 @@ pub(crate) fn show_transport_details(
     mut client_messages: EventWriter<ClientMessageEvent>,
     mut selected_mode: ResMut<SelectedMode>,
     mut camera_control_events: EventWriter<CameraControlEvent>,
+    player_id_resource: Res<PlayerIdResource>,
 ) {
     if let Some(game_state_resource) = game_state_resource {
         let GameStateResource(game_state) = game_state_resource.as_ref();
         let transports = game_state.transport_infos();
+        let PlayerIdResource(player_id) = player_id_resource.as_ref();
 
         for transport in transports {
             if show_transport_details.contains(transport.transport_id()) {
                 egui::Window::new(format!("Transport {:?}", transport.transport_id())).show(
                     contexts.ctx_mut(),
                     |ui| {
+                        let movement_orders = transport.movement_orders();
+
                         // Later: More properly use the Window::open() method for a close button in the title bar
                         if ui.button("Close").clicked() {
                             show_transport_details.remove(transport.transport_id());
-                        }
-                        if ui.button("Find").clicked() {
-                            camera_control_events.send(CameraControlEvent::FocusOnTile(transport.location().next_tile_in_path().tile_coords_xz));
                         }
                         egui::Grid::new("transport_details")
                             .num_columns(2)
@@ -135,31 +142,26 @@ pub(crate) fn show_transport_details(
                                 ui.label("Transport ID");
                                 ui.label(format!("{:?}", transport.transport_id()));
                                 ui.end_row();
-                                ui.label("Owner ID");
-                                ui.label(format!("{:?}", transport.owner_id()));
+                                ui.label("Owner");
+                                ui.label(player_layout_job(*player_id, game_state.players().get(transport.owner_id()).unwrap()));
                                 ui.end_row();
                                 ui.label("Transport Type");
                                 ui.label(format!("{:?}", transport.transport_type()));
                                 ui.end_row();
                                 ui.label("Location");
-                                ui.label(format!("{:?}", transport.location()));
+                                if ui.button(format!("🔍 {:?}", transport.location())).clicked() {
+                                    camera_control_events.send(CameraControlEvent::FocusOnTile(transport.location().next_tile_in_path().tile_coords_xz));
+                                }
                                 ui.end_row();
                                 ui.label("Velocity");
                                 ui.label(format!("{:?}", transport.velocity()));
                                 ui.end_row();
                                 ui.label("Cargo Loaded");
-                                ui.label(format!("{:?}", transport.cargo_loaded()));
+                                ui.label(transport.cargo_as_string());
                                 ui.end_row();
                                 ui.label("Cargo Processing");
                                 ui.label(format!("{:?}", transport.cargo_processing()));
                                 ui.end_row();
-                            });
-                        let movement_orders = transport.movement_orders();
-                        // TODO HIGH: Add more info here about waypoints - both ability to jump to that station, and what cargo is there, and its location...
-                        egui::Grid::new("transport_movement_orders")
-                            .num_columns(4)
-                            .striped(true)
-                            .show(ui, |ui| {
                                 ui.label("Force Stopped");
                                 if ui.button(format!("{:?}", movement_orders.is_force_stopped())).clicked() {
                                     let mut new_movement_orders = movement_orders.clone();
@@ -175,8 +177,23 @@ pub(crate) fn show_transport_details(
                                     ));
                                 };
                                 ui.end_row();
-                                for (idx, movement_order) in movement_orders.into_iter().enumerate()
-                                {
+                            });
+                        egui::Grid::new("transport_movement_orders")
+                            .num_columns(5)
+                            .striped(true)
+                            .show(ui, |ui| {
+                                ui.label("Index");
+                                ui.label("Go To");
+                                ui.label("Action");
+                                ui.label("Cargo");
+                                ui.label("Location");
+                                ui.label("");
+                                ui.end_row();
+                                for (idx, movement_order) in movement_orders.into_iter().enumerate() {
+                                    let MovementOrderLocation::Station(station_id) = movement_order.go_to;
+                                    let station = game_state.building_state().find_station(station_id).unwrap();
+                                    let reference_tile = station.reference_tile();
+
                                     let current_order = if idx == movement_orders.next_index() {
                                         "➡ "
                                     } else {
@@ -185,9 +202,14 @@ pub(crate) fn show_transport_details(
                                     ui.label(format!("{current_order} {idx}"));
                                     ui.label(format!("{:?}", movement_order.go_to));
                                     ui.label(format!("{:?}", movement_order.action));
+                                    ui.label(format!("{:?}", station.cargo()));
+
+                                    if ui.button(format!("🔍 {reference_tile:?}")).clicked() {
+                                        camera_control_events.send(CameraControlEvent::FocusOnTile(reference_tile));
+                                    }
 
                                     // Later: Remove is disabled if there is only one movement order, as you cannot remove the last one
-                                    if ui.button("Remove").clicked() {
+                                    if ui.button("❎ Remove").clicked() {
                                         info!(
                                             "Transport {:?}: Removing movement order {idx:?}",
                                             transport.transport_id()
@@ -206,7 +228,7 @@ pub(crate) fn show_transport_details(
                                     };
                                     ui.end_row();
                                 }
-                                if ui.button("Add").clicked() {
+                                if ui.button("➕ Add").clicked() {
                                     info!(
                                         "Transport {:?}: Switching to station selection in order to add to movement orders",
                                         transport.transport_id(),
