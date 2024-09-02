@@ -17,7 +17,7 @@ use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::map_level::MapLevel;
-use shared_domain::map_level::terrain::DEFAULT_Y_COEF;
+use shared_domain::map_level::terrain::{Terrain, DEFAULT_Y_COEF};
 use shared_domain::server_response::Colour;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::track_planner::plan_tracks_edge_to_edge;
@@ -26,9 +26,7 @@ use shared_domain::{StationId, TrackId};
 use shared_util::bool_ops::BoolOps;
 
 use crate::communication::domain::ClientMessageEvent;
-use crate::debug::drawing::debug_draw_edge;
 use crate::game::buildings::{StationIdComponent, TrackIdComponent};
-use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::Tiles;
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
 use crate::on_ui;
@@ -140,16 +138,7 @@ pub(crate) fn create_rails(
     track_id: Option<TrackId>,
     station_id: Option<StationId>,
 ) {
-    let terrain = &map_level.terrain();
-
-    let (a, b) = track_type.connections_clockwise();
-
-    let (a1, a2) = terrain.vertex_coordinates_clockwise(a, tile);
-    let (b1, b2) = terrain.vertex_coordinates_clockwise(b, tile);
-
-    let (a1, a2) = pick_rail_positions(a1, a2);
-    let (b1, b2) = pick_rail_positions(b1, b2);
-
+    let ((a1, a2), (b1, b2)) = rail_positions(tile, track_type, map_level.terrain());
     let color = Color::srgb_u8(colour.r, colour.g, colour.b);
 
     spawn_rail(
@@ -174,6 +163,22 @@ pub(crate) fn create_rails(
         track_id,
         station_id,
     );
+}
+
+fn rail_positions(
+    tile: TileCoordsXZ,
+    track_type: TrackType,
+    terrain: &Terrain,
+) -> ((Vec3, Vec3), (Vec3, Vec3)) {
+    let (a, b) = track_type.connections_clockwise();
+
+    let (a1, a2) = terrain.vertex_coordinates_clockwise(a, tile);
+    let (b1, b2) = terrain.vertex_coordinates_clockwise(b, tile);
+
+    let (a1, a2) = pick_rail_positions(a1, a2);
+    let (b1, b2) = pick_rail_positions(b1, b2);
+
+    ((a1, a2), (b1, b2))
 }
 
 // The usual rail car is 10 feet wide, 10 feet high, and 50 feet long. We want to fit 2 cars per tile, so one tile is 100 feet or 30 meters.
@@ -250,7 +255,6 @@ pub(crate) fn show_track_preview(
     selected_mode_resource: Res<SelectedMode>,
     egui_contexts: EguiContexts,
     mut gizmos: Gizmos,
-    tiles: Res<Tiles>,
 ) {
     if selected_mode_resource.as_ref() != &SelectedMode::Tracks {
         return;
@@ -259,7 +263,6 @@ pub(crate) fn show_track_preview(
     let GameStateResource(game_state) = game_state_resource.as_ref();
 
     let ordered_selected_edges = &selected_edges.as_ref().ordered;
-    let tiles = tiles.as_ref();
 
     if let Some(tracks) = try_plan_tracks(
         player_id_resource,
@@ -268,17 +271,17 @@ pub(crate) fn show_track_preview(
         egui_contexts,
     ) {
         for track in tracks {
-            debug_draw_track(track, &mut gizmos, tiles);
+            debug_draw_track(track, &mut gizmos, game_state.map_level().terrain());
         }
     }
 }
 
-fn debug_draw_track(track_info: TrackInfo, gizmos: &mut Gizmos, tiles: &Tiles) {
-    // TODO: Actually draw a debug version of tracks, not just edges
-    track_info
-        .edges_clockwise()
-        .iter()
-        .for_each(|edge| debug_draw_edge(gizmos, *edge, &tiles.tiles, BLUE));
+fn debug_draw_track(track_info: TrackInfo, gizmos: &mut Gizmos, terrain: &Terrain) {
+    let ((a1, a2), (b1, b2)) = rail_positions(track_info.tile, track_info.track_type, terrain);
+    let color = BLUE;
+
+    gizmos.line(a1, b2, color);
+    gizmos.line(a2, b1, color);
 }
 
 #[allow(clippy::too_many_arguments)]
