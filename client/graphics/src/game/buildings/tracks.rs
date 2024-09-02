@@ -20,7 +20,9 @@ use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::map_level::terrain::{Terrain, DEFAULT_Y_COEF};
 use shared_domain::server_response::Colour;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
-use shared_domain::transport::track_planner::plan_tracks_edge_to_edge;
+use shared_domain::transport::track_planner::{
+    plan_tracks_edge_to_edge, DEFAULT_ALREADY_EXISTS_COEF,
+};
 use shared_domain::transport::track_type::TrackType;
 use shared_domain::{StationId, TrackId};
 use shared_util::bool_ops::BoolOps;
@@ -245,7 +247,13 @@ fn try_plan_tracks(
     (head == tail).then_none()?;
 
     let PlayerIdResource(player_id) = *player_id_resource;
-    plan_tracks_edge_to_edge(player_id, *head, *tail, game_state, 0.8f32)
+    plan_tracks_edge_to_edge(
+        player_id,
+        *head,
+        *tail,
+        game_state,
+        DEFAULT_ALREADY_EXISTS_COEF,
+    )
 }
 
 pub(crate) fn show_track_preview(

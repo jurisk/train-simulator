@@ -14,7 +14,7 @@ use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::tile_track::TileTrack;
-use shared_domain::transport::track_planner::plan_tracks;
+use shared_domain::transport::track_planner::{plan_tracks, DEFAULT_ALREADY_EXISTS_COEF};
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
 use shared_domain::{IndustryBuildingId, PlayerId, StationId, TransportId};
@@ -239,9 +239,13 @@ fn try_building_tracks(
                 // We have built this before...
                 continue;
             }
-            if let Some((route, _length)) =
-                plan_tracks(player_id, source, &[target], game_state, 0.8f32)
-            {
+            if let Some((route, _length)) = plan_tracks(
+                player_id,
+                source,
+                &[target],
+                game_state,
+                DEFAULT_ALREADY_EXISTS_COEF,
+            ) {
                 ai_state.track_connections_built.insert(edge_set);
                 if !route.is_empty() {
                     // If it's empty, it means it's already built

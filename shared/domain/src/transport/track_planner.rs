@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use log::{debug, trace, warn};
 use pathfinding::prelude::dijkstra;
 
@@ -10,6 +12,8 @@ use crate::transport::track_length::TrackLength;
 use crate::transport::track_type::TrackType;
 use crate::PlayerId;
 
+pub const DEFAULT_ALREADY_EXISTS_COEF: f32 = 0.8;
+
 #[must_use]
 pub fn plan_tracks_edge_to_edge(
     player_id: PlayerId,
@@ -20,6 +24,7 @@ pub fn plan_tracks_edge_to_edge(
 ) -> Option<Vec<TrackInfo>> {
     let head_options = possible_tile_tracks(head, EdgeType::StartingFrom, player_id, game_state);
     let tail_options = possible_tile_tracks(tail, EdgeType::FinishingIn, player_id, game_state);
+    // TODO: We don't necessarily need so much looping - we can always force a start from an existing track (whether from the station or from the track)
     head_options
         .into_iter()
         .filter_map(|head_option| {
@@ -126,14 +131,15 @@ pub fn plan_tracks(
     game_state: &GameState,
     already_exists_coef: f32,
 ) -> Option<(Vec<TrackInfo>, TrackLength)> {
-    debug!("Planning tracks for {player_id:?} from {current_tile_track:?} to {targets:?}");
+    let start = Instant::now();
+
     let path: Option<(Vec<TileTrack>, TrackLength)> = dijkstra(
         &current_tile_track,
         |tile_track| successors(*tile_track, player_id, game_state, already_exists_coef),
         |tile_track| targets.contains(tile_track),
     );
 
-    path.map(|(path, length)| {
+    let result = path.map(|(path, length)| {
         let mut tracks = vec![];
 
         for tile_track in path {
@@ -156,5 +162,13 @@ pub fn plan_tracks(
         }
 
         (tracks, length)
-    })
+    });
+
+    // TODO: We could precompute using `dijkstra_all` async and then just look up the result here, possibly with some caching
+    debug!(
+        "Planning tracks from {current_tile_track:?} to {targets:?} took {:?}",
+        start.elapsed()
+    );
+
+    result
 }
