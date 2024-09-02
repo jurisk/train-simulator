@@ -24,6 +24,7 @@ pub fn plan_tracks_edge_to_edge(
 ) -> Option<Vec<TrackInfo>> {
     let head_options = possible_tile_tracks(head, EdgeType::StartingFrom, player_id, game_state);
     let tail_options = possible_tile_tracks(tail, EdgeType::FinishingIn, player_id, game_state);
+    // TODO: What if we assume that both ends are always new tracks and never existing ones? That way we have less search space and probably get results closer to what the player expects.
     // TODO: We don't necessarily need so much looping - we can always force a start from an existing track (whether from the station or from the track)
     head_options
         .into_iter()
