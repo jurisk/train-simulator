@@ -342,26 +342,22 @@ impl BuildingState {
             .any(|vertex| map_level.under_water(vertex));
 
         // Later: Consider allowing more: https://wiki.openttd.org/en/Archive/Manual/Settings/Build%20on%20slopes .
-        let train_is_tilted = track_info
+        let connection_heights: Vec<_> = track_info
             .track_type
             .connections()
             .into_iter()
-            .any(|direction| {
+            .map(|direction| {
                 let (a, b) = track_info.tile.vertex_coords_clockwise(direction);
                 let height_a = map_level.height_at(a);
                 let height_b = map_level.height_at(b);
-                height_a != height_b
-            });
-
-        let heights: HashSet<Height> = track_info
-            .track_type
-            .connections()
-            .into_iter()
-            .flat_map(|direction| {
-                let (a, b) = track_info.tile.vertex_coords_clockwise(direction);
-                vec![map_level.height_at(a), map_level.height_at(b)]
+                [height_a, height_b]
             })
             .collect();
+
+        let train_is_tilted = connection_heights.iter().any(|[a, b]| a != b);
+
+        let heights: HashSet<Height> = connection_heights.into_iter().flatten().collect();
+
         const MAX_HEIGHT_DIFF: Height = Height::from_u8(1);
         let invalid_height_diff =
             *heights.iter().max().unwrap() > *heights.iter().min().unwrap() + MAX_HEIGHT_DIFF;

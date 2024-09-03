@@ -164,6 +164,7 @@ cargo install flamegraph
 cargo flamegraph --bin client_single_player --features bevy/trace_chrome --root --release
 cargo flamegraph --bin server_console --features bevy/trace_chrome --root --release
 cargo flamegraph --bin client_graphical --features bevy/trace_chrome -- ws://127.0.0.1:8080/ws ee6b4aa1-67e0-4d6b-a42c-56320f61390e
+cargo flamegraph --unit-test shared_domain -- transport::track_planner::tests
 ----
 
 === Code size profiling
