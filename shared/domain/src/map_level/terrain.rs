@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 
 use bevy_math::Vec3;
@@ -7,10 +6,10 @@ use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
-use crate::building::track_info::TrackInfo;
 use crate::map_level::map_level::{Height, TerrainType};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::tile_track::TileTrack;
+use crate::transport::track_type::TrackType;
 use crate::vertex_coords_xz::VertexCoordsXZ;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
@@ -140,33 +139,22 @@ impl Terrain {
     }
 
     #[must_use]
-    #[allow(clippy::items_after_statements, clippy::unwrap_used)]
-    pub fn can_build_track(&self, track: &TrackInfo) -> bool {
+    #[allow(clippy::items_after_statements, clippy::similar_names)]
+    pub fn can_build_track(&self, tile: TileCoordsXZ, track_type: TrackType) -> bool {
         // Later: Do not allow tracks that go out of bounds (where any connection is on the edge)
-        let in_bounds = self.tile_in_bounds(track.tile);
+        let in_bounds = self.tile_in_bounds(tile);
 
-        // Later: Consider allowing more: https://wiki.openttd.org/en/Archive/Manual/Settings/Build%20on%20slopes .
-        let connection_heights: Vec<_> = track
-            .track_type
-            .connections()
-            .into_iter()
-            .map(|direction| {
-                let (a, b) = track.tile.vertex_coords_clockwise(direction);
-                let height_a = self.height_at(a);
-                let height_b = self.height_at(b);
-                [height_a, height_b]
-            })
-            .collect();
-
-        let train_is_not_tilted = connection_heights.iter().all(|[a, b]| a == b);
-
-        let heights: HashSet<Height> = connection_heights.into_iter().flatten().collect();
-
+        // Later: Consider allowing more: https://wiki.openttd.org/en/Archive/Manual/Settings/Build%20on%20slopes
+        let (a, b) = track_type.connections_clockwise();
+        let (a1, a2) = tile.vertex_coords_clockwise(a);
+        let (b1, b2) = tile.vertex_coords_clockwise(b);
+        let ha1 = self.height_at(a1);
+        let ha2 = self.height_at(a2);
+        let hb1 = self.height_at(b1);
+        let hb2 = self.height_at(b2);
+        let train_is_not_tilted = ha1 == ha2 && hb1 == hb2;
         const MAX_HEIGHT_DIFF: Height = Height::from_u8(1);
-        let valid_height_diff = match (heights.iter().min(), heights.iter().max()) {
-            (Some(min), Some(max)) => *max <= *min + MAX_HEIGHT_DIFF,
-            _ => false,
-        };
+        let valid_height_diff = ha1.min(hb1) + MAX_HEIGHT_DIFF >= ha2.max(hb2);
 
         train_is_not_tilted && valid_height_diff && in_bounds
     }

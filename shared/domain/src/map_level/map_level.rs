@@ -185,7 +185,7 @@ impl MapLevel {
             .any(|vertex| self.under_water(vertex));
 
         !any_vertex_under_water
-            && self.terrain.can_build_track(track)
+            && self.terrain.can_build_track(track.tile, track.track_type)
             && self.zoning.can_build_track(track)
     }
 }
