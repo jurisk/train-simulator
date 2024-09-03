@@ -23,10 +23,19 @@ pub fn plan_tracks_edge_to_edge(
     game_state: &GameState,
     already_exists_coef: f32,
 ) -> Option<Vec<TrackInfo>> {
+    // TODO HIGH:   We should avoid having multiple heads.
+    //              If we start from an edge that already has a track on one side (e.g. end of a
+    //              station), we can use that track as the head.
+    //              Otherwise we can use first selected tile to decide which direction to go, and
+    //              use a "virtual" TileTrack on the other side that leads to that edge, in that
+    //              direction. Just don't build it afterwards, remove from results.
+    //              Whether to use a similar logic to cut down on tails is less clear, experiment
+    //              both ways.
+    //              End result is that there should be a warning logged whenever we cannot find a
+    //              single head.
+
     let head_options = possible_tile_tracks(head, EdgeType::StartingFrom, player_id, game_state);
     let tail_options = possible_tile_tracks(tail, EdgeType::FinishingIn, player_id, game_state);
-    // TODO: What if we assume that both ends are always new tracks and never existing ones? That way we have less search space and probably get results closer to what the player expects.
-    // TODO: We don't necessarily need so much looping - we can always force a start from an existing track (whether from the station or from the track)
     head_options
         .into_iter()
         .filter_map(|head_option| {
@@ -168,7 +177,8 @@ pub fn plan_tracks(
         (tracks, length)
     });
 
-    // TODO: We could precompute using `dijkstra_all` async and then just look up the result here, possibly with some caching
+    // TODO:    We could precompute using `dijkstra_all` async and then just look up the result here, possibly with some caching.
+    //          See https://github.com/loopystudios/bevy_async_task
     let elapsed = start.elapsed();
     let level = if elapsed > Duration::from_millis(100) {
         Level::Warn
