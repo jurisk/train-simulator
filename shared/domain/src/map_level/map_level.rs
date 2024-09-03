@@ -177,7 +177,16 @@ impl MapLevel {
 
     #[must_use]
     pub fn can_build_track(&self, track: &TrackInfo) -> bool {
-        self.terrain.can_build_track(track) && self.zoning.can_build_track(track)
+        // TODO HIGH: Cache?
+        let vertex_coords = track.tile.vertex_coords();
+
+        let any_vertex_under_water = vertex_coords
+            .into_iter()
+            .any(|vertex| self.under_water(vertex));
+
+        !any_vertex_under_water
+            && self.terrain.can_build_track(track)
+            && self.zoning.can_build_track(track)
     }
 }
 

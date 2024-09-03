@@ -194,8 +194,7 @@ impl GameState {
     ) -> CanBuildResponse {
         // Later: We do some duplicate invocations here...
         if self.map_level.can_build_track(track) && track.owner_id() == requesting_player_id {
-            self.buildings
-                .can_build_track(requesting_player_id, track, &self.map_level)
+            self.buildings.can_build_track(requesting_player_id, track)
         } else {
             CanBuildResponse::Invalid
         }

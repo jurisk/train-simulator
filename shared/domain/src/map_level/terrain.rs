@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fmt::{Debug, Formatter};
 
 use bevy_math::Vec3;
@@ -139,8 +140,34 @@ impl Terrain {
     }
 
     #[must_use]
-    pub fn can_build_track(&self, _track: &TrackInfo) -> bool {
-        // TODO HIGH: Move the terrain checking code here
-        true
+    #[allow(clippy::items_after_statements, clippy::unwrap_used)]
+    pub fn can_build_track(&self, track: &TrackInfo) -> bool {
+        // Later: Do not allow tracks that go out of bounds (where any connection is on the edge)
+        let in_bounds = self.tile_in_bounds(track.tile);
+
+        // Later: Consider allowing more: https://wiki.openttd.org/en/Archive/Manual/Settings/Build%20on%20slopes .
+        let connection_heights: Vec<_> = track
+            .track_type
+            .connections()
+            .into_iter()
+            .map(|direction| {
+                let (a, b) = track.tile.vertex_coords_clockwise(direction);
+                let height_a = self.height_at(a);
+                let height_b = self.height_at(b);
+                [height_a, height_b]
+            })
+            .collect();
+
+        let train_is_not_tilted = connection_heights.iter().all(|[a, b]| a == b);
+
+        let heights: HashSet<Height> = connection_heights.into_iter().flatten().collect();
+
+        const MAX_HEIGHT_DIFF: Height = Height::from_u8(1);
+        let valid_height_diff = match (heights.iter().min(), heights.iter().max()) {
+            (Some(min), Some(max)) => *max <= *min + MAX_HEIGHT_DIFF,
+            _ => false,
+        };
+
+        train_is_not_tilted && valid_height_diff && in_bounds
     }
 }
