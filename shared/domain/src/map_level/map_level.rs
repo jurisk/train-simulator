@@ -127,9 +127,18 @@ pub struct MapLevel {
 }
 
 impl MapLevel {
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)]
+    pub fn load(json: &str) -> Self {
+        let result = serde_json::from_str::<MapLevel>(json)
+            .unwrap_or_else(|err| panic!("Failed to deserialise {json}: {err}"));
+        assert_eq!(result.is_valid(), Ok(()));
+        result
+    }
+
     // Could eventually move to some `Validated` instead
     #[allow(clippy::missing_errors_doc)]
-    pub fn is_valid(&self) -> Result<(), String> {
+    fn is_valid(&self) -> Result<(), String> {
         self.terrain.is_valid()?;
         self.water.is_valid()?;
         Ok(())

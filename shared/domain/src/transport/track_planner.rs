@@ -187,3 +187,45 @@ pub fn plan_tracks(
 
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use shared_util::direction_xz::DirectionXZ;
+
+    use super::*;
+    use crate::map_level::map_level::MapLevel;
+    use crate::tile_coords_xz::TileCoordsXZ;
+    use crate::MapId;
+
+    #[test]
+    fn test_plan_tracks_edge_to_edge() {
+        let player_id = PlayerId::random();
+
+        let mut game_state = GameState::empty_from_level(
+            MapId("usa_east".to_string()),
+            MapLevel::load(include_str!("../../../../assets/map_levels/usa_east.json")),
+        );
+
+        let result = plan_tracks_edge_to_edge(
+            player_id,
+            EdgeXZ::from_tile_and_direction(TileCoordsXZ::new(1, 190), DirectionXZ::West),
+            EdgeXZ::from_tile_and_direction(TileCoordsXZ::new(255, 0), DirectionXZ::South),
+            &game_state,
+            DEFAULT_ALREADY_EXISTS_COEF,
+        );
+        match result {
+            None => {
+                panic!("No result");
+            },
+            Some(tracks) => {
+                println!("{}", tracks.len());
+                assert!(tracks.len() > 450);
+                let result = game_state.build_tracks(player_id, &tracks);
+                match result {
+                    Ok(results) => assert_eq!(results.len(), tracks.len()),
+                    Err(()) => panic!("Failed to build tracks"),
+                }
+            },
+        }
+    }
+}

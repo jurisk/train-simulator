@@ -16,35 +16,29 @@ use shared_domain::{GameId, MapId, PlayerId};
 use crate::game_service::{GameResponseWithAddress, GameService};
 
 // This is also, in a way, `Lobby`. Should we rename it? Split into two somehow? Not sure yet...
-pub(crate) struct GamesService {
+pub struct GamesService {
     game_map:        HashMap<GameId, GameService>,
     game_prototypes: HashMap<MapId, GameState>,
 }
 
 impl GamesService {
     #[must_use]
-    #[allow(
-        clippy::missing_panics_doc,
-        clippy::new_without_default,
-        clippy::match_same_arms
-    )]
+    #[allow(clippy::new_without_default, clippy::match_same_arms)]
     pub(crate) fn new() -> Self {
         // Later: Eventually, eliminate the Sample map level
-        let europe_level_json = include_str!("../../../assets/map_levels/europe.json");
-        // TODO: Have a USA map and use that
-        let usa_level_json = include_str!("../../../assets/map_levels/usa_east.json");
+        const EUROPE_LEVEL_JSON: &str = include_str!("../../../assets/map_levels/europe.json");
+        // TODO: Have a full USA map and use that
+        const USA_LEVEL_JSON: &str = include_str!("../../../assets/map_levels/usa_east.json");
 
         let mut game_prototypes = HashMap::new();
         for map_id in MapId::all() {
             let MapId(map_name) = &map_id;
             let level_json = match map_name.as_str() {
-                "europe" => europe_level_json,
-                "usa_east" => usa_level_json,
-                _ => usa_level_json,
+                "europe" => EUROPE_LEVEL_JSON,
+                "usa_east" => USA_LEVEL_JSON,
+                _ => USA_LEVEL_JSON,
             };
-            let map_level = serde_json::from_str::<MapLevel>(level_json)
-                .unwrap_or_else(|err| panic!("Failed to deserialise {level_json}: {err}"));
-            assert_eq!(map_level.is_valid(), Ok(()));
+            let map_level = MapLevel::load(level_json);
             let game_prototype = GameState::empty_from_level(map_id.clone(), map_level);
 
             game_prototypes.insert(map_id, game_prototype.clone());
