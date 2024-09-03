@@ -4,6 +4,7 @@ use std::ops::Add;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::building::track_info::TrackInfo;
 use crate::map_level::terrain::Terrain;
 use crate::map_level::zoning::Zoning;
 use crate::tile_coords_xz::TileCoordsXZ;
@@ -172,6 +173,11 @@ impl MapLevel {
     #[must_use]
     pub fn tile_in_bounds(&self, tile: TileCoordsXZ) -> bool {
         self.terrain.tile_in_bounds(tile)
+    }
+
+    #[must_use]
+    pub fn can_build_track(&self, track: &TrackInfo) -> bool {
+        self.terrain.can_build_track(track) && self.zoning.can_build_track(track)
     }
 }
 

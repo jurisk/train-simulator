@@ -6,6 +6,7 @@ use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
+use crate::building::track_info::TrackInfo;
 use crate::map_level::map_level::{Height, TerrainType};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::tile_track::TileTrack;
@@ -135,5 +136,11 @@ impl Terrain {
     #[must_use]
     pub fn y_coef(&self) -> f32 {
         self.y_coef
+    }
+
+    #[must_use]
+    pub fn can_build_track(&self, _track: &TrackInfo) -> bool {
+        // TODO HIGH: Move the terrain checking code here
+        true
     }
 }

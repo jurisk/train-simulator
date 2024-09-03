@@ -157,18 +157,34 @@ impl GameState {
         requesting_player_id: PlayerId,
         tracks: &[TrackInfo],
     ) -> Result<Vec<TrackInfo>, ()> {
-        if self.can_build_tracks(requesting_player_id, tracks) {
-            self.buildings
-                .build_tracks(requesting_player_id, tracks, &self.map_level)
-        } else {
-            Err(())
+        // Later: Actually, if we have multiple tracks at the same location in a batch, we end up building duplicate tracks!
+        match self.can_build_tracks(requesting_player_id, tracks) {
+            None => Err(()),
+            Some(filtered) => {
+                self.buildings.append_tracks(filtered.clone());
+                Ok(filtered)
+            },
         }
     }
 
-    fn can_build_tracks(&self, requesting_player_id: PlayerId, tracks: &[TrackInfo]) -> bool {
-        tracks.iter().all(|track| {
-            self.can_build_track(requesting_player_id, track) != CanBuildResponse::Invalid
-        })
+    pub fn can_build_tracks(
+        &mut self,
+        requesting_player_id: PlayerId,
+        track_infos: &[TrackInfo],
+    ) -> Option<Vec<TrackInfo>> {
+        let mut results = vec![];
+        for track_info in track_infos {
+            match self.can_build_track(requesting_player_id, track_info) {
+                CanBuildResponse::Ok => {
+                    results.push(track_info.clone());
+                },
+                CanBuildResponse::AlreadyExists => {},
+                CanBuildResponse::Invalid => {
+                    return None;
+                },
+            }
+        }
+        Some(results)
     }
 
     pub(crate) fn can_build_track(
@@ -177,7 +193,7 @@ impl GameState {
         track: &TrackInfo,
     ) -> CanBuildResponse {
         // Later: We do some duplicate invocations here...
-        if self.map_level.zoning().can_build_track(track) {
+        if self.map_level.can_build_track(track) && track.owner_id() == requesting_player_id {
             self.buildings
                 .can_build_track(requesting_player_id, track, &self.map_level)
         } else {

@@ -260,37 +260,8 @@ impl BuildingState {
         valid_player_id && can_build
     }
 
-    pub fn can_build_tracks(
-        &mut self,
-        requesting_player_id: PlayerId,
-        track_infos: &[TrackInfo],
-        map_level: &MapLevel,
-    ) -> Option<Vec<TrackInfo>> {
-        let valid_player_id = track_infos
-            .iter()
-            .all(|track_info| track_info.owner_id() == requesting_player_id);
-
-        if valid_player_id {
-            let mut results = vec![];
-            for track_info in track_infos {
-                match self.can_build_track(requesting_player_id, track_info, map_level) {
-                    CanBuildResponse::Ok => {
-                        results.push(track_info.clone());
-                    },
-                    CanBuildResponse::AlreadyExists => {},
-                    CanBuildResponse::Invalid => {
-                        return None;
-                    },
-                }
-            }
-            Some(results)
-        } else {
-            None
-        }
-    }
-
     // TODO: Needs test coverage
-    // TODO: Move to `GameState` as it anyway takes `MapLevel`
+    // TODO: Move the parts that take `MapLevel` to `MapLevel` or `Terrain`
     #[allow(clippy::items_after_statements, clippy::unwrap_used)]
     pub(crate) fn can_build_track(
         &self,
@@ -448,22 +419,6 @@ impl BuildingState {
             Ok(())
         } else {
             Err(())
-        }
-    }
-
-    pub fn build_tracks(
-        &mut self,
-        requesting_player_id: PlayerId,
-        track_infos: &[TrackInfo],
-        map_level: &MapLevel,
-    ) -> Result<Vec<TrackInfo>, ()> {
-        // Later: Actually, if we have multiple tracks at the same location in a batch, we end up building duplicate tracks!
-        match self.can_build_tracks(requesting_player_id, track_infos, map_level) {
-            None => Err(()),
-            Some(filtered) => {
-                self.append_tracks(filtered.clone());
-                Ok(filtered)
-            },
         }
     }
 
