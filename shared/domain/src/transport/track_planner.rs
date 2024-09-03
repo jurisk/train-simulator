@@ -191,7 +191,10 @@ pub fn plan_tracks(
     };
     log!(
         level,
-        "Planning tracks from {current_tile_track:?} to {targets:?} took {:?}",
+        "Planning tracks ({:?}) from {current_tile_track:?} to {targets:?} took {:?}",
+        result
+            .as_ref()
+            .map(|(tracks, length)| (tracks.len(), length)),
         elapsed,
     );
 
