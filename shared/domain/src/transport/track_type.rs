@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::f32::consts::SQRT_2;
 use std::fmt::{Debug, Formatter};
 
@@ -78,13 +77,13 @@ impl TrackType {
     }
 
     #[must_use]
-    pub fn connections(self) -> HashSet<DirectionXZ> {
+    pub const fn connections(self) -> [DirectionXZ; 2] {
         let (a, b) = self.connections_clockwise();
-        HashSet::from([a, b])
+        [a, b]
     }
 
     #[must_use]
-    pub fn connections_clockwise(self) -> (DirectionXZ, DirectionXZ) {
+    pub const fn connections_clockwise(self) -> (DirectionXZ, DirectionXZ) {
         match self {
             TrackType::NorthEast => (DirectionXZ::North, DirectionXZ::East),
             TrackType::NorthSouth => (DirectionXZ::North, DirectionXZ::South),
