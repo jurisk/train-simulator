@@ -1,6 +1,5 @@
 use bevy::prelude::{
-    default, error, info, trace, warn, App, EventReader, EventWriter, FixedUpdate, NextState,
-    Plugin, ResMut,
+    default, error, App, EventReader, EventWriter, FixedUpdate, NextState, Plugin, ResMut,
 };
 use bevy_simplenet::{
     AuthRequest, Client, ClientConfig, ClientEventFrom, ClientFactory, ClientReport,
@@ -8,6 +7,7 @@ use bevy_simplenet::{
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::states::ClientState;
 use enfync::builtin::Handle;
+use log::{info, log, trace, warn, Level};
 use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::server_response::{GameResponse, ServerResponse};
 use url::Url;
@@ -81,14 +81,15 @@ fn read_on_client(
             GameClientEvent::Msg(EncodedServerMsg(message)) => {
                 match bincode::deserialize::<ServerResponse>(&message) {
                     Ok(response) => {
-                        if matches!(
+                        let log_level = if matches!(
                             response,
                             ServerResponse::Game(_, GameResponse::DynamicInfosSync(_, _, _, _))
                         ) {
-                            trace!("Received server message: {response:?}");
+                            Level::Trace
                         } else {
-                            info!("Received server message: {response:?}");
-                        }
+                            Level::Info
+                        };
+                        log!(log_level, "Received server message: {response:?}");
 
                         server_messages.send(ServerMessageEvent::new(response));
                     },

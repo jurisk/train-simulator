@@ -11,6 +11,7 @@ networking-shared = { path = "../shared" }
 game-logic = { path = "../../game/logic" }
 shared-domain = { path = "../../shared/domain" }
 
+log.workspace = true
 enfync.workspace = true
 bincode.workspace = true
 

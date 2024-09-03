@@ -6,14 +6,15 @@ use std::time::Duration;
 
 use axum::Router;
 use bevy::prelude::{
-    debug, default, error, info, trace, App, Event, EventReader, EventWriter, FixedUpdate,
-    IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time,
+    default, App, Event, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res,
+    ResMut, Resource, Time,
 };
 use bevy_simplenet::{
     AcceptorConfig, Authenticator, RateLimitConfig, Server, ServerConfig, ServerEventFrom,
     ServerFactory, ServerReport,
 };
 use game_logic::server_state::ServerState;
+use log::{debug, error, info, log, Level};
 use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
 use shared_domain::game_time::GameTime;
@@ -136,14 +137,15 @@ fn process_client_command_with_client_id_events(
 }
 
 fn send_responses_to_clients(server: &Server<GameChannel>, response: &ServerResponseWithClientIds) {
-    if matches!(
+    let log_level = if matches!(
         response.response,
         ServerResponse::Game(_, GameResponse::DynamicInfosSync(_, _, _, _))
     ) {
-        trace!("Sending {response:?}...");
+        Level::Trace
     } else {
-        info!("Sending {response:?}...");
-    }
+        Level::Info
+    };
+    log!(log_level, "Sending {response:?}...");
 
     for client_id in &*response.client_ids {
         match bincode::serialize(&response.response) {

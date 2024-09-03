@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::ops::Add;
 
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -76,7 +77,7 @@ pub struct Height(u8);
 
 impl Height {
     #[must_use]
-    pub fn from_u8(height: u8) -> Self {
+    pub const fn from_u8(height: u8) -> Self {
         Self(height)
     }
 
@@ -107,6 +108,14 @@ impl Height {
         let average = sum / heights.len() as f32;
         let rounded = average.round() as u8;
         Self(rounded)
+    }
+}
+
+impl Add for Height {
+    type Output = Height;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Height(self.0 + rhs.0)
     }
 }
 

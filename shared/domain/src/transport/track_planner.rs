@@ -1,7 +1,8 @@
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
-use log::{debug, trace, warn};
+use log::{log, trace, warn, Level};
 use pathfinding::prelude::dijkstra;
+use shared_util::bool_ops::BoolOps;
 
 use crate::building::building_state::CanBuildResponse;
 use crate::building::track_info::TrackInfo;
@@ -132,6 +133,8 @@ pub fn plan_tracks(
     game_state: &GameState,
     already_exists_coef: f32,
 ) -> Option<(Vec<TrackInfo>, TrackLength)> {
+    targets.is_empty().then_none()?;
+
     let start = Instant::now();
 
     let path: Option<(Vec<TileTrack>, TrackLength)> = dijkstra(
@@ -166,9 +169,20 @@ pub fn plan_tracks(
     });
 
     // TODO: We could precompute using `dijkstra_all` async and then just look up the result here, possibly with some caching
-    debug!(
+    let elapsed = start.elapsed();
+    let level = if elapsed > Duration::from_millis(100) {
+        Level::Warn
+    } else if elapsed > Duration::from_millis(20) {
+        Level::Info
+    } else if elapsed > Duration::from_millis(10) {
+        Level::Debug
+    } else {
+        Level::Trace
+    };
+    log!(
+        level,
         "Planning tracks from {current_tile_track:?} to {targets:?} took {:?}",
-        start.elapsed()
+        elapsed,
     );
 
     result

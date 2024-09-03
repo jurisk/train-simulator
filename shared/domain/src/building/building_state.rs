@@ -15,7 +15,7 @@ use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::cargo_map::CargoOps;
 use crate::game_time::GameTimeDiff;
-use crate::map_level::map_level::MapLevel;
+use crate::map_level::map_level::{Height, MapLevel};
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
 use crate::{IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackId, TrackType};
@@ -291,6 +291,7 @@ impl BuildingState {
 
     // TODO: Needs test coverage
     // TODO: Move to `GameState` as it anyway takes `MapLevel`
+    #[allow(clippy::items_after_statements, clippy::unwrap_used)]
     pub(crate) fn can_build_track(
         &self,
         requesting_player_id: PlayerId,
@@ -341,22 +342,35 @@ impl BuildingState {
             .any(|vertex| map_level.under_water(vertex));
 
         // Later: Consider allowing more: https://wiki.openttd.org/en/Archive/Manual/Settings/Build%20on%20slopes .
-        // TODO HIGH: Don't allow slopes that are too steep!
-        let valid_heights = track_info
+        let train_is_tilted = track_info
             .track_type
             .connections()
             .into_iter()
-            .all(|direction| {
+            .any(|direction| {
                 let (a, b) = track_info.tile.vertex_coords_clockwise(direction);
                 let height_a = map_level.height_at(a);
                 let height_b = map_level.height_at(b);
-                height_a == height_b
+                height_a != height_b
             });
+
+        let heights: HashSet<Height> = track_info
+            .track_type
+            .connections()
+            .into_iter()
+            .flat_map(|direction| {
+                let (a, b) = track_info.tile.vertex_coords_clockwise(direction);
+                vec![map_level.height_at(a), map_level.height_at(b)]
+            })
+            .collect();
+        const MAX_HEIGHT_DIFF: Height = Height::from_u8(1);
+        let invalid_height_diff =
+            *heights.iter().max().unwrap() > *heights.iter().min().unwrap() + MAX_HEIGHT_DIFF;
 
         if overlapping_other_players_tracks
             || invalid_overlaps
             || any_vertex_under_water
-            || !valid_heights
+            || train_is_tilted
+            || invalid_height_diff
         {
             CanBuildResponse::Invalid
         } else if has_same_track {
