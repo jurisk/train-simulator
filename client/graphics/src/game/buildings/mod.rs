@@ -18,7 +18,9 @@ use crate::communication::domain::ServerMessageEvent;
 use crate::game::buildings::building::build_building_when_mouse_released;
 use crate::game::buildings::demolishing::demolish_when_mouse_released;
 use crate::game::buildings::tracks::build::build_tracks_when_mouse_released;
-use crate::game::buildings::tracks::preview::show_track_preview;
+use crate::game::buildings::tracks::preview::{
+    draw_track_preview, update_track_preview, TrackPreviewResource,
+};
 use crate::game::buildings::tracks::spawn::{create_rails, create_track, remove_track_entities};
 use crate::game::{create_object_entity, player_colour, GameStateResource};
 use crate::states::ClientState;
@@ -41,6 +43,7 @@ pub(crate) struct BuildingsPlugin;
 
 impl Plugin for BuildingsPlugin {
     fn build(&self, app: &mut bevy::app::App) {
+        app.insert_resource(TrackPreviewResource::default());
         app.add_systems(FixedUpdate, handle_game_state_snapshot);
         app.add_systems(
             FixedUpdate,
@@ -52,7 +55,7 @@ impl Plugin for BuildingsPlugin {
         );
         app.add_systems(
             Update,
-            show_track_preview.run_if(in_state(ClientState::Playing)),
+            update_track_preview.run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(
             Update,
@@ -61,6 +64,10 @@ impl Plugin for BuildingsPlugin {
         app.add_systems(
             Update,
             demolish_when_mouse_released.run_if(in_state(ClientState::Playing)),
+        );
+        app.add_systems(
+            Update,
+            draw_track_preview.run_if(in_state(ClientState::Playing)),
         );
     }
 }
