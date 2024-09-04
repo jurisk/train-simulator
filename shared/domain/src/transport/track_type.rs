@@ -73,7 +73,7 @@ impl TrackType {
 
     #[allow(clippy::match_same_arms)]
     #[must_use]
-    pub fn other_end(self, direction: DirectionXZ) -> Option<DirectionXZ> {
+    pub const fn other_end(self, direction: DirectionXZ) -> Option<DirectionXZ> {
         match (self, direction) {
             (TrackType::NorthEast, DirectionXZ::North) => Some(DirectionXZ::East),
             (TrackType::NorthEast, DirectionXZ::East) => Some(DirectionXZ::North),
@@ -103,6 +103,40 @@ impl TrackType {
     pub const fn connections(self) -> [DirectionXZ; 2] {
         let (a, b) = self.connections_clockwise();
         [a, b]
+    }
+
+    #[must_use]
+    pub const fn matching_direction(direction: DirectionXZ) -> [TrackType; 3] {
+        match direction {
+            DirectionXZ::North => {
+                [
+                    TrackType::NorthSouth,
+                    TrackType::NorthEast,
+                    TrackType::NorthWest,
+                ]
+            },
+            DirectionXZ::East => {
+                [
+                    TrackType::EastWest,
+                    TrackType::NorthEast,
+                    TrackType::SouthEast,
+                ]
+            },
+            DirectionXZ::South => {
+                [
+                    TrackType::NorthSouth,
+                    TrackType::SouthEast,
+                    TrackType::SouthWest,
+                ]
+            },
+            DirectionXZ::West => {
+                [
+                    TrackType::EastWest,
+                    TrackType::NorthWest,
+                    TrackType::SouthWest,
+                ]
+            },
+        }
     }
 
     #[must_use]

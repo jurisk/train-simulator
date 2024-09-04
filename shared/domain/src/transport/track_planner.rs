@@ -21,20 +21,18 @@ fn successors(
     game_state: &GameState,
     already_exists_coef: f32,
 ) -> Vec<(DirectionalEdge, TrackLength)> {
-    let mut results = vec![];
-    for track_type in TrackType::all() {
-        let tile = current.into_tile;
-        if track_type.connections().contains(&current.from_direction) {
-            let response = game_state.can_build_track_internal(player_id, tile, track_type);
-            let coef = response_to_coef(response, already_exists_coef);
-            if let Some(coef) = coef {
-                let adjusted_length = track_type.length() * coef;
-                if let Some(exit_direction) = track_type.other_end(current.from_direction) {
-                    let next_from_direction = exit_direction.reverse();
-                    let next_tile = current.into_tile + exit_direction;
-                    let next_edge = DirectionalEdge::new(next_tile, next_from_direction);
-                    results.push((next_edge, adjusted_length));
-                }
+    let mut results = Vec::with_capacity(3);
+    let tile = current.into_tile;
+    for track_type in TrackType::matching_direction(current.from_direction) {
+        let response = game_state.can_build_track_internal(player_id, tile, track_type);
+        let coef = response_to_coef(response, already_exists_coef);
+        if let Some(coef) = coef {
+            let adjusted_length = track_type.length() * coef;
+            if let Some(exit_direction) = track_type.other_end(current.from_direction) {
+                let next_from_direction = exit_direction.reverse();
+                let next_tile = current.into_tile + exit_direction;
+                let next_edge = DirectionalEdge::new(next_tile, next_from_direction);
+                results.push((next_edge, adjusted_length));
             }
         }
     }
