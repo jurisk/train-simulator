@@ -79,30 +79,30 @@ impl StationType {
             match self.orientation {
                 StationOrientation::NorthToSouth => {
                     let a = TileTrack {
-                        tile_coords_xz: reference_tile + TileCoordsXZ::from_usizes(platform, 0),
-                        track_type:     TrackType::NorthSouth,
-                        pointing_in:    DirectionXZ::North,
+                        tile:        reference_tile + TileCoordsXZ::from_usizes(platform, 0),
+                        track_type:  TrackType::NorthSouth,
+                        pointing_in: DirectionXZ::North,
                     };
                     let b = TileTrack {
-                        tile_coords_xz: reference_tile
+                        tile:        reference_tile
                             + TileCoordsXZ::from_usizes(platform, self.length_in_tiles - 1),
-                        track_type:     TrackType::NorthSouth,
-                        pointing_in:    DirectionXZ::South,
+                        track_type:  TrackType::NorthSouth,
+                        pointing_in: DirectionXZ::South,
                     };
                     results.push((platform_index, a));
                     results.push((platform_index, b));
                 },
                 StationOrientation::EastToWest => {
                     let a = TileTrack {
-                        tile_coords_xz: reference_tile + TileCoordsXZ::from_usizes(0, platform),
-                        track_type:     TrackType::EastWest,
-                        pointing_in:    DirectionXZ::West,
+                        tile:        reference_tile + TileCoordsXZ::from_usizes(0, platform),
+                        track_type:  TrackType::EastWest,
+                        pointing_in: DirectionXZ::West,
                     };
                     let b = TileTrack {
-                        tile_coords_xz: reference_tile
+                        tile:        reference_tile
                             + TileCoordsXZ::from_usizes(self.length_in_tiles - 1, platform),
-                        track_type:     TrackType::EastWest,
-                        pointing_in:    DirectionXZ::East,
+                        track_type:  TrackType::EastWest,
+                        pointing_in: DirectionXZ::East,
                     };
                     results.push((platform_index, a));
                     results.push((platform_index, b));
@@ -182,24 +182,24 @@ mod tests {
             .collect::<HashSet<_>>();
         let expected: HashSet<TileTrack> = [
             TileTrack {
-                tile_coords_xz: TileCoordsXZ::from_usizes(10, 20),
-                track_type:     TrackType::NorthSouth,
-                pointing_in:    DirectionXZ::North,
+                tile:        TileCoordsXZ::from_usizes(10, 20),
+                track_type:  TrackType::NorthSouth,
+                pointing_in: DirectionXZ::North,
             },
             TileTrack {
-                tile_coords_xz: TileCoordsXZ::from_usizes(10, 22),
-                track_type:     TrackType::NorthSouth,
-                pointing_in:    DirectionXZ::South,
+                tile:        TileCoordsXZ::from_usizes(10, 22),
+                track_type:  TrackType::NorthSouth,
+                pointing_in: DirectionXZ::South,
             },
             TileTrack {
-                tile_coords_xz: TileCoordsXZ::from_usizes(11, 20),
-                track_type:     TrackType::NorthSouth,
-                pointing_in:    DirectionXZ::North,
+                tile:        TileCoordsXZ::from_usizes(11, 20),
+                track_type:  TrackType::NorthSouth,
+                pointing_in: DirectionXZ::North,
             },
             TileTrack {
-                tile_coords_xz: TileCoordsXZ::from_usizes(11, 22),
-                track_type:     TrackType::NorthSouth,
-                pointing_in:    DirectionXZ::South,
+                tile:        TileCoordsXZ::from_usizes(11, 22),
+                track_type:  TrackType::NorthSouth,
+                pointing_in: DirectionXZ::South,
             },
         ]
         .into_iter()

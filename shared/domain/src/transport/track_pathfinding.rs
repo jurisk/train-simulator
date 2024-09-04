@@ -27,7 +27,7 @@ fn successors(
         .into_iter()
         .map(|track_type| {
             let tile_track = TileTrack {
-                tile_coords_xz: next_tile_coords,
+                tile: next_tile_coords,
                 track_type,
                 pointing_in: track_type.other_end_unsafe(tile_track.pointing_in.reverse()),
             };

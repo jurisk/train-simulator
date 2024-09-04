@@ -16,13 +16,18 @@ pub struct TrackInfo {
 
 impl TrackInfo {
     #[must_use]
-    pub fn from_tile_track(owner_id: PlayerId, tile_track: TileTrack) -> Self {
+    pub fn new(owner_id: PlayerId, tile: TileCoordsXZ, track_type: TrackType) -> Self {
         Self {
             id: TrackId::random(),
             owner_id,
-            tile: tile_track.tile_coords_xz,
-            track_type: tile_track.track_type,
+            tile,
+            track_type,
         }
+    }
+
+    #[must_use]
+    pub fn from_tile_track(owner_id: PlayerId, tile_track: TileTrack) -> Self {
+        Self::new(owner_id, tile_track.tile, tile_track.track_type)
     }
 
     #[must_use]

@@ -14,6 +14,7 @@ pub mod building;
 mod cargo_amount;
 pub mod cargo_map;
 pub mod client_command;
+pub mod directional_edge;
 pub mod edge_xz;
 pub mod game_state;
 pub mod game_time;

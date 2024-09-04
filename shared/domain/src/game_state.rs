@@ -187,6 +187,7 @@ impl GameState {
         Some(results)
     }
 
+    // TODO HIGH: This is called often, but really doesn't need whole `TrackInfo` and `owner` comparison every time - refactor so that the checks are more lightweight for track planning preview and the heavy-weight ones only kick in on the server when actually building.
     pub(crate) fn can_build_track(
         &self,
         requesting_player_id: PlayerId,

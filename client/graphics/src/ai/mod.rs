@@ -14,7 +14,7 @@ use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::tile_track::TileTrack;
-use shared_domain::transport::track_planner::{plan_tracks, DEFAULT_ALREADY_EXISTS_COEF};
+use shared_domain::transport::track_planner::{plan_tracks_2, DEFAULT_ALREADY_EXISTS_COEF};
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
 use shared_domain::{IndustryBuildingId, PlayerId, StationId, TransportId};
@@ -239,7 +239,7 @@ fn try_building_tracks(
                 // We have built this before...
                 continue;
             }
-            if let Some((route, _length)) = plan_tracks(
+            if let Some((route, _length)) = plan_tracks_2(
                 player_id,
                 source,
                 &[target],
@@ -291,8 +291,8 @@ fn purchase_transport_command(
     let from_station = game_state.building_state().find_station(from_station)?;
     let tile_tracks = from_station.station_exit_tile_tracks();
     let tile_track = tile_tracks.first()?;
-    let transport_location = from_station
-        .transport_location_at_station(tile_track.tile_coords_xz, tile_track.pointing_in)?;
+    let transport_location =
+        from_station.transport_location_at_station(tile_track.tile, tile_track.pointing_in)?;
 
     let command = GameCommand::PurchaseTransport(TransportInfo::new(
         TransportId::random(),

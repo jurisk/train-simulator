@@ -150,7 +150,7 @@ pub(crate) fn show_transport_details(
                                 ui.end_row();
                                 ui.label("Location");
                                 if ui.button(format!("🔍 {:?}", transport.location())).clicked() {
-                                    camera_control_events.send(CameraControlEvent::FocusOnTile(transport.location().next_tile_in_path().tile_coords_xz));
+                                    camera_control_events.send(CameraControlEvent::FocusOnTile(transport.location().next_tile_in_path().tile));
                                 }
                                 ui.end_row();
                                 ui.label("Velocity");

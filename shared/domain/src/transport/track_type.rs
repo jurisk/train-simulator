@@ -48,6 +48,29 @@ impl TrackType {
         ]
     }
 
+    #[must_use]
+    #[allow(clippy::match_same_arms)]
+    pub const fn from_directions(into: DirectionXZ, out: DirectionXZ) -> Option<TrackType> {
+        match (into, out) {
+            (DirectionXZ::North, DirectionXZ::South) => Some(TrackType::NorthSouth),
+            (DirectionXZ::South, DirectionXZ::North) => Some(TrackType::NorthSouth),
+            (DirectionXZ::East, DirectionXZ::West) => Some(TrackType::EastWest),
+            (DirectionXZ::West, DirectionXZ::East) => Some(TrackType::EastWest),
+            (DirectionXZ::North, DirectionXZ::East) => Some(TrackType::NorthEast),
+            (DirectionXZ::East, DirectionXZ::North) => Some(TrackType::NorthEast),
+            (DirectionXZ::North, DirectionXZ::West) => Some(TrackType::NorthWest),
+            (DirectionXZ::West, DirectionXZ::North) => Some(TrackType::NorthWest),
+            (DirectionXZ::South, DirectionXZ::East) => Some(TrackType::SouthEast),
+            (DirectionXZ::East, DirectionXZ::South) => Some(TrackType::SouthEast),
+            (DirectionXZ::South, DirectionXZ::West) => Some(TrackType::SouthWest),
+            (DirectionXZ::West, DirectionXZ::South) => Some(TrackType::SouthWest),
+            (DirectionXZ::North, DirectionXZ::North) => None,
+            (DirectionXZ::East, DirectionXZ::East) => None,
+            (DirectionXZ::South, DirectionXZ::South) => None,
+            (DirectionXZ::West, DirectionXZ::West) => None,
+        }
+    }
+
     #[allow(clippy::match_same_arms)]
     #[must_use]
     pub fn other_end(self, direction: DirectionXZ) -> Option<DirectionXZ> {

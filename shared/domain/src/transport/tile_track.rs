@@ -11,9 +11,9 @@ use crate::transport::track_type::TrackType;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash, Ord, PartialOrd)]
 pub struct TileTrack {
-    pub tile_coords_xz: TileCoordsXZ,
-    pub track_type:     TrackType,
-    pub pointing_in:    DirectionXZ,
+    pub tile:        TileCoordsXZ,
+    pub track_type:  TrackType,
+    pub pointing_in: DirectionXZ,
 }
 
 impl Debug for TileTrack {
@@ -21,7 +21,7 @@ impl Debug for TileTrack {
         write!(
             f,
             "{:?}-{:?}-{:?}",
-            self.tile_coords_xz, self.track_type, self.pointing_in
+            self.tile, self.track_type, self.pointing_in
         )
     }
 }
@@ -41,6 +41,6 @@ impl TileTrack {
 
     #[must_use]
     pub fn next_tile_coords(&self) -> TileCoordsXZ {
-        self.tile_coords_xz + self.pointing_in
+        self.tile + self.pointing_in
     }
 }

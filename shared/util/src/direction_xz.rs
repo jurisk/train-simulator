@@ -33,7 +33,7 @@ impl DirectionXZ {
     }
 
     #[must_use]
-    pub fn reverse(self) -> Self {
+    pub const fn reverse(self) -> Self {
         match self {
             DirectionXZ::North => DirectionXZ::South,
             DirectionXZ::East => DirectionXZ::West,

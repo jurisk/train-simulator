@@ -115,7 +115,7 @@ impl Terrain {
 
     #[must_use]
     pub fn entry_and_exit(&self, tile_track: TileTrack) -> (Vec3, Vec3) {
-        let tile = tile_track.tile_coords_xz;
+        let tile = tile_track.tile;
         let track_type = tile_track.track_type;
         let exit_direction = tile_track.pointing_in;
         let entry_direction = track_type.other_end_unsafe(exit_direction);

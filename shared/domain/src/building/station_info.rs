@@ -79,16 +79,16 @@ impl StationInfo {
         let exit_track = self
             .station_exit_tile_tracks()
             .into_iter()
-            .find(|track| track.tile_coords_xz == tile && track.pointing_in == direction)?;
+            .find(|track| track.tile == tile && track.pointing_in == direction)?;
         let diff: CoordsXZ = exit_track.pointing_in.reverse().into();
         let mut tile_path = vec![];
         for i in 0 .. self.station_type.length_in_tiles {
             let delta: CoordsXZ = diff * (i as i32);
             let delta_t: TileCoordsXZ = delta.into();
-            let tile_coords_xz = exit_track.tile_coords_xz + delta_t;
+            let tile_coords_xz = exit_track.tile + delta_t;
             let tile_track = TileTrack {
-                tile_coords_xz,
-                track_type: exit_track.track_type,
+                tile:        tile_coords_xz,
+                track_type:  exit_track.track_type,
                 pointing_in: exit_track.pointing_in,
             };
             tile_path.push(tile_track);
@@ -119,7 +119,7 @@ impl StationInfo {
             for track_type in self.station_type().track_types_at(relative_tile) {
                 for pointing_in in track_type.connections() {
                     results.push(TileTrack {
-                        tile_coords_xz: self.reference_tile() + relative_tile,
+                        tile: self.reference_tile() + relative_tile,
                         track_type,
                         pointing_in,
                     });

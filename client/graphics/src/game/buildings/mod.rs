@@ -270,7 +270,7 @@ fn create_station(
 ) {
     let colour = player_colour(players, station_info.owner_id());
     for tile_track in station_info.tile_tracks() {
-        let tile_coords = tile_track.tile_coords_xz;
+        let tile_coords = tile_track.tile;
         let track_type = tile_track.track_type;
 
         // Later: Instead of giving these tracks StationIdComponent, we could instead just make them children of the station entity and make sure they automatically de-spawn when demolished?
