@@ -8,7 +8,6 @@ use bevy::state::condition::in_state;
 use shared_domain::building::building_info::WithOwner;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
-use shared_domain::building::track_info::TrackInfo;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::server_response::{Colour, GameResponse, ServerResponse};
@@ -18,9 +17,9 @@ use crate::assets::GameAssets;
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::buildings::building::build_building_when_mouse_released;
 use crate::game::buildings::demolishing::demolish_when_mouse_released;
-use crate::game::buildings::tracks::{
-    build_tracks_when_mouse_released, create_rails, show_track_preview,
-};
+use crate::game::buildings::tracks::build::build_tracks_when_mouse_released;
+use crate::game::buildings::tracks::preview::show_track_preview;
+use crate::game::buildings::tracks::spawn::{create_rails, create_track, remove_track_entities};
 use crate::game::{create_object_entity, player_colour, GameStateResource};
 use crate::states::ClientState;
 
@@ -36,7 +35,7 @@ struct StationIdComponent(StationId);
 struct IndustryBuildingIdComponent(IndustryBuildingId);
 
 #[derive(Component)]
-struct TrackIdComponent(TrackId);
+pub(crate) struct TrackIdComponent(TrackId);
 
 pub(crate) struct BuildingsPlugin;
 
@@ -198,12 +197,10 @@ fn handle_buildings_or_tracks_changed(
                 },
                 GameResponse::StationRemoved(station_id) => {
                     game_state.building_state_mut().remove_station(*station_id);
-
                     remove_station_entities(*station_id, &mut commands, &station_query);
                 },
                 GameResponse::TrackRemoved(track_id) => {
                     game_state.building_state_mut().remove_track(*track_id);
-
                     remove_track_entities(*track_id, &mut commands, &track_query);
                 },
                 GameResponse::TransportsAdded(_) => {},
@@ -217,42 +214,6 @@ fn handle_buildings_or_tracks_changed(
 }
 
 const STATION_BASE_COLOUR: Colour = Colour::rgb(128, 128, 128);
-
-#[allow(clippy::similar_names)]
-fn create_track(
-    track_info: &TrackInfo,
-    commands: &mut Commands,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
-    game_assets: &GameAssets,
-    map_level: &MapLevel,
-    players: &PlayerState,
-) {
-    let colour = player_colour(players, track_info.owner_id());
-    create_rails(
-        colour,
-        commands,
-        &game_assets.track_assets,
-        materials,
-        map_level,
-        track_info.tile,
-        track_info.track_type,
-        Some(track_info.id()),
-        None,
-    );
-}
-
-fn remove_track_entities(
-    track_id: TrackId,
-    commands: &mut Commands,
-    query: &Query<(Entity, &TrackIdComponent)>,
-) {
-    for (entity, track_id_component) in query {
-        let TrackIdComponent(this_track_id) = track_id_component;
-        if *this_track_id == track_id {
-            commands.entity(entity).despawn();
-        }
-    }
-}
 
 #[allow(clippy::similar_names, clippy::match_same_arms)]
 fn create_industry_building(

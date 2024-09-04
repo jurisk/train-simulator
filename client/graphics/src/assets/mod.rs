@@ -4,7 +4,7 @@ use bevy::app::{App, Plugin};
 use bevy::prelude::{Assets, Mesh, ResMut, Resource, Startup};
 
 use crate::game::buildings::assets::BuildingAssets;
-use crate::game::buildings::tracks::TrackAssets;
+use crate::game::buildings::tracks::assets::TrackAssets;
 use crate::game::map_level::assets::MapAssets;
 use crate::game::transport::assets::TransportAssets;
 // Later: Use https://github.com/NiklasEi/bevy_asset_loader? Or perhaps not.

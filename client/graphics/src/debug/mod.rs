@@ -29,7 +29,7 @@ impl Plugin for DebugPlugin {
         app.insert_resource(ShowWorldInspector(false))
             .add_plugins(WorldInspectorPlugin::new().run_if(show_world_inspector_window))
             .add_systems(Update, show_world_inspector_keyboard)
-            // Later: FPS overlay does not appear
+            // Later: FPS overlay does not appear, or possibly appears below UI - consider rendering it explicitly using Egui or switching to https://github.com/IyesGames/iyes_perf_ui instead?
             .add_plugins(FpsOverlayPlugin::default())
             .add_plugins(TestAxisPlugin)
             .add_plugins(LogDiagnosticsPlugin {
