@@ -10,11 +10,12 @@ use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::cargo_map::WithCargo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
+use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::tile_track::TileTrack;
-use shared_domain::transport::track_planner::{plan_tracks_2, DEFAULT_ALREADY_EXISTS_COEF};
+use shared_domain::transport::track_planner::{plan_tracks, DEFAULT_ALREADY_EXISTS_COEF};
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
 use shared_domain::{IndustryBuildingId, PlayerId, StationId, TransportId};
@@ -199,6 +200,7 @@ fn logistics_links(
     results
 }
 
+// Later: Should the connections be `DirectionalEdge`-s instead of `TileTrack`?
 fn track_connections(
     game_state: &GameState,
     links: Vec<(StationId, ResourceType, StationId)>,
@@ -239,10 +241,10 @@ fn try_building_tracks(
                 // We have built this before...
                 continue;
             }
-            if let Some((route, _length)) = plan_tracks_2(
+            if let Some((route, _length)) = plan_tracks(
                 player_id,
-                source,
-                &[target],
+                DirectionalEdge::exit_from(source),
+                &[DirectionalEdge::entrance_to(target)],
                 game_state,
                 DEFAULT_ALREADY_EXISTS_COEF,
             ) {

@@ -8,7 +8,7 @@ use crate::game::buildings::tracks::plan::try_plan_tracks;
 use crate::game::buildings::tracks::positions::rail_positions;
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
-use crate::selection::SelectedEdges;
+use crate::selection::{SelectedEdges, SelectedTiles};
 
 #[derive(Resource, Default)]
 pub(crate) struct TrackPreviewResource(pub Vec<TrackInfo>);
@@ -23,6 +23,7 @@ impl TrackPreviewResource {
 // Later: Don't instantly plan when mouse is being rapidly moved, instead wait for a small delay
 pub(crate) fn update_track_preview(
     selected_edges: Res<SelectedEdges>,
+    selected_tiles: Res<SelectedTiles>,
     player_id_resource: Res<PlayerIdResource>,
     game_state_resource: Res<GameStateResource>,
     selected_mode_resource: Res<SelectedMode>,
@@ -33,11 +34,13 @@ pub(crate) fn update_track_preview(
         let GameStateResource(game_state) = game_state_resource.as_ref();
 
         let ordered_selected_edges = &selected_edges.as_ref().ordered;
+        let ordered_selected_tiles = &selected_tiles.as_ref().ordered;
 
         try_plan_tracks(
             player_id_resource,
             game_state,
             ordered_selected_edges,
+            ordered_selected_tiles,
             egui_contexts,
         )
         .unwrap_or_default()
