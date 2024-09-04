@@ -264,23 +264,22 @@ impl BuildingState {
     pub(crate) fn can_build_track(
         &self,
         requesting_player_id: PlayerId,
-        track_info: &TrackInfo,
+        tile: TileCoordsXZ,
+        track_type: TrackType,
     ) -> CanBuildResponse {
-        let overlapping_station = self.station_at(track_info.tile);
+        let overlapping_station = self.station_at(tile);
         let has_same_track_from_station = if let Some(station) = overlapping_station {
-            station
-                .station_track_types_at(track_info.tile)
-                .contains(&track_info.track_type)
+            station.station_track_types_at(tile).contains(&track_type)
         } else {
             false
         };
 
-        let overlapping_industry = self.industry_building_at(track_info.tile);
+        let overlapping_industry = self.industry_building_at(tile);
         let invalid_station_overlap = !has_same_track_from_station && overlapping_station.is_some();
         let invalid_industry_overlap = overlapping_industry.is_some();
         let invalid_overlaps = invalid_industry_overlap || invalid_station_overlap;
 
-        let overlapping_tracks = self.tracks_at(track_info.tile);
+        let overlapping_tracks = self.tracks_at(tile);
 
         let overlapping_other_players_tracks = overlapping_tracks
             .iter()
@@ -292,8 +291,7 @@ impl BuildingState {
                 .map(|other_track| other_track.track_type)
                 .collect::<HashSet<_>>();
 
-            let has_same_track_from_tracks =
-                overlapping_tracks_from_tracks.contains(&track_info.track_type);
+            let has_same_track_from_tracks = overlapping_tracks_from_tracks.contains(&track_type);
 
             has_same_track_from_tracks || has_same_track_from_station
         };

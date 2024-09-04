@@ -4,10 +4,10 @@ use std::ops::Add;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use crate::building::track_info::TrackInfo;
 use crate::map_level::terrain::Terrain;
 use crate::map_level::zoning::Zoning;
 use crate::tile_coords_xz::TileCoordsXZ;
+use crate::transport::track_type::TrackType;
 use crate::vertex_coords_xz::VertexCoordsXZ;
 use crate::water::Water;
 
@@ -176,17 +176,17 @@ impl MapLevel {
     }
 
     #[must_use]
-    pub fn can_build_track(&self, track: &TrackInfo) -> bool {
+    pub fn can_build_track(&self, tile: TileCoordsXZ, track_type: TrackType) -> bool {
         // Later: We could cache this (have a `Tile` => `Set<TrackType>` map)
-        let vertex_coords = track.tile.vertex_coords();
+        let vertex_coords = tile.vertex_coords();
 
         let any_vertex_under_water = vertex_coords
             .into_iter()
             .any(|vertex| self.under_water(vertex));
 
         !any_vertex_under_water
-            && self.terrain.can_build_track(track.tile, track.track_type)
-            && self.zoning.can_build_track(track)
+            && self.terrain.can_build_track(tile, track_type)
+            && self.zoning.can_build_track(tile)
     }
 }
 

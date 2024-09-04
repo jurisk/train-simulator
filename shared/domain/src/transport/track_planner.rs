@@ -23,9 +23,9 @@ fn successors(
 ) -> Vec<(DirectionalEdge, TrackLength)> {
     let mut results = vec![];
     for track_type in TrackType::all() {
-        let track_info = TrackInfo::new(player_id, current.into_tile, track_type);
+        let tile = current.into_tile;
         if track_type.connections().contains(&current.from_direction) {
-            let response = game_state.can_build_track(player_id, &track_info);
+            let response = game_state.can_build_track_internal(player_id, tile, track_type);
             let coef = response_to_coef(response, already_exists_coef);
             if let Some(coef) = coef {
                 let adjusted_length = track_type.length() * coef;
@@ -72,24 +72,25 @@ pub fn plan_tracks(
         let mut tracks = vec![];
 
         for (a, b) in path.into_iter().tuple_windows() {
-            // TODO: Avoid `unwrap` for `from_directions`
-            let track_type =
-                TrackType::from_directions(a.from_direction, b.from_direction.reverse()).unwrap();
-            let track_info = TrackInfo::new(player_id, a.into_tile, track_type);
-            let response = game_state.can_build_track(player_id, &track_info);
-            match response {
-                CanBuildResponse::Ok => {
-                    tracks.push(track_info);
-                },
-                CanBuildResponse::AlreadyExists => {
-                    // Expected if we are building an addition to existing track
-                },
-                CanBuildResponse::Invalid => {
-                    warn!(
-                        "Unexpected state - our found path includes invalid tracks: {:?}",
-                        current,
-                    );
-                },
+            if let Some(track_type) =
+                TrackType::from_directions(a.from_direction, b.from_direction.reverse())
+            {
+                let track_info = TrackInfo::new(player_id, a.into_tile, track_type);
+                let response = game_state.can_build_track(player_id, &track_info);
+                match response {
+                    CanBuildResponse::Ok => {
+                        tracks.push(track_info);
+                    },
+                    CanBuildResponse::AlreadyExists => {
+                        // Expected if we are building an addition to existing track
+                    },
+                    CanBuildResponse::Invalid => {
+                        warn!(
+                            "Unexpected state - our found path includes invalid tracks: {:?}",
+                            current,
+                        );
+                    },
+                }
             }
         }
 
@@ -130,7 +131,7 @@ mod tests {
     use crate::MapId;
 
     #[test]
-    fn test_plan_tracks_edge_to_edge() {
+    fn test_plan_tracks() {
         let player_id = PlayerId::random();
 
         let mut game_state = GameState::empty_from_level(
@@ -144,27 +145,21 @@ mod tests {
         let head = DirectionalEdge::new(from_tile, DirectionXZ::West);
         let tail = DirectionalEdge::new(to_tile, DirectionXZ::South);
 
-        let result = plan_tracks(
+        let (tracks, length) = plan_tracks(
             player_id,
             head,
             &[tail],
             &game_state,
             DEFAULT_ALREADY_EXISTS_COEF,
-        );
-        match result {
-            None => {
-                panic!("No result");
-            },
-            Some((tracks, length)) => {
-                println!("{}", tracks.len());
-                assert!(tracks.len() > 450);
-                assert!(length > TrackLength::new(300f32));
-                let result = game_state.build_tracks(player_id, &tracks);
-                match result {
-                    Ok(results) => assert_eq!(results.len(), tracks.len()),
-                    Err(()) => panic!("Failed to build tracks"),
-                }
-            },
-        }
+        )
+        .expect("Failed to plan tracks");
+
+        println!("{}", tracks.len());
+        assert!(tracks.len() > 450);
+        assert!(length > TrackLength::new(300f32));
+        let result = game_state
+            .build_tracks(player_id, &tracks)
+            .expect("Failed to build tracks");
+        assert_eq!(result.len(), tracks.len());
     }
 }

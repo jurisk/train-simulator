@@ -15,7 +15,9 @@ use crate::map_level::map_level::MapLevel;
 use crate::map_level::zoning::ZoningInfo;
 use crate::players::player_state::PlayerState;
 use crate::server_response::{GameInfo, PlayerInfo};
+use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::movement_orders::MovementOrders;
+use crate::transport::track_type::TrackType;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::transport::transport_state::TransportState;
 use crate::{GameId, IndustryBuildingId, MapId, PlayerId, StationId, TrackId, TransportId};
@@ -187,15 +189,26 @@ impl GameState {
         Some(results)
     }
 
-    // TODO HIGH: This is called often, but really doesn't need whole `TrackInfo` and `owner` comparison every time - refactor so that the checks are more lightweight for track planning preview and the heavy-weight ones only kick in on the server when actually building.
     pub(crate) fn can_build_track(
         &self,
-        requesting_player_id: PlayerId,
+        player_id: PlayerId,
         track: &TrackInfo,
     ) -> CanBuildResponse {
-        // Later: We do some duplicate invocations here...
-        if self.map_level.can_build_track(track) && track.owner_id() == requesting_player_id {
-            self.buildings.can_build_track(requesting_player_id, track)
+        if track.owner_id() == player_id {
+            self.can_build_track_internal(player_id, track.tile, track.track_type)
+        } else {
+            CanBuildResponse::Invalid
+        }
+    }
+
+    pub(crate) fn can_build_track_internal(
+        &self,
+        player_id: PlayerId,
+        tile: TileCoordsXZ,
+        track_type: TrackType,
+    ) -> CanBuildResponse {
+        if self.map_level.can_build_track(tile, track_type) {
+            self.buildings.can_build_track(player_id, tile, track_type)
         } else {
             CanBuildResponse::Invalid
         }

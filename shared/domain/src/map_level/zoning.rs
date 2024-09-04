@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
-use crate::building::track_info::TrackInfo;
 use crate::building::WithRelativeTileCoverage;
 use crate::map_level::zoning::ZoningType::Source;
 use crate::resource_type::ResourceType;
@@ -103,8 +102,8 @@ impl Zoning {
     }
 
     #[must_use]
-    pub fn can_build_track(&self, track_info: &TrackInfo) -> bool {
-        self.zoning_at_tile(track_info.tile).is_none()
+    pub fn can_build_track(&self, tile: TileCoordsXZ) -> bool {
+        self.zoning_at_tile(tile).is_none()
     }
 
     #[must_use]
