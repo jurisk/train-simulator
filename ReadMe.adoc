@@ -151,14 +151,10 @@ Note: `--branch` requires nightly `cargo-llvm-cov`.
 [source,bash]
 ----
 cargo +nightly install cargo-llvm-cov
-cargo +stable install cargo-llvm-cov --locked
 cargo +stable install cargo-nextest --locked
 cargo nextest run
-cargo llvm-cov
 cargo +nightly llvm-cov --branch
 cargo +nightly llvm-cov --branch --open
-cargo llvm-cov --open
-cargo llvm-cov nextest
 cargo +nightly llvm-cov nextest --branch
 cargo +nightly llvm-cov nextest --branch --open
 ----

@@ -1,0 +1,12 @@
+[package]
+name = "game-ai"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+shared-domain = { path = "../../shared/domain" }
+shared-util = { path = "../../shared/util" }
+log.workspace = true
