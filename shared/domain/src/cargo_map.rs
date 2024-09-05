@@ -35,9 +35,15 @@ pub struct CargoMap {
     map: HashMap<ResourceType, CargoAmount>,
 }
 
+impl Default for CargoMap {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CargoMap {
     #[must_use]
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             map: HashMap::new(),
         }
@@ -47,10 +53,12 @@ impl CargoMap {
         *self.map.entry(resource).or_default() += amount;
     }
 
-    pub(crate) fn get(&self, resource: ResourceType) -> CargoAmount {
+    #[must_use]
+    pub fn get(&self, resource: ResourceType) -> CargoAmount {
         self.map.get(&resource).copied().unwrap_or_default()
     }
 
+    #[must_use]
     pub(crate) fn total_amount(&self) -> CargoAmount {
         let mut result = CargoAmount::ZERO;
         for &amount in self.map.values() {

@@ -11,7 +11,7 @@ use uuid::Uuid;
 use crate::tile_coords_xz::TileCoordsXZ;
 
 pub mod building;
-mod cargo_amount;
+pub mod cargo_amount;
 pub mod cargo_map;
 pub mod client_command;
 pub mod directional_edge;

@@ -150,6 +150,7 @@ Note: `--branch` requires nightly `cargo-llvm-cov`.
 
 [source,bash]
 ----
+cargo test -- --nocapture
 cargo +nightly install cargo-llvm-cov
 cargo +stable install cargo-nextest --locked
 cargo nextest run

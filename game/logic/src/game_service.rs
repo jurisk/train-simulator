@@ -73,7 +73,20 @@ impl GameService {
             GameCommand::Demolish(demolish_selector) => {
                 self.process_demolish(requesting_player_id, *demolish_selector)
             },
+            GameCommand::RequestGameStateSnapshot => {
+                self.request_game_state_snapshot(requesting_player_id)
+            },
         }
+    }
+
+    fn request_game_state_snapshot(
+        &self,
+        requesting_player_id: PlayerId,
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
+        Ok(vec![GameResponseWithAddress::new(
+            AddressEnvelope::ToPlayer(requesting_player_id),
+            GameResponse::GameStateSnapshot(self.state.clone()),
+        )])
     }
 
     fn process_build_industry_building(

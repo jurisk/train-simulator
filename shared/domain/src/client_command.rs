@@ -66,6 +66,9 @@ pub enum GameCommand {
     PurchaseTransport(TransportInfo),
     UpdateTransportMovementOrders(TransportId, MovementOrders),
     Demolish(DemolishSelector),
+
+    // Later: This is only used for testing purposes, perhaps we can refactor to avoid this
+    RequestGameStateSnapshot,
 }
 
 impl Debug for GameCommand {
@@ -88,6 +91,9 @@ impl Debug for GameCommand {
             },
             GameCommand::Demolish(selector) => {
                 write!(f, "Demolish({selector:?})")
+            },
+            GameCommand::RequestGameStateSnapshot => {
+                write!(f, "RequestGameStateSnapshot")
             },
         }
     }

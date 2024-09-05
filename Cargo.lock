@@ -2484,6 +2484,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "game-integration-tests"
+version = "0.1.0"
+dependencies = [
+ "game-ai",
+ "game-logic",
+ "shared-domain",
+]
+
+[[package]]
 name = "game-logic"
 version = "0.1.0"
 dependencies = [

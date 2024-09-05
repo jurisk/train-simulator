@@ -1,0 +1,12 @@
+[package]
+name = "game-integration-tests"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+game-ai = { path = "../ai" }
+game-logic = { path = "../logic" }
+shared-domain = { path = "../../shared/domain" }

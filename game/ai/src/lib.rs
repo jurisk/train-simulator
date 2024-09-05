@@ -22,7 +22,6 @@ pub struct ArtificialIntelligenceState {
     track_connections_built: HashSet<BTreeSet<TileTrack>>,
 }
 
-// TODO HIGH: Make a test that runs this in a loop
 pub fn ai_commands(
     player_id: PlayerId,
     game_state: &GameState,

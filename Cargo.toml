@@ -1,14 +1,15 @@
 [workspace]
 members = [
-    "client/single-player",
     "client/graphics",
-    "shared/domain",
-    "shared/util",
-    "game/logic",
+    "client/single-player",
     "game/ai",
+    "game/integration-tests",
+    "game/logic",
     "networking/client",
     "networking/server",
     "networking/shared",
+    "shared/domain",
+    "shared/util",
 ]
 resolver = "2"
 

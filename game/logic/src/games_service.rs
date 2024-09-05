@@ -24,7 +24,7 @@ pub struct GamesService {
 impl GamesService {
     #[must_use]
     #[allow(clippy::new_without_default, clippy::match_same_arms)]
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         // Later: Eventually, eliminate the Sample map level
         const EUROPE_LEVEL_JSON: &str = include_str!("../../../assets/map_levels/europe.json");
         // TODO: Have a full USA map and use that
@@ -50,7 +50,7 @@ impl GamesService {
         }
     }
 
-    pub(crate) fn advance_times(&mut self, time: GameTime) {
+    pub fn advance_times(&mut self, time: GameTime) {
         for game_service in self.game_map.values_mut() {
             game_service.advance_time(time);
         }
@@ -89,7 +89,7 @@ impl GamesService {
         )])
     }
 
-    pub(crate) fn create_and_join_game(
+    pub fn create_and_join_game(
         &mut self,
         requesting_player_info: &PlayerInfo,
         map_id: &MapId,
@@ -134,7 +134,7 @@ impl GamesService {
         }
     }
 
-    pub(crate) fn process_command(
+    pub fn process_command(
         &mut self,
         game_id: GameId,
         player_id: PlayerId,
