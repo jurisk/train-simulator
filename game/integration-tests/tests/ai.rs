@@ -53,7 +53,6 @@ fn ai_until_final_goods_built() {
         for station in game_state.building_state().find_players_stations(player_id) {
             cargo += station.cargo();
         }
-        println!("Cargo reached at {time:?}: {cargo:?}");
 
         if [
             ResourceType::Ammunition,
@@ -62,22 +61,17 @@ fn ai_until_final_goods_built() {
             ResourceType::Concrete,
         ]
         .iter()
-        .all(|resource| cargo.get(*resource) > CargoAmount::ZERO)
+        .any(|resource| cargo.get(*resource) > CargoAmount::ZERO)
         {
-            println!("Final goods built, stopping AI loop");
             break;
         }
 
         let commands = ai_commands(player_id, game_state, &mut artificial_intelligence_state);
         if let Some(commands) = commands {
             for command in commands {
-                println!("Sending command: {:?}", command);
-                let responses = games_service
+                let _responses = games_service
                     .process_command(game_id, player_id, &command)
                     .unwrap();
-                for response in responses {
-                    println!("Received response: {:?}", response.response);
-                }
             }
         }
 
