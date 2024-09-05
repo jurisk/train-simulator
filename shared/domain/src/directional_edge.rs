@@ -1,13 +1,22 @@
+use std::fmt;
+use std::fmt::{Debug, Formatter};
+
 use shared_util::direction_xz::DirectionXZ;
 
 use crate::edge_xz::EdgeXZ;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::tile_track::TileTrack;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct DirectionalEdge {
     pub into_tile:      TileCoordsXZ,
     pub from_direction: DirectionXZ,
+}
+
+impl Debug for DirectionalEdge {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?} from {:?}", self.into_tile, self.from_direction)
+    }
 }
 
 impl DirectionalEdge {

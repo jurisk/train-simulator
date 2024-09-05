@@ -48,6 +48,9 @@ impl ArtificialIntelligenceTimer {
 }
 
 #[derive(Resource, Default)]
+pub struct ArtificialIntelligenceStateResource(ArtificialIntelligenceState);
+
+#[derive(Default)]
 pub struct ArtificialIntelligenceState {
     track_connections_built: HashSet<BTreeSet<TileTrack>>,
 }
@@ -65,7 +68,7 @@ impl Plugin for ArtificialIntelligencePlugin {
             FixedUpdate,
             act_upon_timer.run_if(in_state(ClientState::Playing)),
         );
-        app.insert_resource(ArtificialIntelligenceState::default());
+        app.insert_resource(ArtificialIntelligenceStateResource::default());
     }
 }
 
@@ -82,14 +85,15 @@ fn act_upon_timer(
     mut client_messages: EventWriter<ClientMessageEvent>,
     player_id_resource: Res<PlayerIdResource>,
     game_state_resource: Res<GameStateResource>,
-    mut ai_state: ResMut<ArtificialIntelligenceState>,
+    mut ai_state_resource: ResMut<ArtificialIntelligenceStateResource>,
 ) {
+    let ArtificialIntelligenceStateResource(ai_state) = &mut *ai_state_resource;
     if let Some(ref timer) = timer.timer {
         if timer.just_finished() {
             let PlayerIdResource(player_id) = *player_id_resource;
             let GameStateResource(game_state) = game_state_resource.as_ref();
 
-            ai_step(player_id, game_state, &mut client_messages, &mut ai_state);
+            ai_step(player_id, game_state, &mut client_messages, ai_state);
         }
     }
 }
