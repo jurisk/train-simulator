@@ -104,8 +104,8 @@ Frequent:
 [source,bash]
 ----
 cargo +nightly fmt
-cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used
-cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used -W unused_crate_dependencies -W unused_extern_crates -W unused_lifetimes
+cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used -W clippy::allow_attributes
+cargo +nightly clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used -W clippy::allow_attributes -W unused_crate_dependencies -W unused_extern_crates -W unused_lifetimes
 ----
 
 === WASM build
