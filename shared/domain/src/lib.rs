@@ -40,7 +40,7 @@ impl Debug for ClientId {
     }
 }
 
-#[allow(clippy::cast_possible_truncation)]
+#[expect(clippy::cast_possible_truncation)]
 impl ClientId {
     #[must_use]
     pub fn random() -> Self {
@@ -141,7 +141,7 @@ newtype_uuid!(ZoningId, "Z");
 pub struct MapId(pub String);
 
 impl Default for MapId {
-    #[allow(clippy::unwrap_used)]
+    #[expect(clippy::unwrap_used)]
     fn default() -> Self {
         MapId::all().first().unwrap().clone()
     }

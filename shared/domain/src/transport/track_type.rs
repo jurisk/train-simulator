@@ -49,7 +49,7 @@ impl TrackType {
     }
 
     #[must_use]
-    #[allow(clippy::match_same_arms)]
+    #[expect(clippy::match_same_arms)]
     pub const fn from_directions(into: DirectionXZ, out: DirectionXZ) -> Option<TrackType> {
         match (into, out) {
             (DirectionXZ::North, DirectionXZ::South) => Some(TrackType::NorthSouth),
@@ -71,7 +71,7 @@ impl TrackType {
         }
     }
 
-    #[allow(clippy::match_same_arms)]
+    #[expect(clippy::match_same_arms)]
     #[must_use]
     pub const fn other_end(self, direction: DirectionXZ) -> Option<DirectionXZ> {
         match (self, direction) {
@@ -91,7 +91,7 @@ impl TrackType {
         }
     }
 
-    #[allow(clippy::missing_panics_doc)]
+    #[expect(clippy::missing_panics_doc)]
     #[must_use]
     pub fn other_end_unsafe(self, direction: DirectionXZ) -> DirectionXZ {
         self.other_end(direction).unwrap_or_else(|| {

@@ -1,7 +1,7 @@
 use bevy_math::Vec3;
 
 #[must_use]
-#[allow(clippy::many_single_char_names)]
+#[expect(clippy::many_single_char_names)]
 pub fn line_segment_intersection_with_sphere(
     segment: (Vec3, Vec3),
     sphere: (Vec3, f32),

@@ -8,7 +8,7 @@ use crate::game::GameStateResource;
 use crate::hud::domain::SelectedMode;
 use crate::selection::{SelectedEdges, SelectedTiles};
 
-#[allow(clippy::collapsible_if)]
+#[expect(clippy::collapsible_if)]
 pub(crate) fn build_tracks_when_mouse_released(
     mut selected_tiles: ResMut<SelectedTiles>,
     mut selected_edges: ResMut<SelectedEdges>,

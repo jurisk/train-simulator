@@ -40,7 +40,7 @@ pub(crate) fn calculate_train_component_transforms(
         .collect()
 }
 
-#[allow(clippy::similar_names, clippy::too_many_arguments)]
+#[expect(clippy::similar_names, clippy::too_many_arguments)]
 pub(crate) fn create_train(
     transport_id: TransportId,
     colour: Colour,
@@ -78,7 +78,7 @@ pub(crate) fn create_train(
     parent
 }
 
-#[allow(clippy::too_many_arguments, clippy::items_after_statements)]
+#[expect(clippy::too_many_arguments, clippy::items_after_statements)]
 fn create_train_component(
     index: usize,
     color: Color,

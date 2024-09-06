@@ -40,13 +40,13 @@ impl Plugin for DebugPlugin {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn show_world_inspector_window(show_world_inspector: Res<ShowWorldInspector>) -> bool {
     let ShowWorldInspector(show_world_inspector) = show_world_inspector.as_ref();
     *show_world_inspector
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn show_world_inspector_keyboard(
     mut show_world_inspector: ResMut<ShowWorldInspector>,
     keyboard_input: Res<ButtonInput<KeyCode>>,

@@ -12,7 +12,7 @@ use crate::communication::domain::ServerMessageEvent;
 use crate::game::create_object_entity;
 use crate::game::map_level::assets::MapAssets;
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Component)]
 struct ZoningIdComponent(ZoningId);
 
@@ -24,7 +24,7 @@ impl Plugin for ZoningPlugin {
     }
 }
 
-#[allow(clippy::collapsible_match, clippy::needless_pass_by_value)]
+#[expect(clippy::collapsible_match, clippy::needless_pass_by_value)]
 fn handle_game_state_snapshot(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut materials: ResMut<Assets<StandardMaterial>>,

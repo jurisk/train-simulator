@@ -88,7 +88,7 @@ impl Height {
     }
 
     #[must_use]
-    #[allow(clippy::cast_lossless)]
+    #[expect(clippy::cast_lossless)]
     pub fn as_f32(self) -> f32 {
         self.0 as f32
     }
@@ -99,7 +99,7 @@ impl Height {
     }
 
     #[must_use]
-    #[allow(
+    #[expect(
         clippy::cast_precision_loss,
         clippy::cast_possible_truncation,
         clippy::cast_sign_loss
@@ -129,7 +129,7 @@ pub struct MapLevel {
 
 impl MapLevel {
     #[must_use]
-    #[allow(clippy::missing_panics_doc)]
+    #[expect(clippy::missing_panics_doc)]
     pub fn load(json: &str) -> Self {
         let result = serde_json::from_str::<MapLevel>(json)
             .unwrap_or_else(|err| panic!("Failed to deserialise {json}: {err}"));
@@ -138,7 +138,7 @@ impl MapLevel {
     }
 
     // Could eventually move to some `Validated` instead
-    #[allow(clippy::missing_errors_doc)]
+    #[expect(clippy::missing_errors_doc)]
     fn is_valid(&self) -> Result<(), String> {
         self.terrain.is_valid()?;
         self.water.is_valid()?;

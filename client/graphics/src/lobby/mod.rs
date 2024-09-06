@@ -63,7 +63,7 @@ fn select_game_to_join(
         .or(game_matching_map_id)
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn handle_available_games(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut client_messages: EventWriter<ClientMessageEvent>,

@@ -168,7 +168,7 @@ fn highlight_selected_tiles(
 // TODO: Avoid this, and use BigDecimal
 const HACK_COEF: f32 = 1_000_000.0;
 
-#[allow(clippy::cast_possible_truncation)]
+#[expect(clippy::cast_possible_truncation)]
 fn closest_tile(tiles: &GridXZ<TileCoordsXZ, Tile>, intersection: Vec3) -> Option<TileCoordsXZ> {
     tiles.coords().min_by_key(|coords| {
         let quad = tiles[*coords].quad;
@@ -177,7 +177,7 @@ fn closest_tile(tiles: &GridXZ<TileCoordsXZ, Tile>, intersection: Vec3) -> Optio
     })
 }
 
-#[allow(clippy::cast_possible_truncation)]
+#[expect(clippy::cast_possible_truncation)]
 fn closest_edge(
     tiles: &GridXZ<TileCoordsXZ, Tile>,
     closest_tile: TileCoordsXZ,
@@ -196,7 +196,7 @@ fn closest_edge(
     Some(EdgeXZ::from_tile_and_direction(closest_tile, direction))
 }
 
-#[allow(
+#[expect(
     clippy::too_many_arguments,
     clippy::needless_pass_by_value,
     clippy::match_bool,

@@ -46,7 +46,7 @@ impl<K, V> GridXZ<K, V> {
         }
     }
 
-    #[allow(clippy::missing_errors_doc)]
+    #[expect(clippy::missing_errors_doc)]
     pub fn is_valid(&self) -> Result<(), String> {
         if self.data.len() == self.size_z {
             if self.data.iter().all(|row| row.len() == self.size_x) {
@@ -126,7 +126,7 @@ where
     }
 
     #[must_use]
-    #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
     pub fn in_bounds(&self, k: K) -> bool {
         let coords: CoordsXZ = k.into();
         coords.x < self.size_x as i32

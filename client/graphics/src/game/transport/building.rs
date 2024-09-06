@@ -51,7 +51,7 @@ fn build_transport_command(
     Ok(result)
 }
 
-#[allow(clippy::needless_pass_by_value, clippy::too_many_arguments)]
+#[expect(clippy::needless_pass_by_value, clippy::too_many_arguments)]
 pub(crate) fn build_transport_when_mouse_released(
     hovered_edge: Res<HoveredEdge>,
     hovered_tile: Res<HoveredTile>,

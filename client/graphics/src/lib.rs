@@ -52,7 +52,7 @@ impl Plugin for ClientGraphicsPlugin {
                 .build()
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        #[allow(clippy::cast_precision_loss)]
+                        #[expect(clippy::cast_precision_loss)]
                         resolution: WindowResolution::new(
                             WINDOW_WIDTH as f32,
                             WINDOW_HEIGHT as f32,

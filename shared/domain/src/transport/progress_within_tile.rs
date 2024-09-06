@@ -11,7 +11,7 @@ pub struct ProgressWithinTile(f32);
 
 impl ProgressWithinTile {
     #[must_use]
-    #[allow(clippy::missing_panics_doc)]
+    #[expect(clippy::missing_panics_doc)]
     pub fn new(progress: f32) -> Self {
         assert!(
             (0.0 ..= 1.0).contains(&progress),

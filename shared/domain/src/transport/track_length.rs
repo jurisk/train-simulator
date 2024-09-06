@@ -68,7 +68,7 @@ impl PartialOrd<Self> for TrackLength {
     }
 }
 
-#[allow(clippy::unwrap_used)]
+#[expect(clippy::unwrap_used)]
 impl Ord for TrackLength {
     fn cmp(&self, other: &Self) -> Ordering {
         self.0.partial_cmp(&other.0).unwrap()

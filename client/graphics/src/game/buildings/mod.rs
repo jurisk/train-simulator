@@ -72,7 +72,7 @@ impl Plugin for BuildingsPlugin {
     }
 }
 
-#[allow(clippy::single_match)]
+#[expect(clippy::single_match)]
 fn handle_game_state_snapshot(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
@@ -124,7 +124,7 @@ fn handle_game_state_snapshot(
     }
 }
 
-#[allow(
+#[expect(
     clippy::collapsible_match,
     clippy::match_same_arms,
     clippy::too_many_arguments
@@ -222,7 +222,7 @@ fn handle_buildings_or_tracks_changed(
 
 const STATION_BASE_COLOUR: Colour = Colour::rgb(128, 128, 128);
 
-#[allow(clippy::similar_names, clippy::match_same_arms)]
+#[expect(clippy::similar_names, clippy::match_same_arms)]
 fn create_industry_building(
     building_info: &IndustryBuildingInfo,
     commands: &mut Commands,
@@ -259,7 +259,7 @@ fn remove_industry_building_entities(
     }
 }
 
-#[allow(clippy::similar_names, clippy::match_same_arms)]
+#[expect(clippy::similar_names, clippy::match_same_arms)]
 fn create_station(
     station_info: &StationInfo,
     commands: &mut Commands,

@@ -44,7 +44,7 @@ impl TransportsToShow {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn select_station_to_add_to_movement_orders(
     mut egui_contexts: EguiContexts,
     selected_mode: Res<SelectedMode>,
@@ -105,7 +105,7 @@ pub(crate) fn select_station_to_add_to_movement_orders(
     }
 }
 
-#[allow(
+#[expect(
     clippy::needless_pass_by_value,
     clippy::too_many_lines,
     clippy::unwrap_used

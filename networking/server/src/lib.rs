@@ -110,7 +110,7 @@ fn read_on_server(
 }
 
 // TODO: Server should publish updates so that discrepancies in movement between server and client can be reconciled by the clients
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn process_client_command_with_client_id_events(
     mut server_state_resource: ResMut<ServerStateResource>,
     server: ResMut<Server<GameChannel>>,

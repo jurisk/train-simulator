@@ -50,7 +50,7 @@ impl Plugin for HudPlugin {
     }
 }
 
-#[allow(clippy::similar_names)]
+#[expect(clippy::similar_names)]
 #[must_use]
 pub fn player_layout_job(own_player_id: PlayerId, player_info: &PlayerInfo) -> LayoutJob {
     let colour = player_info.colour;

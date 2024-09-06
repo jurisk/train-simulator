@@ -53,7 +53,7 @@ impl Debug for BuildingState {
 
 impl BuildingState {
     #[must_use]
-    #[allow(clippy::new_without_default)]
+    #[expect(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
             tracks:               Vec::new(),
@@ -194,7 +194,7 @@ impl BuildingState {
         self.tracks.extend(additional);
     }
 
-    #[allow(clippy::items_after_statements)]
+    #[expect(clippy::items_after_statements)]
     fn recalculate_cargo_forwarding_links(&mut self) {
         self.closest_station_link.clear();
         for building in &self.industry_buildings {
@@ -305,7 +305,7 @@ impl BuildingState {
         }
     }
 
-    #[allow(clippy::collapsible_else_if)]
+    #[expect(clippy::collapsible_else_if)]
     pub(crate) fn can_build_for_coverage(
         &self,
         tile_coverage: &TileCoverage,
@@ -437,7 +437,7 @@ impl BuildingState {
         }
     }
 
-    #[allow(clippy::unwrap_used)]
+    #[expect(clippy::unwrap_used)]
     fn exchange_cargo(&mut self, industry_building_id: IndustryBuildingId, station_id: StationId) {
         let industry_building = self.find_industry_building(industry_building_id).unwrap();
         let industry_building_inputs = industry_building.industry_transform_inputs();

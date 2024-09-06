@@ -23,7 +23,7 @@ pub struct GamesService {
 
 impl GamesService {
     #[must_use]
-    #[allow(clippy::new_without_default, clippy::match_same_arms)]
+    #[expect(clippy::new_without_default, clippy::match_same_arms)]
     pub fn new() -> Self {
         // Later: Eventually, eliminate the Sample map level
         const EUROPE_LEVEL_JSON: &str = include_str!("../../../assets/map_levels/europe.json");
@@ -174,7 +174,7 @@ impl GamesService {
         }
     }
 
-    #[allow(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value)]
     pub(crate) fn process_lobby_command(
         &mut self,
         player_info: &PlayerInfo,
@@ -201,7 +201,7 @@ impl GamesService {
         }
     }
 
-    #[allow(clippy::single_match_else)]
+    #[expect(clippy::single_match_else)]
     pub(crate) fn players_in_game(&self, game_id: GameId) -> Vec<PlayerId> {
         match self.lookup_game_service(game_id) {
             Ok(found) => found.player_ids(),

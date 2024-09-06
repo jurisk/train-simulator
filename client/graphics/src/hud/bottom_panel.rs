@@ -5,7 +5,7 @@ use egui::{Align, Layout};
 use crate::hud::domain::SelectedMode;
 use crate::selection::HoveredTile;
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn show_bottom_panel(
     mut contexts: EguiContexts,
     selected_mode: Res<SelectedMode>,

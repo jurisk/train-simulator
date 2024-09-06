@@ -100,7 +100,7 @@ fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
-#[allow(clippy::match_same_arms)]
+#[expect(clippy::match_same_arms)]
 fn industry_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     menu::menu_button(ui, "⚒ Industry", |ui| {
         set_font_size(ui, 24.0);

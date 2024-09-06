@@ -19,7 +19,7 @@ impl Plugin for WaterPlugin {
     }
 }
 
-#[allow(clippy::collapsible_match)]
+#[expect(clippy::collapsible_match)]
 fn handle_game_state_snapshot(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -40,7 +40,7 @@ fn handle_game_state_snapshot(
     }
 }
 
-#[allow(
+#[expect(
     clippy::cast_precision_loss,
     clippy::needless_pass_by_value,
     clippy::cast_lossless

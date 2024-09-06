@@ -14,7 +14,7 @@ use shared_domain::ClientId;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-#[allow(clippy::struct_field_names)]
+#[expect(clippy::struct_field_names)]
 struct Args {
     #[clap(short, long)]
     player_id: Option<String>,
@@ -44,7 +44,7 @@ fn main() {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[allow(clippy::expect_used)]
+#[expect(clippy::expect_used)]
 fn main() {
     let args = Args::parse();
     run_with_string(
@@ -73,7 +73,7 @@ struct ClientIdResource(ClientId);
 #[derive(Resource)]
 struct ServerStateResource(pub ServerState);
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn process_messages_locally(
     client_id_resource: Res<ClientIdResource>,
     mut server_state_resource: ResMut<ServerStateResource>,
@@ -101,7 +101,7 @@ fn process_messages_locally(
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn advance_time_locally(
     time: Res<Time>,
     client_id_resource: Res<ClientIdResource>,

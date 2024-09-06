@@ -54,14 +54,14 @@ impl Plugin for ArtificialIntelligencePlugin {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn update_timer(time: Res<Time>, mut timer: ResMut<ArtificialIntelligenceTimer>) {
     if let Some(timer) = timer.timer.as_mut() {
         timer.tick(time.delta());
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn act_upon_timer(
     timer: Res<ArtificialIntelligenceTimer>,
     mut client_messages: EventWriter<ClientMessageEvent>,

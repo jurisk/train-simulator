@@ -98,7 +98,7 @@ impl Triangle {
     }
 }
 
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_precision_loss,
     clippy::ptr_arg,
@@ -123,7 +123,7 @@ where
     (tiles, mesh)
 }
 
-#[allow(
+#[expect(
     clippy::cast_possible_truncation,
     clippy::cast_precision_loss,
     clippy::ptr_arg,
@@ -217,7 +217,7 @@ fn calculate_flat_normal(triangle: &Triangle) -> Vec3 {
     u.cross(v).normalize()
 }
 
-#[allow(clippy::cast_possible_truncation)]
+#[expect(clippy::cast_possible_truncation)]
 fn convert_to_mesh(tiles: &Tiles, custom_attribute: MeshVertexAttribute) -> Mesh {
     let input = tiles.triangles();
 

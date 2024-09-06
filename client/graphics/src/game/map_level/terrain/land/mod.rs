@@ -35,7 +35,7 @@ impl Plugin for LandPlugin {
 pub(crate) const ATTRIBUTE_TERRAIN_TYPE: MeshVertexAttribute =
     MeshVertexAttribute::new("TerrainType", 988_540_917, VertexFormat::Uint32);
 
-#[allow(unused)]
+#[expect(unused)]
 enum LandMaterialType {
     Advanced,
     Debug,
@@ -43,7 +43,7 @@ enum LandMaterialType {
 
 const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
 
-#[allow(clippy::needless_pass_by_value, clippy::collapsible_match)]
+#[expect(clippy::needless_pass_by_value, clippy::collapsible_match)]
 fn handle_map_level_updated(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
@@ -69,7 +69,7 @@ fn handle_map_level_updated(
     }
 }
 
-#[allow(
+#[expect(
     clippy::cast_precision_loss,
     clippy::needless_pass_by_value,
     clippy::cast_lossless

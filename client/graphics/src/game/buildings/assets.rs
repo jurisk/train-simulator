@@ -14,7 +14,7 @@ pub struct BuildingAssets {
 
 impl BuildingAssets {
     #[must_use]
-    #[allow(clippy::cast_precision_loss, clippy::items_after_statements)]
+    #[expect(clippy::cast_precision_loss, clippy::items_after_statements)]
     pub fn new(meshes: &mut Assets<Mesh>) -> Self {
         let fallback = meshes.add(Mesh::from(Sphere::default()));
 

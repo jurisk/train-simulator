@@ -33,7 +33,7 @@ pub fn ai_commands(
         .or_else(|| try_building_industry_buildings(player_id, game_state))
 }
 
-#[allow(clippy::redundant_else)]
+#[expect(clippy::redundant_else)]
 fn try_building_industry_buildings(
     player_id: PlayerId,
     game_state: &GameState,
@@ -142,7 +142,7 @@ fn track_connections(
     results
 }
 
-#[allow(clippy::redundant_else)]
+#[expect(clippy::redundant_else)]
 fn try_building_tracks(
     ai_state: &mut ArtificialIntelligenceState,
     player_id: PlayerId,

@@ -14,7 +14,7 @@ pub struct MapAssets {
 
 impl MapAssets {
     #[must_use]
-    #[allow(clippy::items_after_statements)]
+    #[expect(clippy::items_after_statements)]
     pub fn new(meshes: &mut Assets<Mesh>) -> Self {
         let fallback = meshes.add(Mesh::from(Sphere::default()));
         let mut zoning_meshes = HashMap::new();

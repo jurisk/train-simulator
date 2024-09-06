@@ -42,7 +42,7 @@ pub mod transport;
 #[derive(Resource)]
 pub struct GameStateResource(pub GameState);
 
-#[allow(clippy::module_name_repetitions)]
+#[expect(clippy::module_name_repetitions)]
 pub struct GamePlugin {
     pub game_launch_params: GameLaunchParams,
 }
@@ -109,13 +109,13 @@ impl Plugin for GamePlugin {
 pub struct PlayerIdResource(pub PlayerId);
 
 // Movement prediction on the client side
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn client_side_time_advance(mut game_state_resource: ResMut<GameStateResource>, time: Res<Time>) {
     let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
     game_state.advance_time_diff(GameTimeDiff::from_seconds(time.delta_seconds()));
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn initiate_login(
     mut client_messages: EventWriter<ClientMessageEvent>,
     game_launch_params: Res<GameLaunchParams>,
@@ -165,7 +165,7 @@ fn handle_players_updated(
 }
 
 // TODO: How does `terrain` differ from `map_level`? What about trees? Is it `MapLevel`? Is it `Buildings`?
-#[allow(clippy::collapsible_match)]
+#[expect(clippy::collapsible_match)]
 fn handle_game_state_snapshot(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut client_state: ResMut<NextState<ClientState>>,
@@ -198,7 +198,7 @@ fn handle_errors(mut server_messages: EventReader<ServerMessageEvent>) {
     }
 }
 
-#[allow(clippy::similar_names)]
+#[expect(clippy::similar_names)]
 pub(crate) fn player_colour(players_info: &PlayerState, player_id: PlayerId) -> Colour {
     match players_info.get(player_id) {
         None => {
@@ -213,7 +213,7 @@ pub(crate) fn player_colour(players_info: &PlayerState, player_id: PlayerId) -> 
 }
 
 #[must_use]
-#[allow(clippy::missing_panics_doc)]
+#[expect(clippy::missing_panics_doc)]
 pub fn center_vec3(object: &dyn WithTileCoverage, map_level: &MapLevel) -> Vec3 {
     let terrain = map_level.terrain();
     let (nw, se) = match object.covers_tiles() {
@@ -231,7 +231,7 @@ pub fn center_vec3(object: &dyn WithTileCoverage, map_level: &MapLevel) -> Vec3 
     (se + nw) / 2.0
 }
 
-#[allow(clippy::too_many_arguments, clippy::similar_names)]
+#[expect(clippy::too_many_arguments, clippy::similar_names)]
 pub fn create_object_entity(
     object: &dyn WithTileCoverage,
     label: String,

@@ -19,7 +19,7 @@ pub struct Terrain {
     vertex_terrains: GridXZ<VertexCoordsXZ, TerrainType>,
 }
 
-#[allow(clippy::missing_fields_in_debug)]
+#[expect(clippy::missing_fields_in_debug)]
 impl Debug for Terrain {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Terrain")
@@ -45,7 +45,7 @@ impl Terrain {
         }
     }
 
-    #[allow(clippy::missing_errors_doc)]
+    #[expect(clippy::missing_errors_doc)]
     pub fn is_valid(&self) -> Result<(), String> {
         self.vertex_heights.is_valid()
     }
@@ -103,7 +103,7 @@ impl Terrain {
     }
 
     #[must_use]
-    #[allow(clippy::cast_precision_loss, clippy::cast_lossless)]
+    #[expect(clippy::cast_precision_loss, clippy::cast_lossless)]
     pub fn logical_to_world(&self, vertex_coords_xz: VertexCoordsXZ) -> Vec3 {
         let height = self.vertex_heights[vertex_coords_xz].as_f32();
         let coords_xz: CoordsXZ = vertex_coords_xz.into();
@@ -125,7 +125,7 @@ impl Terrain {
     }
 
     #[must_use]
-    #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
     pub fn tile_in_bounds(&self, tile: TileCoordsXZ) -> bool {
         let coords: CoordsXZ = tile.into();
         let valid_x = coords.x >= 0 && coords.x < self.tile_count_x() as i32;
@@ -139,7 +139,7 @@ impl Terrain {
     }
 
     #[must_use]
-    #[allow(clippy::items_after_statements, clippy::similar_names)]
+    #[expect(clippy::items_after_statements, clippy::similar_names)]
     pub fn can_build_track(&self, tile: TileCoordsXZ, track_type: TrackType) -> bool {
         // Later: Do not allow tracks that go out of bounds (where any connection is on the edge)
         let in_bounds = self.tile_in_bounds(tile);

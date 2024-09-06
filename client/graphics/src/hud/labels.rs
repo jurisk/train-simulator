@@ -31,7 +31,7 @@ fn with_tile_coverage_label(
     });
 }
 
-#[allow(clippy::needless_pass_by_value, clippy::module_name_repetitions)]
+#[expect(clippy::needless_pass_by_value, clippy::module_name_repetitions)]
 pub fn draw_labels(
     mut contexts: EguiContexts,
     game_state_resource: Option<Res<GameStateResource>>,
@@ -215,7 +215,7 @@ fn draw_in_position<F>(
         .show(context, f);
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 fn draw_menu(
     label: String,
     position: Vec3,
@@ -240,7 +240,7 @@ fn draw_menu(
     });
 }
 
-#[allow(clippy::let_and_return)]
+#[expect(clippy::let_and_return)]
 fn project_to_screen(
     position: Vec3,
     camera: &Camera,

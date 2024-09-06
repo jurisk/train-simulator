@@ -73,7 +73,7 @@ impl Plugin for TransportPlugin {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn move_transports(
     mut query: Query<(&TransportIdComponent, &Children)>,
     mut child_query: Query<(&mut Transform, &TransportIndexComponent)>,
@@ -111,7 +111,7 @@ fn move_transports(
     }
 }
 
-#[allow(clippy::collapsible_match)]
+#[expect(clippy::collapsible_match)]
 fn handle_transports_sync(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut game_state_resource: ResMut<GameStateResource>,
@@ -137,7 +137,7 @@ fn handle_transports_sync(
     }
 }
 
-#[allow(
+#[expect(
     clippy::collapsible_match,
     clippy::single_match,
     clippy::needless_pass_by_value
@@ -168,7 +168,7 @@ fn handle_game_state_snapshot(
     }
 }
 
-#[allow(
+#[expect(
     clippy::collapsible_match,
     clippy::needless_pass_by_value,
     clippy::single_match
@@ -203,7 +203,7 @@ fn handle_transport_created(
     }
 }
 
-#[allow(clippy::similar_names)]
+#[expect(clippy::similar_names)]
 fn create_transport(
     transport_info: &TransportInfo,
     commands: &mut Commands,
@@ -228,7 +228,7 @@ fn create_transport(
     }
 }
 
-#[allow(clippy::similar_names)]
+#[expect(clippy::similar_names)]
 #[must_use]
 fn create_transport_internal(
     transport_info: &TransportInfo,

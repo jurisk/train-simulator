@@ -5,7 +5,7 @@ use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 
 pub mod domain;
 
-#[allow(clippy::module_name_repetitions)]
+#[expect(clippy::module_name_repetitions)]
 pub struct CommunicationPlugin;
 
 impl Plugin for CommunicationPlugin {

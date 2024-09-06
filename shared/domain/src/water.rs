@@ -8,7 +8,7 @@ pub struct Water {
 }
 
 impl Water {
-    #[allow(clippy::missing_errors_doc)]
+    #[expect(clippy::missing_errors_doc)]
     pub fn is_valid(&self) -> Result<(), String> {
         let (below, above) = &self.between;
         if below.as_u8() + 1 == above.as_u8() {

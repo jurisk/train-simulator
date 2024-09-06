@@ -22,7 +22,7 @@ impl TileCoordsXZ {
     }
 
     #[must_use]
-    #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
+    #[expect(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
     pub const fn from_usizes(x: usize, z: usize) -> Self {
         Self {
             x: x as i32,

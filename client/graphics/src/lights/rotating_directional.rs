@@ -71,7 +71,7 @@ fn create_lights(mut commands: Commands) {
     ));
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn animate_light_direction(
     time: Res<Time>,
     mut query: Query<&mut Transform, With<DirectionalLight>>,

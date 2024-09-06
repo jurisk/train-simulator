@@ -63,7 +63,7 @@ impl EdgeXZ {
         }
     }
 
-    #[allow(clippy::if_same_then_else)]
+    #[expect(clippy::if_same_then_else)]
     #[must_use]
     pub fn common_tile(a: EdgeXZ, b: EdgeXZ) -> Option<TileCoordsXZ> {
         let (a_0, a_1) = a.ordered_tiles();

@@ -18,7 +18,7 @@ use crate::game::buildings::tracks::positions::rail_positions;
 use crate::game::buildings::{StationIdComponent, TrackIdComponent};
 use crate::game::player_colour;
 
-#[allow(clippy::similar_names)]
+#[expect(clippy::similar_names)]
 pub(crate) fn create_track(
     track_info: &TrackInfo,
     commands: &mut Commands,
@@ -43,7 +43,7 @@ pub(crate) fn create_track(
 
 // Later: Consider what to do with the rails that right now go through the terrain.
 // Either prohibit such, or make them render better.
-#[allow(clippy::similar_names, clippy::too_many_arguments)]
+#[expect(clippy::similar_names, clippy::too_many_arguments)]
 pub(crate) fn create_rails(
     colour: Colour,
     commands: &mut Commands,
@@ -82,7 +82,7 @@ pub(crate) fn create_rails(
     );
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 fn spawn_rail(
     a: Vec3,
     b: Vec3,

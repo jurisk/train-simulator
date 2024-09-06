@@ -76,7 +76,7 @@ pub struct PlayerInfo {
     pub colour: Colour,
 }
 
-#[allow(clippy::large_enum_variant)]
+#[expect(clippy::large_enum_variant)]
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
     GameStateSnapshot(GameState),
@@ -215,7 +215,7 @@ pub enum NetworkResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-#[allow(clippy::large_enum_variant)]
+#[expect(clippy::large_enum_variant)]
 pub enum ServerResponse {
     Network(NetworkResponse),
     Authentication(AuthenticationResponse),
@@ -232,7 +232,7 @@ pub enum AddressEnvelope {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-#[allow(clippy::module_name_repetitions)]
+#[expect(clippy::module_name_repetitions)]
 pub struct ServerResponseWithAddress {
     pub address:  AddressEnvelope,
     pub response: ServerResponse,
@@ -246,7 +246,7 @@ impl ServerResponseWithAddress {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
-#[allow(clippy::module_name_repetitions)]
+#[expect(clippy::module_name_repetitions)]
 pub struct ServerResponseWithClientIds {
     pub client_ids: Vec<ClientId>,
     pub response:   ServerResponse,

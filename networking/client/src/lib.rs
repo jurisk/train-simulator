@@ -41,7 +41,7 @@ impl Plugin for MultiplayerSimpleNetClientPlugin {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 pub fn client_send_player_commands(
     mut player_commands: EventReader<ClientMessageEvent>,
     client: ResMut<Client<GameChannel>>,

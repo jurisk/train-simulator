@@ -31,7 +31,7 @@ impl Plugin for PerspectiveCameraPlugin {
     }
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn process_camera_control_events(
     mut events: EventReader<CameraControlEvent>,
     mut query: Query<(&mut Transform, &CameraComponent, &Camera)>,
@@ -89,7 +89,7 @@ fn create_camera(mut commands: Commands) {
     ));
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn move_camera(
     time: Res<Time>,
     keyboard_input: Res<ButtonInput<KeyCode>>,

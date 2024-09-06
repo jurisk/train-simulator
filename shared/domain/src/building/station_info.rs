@@ -70,7 +70,7 @@ impl StationInfo {
     }
 
     #[must_use]
-    #[allow(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
+    #[expect(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
     pub fn transport_location_at_station(
         &self,
         tile: TileCoordsXZ,

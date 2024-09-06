@@ -60,7 +60,7 @@ fn enable_default_camera(
     switch_to_camera(&mut query, &mut commands, camera_id);
 }
 
-#[allow(clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
 fn switch_camera(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<(Entity, &mut Camera, &CameraComponent)>,
