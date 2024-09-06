@@ -78,7 +78,6 @@ pub(crate) fn create_train(
     parent
 }
 
-#[expect(clippy::too_many_arguments, clippy::items_after_statements)]
 fn create_train_component(
     index: usize,
     color: Color,

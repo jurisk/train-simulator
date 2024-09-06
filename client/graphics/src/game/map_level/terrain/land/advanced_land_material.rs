@@ -24,7 +24,6 @@ impl Plugin for AdvancedLandMaterialPlugin {
 }
 
 #[derive(Asset, AsBindGroup, Reflect, Debug, Clone)]
-#[expect(clippy::struct_field_names)]
 pub(crate) struct LandExtension {
     // We need to ensure that the bindings of the base material and the extension do not conflict,
     // so we start from binding slot 100, leaving slots 0-99 for the base material.

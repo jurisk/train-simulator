@@ -203,7 +203,6 @@ fn handle_transport_created(
     }
 }
 
-#[expect(clippy::similar_names)]
 fn create_transport(
     transport_info: &TransportInfo,
     commands: &mut Commands,
@@ -228,7 +227,6 @@ fn create_transport(
     }
 }
 
-#[expect(clippy::similar_names)]
 #[must_use]
 fn create_transport_internal(
     transport_info: &TransportInfo,

@@ -194,7 +194,6 @@ impl BuildingState {
         self.tracks.extend(additional);
     }
 
-    #[expect(clippy::items_after_statements)]
     fn recalculate_cargo_forwarding_links(&mut self) {
         self.closest_station_link.clear();
         for building in &self.industry_buildings {
@@ -305,7 +304,6 @@ impl BuildingState {
         }
     }
 
-    #[expect(clippy::collapsible_else_if)]
     pub(crate) fn can_build_for_coverage(
         &self,
         tile_coverage: &TileCoverage,

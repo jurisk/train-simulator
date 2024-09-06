@@ -40,11 +40,7 @@ fn handle_game_state_snapshot(
     }
 }
 
-#[expect(
-    clippy::cast_precision_loss,
-    clippy::needless_pass_by_value,
-    clippy::cast_lossless
-)]
+#[expect(clippy::cast_precision_loss)]
 fn create_water(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,

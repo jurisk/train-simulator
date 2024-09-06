@@ -98,13 +98,6 @@ impl Triangle {
     }
 }
 
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_precision_loss,
-    clippy::ptr_arg,
-    clippy::needless_pass_by_value,
-    clippy::too_many_arguments
-)]
 #[must_use]
 pub fn tiled_mesh_from_height_map_data<F>(
     min_x: f32,
@@ -123,13 +116,7 @@ where
     (tiles, mesh)
 }
 
-#[expect(
-    clippy::cast_possible_truncation,
-    clippy::cast_precision_loss,
-    clippy::ptr_arg,
-    clippy::needless_pass_by_value,
-    clippy::too_many_arguments
-)]
+#[expect(clippy::cast_precision_loss, clippy::needless_pass_by_value)]
 #[must_use]
 fn tiles_from_heights<F>(
     min_x: f32,

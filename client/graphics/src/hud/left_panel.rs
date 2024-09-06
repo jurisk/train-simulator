@@ -13,7 +13,6 @@ use crate::game::transport::ui::TransportsToShow;
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::player_layout_job;
 
-#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn show_left_panel(
     mut contexts: EguiContexts,
     game_state_resource: Option<Res<GameStateResource>>,
@@ -47,7 +46,6 @@ pub(crate) fn show_left_panel(
     }
 }
 
-#[expect(clippy::match_same_arms, clippy::collapsible_if)]
 fn buildings_info_panel(
     ui: &mut Ui,
     player_id: PlayerId,
@@ -107,7 +105,6 @@ fn transport_info_panel(
     }
 }
 
-#[expect(clippy::similar_names)]
 fn players_info_panel(ui: &mut Ui, own_player_id: PlayerId, players: &PlayerState) {
     ui.heading("Players");
     for player_info in players.infos() {

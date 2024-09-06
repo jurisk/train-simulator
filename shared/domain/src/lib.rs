@@ -40,7 +40,6 @@ impl Debug for ClientId {
     }
 }
 
-#[expect(clippy::cast_possible_truncation)]
 impl ClientId {
     #[must_use]
     pub fn random() -> Self {

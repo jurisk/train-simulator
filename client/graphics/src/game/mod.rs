@@ -213,7 +213,6 @@ pub(crate) fn player_colour(players_info: &PlayerState, player_id: PlayerId) -> 
 }
 
 #[must_use]
-#[expect(clippy::missing_panics_doc)]
 pub fn center_vec3(object: &dyn WithTileCoverage, map_level: &MapLevel) -> Vec3 {
     let terrain = map_level.terrain();
     let (nw, se) = match object.covers_tiles() {

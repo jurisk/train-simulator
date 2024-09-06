@@ -142,7 +142,6 @@ fn track_connections(
     results
 }
 
-#[expect(clippy::redundant_else)]
 fn try_building_tracks(
     ai_state: &mut ArtificialIntelligenceState,
     player_id: PlayerId,

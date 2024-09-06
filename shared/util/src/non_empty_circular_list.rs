@@ -72,7 +72,6 @@ impl<T: Clone> NonEmptyCircularList<T> {
     }
 
     #[must_use]
-    #[expect(dead_code)]
     pub fn iter(&self) -> NonEmptyCircularListIterator<'_, T> {
         <&Self as IntoIterator>::into_iter(self)
     }

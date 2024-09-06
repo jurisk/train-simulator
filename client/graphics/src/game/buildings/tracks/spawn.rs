@@ -18,7 +18,6 @@ use crate::game::buildings::tracks::positions::rail_positions;
 use crate::game::buildings::{StationIdComponent, TrackIdComponent};
 use crate::game::player_colour;
 
-#[expect(clippy::similar_names)]
 pub(crate) fn create_track(
     track_info: &TrackInfo,
     commands: &mut Commands,

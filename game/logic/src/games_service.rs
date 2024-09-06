@@ -174,7 +174,6 @@ impl GamesService {
         }
     }
 
-    #[expect(clippy::needless_pass_by_value)]
     pub(crate) fn process_lobby_command(
         &mut self,
         player_info: &PlayerInfo,

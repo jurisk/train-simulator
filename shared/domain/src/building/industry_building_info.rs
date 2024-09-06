@@ -85,7 +85,6 @@ impl IndustryBuildingInfo {
     }
 
     #[must_use]
-    #[expect(clippy::match_same_arms)]
     pub fn industry_transform_inputs(&self) -> HashSet<ResourceType> {
         let mut result = HashSet::new();
         for input in self.industry_type.transform_per_second().inputs {

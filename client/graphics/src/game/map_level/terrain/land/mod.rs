@@ -69,11 +69,7 @@ fn handle_map_level_updated(
     }
 }
 
-#[expect(
-    clippy::cast_precision_loss,
-    clippy::needless_pass_by_value,
-    clippy::cast_lossless
-)]
+#[expect(clippy::cast_precision_loss)]
 pub(crate) fn create_land(
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,

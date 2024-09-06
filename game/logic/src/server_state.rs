@@ -24,7 +24,7 @@ pub struct ServerState {
 
 impl ServerState {
     #[must_use]
-    #[expect(clippy::missing_panics_doc, clippy::new_without_default)]
+    #[expect(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
             authentication_service: AuthenticationService::new(),
@@ -45,7 +45,6 @@ impl ServerState {
             .collect()
     }
 
-    #[expect(clippy::single_match_else)]
     fn translate_response(
         &self,
         server_response_with_address: ServerResponseWithAddress,
@@ -72,7 +71,6 @@ impl ServerState {
         }
     }
 
-    #[expect(clippy::needless_pass_by_value)]
     fn process_network_command(
         client_id: ClientId,
         network_command: &NetworkCommand,

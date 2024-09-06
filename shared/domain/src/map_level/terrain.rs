@@ -103,7 +103,7 @@ impl Terrain {
     }
 
     #[must_use]
-    #[expect(clippy::cast_precision_loss, clippy::cast_lossless)]
+    #[expect(clippy::cast_precision_loss)]
     pub fn logical_to_world(&self, vertex_coords_xz: VertexCoordsXZ) -> Vec3 {
         let height = self.vertex_heights[vertex_coords_xz].as_f32();
         let coords_xz: CoordsXZ = vertex_coords_xz.into();

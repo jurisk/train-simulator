@@ -124,11 +124,7 @@ fn handle_game_state_snapshot(
     }
 }
 
-#[expect(
-    clippy::collapsible_match,
-    clippy::match_same_arms,
-    clippy::too_many_arguments
-)]
+#[expect(clippy::match_same_arms, clippy::too_many_arguments)]
 fn handle_buildings_or_tracks_changed(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
@@ -222,7 +218,6 @@ fn handle_buildings_or_tracks_changed(
 
 const STATION_BASE_COLOUR: Colour = Colour::rgb(128, 128, 128);
 
-#[expect(clippy::similar_names, clippy::match_same_arms)]
 fn create_industry_building(
     building_info: &IndustryBuildingInfo,
     commands: &mut Commands,
@@ -259,7 +254,6 @@ fn remove_industry_building_entities(
     }
 }
 
-#[expect(clippy::similar_names, clippy::match_same_arms)]
 fn create_station(
     station_info: &StationInfo,
     commands: &mut Commands,

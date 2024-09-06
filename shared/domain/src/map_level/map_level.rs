@@ -138,7 +138,6 @@ impl MapLevel {
     }
 
     // Could eventually move to some `Validated` instead
-    #[expect(clippy::missing_errors_doc)]
     fn is_valid(&self) -> Result<(), String> {
         self.terrain.is_valid()?;
         self.water.is_valid()?;

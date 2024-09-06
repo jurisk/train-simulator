@@ -44,7 +44,6 @@ fn main() {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[expect(clippy::expect_used)]
 fn main() {
     let args = Args::parse();
     run_with_string(

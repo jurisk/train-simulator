@@ -32,7 +32,6 @@ fn main() {
     println!("WASM main() called");
 }
 
-#[expect(clippy::expect_used)]
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
     let args = Args::parse();

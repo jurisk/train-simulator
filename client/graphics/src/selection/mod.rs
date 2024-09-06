@@ -199,8 +199,7 @@ fn closest_edge(
 #[expect(
     clippy::too_many_arguments,
     clippy::needless_pass_by_value,
-    clippy::match_bool,
-    clippy::module_name_repetitions
+    clippy::match_bool
 )]
 fn update_selections<T: TypePath + Send + Sync>(
     sources: Query<&RaycastSource<T>>,
