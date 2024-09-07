@@ -63,6 +63,7 @@ impl BuildingState {
         }
     }
 
+    // TODO HIGH: This is frequently called and should be optimised
     #[must_use]
     pub fn track_types_at(&self, tile: TileCoordsXZ) -> Vec<TrackType> {
         let mut results = vec![];
@@ -278,6 +279,7 @@ impl BuildingState {
         let invalid_industry_overlap = overlapping_industry.is_some();
         let invalid_overlaps = invalid_industry_overlap || invalid_station_overlap;
 
+        // TODO HIGH: This is rather inefficient and should be improved
         let overlapping_tracks = self.tracks_at(tile);
 
         let overlapping_other_players_tracks = overlapping_tracks
