@@ -2,7 +2,6 @@ use std::collections::BTreeSet;
 
 use log::warn;
 use serde::{Deserialize, Serialize};
-use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::building::track_info::TrackInfo;
@@ -162,17 +161,5 @@ impl TrackState {
     #[must_use]
     pub(crate) fn track_types_at(&self, tile: TileCoordsXZ) -> BTreeSet<TrackType> {
         self.tracks_at(tile).track_types()
-    }
-
-    // TODO HIGH: Optimize this as it is called often
-    #[must_use]
-    pub(crate) fn track_types_with_connection(
-        &self,
-        tile: TileCoordsXZ,
-        connection: DirectionXZ,
-    ) -> impl IntoIterator<Item = TrackType> {
-        self.track_types_at(tile)
-            .into_iter()
-            .filter(move |track_type| track_type.connections().contains(&connection))
     }
 }

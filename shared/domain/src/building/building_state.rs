@@ -63,13 +63,16 @@ impl BuildingState {
         }
     }
 
+    // TODO HIGH: Optimize this as it is called often
     #[must_use]
     pub fn track_types_with_connection(
         &self,
         tile: TileCoordsXZ,
         connection: DirectionXZ,
     ) -> impl IntoIterator<Item = TrackType> {
-        self.tracks.track_types_with_connection(tile, connection)
+        self.track_types_at(tile)
+            .into_iter()
+            .filter(move |track_type| track_type.connections().contains(&connection))
     }
 
     // TODO HIGH: Cache to optimise this?

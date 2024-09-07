@@ -68,6 +68,11 @@ pub fn find_route_to_tile_tracks(
     targets: &[TileTrack],
     building_state: &BuildingState,
 ) -> Option<Vec<TileTrack>> {
+    debug!(
+        "Finding route to {:?} from {:?}",
+        targets, current_tile_track
+    );
+
     let (path, _length) = dijkstra(
         &current_tile_track,
         |tile_track| successors(*tile_track, building_state),
