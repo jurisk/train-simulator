@@ -5,31 +5,23 @@ use crate::building::building_state::BuildingState;
 use crate::transport::movement_orders::MovementOrderLocation;
 use crate::transport::tile_track::TileTrack;
 use crate::transport::track_length::TrackLength;
-use crate::transport::track_type::TrackType;
 
 fn successors(
     tile_track: TileTrack,
     building_state: &BuildingState,
 ) -> Vec<(TileTrack, TrackLength)> {
     let next_tile_coords = tile_track.next_tile_coords();
-    let tracks_at_next_tile: Vec<TrackType> = building_state.track_types_at(next_tile_coords);
+    let needed_connection = tile_track.pointing_in.reverse();
 
-    let valid_tracks_at_next_tile: Vec<TrackType> = tracks_at_next_tile
-        .into_iter()
-        .filter(|track_type| {
-            track_type
-                .connections()
-                .contains(&tile_track.pointing_in.reverse())
-        })
-        .collect();
-
-    valid_tracks_at_next_tile
+    building_state
+        .track_types_with_connection(next_tile_coords, needed_connection)
         .into_iter()
         .map(|track_type| {
+            let pointing_in = track_type.other_end_unsafe(needed_connection);
             let tile_track = TileTrack {
                 tile: next_tile_coords,
                 track_type,
-                pointing_in: track_type.other_end_unsafe(tile_track.pointing_in.reverse()),
+                pointing_in,
             };
             (tile_track, track_type.length())
         })

@@ -5,6 +5,7 @@ use std::fmt::{Debug, Formatter};
 
 use log::warn;
 use serde::{Deserialize, Serialize};
+use shared_util::direction_xz::DirectionXZ;
 
 use crate::building::building_info::{
     BuildingDynamicInfo, BuildingInfo, WithOwner, WithTileCoverage,
@@ -61,6 +62,18 @@ impl BuildingState {
             stations:             Vec::new(),
             closest_station_link: HashMap::new(),
         }
+    }
+
+    // TODO HIGH: Optimize this as it is called often
+    #[must_use]
+    pub fn track_types_with_connection(
+        &self,
+        tile: TileCoordsXZ,
+        connection: DirectionXZ,
+    ) -> impl IntoIterator<Item = TrackType> {
+        self.track_types_at(tile)
+            .into_iter()
+            .filter(move |track_type| track_type.connections().contains(&connection))
     }
 
     // TODO HIGH: This is frequently called and should be optimised
