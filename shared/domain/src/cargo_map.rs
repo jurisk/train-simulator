@@ -93,10 +93,15 @@ impl CargoMap {
     }
 
     #[must_use]
+    pub fn contains_resource(&self, resource: ResourceType) -> bool {
+        self.get(resource) != CargoAmount::ZERO
+    }
+
+    #[must_use]
     pub fn resource_types_present(&self) -> HashSet<ResourceType> {
         let mut result = HashSet::new();
         for resource in ResourceType::all() {
-            if self.get(resource) != CargoAmount::ZERO {
+            if self.contains_resource(resource) {
                 result.insert(resource);
             }
         }

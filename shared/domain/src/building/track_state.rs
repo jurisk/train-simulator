@@ -15,7 +15,7 @@ pub enum MaybeTracksOnTile {
     Empty,
     SingleOwner {
         owner_id:    PlayerId,
-        // TODO: Move to `BitSet` if it actually is faster
+        // TODO HIGH: Move to `BitSet` if it actually is faster
         track_types: BTreeSet<TrackType>,
     },
 }

@@ -117,6 +117,7 @@ impl BuildingState {
         self.tracks.tracks_at(tile)
     }
 
+    // TODO HIGH: Optimise
     #[must_use]
     pub fn station_at(&self, tile: TileCoordsXZ) -> Option<&StationInfo> {
         let results: Vec<_> = self
@@ -133,6 +134,7 @@ impl BuildingState {
         }
     }
 
+    // TODO HIGH: Optimise
     #[must_use]
     pub fn industry_building_at(&self, tile: TileCoordsXZ) -> Option<&IndustryBuildingInfo> {
         let results: Vec<_> = self

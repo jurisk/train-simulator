@@ -1,4 +1,4 @@
-use log::{debug, error, warn};
+use log::{debug, error};
 
 use crate::building::building_state::BuildingState;
 use crate::cargo_map::CargoOps;

@@ -101,6 +101,7 @@ impl Zoning {
         }
     }
 
+    // TODO HIGH: Optimise
     #[must_use]
     pub fn can_build_track(&self, tile: TileCoordsXZ) -> bool {
         self.zoning_at_tile(tile).is_none()

@@ -183,10 +183,7 @@ fn matching_transport_exists(
     to_station: StationId,
 ) -> bool {
     transports.iter().any(|transport| {
-        let matching_resource = transport
-            .cargo_capacity()
-            .resource_types_present()
-            .contains(&resource_type);
+        let matching_resource = transport.cargo_capacity().contains_resource(resource_type);
         let orders = transport.movement_orders();
         let matching_from = orders.contains_station(from_station);
         let matching_to = orders.contains_station(to_station);

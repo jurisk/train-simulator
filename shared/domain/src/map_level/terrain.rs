@@ -138,6 +138,7 @@ impl Terrain {
         self.y_coef
     }
 
+    // TODO HIGH: Optimise
     #[must_use]
     #[expect(clippy::items_after_statements, clippy::similar_names)]
     pub fn can_build_track(&self, tile: TileCoordsXZ, track_type: TrackType) -> bool {
