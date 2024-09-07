@@ -280,13 +280,13 @@ impl GameService {
                 self.state
                     .building_state()
                     .all_industry_buildings()
-                    .iter()
+                    .into_iter()
                     .map(|building| (building.id(), building.dynamic_info().clone()))
                     .collect(),
                 self.state
                     .building_state()
                     .all_stations()
-                    .iter()
+                    .into_iter()
                     .map(|building| (building.id(), building.dynamic_info().clone()))
                     .collect(),
                 self.state

@@ -33,8 +33,8 @@ pub enum CanBuildResponse {
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
     tracks:               Vec<TrackInfo>,
-    industry_buildings:   Vec<IndustryBuildingInfo>,
-    stations:             Vec<StationInfo>,
+    industry_buildings:   HashMap<IndustryBuildingId, IndustryBuildingInfo>,
+    stations:             HashMap<StationId, StationInfo>,
     // Link from each industry building to the closest station
     // Later: Should these be 1:1, N:1 or N:M correspondence between industry & station? Is it a problem if a station can accept & provide the same good and thus does not need trains?
     closest_station_link: HashMap<IndustryBuildingId, StationId>,
@@ -58,8 +58,8 @@ impl BuildingState {
     pub fn new() -> Self {
         Self {
             tracks:               Vec::new(),
-            industry_buildings:   Vec::new(),
-            stations:             Vec::new(),
+            industry_buildings:   HashMap::new(),
+            stations:             HashMap::new(),
             closest_station_link: HashMap::new(),
         }
     }
@@ -120,8 +120,8 @@ impl BuildingState {
     #[must_use]
     pub fn station_at(&self, tile: TileCoordsXZ) -> Option<&StationInfo> {
         let results: Vec<_> = self
-            .stations
-            .iter()
+            .all_stations()
+            .into_iter()
             .filter(|station| station.covers_tiles().contains(tile))
             .collect();
 
@@ -136,8 +136,8 @@ impl BuildingState {
     #[must_use]
     pub fn industry_building_at(&self, tile: TileCoordsXZ) -> Option<&IndustryBuildingInfo> {
         let results: Vec<_> = self
-            .industry_buildings
-            .iter()
+            .all_industry_buildings()
+            .into_iter()
             .filter(|industry_building| industry_building.covers_tiles().contains(tile))
             .collect();
 
@@ -172,21 +172,21 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn all_stations(&self) -> &Vec<StationInfo> {
-        &self.stations
+    pub fn all_stations(&self) -> impl IntoIterator<Item = &StationInfo> {
+        self.stations.values()
     }
 
     #[must_use]
     pub fn find_players_stations(&self, player_id: PlayerId) -> Vec<&StationInfo> {
-        self.stations
-            .iter()
+        self.all_stations()
+            .into_iter()
             .filter(|station| station.owner_id() == player_id)
             .collect()
     }
 
     #[must_use]
-    pub fn all_industry_buildings(&self) -> &Vec<IndustryBuildingInfo> {
-        &self.industry_buildings
+    pub fn all_industry_buildings(&self) -> impl IntoIterator<Item = &IndustryBuildingInfo> {
+        self.industry_buildings.values()
     }
 
     #[must_use]
@@ -194,13 +194,14 @@ impl BuildingState {
         &self.tracks
     }
 
-    pub fn append_industry_building(&mut self, additional: IndustryBuildingInfo) {
-        self.industry_buildings.push(additional);
+    pub fn append_industry_building(&mut self, industry_building: IndustryBuildingInfo) {
+        self.industry_buildings
+            .insert(industry_building.id(), industry_building);
         self.recalculate_cargo_forwarding_links();
     }
 
-    pub fn append_station(&mut self, additional: StationInfo) {
-        self.stations.push(additional);
+    pub fn append_station(&mut self, station: StationInfo) {
+        self.stations.insert(station.id(), station);
         self.recalculate_cargo_forwarding_links();
     }
 
@@ -210,7 +211,7 @@ impl BuildingState {
 
     fn recalculate_cargo_forwarding_links(&mut self) {
         self.closest_station_link.clear();
-        for building in &self.industry_buildings {
+        for building in self.industry_buildings.values() {
             if let Some((closest_station, distance)) = self.find_closest_station(building) {
                 const CARGO_FORWARDING_DISTANCE_THRESHOLD: i32 = 1;
                 if distance <= CARGO_FORWARDING_DISTANCE_THRESHOLD {
@@ -222,7 +223,7 @@ impl BuildingState {
     }
 
     fn find_closest_station(&self, building: &IndustryBuildingInfo) -> Option<(&StationInfo, i32)> {
-        self.stations_owned_by(building.owner_id())
+        self.find_players_stations(building.owner_id())
             .into_iter()
             .map(|station| {
                 (
@@ -241,19 +242,12 @@ impl BuildingState {
         &self,
         player_id: PlayerId,
     ) -> Vec<&IndustryBuildingInfo> {
-        self.industry_buildings
-            .iter()
+        self.all_industry_buildings()
+            .into_iter()
             .filter(|building| {
                 building.owner_id() == player_id
                     && !self.closest_station_link.contains_key(&building.id())
             })
-            .collect()
-    }
-
-    fn stations_owned_by(&self, owner_id: PlayerId) -> Vec<&StationInfo> {
-        self.stations
-            .iter()
-            .filter(|building| building.owner_id() == owner_id)
             .collect()
     }
 
@@ -395,9 +389,7 @@ impl BuildingState {
 
     #[must_use]
     pub fn find_station(&self, station_id: StationId) -> Option<&StationInfo> {
-        self.stations
-            .iter()
-            .find(|building| building.id() == station_id)
+        self.stations.get(&station_id)
     }
 
     #[must_use]
@@ -405,8 +397,8 @@ impl BuildingState {
         &self,
         industry_building_id: IndustryBuildingId,
     ) -> Option<&IndustryBuildingInfo> {
-        self.industry_buildings
-            .iter()
+        self.all_industry_buildings()
+            .into_iter()
             .find(|building| building.id() == industry_building_id)
     }
 
@@ -416,8 +408,8 @@ impl BuildingState {
         owner_id: PlayerId,
         industry_type: IndustryType,
     ) -> Vec<&IndustryBuildingInfo> {
-        self.industry_buildings
-            .iter()
+        self.all_industry_buildings()
+            .into_iter()
             .filter(|building| {
                 building.owner_id() == owner_id && building.industry_type() == industry_type
             })
@@ -429,20 +421,16 @@ impl BuildingState {
         &mut self,
         industry_building_id: IndustryBuildingId,
     ) -> Option<&mut IndustryBuildingInfo> {
-        self.industry_buildings
-            .iter_mut()
-            .find(|industry_building| industry_building.id() == industry_building_id)
+        self.industry_buildings.get_mut(&industry_building_id)
     }
 
     #[must_use]
     pub(crate) fn find_station_mut(&mut self, station_id: StationId) -> Option<&mut StationInfo> {
-        self.stations
-            .iter_mut()
-            .find(|building| building.id() == station_id)
+        self.stations.get_mut(&station_id)
     }
 
     pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff) {
-        for industry_building in &mut self.industry_buildings {
+        for industry_building in &mut self.industry_buildings.values_mut() {
             industry_building.advance_industry_building(diff);
         }
         for (industry_building_id, station_id) in self.closest_station_link.clone() {
@@ -520,13 +508,12 @@ impl BuildingState {
     }
 
     pub fn remove_industry_building(&mut self, industry_building_id: IndustryBuildingId) {
-        self.industry_buildings
-            .retain(|building| building.id() != industry_building_id);
+        self.industry_buildings.remove(&industry_building_id);
         self.recalculate_cargo_forwarding_links();
     }
 
     pub fn remove_station(&mut self, station_id: StationId) {
-        self.stations.retain(|building| building.id() != station_id);
+        self.stations.remove(&station_id);
         self.recalculate_cargo_forwarding_links();
     }
 
@@ -557,8 +544,7 @@ impl BuildingState {
     ) -> Result<(), ()> {
         let industry_building = self
             .industry_buildings
-            .iter()
-            .find(|building| building.id() == industry_building_id)
+            .get(&industry_building_id)
             .ok_or(())?;
 
         if industry_building.owner_id() == requesting_player_id {
@@ -575,11 +561,7 @@ impl BuildingState {
         station_id: StationId,
     ) -> Result<(), ()> {
         // TODO: Check there are no trains on (or near?) this station
-        let station = self
-            .stations
-            .iter()
-            .find(|building| building.id() == station_id)
-            .ok_or(())?;
+        let station = self.find_station(station_id).ok_or(())?;
         if station.owner_id() == requesting_player_id {
             self.remove_station(station_id);
             Ok(())
