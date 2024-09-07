@@ -10,7 +10,7 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::track_type::TrackType;
 use crate::{PlayerId, TrackId};
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Default)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Default, Debug)]
 pub enum MaybeTracksOnTile {
     #[default]
     Empty,

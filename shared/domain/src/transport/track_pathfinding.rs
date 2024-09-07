@@ -1,4 +1,4 @@
-use log::{debug, info};
+use log::{debug, trace};
 use pathfinding::prelude::dijkstra;
 
 use crate::building::building_state::BuildingState;
@@ -27,7 +27,7 @@ fn successors(
         })
         .collect::<Vec<_>>();
 
-    info!("current: {tile_track:?}, successors: {results:?}");
+    trace!("current: {tile_track:?}, successors: {results:?}");
     results
 }
 

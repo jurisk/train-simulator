@@ -126,6 +126,8 @@ mod tests {
     use super::*;
     use crate::map_level::map_level::MapLevel;
     use crate::tile_coords_xz::TileCoordsXZ;
+    use crate::transport::tile_track::TileTrack;
+    use crate::transport::track_pathfinding::find_route_to_tile_tracks;
     use crate::MapId;
 
     #[test]
@@ -159,5 +161,35 @@ mod tests {
             .build_tracks(player_id, &tracks)
             .expect("Failed to build tracks");
         assert_eq!(result.len(), tracks.len());
+
+        let first_tile = head.into_tile;
+        let last_tile = tail.into_tile + tail.from_direction;
+        println!(
+            "From {:?}",
+            game_state.building_state().tracks_at(first_tile)
+        );
+        println!(
+            "To   {:?}",
+            game_state.building_state().tracks_at(last_tile)
+        );
+
+        let from_tile_track = TileTrack {
+            tile:        first_tile,
+            track_type:  TrackType::NorthWest,
+            pointing_in: DirectionXZ::North,
+        };
+
+        let to_tile_track = TileTrack {
+            tile:        last_tile,
+            track_type:  TrackType::NorthWest,
+            pointing_in: DirectionXZ::North,
+        };
+        let route = find_route_to_tile_tracks(
+            from_tile_track,
+            &[to_tile_track],
+            game_state.building_state(),
+        )
+        .unwrap();
+        assert!(route.len() > 450);
     }
 }
