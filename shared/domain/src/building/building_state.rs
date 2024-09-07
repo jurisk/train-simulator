@@ -1,6 +1,6 @@
 #![allow(clippy::missing_errors_doc, clippy::result_unit_err)]
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
 
 use log::warn;
@@ -14,6 +14,7 @@ use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::industry_type::IndustryType;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
+use crate::building::track_state::{MaybeTracksOnTile, TrackState};
 use crate::cargo_map::CargoOps;
 use crate::game_time::GameTimeDiff;
 use crate::map_level::map_level::MapLevel;
@@ -32,7 +33,7 @@ pub enum CanBuildResponse {
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
-    tracks:               Vec<TrackInfo>,
+    tracks:               TrackState,
     industry_buildings:   HashMap<IndustryBuildingId, IndustryBuildingInfo>,
     stations:             HashMap<StationId, StationInfo>,
     // Link from each industry building to the closest station
@@ -44,8 +45,7 @@ impl Debug for BuildingState {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "BuildingState({} tracks, {} industry buildings, {} stations)",
-            self.tracks.len(),
+            "BuildingState({} industry buildings, {} stations)",
             self.industry_buildings.len(),
             self.stations.len()
         )
@@ -54,10 +54,9 @@ impl Debug for BuildingState {
 
 impl BuildingState {
     #[must_use]
-    #[expect(clippy::new_without_default)]
-    pub fn new() -> Self {
+    pub fn new(size_x: usize, size_z: usize) -> Self {
         Self {
-            tracks:               Vec::new(),
+            tracks:               TrackState::new(size_x, size_z),
             industry_buildings:   HashMap::new(),
             stations:             HashMap::new(),
             closest_station_link: HashMap::new(),
@@ -76,19 +75,23 @@ impl BuildingState {
             .filter(move |track_type| track_type.connections().contains(&connection))
     }
 
-    // TODO HIGH: This is frequently called and should be optimised
+    // TODO HIGH: Cache to optimise this?
     #[must_use]
-    pub fn track_types_at(&self, tile: TileCoordsXZ) -> Vec<TrackType> {
-        let mut results = vec![];
-        if let Some(station) = self.station_at(tile) {
-            for track in station.station_track_types_at(tile) {
-                results.push(track);
+    pub fn track_types_at(&self, tile: TileCoordsXZ) -> BTreeSet<TrackType> {
+        let from_track = self.tracks.track_types_at(tile);
+        if from_track.is_empty() {
+            let mut results = BTreeSet::new();
+
+            if let Some(station) = self.station_at(tile) {
+                for track in station.station_track_types_at(tile) {
+                    results.insert(track);
+                }
             }
+
+            results
+        } else {
+            from_track.clone()
         }
-        for track in self.tracks_at(tile) {
-            results.push(track.track_type);
-        }
-        results
     }
 
     #[must_use]
@@ -110,11 +113,8 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn tracks_at(&self, tile: TileCoordsXZ) -> Vec<&TrackInfo> {
-        self.tracks
-            .iter()
-            .filter(|track| track.tile == tile)
-            .collect()
+    pub fn tracks_at(&self, tile: TileCoordsXZ) -> MaybeTracksOnTile {
+        self.tracks.tracks_at(tile)
     }
 
     #[must_use]
@@ -190,8 +190,8 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn all_tracks(&self) -> &Vec<TrackInfo> {
-        &self.tracks
+    pub fn all_track_infos(&self) -> Vec<TrackInfo> {
+        self.tracks.all_track_infos()
     }
 
     pub fn append_industry_building(&mut self, industry_building: IndustryBuildingInfo) {
@@ -206,7 +206,7 @@ impl BuildingState {
     }
 
     pub fn append_tracks(&mut self, additional: Vec<TrackInfo>) {
-        self.tracks.extend(additional);
+        self.tracks.append_tracks(additional);
     }
 
     fn recalculate_cargo_forwarding_links(&mut self) {
@@ -290,16 +290,12 @@ impl BuildingState {
         let overlapping_tracks = self.tracks_at(tile);
 
         let overlapping_other_players_tracks = overlapping_tracks
-            .iter()
-            .any(|track| track.owner_id() != requesting_player_id);
+            .owner_id()
+            .into_iter()
+            .any(|player_id| player_id != requesting_player_id);
 
         let has_same_track = {
-            let overlapping_tracks_from_tracks = overlapping_tracks
-                .into_iter()
-                .map(|other_track| other_track.track_type)
-                .collect::<HashSet<_>>();
-
-            let has_same_track_from_tracks = overlapping_tracks_from_tracks.contains(&track_type);
+            let has_same_track_from_tracks = overlapping_tracks.track_types().contains(&track_type);
 
             has_same_track_from_tracks || has_same_track_from_station
         };
@@ -522,19 +518,8 @@ impl BuildingState {
         requesting_player_id: PlayerId,
         track_id: TrackId,
     ) -> Result<(), ()> {
-        // TODO: Check there are no trains on (or near?) these tracks
-        let track = self
-            .tracks
-            .iter()
-            .find(|track| track.id() == track_id)
-            .ok_or(())?;
-
-        if track.owner_id() == requesting_player_id {
-            self.remove_track(track_id);
-            Ok(())
-        } else {
-            Err(())
-        }
+        self.tracks
+            .attempt_to_remove_track(requesting_player_id, track_id)
     }
 
     pub fn attempt_to_remove_industry_building(
@@ -571,6 +556,6 @@ impl BuildingState {
     }
 
     pub fn remove_track(&mut self, track_id: TrackId) {
-        self.tracks.retain(|track| track.id() != track_id);
+        self.tracks.remove_track(track_id);
     }
 }

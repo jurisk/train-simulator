@@ -1,4 +1,4 @@
-use log::{debug, error};
+use log::{debug, error, warn};
 
 use crate::building::building_state::BuildingState;
 use crate::cargo_map::CargoOps;
@@ -30,6 +30,11 @@ fn jump_tile(transport_info: &mut TransportInfo, building_state: &BuildingState)
                 "No route found for orders {current_order:?} for transport {:?}",
                 transport_info.transport_id()
             );
+
+            // Commented out to avoid trains getting stuck when temporarily blocked,
+            // but this can be a useful debugging feature sometimes:
+            // transport_info.dynamic_info.movement_orders.set_force_stop(true);
+
             Err(())
         },
         Some(next_tile_track) => {

@@ -1,4 +1,4 @@
-use log::debug;
+use log::{debug, trace};
 use pathfinding::prelude::dijkstra;
 
 use crate::building::building_state::BuildingState;
@@ -13,7 +13,7 @@ fn successors(
     let next_tile_coords = tile_track.next_tile_coords();
     let needed_connection = tile_track.pointing_in.reverse();
 
-    building_state
+    let results = building_state
         .track_types_with_connection(next_tile_coords, needed_connection)
         .into_iter()
         .map(|track_type| {
@@ -25,7 +25,10 @@ fn successors(
             };
             (tile_track, track_type.length())
         })
-        .collect::<Vec<_>>()
+        .collect::<Vec<_>>();
+
+    trace!("current: {tile_track:?}, successors: {results:?}");
+    results
 }
 
 #[must_use]
@@ -65,6 +68,11 @@ pub fn find_route_to_tile_tracks(
     targets: &[TileTrack],
     building_state: &BuildingState,
 ) -> Option<Vec<TileTrack>> {
+    debug!(
+        "Finding route to {:?} from {:?}",
+        targets, current_tile_track
+    );
+
     let (path, _length) = dijkstra(
         &current_tile_track,
         |tile_track| successors(*tile_track, building_state),

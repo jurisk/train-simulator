@@ -2,6 +2,7 @@ use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, MouseButton, Res};
 use bevy_egui::EguiContexts;
 use shared_domain::client_command::{ClientCommand, DemolishSelector, GameCommand};
+use shared_domain::TrackId;
 use shared_util::bool_ops::BoolOps;
 
 use crate::communication::domain::ClientMessageEvent;
@@ -68,8 +69,10 @@ fn demolish_command(
         },
         DemolishType::Tracks => {
             let tracks = building_state.tracks_at(hovered_tile);
-            let selected_track = tracks.first()?; // Later: Don't just pick the first one
-            GameCommand::Demolish(DemolishSelector::Track(selected_track.id()))
+            let track_types = tracks.track_types();
+            let selected = track_types.first()?; // Later: Don't just pick the first
+            let track_id = TrackId::new(hovered_tile, *selected);
+            GameCommand::Demolish(DemolishSelector::Track(track_id))
         },
     };
 

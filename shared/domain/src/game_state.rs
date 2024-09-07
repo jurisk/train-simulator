@@ -40,11 +40,14 @@ impl GameState {
     #[must_use]
     pub fn empty_from_level(map_id: MapId, map_level: MapLevel) -> Self {
         let game_id = GameId::random();
+        let terrain = map_level.terrain();
+        let size_x = terrain.tile_count_x();
+        let size_z = terrain.tile_count_z();
         Self {
             game_id,
             map_id,
             map_level,
-            buildings: BuildingState::new(),
+            buildings: BuildingState::new(size_x, size_z),
             transports: TransportState::empty(),
             players: PlayerState::empty(),
             time: GameTime::new(),
@@ -115,8 +118,8 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn track_infos(&self) -> &Vec<TrackInfo> {
-        self.buildings.all_tracks()
+    pub fn track_infos(&self) -> Vec<TrackInfo> {
+        self.buildings.all_track_infos()
     }
 
     #[must_use]
@@ -267,6 +270,7 @@ impl GameState {
         requesting_player_id: PlayerId,
         track_id: TrackId,
     ) -> Result<(), ()> {
+        // TODO: Check there are no trains on (or near?) these tracks
         self.buildings
             .attempt_to_remove_track(requesting_player_id, track_id)
     }

@@ -107,9 +107,9 @@ fn handle_game_state_snapshot(
                         );
                     }
 
-                    for track in game_state.building_state().all_tracks() {
+                    for track in game_state.building_state().all_track_infos() {
                         create_track(
-                            track,
+                            &track,
                             &mut commands,
                             &mut materials,
                             game_assets.as_ref(),
