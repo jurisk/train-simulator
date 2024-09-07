@@ -9,6 +9,7 @@ pub mod industry_type;
 pub mod station_info;
 pub mod station_type;
 pub mod track_info;
+pub mod track_state;
 
 pub trait WithRelativeTileCoverage {
     fn relative_tiles_used(&self) -> TileCoverage;

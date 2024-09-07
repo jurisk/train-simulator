@@ -130,7 +130,6 @@ impl PlayerId {
 }
 
 newtype_uuid!(GameId, "G");
-newtype_uuid!(TrackId, "T");
 newtype_uuid!(StationId, "S");
 newtype_uuid!(IndustryBuildingId, "IB");
 newtype_uuid!(TransportId, "T");
@@ -161,5 +160,24 @@ impl FromStr for MapId {
             .into_iter()
             .find(|MapId(map_id)| map_id == s)
             .ok_or(())
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
+pub struct TrackId {
+    pub tile:       TileCoordsXZ,
+    pub track_type: TrackType,
+}
+
+impl TrackId {
+    #[must_use]
+    pub fn new(tile: TileCoordsXZ, track_type: TrackType) -> Self {
+        Self { tile, track_type }
+    }
+}
+
+impl Debug for TrackId {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "T-{:?}-{:?}", self.tile, self.track_type)
     }
 }

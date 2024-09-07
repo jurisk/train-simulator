@@ -6,6 +6,7 @@ use crate::transport::tile_track::TileTrack;
 use crate::transport::track_type::TrackType;
 use crate::{PlayerId, TrackId};
 
+// TODO HIGH: Consider just removing this altogether!
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct TrackInfo {
     id:             TrackId,
@@ -18,7 +19,7 @@ impl TrackInfo {
     #[must_use]
     pub fn new(owner_id: PlayerId, tile: TileCoordsXZ, track_type: TrackType) -> Self {
         Self {
-            id: TrackId::random(),
+            id: TrackId::new(tile, track_type),
             owner_id,
             tile,
             track_type,

@@ -125,6 +125,13 @@ where
             .and_then(|row| row.get(coords.x as usize))
     }
 
+    pub fn get_mut(&mut self, k: K) -> Option<&mut V> {
+        let coords: CoordsXZ = k.into();
+        self.data
+            .get_mut(coords.z as usize)
+            .and_then(|row| row.get_mut(coords.x as usize))
+    }
+
     #[must_use]
     #[expect(clippy::cast_possible_wrap, clippy::cast_possible_truncation)]
     pub fn in_bounds(&self, k: K) -> bool {
