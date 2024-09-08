@@ -300,6 +300,7 @@ impl BuildingState {
         }
     }
 
+    // TODO HIGH: You can now build stations over tracks, leading to totally invalid setups
     pub(crate) fn can_build_for_coverage(
         &self,
         tile_coverage: &TileCoverage,
