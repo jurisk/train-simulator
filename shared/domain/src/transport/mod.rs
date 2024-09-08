@@ -4,7 +4,7 @@ pub mod cargo_processing;
 pub mod movement_orders;
 pub mod progress_within_tile;
 pub mod tile_track;
-mod track_length;
+pub mod track_length;
 pub mod track_pathfinding;
 pub mod track_planner;
 pub mod track_type;

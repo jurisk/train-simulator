@@ -10,10 +10,12 @@ use crate::transport::transport_velocity::TransportVelocity;
 pub struct TrackLength(f32);
 
 impl TrackLength {
+    #[must_use]
     pub const fn new(length: f32) -> Self {
         Self(length)
     }
 
+    #[must_use]
     pub const fn to_f32(self) -> f32 {
         self.0
     }

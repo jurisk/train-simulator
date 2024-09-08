@@ -10,3 +10,4 @@ rust-version.workspace = true
 game-ai = { path = "../ai" }
 game-logic = { path = "../logic" }
 shared-domain = { path = "../../shared/domain" }
+shared-util = { path = "../../shared/util" }

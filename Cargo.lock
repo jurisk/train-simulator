@@ -2505,6 +2505,7 @@ dependencies = [
  "game-ai",
  "game-logic",
  "shared-domain",
+ "shared-util",
 ]
 
 [[package]]
