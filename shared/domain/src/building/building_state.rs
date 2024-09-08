@@ -6,6 +6,7 @@ use std::fmt::{Debug, Formatter};
 use log::warn;
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
+use shared_util::grid_xz::GridXZ;
 
 use crate::building::building_info::{
     BuildingDynamicInfo, BuildingInfo, WithOwner, WithTileCoverage,
@@ -33,12 +34,14 @@ pub enum CanBuildResponse {
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
-    tracks:               TrackState,
-    industry_buildings:   HashMap<IndustryBuildingId, IndustryBuildingInfo>,
-    stations:             HashMap<StationId, StationInfo>,
+    tracks:                  TrackState,
+    industry_buildings:      HashMap<IndustryBuildingId, IndustryBuildingInfo>,
+    tile_industry_buildings: GridXZ<TileCoordsXZ, Option<IndustryBuildingId>>,
+    stations:                HashMap<StationId, StationInfo>,
+    tile_stations:           GridXZ<TileCoordsXZ, Option<StationId>>,
     // Link from each industry building to the closest station
     // Later: Should these be 1:1, N:1 or N:M correspondence between industry & station? Is it a problem if a station can accept & provide the same good and thus does not need trains?
-    closest_station_link: HashMap<IndustryBuildingId, StationId>,
+    closest_station_link:    HashMap<IndustryBuildingId, StationId>,
 }
 
 impl Debug for BuildingState {
@@ -56,10 +59,12 @@ impl BuildingState {
     #[must_use]
     pub fn new(size_x: usize, size_z: usize) -> Self {
         Self {
-            tracks:               TrackState::new(size_x, size_z),
-            industry_buildings:   HashMap::new(),
-            stations:             HashMap::new(),
-            closest_station_link: HashMap::new(),
+            tracks:                  TrackState::new(size_x, size_z),
+            industry_buildings:      HashMap::new(),
+            tile_industry_buildings: GridXZ::filled_with(size_x, size_z, None),
+            stations:                HashMap::new(),
+            tile_stations:           GridXZ::filled_with(size_x, size_z, None),
+            closest_station_link:    HashMap::new(),
         }
     }
 
@@ -117,40 +122,19 @@ impl BuildingState {
         self.tracks.tracks_at(tile)
     }
 
-    // TODO HIGH: Optimise
     #[must_use]
     pub fn station_at(&self, tile: TileCoordsXZ) -> Option<&StationInfo> {
-        let results: Vec<_> = self
-            .all_stations()
-            .into_iter()
-            .filter(|station| station.covers_tiles().contains(tile))
-            .collect();
-
-        if results.len() > 1 {
-            warn!("Found multiple stations at tile {:?}: {:?}", tile, results);
-            None
-        } else {
-            results.first().copied()
+        match self.tile_stations.get(tile) {
+            Some(Some(station_id)) => self.stations.get(station_id),
+            _ => None,
         }
     }
 
-    // TODO HIGH: Optimise
     #[must_use]
     pub fn industry_building_at(&self, tile: TileCoordsXZ) -> Option<&IndustryBuildingInfo> {
-        let results: Vec<_> = self
-            .all_industry_buildings()
-            .into_iter()
-            .filter(|industry_building| industry_building.covers_tiles().contains(tile))
-            .collect();
-
-        if results.len() > 1 {
-            warn!(
-                "Found multiple industry buildings at tile {:?}: {:?}",
-                tile, results
-            );
-            None
-        } else {
-            results.first().copied()
+        match self.tile_industry_buildings.get(tile) {
+            Some(Some(industry_building_id)) => self.industry_buildings.get(industry_building_id),
+            _ => None,
         }
     }
 
@@ -197,12 +181,18 @@ impl BuildingState {
     }
 
     pub fn append_industry_building(&mut self, industry_building: IndustryBuildingInfo) {
+        for tile in industry_building.covers_tiles().to_set() {
+            self.tile_industry_buildings[tile] = Some(industry_building.id());
+        }
         self.industry_buildings
             .insert(industry_building.id(), industry_building);
         self.recalculate_cargo_forwarding_links();
     }
 
     pub fn append_station(&mut self, station: StationInfo) {
+        for tile in station.covers_tiles().to_set() {
+            self.tile_stations[tile] = Some(station.id());
+        }
         self.stations.insert(station.id(), station);
         self.recalculate_cargo_forwarding_links();
     }
@@ -506,12 +496,20 @@ impl BuildingState {
     }
 
     pub fn remove_industry_building(&mut self, industry_building_id: IndustryBuildingId) {
-        self.industry_buildings.remove(&industry_building_id);
+        if let Some(removed) = self.industry_buildings.remove(&industry_building_id) {
+            for tile in removed.covers_tiles().to_set() {
+                self.tile_industry_buildings[tile] = None;
+            }
+        }
         self.recalculate_cargo_forwarding_links();
     }
 
     pub fn remove_station(&mut self, station_id: StationId) {
-        self.stations.remove(&station_id);
+        if let Some(removed) = self.stations.remove(&station_id) {
+            for tile in removed.covers_tiles().to_set() {
+                self.tile_stations[tile] = None;
+            }
+        }
         self.recalculate_cargo_forwarding_links();
     }
 
