@@ -90,4 +90,13 @@ mod tests {
             DirectionalEdge::new(TileCoordsXZ::new(1, 2), DirectionXZ::West)
         );
     }
+
+    #[test]
+    fn test_mirror() {
+        let tile = TileCoordsXZ::new(1, 2);
+        let edge = DirectionalEdge::new(tile, DirectionXZ::North);
+        let mirrored = edge.mirror();
+        let expected = DirectionalEdge::new(tile + DirectionXZ::North, DirectionXZ::South);
+        assert_eq!(mirrored, expected);
+    }
 }

@@ -8,11 +8,12 @@ pub struct Water {
 }
 
 impl Water {
+    #[expect(clippy::missing_errors_doc)]
     pub fn new(below: Height, above: Height) -> Result<Self, String> {
         let result = Self {
             between: (below, above),
         };
-        result.is_valid().map(|_| result)
+        result.is_valid().map(|()| result)
     }
 
     #[expect(clippy::missing_errors_doc)]

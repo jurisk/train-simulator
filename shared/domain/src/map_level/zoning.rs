@@ -70,6 +70,7 @@ pub struct Zoning(Vec<ZoningInfo>);
 
 impl Zoning {
     #[must_use]
+    #[expect(clippy::new_without_default)]
     pub fn new() -> Self {
         Self(Vec::new())
     }
