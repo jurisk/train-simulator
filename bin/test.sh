@@ -1,3 +1,3 @@
 #!/usr/bin/env zsh
 bin/housekeeping.sh
-cargo nextest
+cargo nextest run

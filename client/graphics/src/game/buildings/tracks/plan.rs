@@ -22,19 +22,8 @@ pub(crate) fn try_plan_tracks(
 ) -> Option<Vec<TrackInfo>> {
     on_ui(&mut egui_contexts).then_none()?;
 
-    let head_edge = ordered_selected_edges.first()?;
-    let tail_edge = ordered_selected_edges.last()?;
-
-    (head_edge == tail_edge).then_none()?;
-
-    let head_tile = ordered_selected_tiles.first()?;
-    let tail_tile = ordered_selected_tiles.last()?;
-
-    (head_tile == tail_tile).then_none()?;
-
-    let head = DirectionalEdge::from_tile_and_edge(*head_tile, *head_edge)?;
-    let tail = DirectionalEdge::from_tile_and_edge(*tail_tile, *tail_edge)?;
-    let tail = tail.mirror();
+    let (head, tail) =
+        head_tail_from_tiles_and_edges(ordered_selected_edges, ordered_selected_tiles)?;
 
     let PlayerIdResource(player_id) = *player_id_resource;
     plan_tracks(
@@ -45,4 +34,46 @@ pub(crate) fn try_plan_tracks(
         DEFAULT_ALREADY_EXISTS_COEF,
     )
     .map(|(track_infos, _)| track_infos)
+}
+
+fn head_tail_from_tiles_and_edges(
+    ordered_selected_edges: &[EdgeXZ],
+    ordered_selected_tiles: &[TileCoordsXZ],
+) -> Option<(DirectionalEdge, DirectionalEdge)> {
+    let head_edge = ordered_selected_edges.first()?;
+    let tail_edge = ordered_selected_edges.last()?;
+
+    (head_edge == tail_edge).then_none()?;
+
+    let head_tile = ordered_selected_tiles.first()?;
+    let tail_tile = ordered_selected_tiles.last()?;
+
+    let head = DirectionalEdge::from_tile_and_edge(*head_tile, *head_edge)?;
+    let tail = DirectionalEdge::from_tile_and_edge(*tail_tile, *tail_edge)?;
+    let tail = tail.mirror();
+
+    Some((head, tail))
+}
+
+#[cfg(test)]
+mod tests {
+    use shared_util::direction_xz::DirectionXZ;
+
+    use super::*;
+
+    #[test]
+    fn test_head_tail_from_tiles_and_edges_for_single_tile() {
+        let tile = TileCoordsXZ::new(0, 0);
+        let head_edge = EdgeXZ::from_tile_and_direction(tile, DirectionXZ::West);
+        let tail_edge = EdgeXZ::from_tile_and_direction(tile, DirectionXZ::North);
+
+        let (head, tail) =
+            head_tail_from_tiles_and_edges(&[head_edge, tail_edge], &[tile]).unwrap();
+
+        let expected_head = DirectionalEdge::new(tile, DirectionXZ::West);
+        let expected_tail = DirectionalEdge::new(tile + DirectionXZ::North, DirectionXZ::South);
+
+        assert_eq!(head, expected_head);
+        assert_eq!(tail, expected_tail);
+    }
 }
