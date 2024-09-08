@@ -61,7 +61,7 @@ fn ai_until_final_goods_built() {
             ResourceType::Concrete,
         ]
         .iter()
-        .any(|resource| cargo.get(*resource) > CargoAmount::ZERO)
+        .all(|resource| cargo.get(*resource) > CargoAmount::ZERO)
         {
             break;
         }

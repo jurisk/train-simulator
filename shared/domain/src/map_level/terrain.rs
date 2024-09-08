@@ -147,7 +147,7 @@ impl Terrain {
         self.y_coef
     }
 
-    // TODO HIGH: Optimise
+    // TODO: Optimise with `GridXZ<TileCoordsXZ, TrackTypeSet>` for faster common lookups - but need to deal with serialisation
     #[must_use]
     #[expect(clippy::items_after_statements, clippy::similar_names)]
     pub fn can_build_track(&self, tile: TileCoordsXZ, track_type: TrackType) -> bool {

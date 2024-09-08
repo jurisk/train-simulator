@@ -6,7 +6,8 @@ use crate::transport::tile_track::TileTrack;
 use crate::transport::track_type::TrackType;
 use crate::{PlayerId, TrackId};
 
-// TODO HIGH: Consider just removing this altogether!
+// Later:   This is somewhat awkward as it's really just a DTO at this point and our internal
+//          representation is different - perhaps it can be refactored to something more elegant.
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct TrackInfo {
     id:             TrackId,

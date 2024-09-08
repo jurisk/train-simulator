@@ -64,7 +64,7 @@ impl ZoningInfo {
     }
 }
 
-// TODO HIGH: Optimise
+// TODO: Optimise with GridXZ<TileCoordsXZ, ZoningId> for faster common lookups - but need to deal with serialisation
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Zoning(Vec<ZoningInfo>);
 
@@ -108,7 +108,6 @@ impl Zoning {
         }
     }
 
-    // TODO HIGH: Optimise
     #[must_use]
     pub fn can_build_track(&self, tile: TileCoordsXZ) -> bool {
         self.zoning_at_tile(tile).is_none()
