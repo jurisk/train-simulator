@@ -1,12 +1,14 @@
 use std::fmt::Debug;
 use std::ops::Add;
 
+use itertools::Itertools;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::map_level::terrain::Terrain;
 use crate::map_level::zoning::Zoning;
 use crate::tile_coords_xz::TileCoordsXZ;
+use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type::TrackType;
 use crate::vertex_coords_xz::VertexCoordsXZ;
 use crate::water::Water;
@@ -195,6 +197,28 @@ impl MapLevel {
         !any_vertex_under_water
             && self.terrain.can_build_track(tile, track_type)
             && self.zoning.can_build_track(tile)
+    }
+
+    pub(crate) fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> bool {
+        let vertex_coords: Vec<_> = tile_coverage
+            .to_set()
+            .into_iter()
+            .flat_map(TileCoordsXZ::vertex_coords)
+            .collect();
+
+        let any_tile_out_of_bounds = tile_coverage
+            .to_set()
+            .into_iter()
+            .any(|tile| !self.tile_in_bounds(tile));
+
+        let any_vertex_under_water = vertex_coords.iter().any(|vertex| self.under_water(*vertex));
+
+        let equal_heights = vertex_coords
+            .into_iter()
+            .map(|vertex| self.height_at(vertex))
+            .all_equal();
+
+        equal_heights && !any_tile_out_of_bounds && !any_vertex_under_water
     }
 }
 

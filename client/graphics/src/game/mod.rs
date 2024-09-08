@@ -164,7 +164,6 @@ fn handle_players_updated(
     }
 }
 
-// TODO: How does `terrain` differ from `map_level`? What about trees? Is it `MapLevel`? Is it `Buildings`?
 #[expect(clippy::collapsible_match)]
 fn handle_game_state_snapshot(
     mut server_messages: EventReader<ServerMessageEvent>,

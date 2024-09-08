@@ -253,8 +253,9 @@ impl BuildingState {
 
         // TODO: Check that this is a valid building and there is enough money to build it, subtract money
 
-        let can_build = self.can_build_for_coverage(&building_info.covers_tiles(), map_level)
-            == CanBuildResponse::Ok;
+        let coverage = building_info.covers_tiles();
+        let can_build = self.can_build_for_coverage(&coverage) == CanBuildResponse::Ok
+            && map_level.can_build_for_coverage(&coverage);
 
         valid_player_id && can_build
     }
@@ -300,43 +301,12 @@ impl BuildingState {
         }
     }
 
-    // TODO: Should we move all checks related to `MapLevel` to `MapLevel`?
-    pub(crate) fn can_build_for_coverage(
-        &self,
-        tile_coverage: &TileCoverage,
-        map_level: &MapLevel,
-    ) -> CanBuildResponse {
-        let any_tile_out_of_bounds = tile_coverage
-            .to_set()
-            .into_iter()
-            .any(|tile| !map_level.tile_in_bounds(tile));
-
-        if any_tile_out_of_bounds {
-            return CanBuildResponse::Invalid;
-        }
-
+    pub(crate) fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> CanBuildResponse {
         let invalid_overlaps = tile_coverage.to_set().into_iter().any(|tile| {
             self.building_at(tile).is_some() || self.tracks_at(tile) != MaybeTracksOnTile::Empty
         });
 
-        let vertex_coords: Vec<_> = tile_coverage
-            .to_set()
-            .into_iter()
-            .flat_map(TileCoordsXZ::vertex_coords)
-            .collect();
-
-        let any_vertex_under_water = vertex_coords
-            .iter()
-            .any(|vertex| map_level.under_water(*vertex));
-
-        let vertex_heights = vertex_coords
-            .into_iter()
-            .map(|vertex| map_level.height_at(vertex))
-            .collect::<HashSet<_>>();
-
-        let valid_heights = vertex_heights.len() == 1;
-
-        if invalid_overlaps || any_vertex_under_water || !valid_heights {
+        if invalid_overlaps {
             CanBuildResponse::Invalid
         } else {
             CanBuildResponse::Ok
