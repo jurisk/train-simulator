@@ -300,7 +300,7 @@ impl BuildingState {
         }
     }
 
-    // TODO HIGH: You can now build stations over tracks, leading to totally invalid setups
+    // TODO: Should we move all checks related to `MapLevel` to `MapLevel`?
     pub(crate) fn can_build_for_coverage(
         &self,
         tile_coverage: &TileCoverage,
@@ -315,13 +315,9 @@ impl BuildingState {
             return CanBuildResponse::Invalid;
         }
 
-        let overlapping_buildings = tile_coverage
-            .to_set()
-            .into_iter()
-            .filter_map(|tile| self.building_at(tile))
-            .collect::<Vec<_>>();
-
-        let invalid_overlaps = !overlapping_buildings.is_empty();
+        let invalid_overlaps = tile_coverage.to_set().into_iter().any(|tile| {
+            self.building_at(tile).is_some() || self.tracks_at(tile) != MaybeTracksOnTile::Empty
+        });
 
         let vertex_coords: Vec<_> = tile_coverage
             .to_set()
@@ -560,5 +556,40 @@ impl BuildingState {
 
     pub fn remove_track(&mut self, track_id: TrackId) {
         self.tracks.remove_track(track_id);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::building::station_type::StationType;
+    use crate::map_level::map_level::{Height, TerrainType};
+    use crate::map_level::terrain::Terrain;
+    use crate::map_level::zoning::Zoning;
+    use crate::water::Water;
+
+    #[test]
+    fn test_disallow_build_station_over_tracks() {
+        let size_x = 4;
+        let size_z = 1;
+        let mut building_state = BuildingState::new(size_x, size_z);
+        let map_level = MapLevel::new(
+            Terrain::flat(size_x, size_z, Height::from_u8(1), TerrainType::Grass),
+            Water::from_below(Height::from_u8(0)),
+            Zoning::new(),
+        );
+        let owner_id = PlayerId::random();
+        let tile = TileCoordsXZ::new(2, 0);
+        let track_type = TrackType::NorthWest;
+        let track_info = TrackInfo::new(owner_id, tile, track_type);
+        building_state.append_tracks(vec![track_info]);
+        let station_info = StationInfo::new(
+            owner_id,
+            StationId::random(),
+            TileCoordsXZ::new(0, 0),
+            StationType::EW_1_4,
+        );
+        let result = building_state.can_build_building(owner_id, &station_info, &map_level);
+        assert_eq!(result, false);
     }
 }

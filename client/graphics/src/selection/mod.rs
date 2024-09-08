@@ -196,6 +196,8 @@ fn closest_edge(
     Some(EdgeXZ::from_tile_and_direction(closest_tile, direction))
 }
 
+// TODO HIGH:   This triggers change detection even if nothing has changed. Consider checking if there is a change before updating, or just moving to "last_clicked_directional_edge" and "last_hovered_directional_edge" for simplicity.
+//              https://bevy-cheatbook.github.io/programming/change-detection.html#what-gets-detected
 #[expect(
     clippy::too_many_arguments,
     clippy::needless_pass_by_value,

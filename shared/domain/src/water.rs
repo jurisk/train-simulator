@@ -8,6 +8,13 @@ pub struct Water {
 }
 
 impl Water {
+    #[must_use]
+    pub fn from_below(below: Height) -> Self {
+        Self {
+            between: (below, below + Height::from_u8(1)),
+        }
+    }
+
     #[expect(clippy::missing_errors_doc)]
     pub fn new(below: Height, above: Height) -> Result<Self, String> {
         let result = Self {
