@@ -8,7 +8,7 @@ use crate::game::buildings::tracks::plan::try_plan_tracks;
 use crate::game::buildings::tracks::positions::rail_positions;
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
-use crate::selection::{SelectedEdges, SelectedTiles};
+use crate::selection::{ClickedEdge, ClickedTile, HoveredEdge, HoveredTile};
 
 #[derive(Resource, Default)]
 pub(crate) struct TrackPreviewResource(pub Vec<TrackInfo>);
@@ -21,9 +21,12 @@ impl TrackPreviewResource {
 
 // Later: Do the planning for preview `async` using https://github.com/loopystudios/bevy_async_task
 // Later: Don't instantly plan when mouse is being rapidly moved, instead wait for a small delay
+#[expect(clippy::too_many_arguments)]
 pub(crate) fn update_track_preview(
-    selected_edges: Res<SelectedEdges>,
-    selected_tiles: Res<SelectedTiles>,
+    clicked_tile: Res<ClickedTile>,
+    hovered_tile: Res<HoveredTile>,
+    clicked_edge: Res<ClickedEdge>,
+    hovered_edge: Res<HoveredEdge>,
     player_id_resource: Res<PlayerIdResource>,
     game_state_resource: Res<GameStateResource>,
     selected_mode_resource: Res<SelectedMode>,
@@ -32,18 +35,18 @@ pub(crate) fn update_track_preview(
 ) {
     let TrackPreviewResource(track_preview) = &mut *track_preview_resource;
     if selected_mode_resource.as_ref() == &SelectedMode::Tracks {
-        let changed = selected_edges.is_changed() || selected_tiles.is_changed();
+        let changed = clicked_tile.is_changed()
+            || clicked_edge.is_changed()
+            || hovered_tile.is_changed()
+            || hovered_edge.is_changed();
         if changed {
             let GameStateResource(game_state) = game_state_resource.as_ref();
-
-            let ordered_selected_edges = &selected_edges.as_ref().ordered;
-            let ordered_selected_tiles = &selected_tiles.as_ref().ordered;
 
             let planned = try_plan_tracks(
                 player_id_resource,
                 game_state,
-                ordered_selected_edges,
-                ordered_selected_tiles,
+                (hovered_tile.0, hovered_edge.0),
+                (clicked_tile.0, clicked_edge.0),
                 egui_contexts,
             )
             .unwrap_or_default();

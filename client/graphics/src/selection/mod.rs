@@ -22,10 +22,56 @@ use crate::hud::domain::SelectedMode;
 use crate::states::ClientState;
 
 #[derive(Resource, Default, Debug)]
+pub struct ClickedTile(pub Option<TileCoordsXZ>);
+
+impl ClickedTile {
+    pub fn should_update(&self, new: Option<TileCoordsXZ>) -> bool {
+        self.0.is_none() && new.is_some()
+    }
+
+    pub fn update(&mut self, new: Option<TileCoordsXZ>) {
+        self.0 = new;
+    }
+}
+
+#[derive(Resource, Default, Debug)]
 pub struct HoveredTile(pub Option<TileCoordsXZ>);
 
-#[derive(Resource, Default)]
+impl HoveredTile {
+    pub fn should_update(&self, new: Option<TileCoordsXZ>) -> bool {
+        self.0 != new
+    }
+
+    pub fn update(&mut self, new: Option<TileCoordsXZ>) {
+        self.0 = new;
+    }
+}
+
+#[derive(Resource, Default, Debug)]
+pub struct ClickedEdge(pub Option<EdgeXZ>);
+
+impl ClickedEdge {
+    pub fn should_update(&self, new: Option<EdgeXZ>) -> bool {
+        self.0.is_none() && new.is_some()
+    }
+
+    pub fn update(&mut self, new: Option<EdgeXZ>) {
+        self.0 = new;
+    }
+}
+
+#[derive(Resource, Default, Debug)]
 pub struct HoveredEdge(pub Option<EdgeXZ>);
+
+impl HoveredEdge {
+    pub fn should_update(&self, new: Option<EdgeXZ>) -> bool {
+        self.0 != new
+    }
+
+    pub fn update(&mut self, new: Option<EdgeXZ>) {
+        self.0 = new;
+    }
+}
 
 #[derive(Resource, Default)]
 pub struct SelectedTiles {
@@ -70,9 +116,11 @@ impl Plugin for SelectionPlugin {
             highlight_selected_edges.run_if(in_state(ClientState::Playing)),
         );
         app.insert_resource(HoveredTile::default());
+        app.insert_resource(ClickedTile::default());
         app.insert_resource(SelectedTiles::default());
 
         app.insert_resource(HoveredEdge::default());
+        app.insert_resource(ClickedEdge::default());
         app.insert_resource(SelectedEdges::default());
 
         app.add_systems(Update, remove_selection_when_selected_mode_changes);
@@ -196,8 +244,7 @@ fn closest_edge(
     Some(EdgeXZ::from_tile_and_direction(closest_tile, direction))
 }
 
-// TODO HIGH:   This triggers change detection even if nothing has changed. Consider checking if there is a change before updating, or just moving to "last_clicked_directional_edge" and "last_hovered_directional_edge" for simplicity.
-//              https://bevy-cheatbook.github.io/programming/change-detection.html#what-gets-detected
+// See https://bevy-cheatbook.github.io/programming/change-detection.html#what-gets-detected for why some of this is as it is
 #[expect(
     clippy::too_many_arguments,
     clippy::needless_pass_by_value,
@@ -211,6 +258,8 @@ fn update_selections<T: TypePath + Send + Sync>(
     mut selected_edges: ResMut<SelectedEdges>,
     mut hovered_tile: ResMut<HoveredTile>,
     mut hovered_edge: ResMut<HoveredEdge>,
+    mut clicked_tile: ResMut<ClickedTile>,
+    mut clicked_edge: ResMut<ClickedEdge>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
 ) {
     for (is_first, intersection) in sources.iter().flat_map(|m| {
@@ -233,36 +282,51 @@ fn update_selections<T: TypePath + Send + Sync>(
 
                 // Later: If selection is too far away, there is no selection. To avoid sides getting selected when the actual mouse is outside the playing field.
 
-                let HoveredTile(hovered_tile) = hovered_tile.as_mut();
-                *hovered_tile = closest_tile;
+                if hovered_tile.should_update(closest_tile) {
+                    hovered_tile.update(closest_tile);
+                }
 
                 let SelectedTiles {
                     ordered: ordered_selected_tiles,
                 } = selected_tiles.as_mut();
 
                 if mouse_buttons.pressed(MouseButton::Left) {
+                    if clicked_tile.should_update(closest_tile) {
+                        clicked_tile.update(closest_tile);
+                    }
+
                     if let Some(closest) = closest_tile {
                         if !ordered_selected_tiles.contains(&closest) {
                             ordered_selected_tiles.push(closest);
                         }
                     }
+                } else {
+                    clicked_tile.update(None);
                 }
 
                 if let Some(closest_tile) = closest_tile {
                     let closest_edge = closest_edge(tiles, closest_tile, intersection.position());
-                    let HoveredEdge(hovered_edge) = hovered_edge.as_mut();
-                    *hovered_edge = closest_edge;
+
+                    if hovered_edge.should_update(closest_edge) {
+                        hovered_edge.update(closest_edge);
+                    }
 
                     let SelectedEdges {
                         ordered: ordered_selected_edges,
                     } = selected_edges.as_mut();
 
                     if mouse_buttons.pressed(MouseButton::Left) {
+                        if clicked_edge.should_update(closest_edge) {
+                            clicked_edge.update(closest_edge);
+                        }
+
                         if let Some(closest) = closest_edge {
                             if !ordered_selected_edges.contains(&closest) {
                                 ordered_selected_edges.push(closest);
                             }
                         }
+                    } else {
+                        clicked_edge.update(None);
                     }
                 }
 

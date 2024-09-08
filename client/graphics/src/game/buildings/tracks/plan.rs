@@ -16,14 +16,13 @@ use crate::on_ui;
 pub(crate) fn try_plan_tracks(
     player_id_resource: Res<PlayerIdResource>,
     game_state: &GameState,
-    ordered_selected_edges: &[EdgeXZ],
-    ordered_selected_tiles: &[TileCoordsXZ],
+    head: (Option<TileCoordsXZ>, Option<EdgeXZ>),
+    tail: (Option<TileCoordsXZ>, Option<EdgeXZ>),
     mut egui_contexts: EguiContexts,
 ) -> Option<Vec<TrackInfo>> {
     on_ui(&mut egui_contexts).then_none()?;
 
-    let (head, tail) =
-        head_tail_from_tiles_and_edges(ordered_selected_edges, ordered_selected_tiles)?;
+    let (head, tail) = resolve_edges(head, tail)?;
 
     let PlayerIdResource(player_id) = *player_id_resource;
     plan_tracks(
@@ -36,20 +35,24 @@ pub(crate) fn try_plan_tracks(
     .map(|(track_infos, _)| track_infos)
 }
 
-fn head_tail_from_tiles_and_edges(
-    ordered_selected_edges: &[EdgeXZ],
-    ordered_selected_tiles: &[TileCoordsXZ],
+// Later: This is a bit clumsy as it could be resolved already in `selection` logic.
+fn resolve_edges(
+    head: (Option<TileCoordsXZ>, Option<EdgeXZ>),
+    tail: (Option<TileCoordsXZ>, Option<EdgeXZ>),
 ) -> Option<(DirectionalEdge, DirectionalEdge)> {
-    let head_edge = ordered_selected_edges.first()?;
-    let tail_edge = ordered_selected_edges.last()?;
+    let (head_tile, head_edge) = head;
+    let (tail_tile, tail_edge) = tail;
+
+    let head_tile = head_tile?;
+    let head_edge = head_edge?;
+
+    let tail_tile = tail_tile?;
+    let tail_edge = tail_edge?;
 
     (head_edge == tail_edge).then_none()?;
 
-    let head_tile = ordered_selected_tiles.first()?;
-    let tail_tile = ordered_selected_tiles.last()?;
-
-    let head = DirectionalEdge::from_tile_and_edge(*head_tile, *head_edge)?;
-    let tail = DirectionalEdge::from_tile_and_edge(*tail_tile, *tail_edge)?;
+    let head = DirectionalEdge::from_tile_and_edge(head_tile, head_edge)?;
+    let tail = DirectionalEdge::from_tile_and_edge(tail_tile, tail_edge)?;
     let tail = tail.mirror();
 
     Some((head, tail))
@@ -62,13 +65,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_head_tail_from_tiles_and_edges_for_single_tile() {
+    fn test_resolve_edges_for_single_tile() {
         let tile = TileCoordsXZ::new(0, 0);
         let head_edge = EdgeXZ::from_tile_and_direction(tile, DirectionXZ::West);
         let tail_edge = EdgeXZ::from_tile_and_direction(tile, DirectionXZ::North);
 
         let (head, tail) =
-            head_tail_from_tiles_and_edges(&[head_edge, tail_edge], &[tile]).unwrap();
+            resolve_edges((Some(tile), Some(head_edge)), (Some(tile), Some(tail_edge))).unwrap();
 
         let expected_head = DirectionalEdge::new(tile, DirectionXZ::West);
         let expected_tail = DirectionalEdge::new(tile + DirectionXZ::North, DirectionXZ::South);
