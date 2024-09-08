@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 
 use itertools::Itertools;
-use log::{log, trace, warn, Level};
+use log::{info, log, trace, warn, Level};
 use pathfinding::prelude::dijkstra;
 use shared_util::bool_ops::BoolOps;
 
@@ -60,11 +60,16 @@ pub fn plan_tracks(
 
     let start = Instant::now();
 
+    info!("Planning tracks at {start:?} from {current:?} to {targets:?}");
+
     let path = dijkstra(
         &current,
         |current| successors(*current, player_id, game_state, already_exists_coef),
         |current| targets.contains(current),
     );
+
+    let path_length = path.as_ref().map(|(path, _length)| path.len());
+    info!("Found path: {:?} in {:?}", path_length, start.elapsed());
 
     let result = path.map(|(path, length)| {
         let mut tracks = vec![];
