@@ -8,6 +8,13 @@ pub struct Water {
 }
 
 impl Water {
+    pub fn new(below: Height, above: Height) -> Result<Self, String> {
+        let result = Self {
+            between: (below, above),
+        };
+        result.is_valid().map(|_| result)
+    }
+
     #[expect(clippy::missing_errors_doc)]
     pub fn is_valid(&self) -> Result<(), String> {
         let (below, above) = &self.between;

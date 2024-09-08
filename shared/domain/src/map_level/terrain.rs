@@ -45,6 +45,15 @@ impl Terrain {
         }
     }
 
+    #[must_use]
+    pub fn flat(tiles_x: usize, tiles_z: usize, height: Height, terrain_type: TerrainType) -> Self {
+        let vertices_x = tiles_x + 1;
+        let vertices_z = tiles_z + 1;
+        let vertex_heights = GridXZ::filled_with(vertices_x, vertices_z, height);
+        let vertex_terrains = GridXZ::filled_with(vertices_x, vertices_z, terrain_type);
+        Self::new(DEFAULT_Y_COEF, vertex_heights, vertex_terrains)
+    }
+
     #[expect(clippy::missing_errors_doc)]
     pub fn is_valid(&self) -> Result<(), String> {
         self.vertex_heights.is_valid()

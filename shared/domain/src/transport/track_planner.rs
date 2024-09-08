@@ -118,3 +118,45 @@ pub fn plan_tracks(
 
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use shared_util::direction_xz::DirectionXZ;
+
+    use super::*;
+    use crate::map_level::map_level::{Height, MapLevel, TerrainType};
+    use crate::map_level::terrain::Terrain;
+    use crate::map_level::zoning::Zoning;
+    use crate::tile_coords_xz::TileCoordsXZ;
+    use crate::water::Water;
+    use crate::MapId;
+
+    #[test]
+    fn test_plan_single_tile_ew() {
+        let player_id = PlayerId::random();
+        let tile = TileCoordsXZ::new(1, 1);
+        let terrain = Terrain::flat(3, 3, Height::from_u8(1), TerrainType::Grass);
+        let water = Water::new(Height::from_u8(0), Height::from_u8(1));
+        let zoning = Zoning::new();
+        let map_level = MapLevel::new(terrain, water.expect("valid water"), zoning);
+        let game_state = GameState::empty_from_level(MapId("test".to_string()), map_level);
+        let head = DirectionalEdge::new(tile, DirectionXZ::West);
+        let tail = DirectionalEdge::new(tile + DirectionXZ::East, DirectionXZ::West);
+        let (results, length) = plan_tracks(
+            player_id,
+            head,
+            &[tail],
+            &game_state,
+            DEFAULT_ALREADY_EXISTS_COEF,
+        )
+        .unwrap();
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(length, TrackType::EastWest.length());
+
+        let track = &results[0];
+        assert_eq!(track.owner_id(), player_id);
+        assert_eq!(track.tile, tile);
+        assert_eq!(track.track_type, TrackType::EastWest);
+    }
+}

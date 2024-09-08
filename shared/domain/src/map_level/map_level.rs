@@ -129,6 +129,15 @@ pub struct MapLevel {
 
 impl MapLevel {
     #[must_use]
+    pub fn new(terrain: Terrain, water: Water, zoning: Zoning) -> Self {
+        Self {
+            terrain,
+            water,
+            zoning,
+        }
+    }
+
+    #[must_use]
     #[expect(clippy::missing_panics_doc)]
     pub fn load(json: &str) -> Self {
         let result = serde_json::from_str::<MapLevel>(json)

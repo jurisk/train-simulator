@@ -64,10 +64,16 @@ impl ZoningInfo {
     }
 }
 
+// TODO HIGH: Optimise
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Zoning(Vec<ZoningInfo>);
 
 impl Zoning {
+    #[must_use]
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
     #[must_use]
     pub fn all_zonings(&self) -> &Vec<ZoningInfo> {
         &self.0
