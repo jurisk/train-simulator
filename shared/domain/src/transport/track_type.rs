@@ -11,6 +11,7 @@ use crate::transport::track_length::TrackLength;
 
 // Later: Possibly rename to `ConnectionType` or something. And `TrackType` thus has multiple of these `ConnectionType`-s.
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash, Ord, PartialOrd)]
+#[repr(u8)]
 pub enum TrackType {
     NorthEast,
     NorthSouth,

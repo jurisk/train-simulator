@@ -185,7 +185,7 @@ impl MapLevel {
 
     #[must_use]
     pub fn can_build_track(&self, tile: TileCoordsXZ, track_type: TrackType) -> bool {
-        // Later: We could cache this (have a `Tile` => `Set<TrackType>` map)
+        // Later: We could cache this (have a `Tile` => `TrackTypeSet` map)
         let vertex_coords = tile.vertex_coords();
 
         let any_vertex_under_water = vertex_coords

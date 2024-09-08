@@ -23,7 +23,7 @@ use crate::transport::transport_state::TransportState;
 use crate::{GameId, IndustryBuildingId, MapId, PlayerId, StationId, TrackId, TransportId};
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
-//          So the API gets quite busy because of this. There may be better ways.
+//          So the API gets quite busy because of this. There may be better ways, such as splitting the validation-oriented methods into a server-only trait.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct GameState {
     game_id:    GameId,
@@ -265,14 +265,14 @@ impl GameState {
         }
     }
 
-    pub fn remove_track(
+    pub fn remove_tracks(
         &mut self,
         requesting_player_id: PlayerId,
-        track_id: TrackId,
+        track_ids: &[TrackId],
     ) -> Result<(), ()> {
         // TODO: Check there are no trains on (or near?) these tracks
         self.buildings
-            .attempt_to_remove_track(requesting_player_id, track_id)
+            .attempt_to_remove_tracks(requesting_player_id, track_ids)
     }
 
     pub fn remove_industry_building(

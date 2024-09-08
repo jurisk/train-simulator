@@ -76,6 +76,7 @@ pub struct PlayerInfo {
     pub colour: Colour,
 }
 
+#[expect(clippy::large_enum_variant)]
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameResponse {
     GameStateSnapshot(GameState),
@@ -87,7 +88,7 @@ pub enum GameResponse {
     StationAdded(StationInfo),
     StationRemoved(StationId),
     TracksAdded(Vec<TrackInfo>),
-    TrackRemoved(TrackId),
+    TracksRemoved(Vec<TrackId>),
     TransportsAdded(Vec<TransportInfo>),
     DynamicInfosSync(
         GameTime,
@@ -192,8 +193,8 @@ impl Debug for GameResponse {
             GameResponse::StationRemoved(station_id) => {
                 write!(f, "StationRemoved({station_id:?})")
             },
-            GameResponse::TrackRemoved(track_id) => {
-                write!(f, "TrackRemoved({track_id:?})")
+            GameResponse::TracksRemoved(track_ids) => {
+                write!(f, "TracksRemoved({:?} tracks)", track_ids.len())
             },
         }
     }
@@ -213,6 +214,8 @@ pub enum NetworkResponse {
     Pong { id: Uuid, elapsed: Duration },
 }
 
+// Later: We are shipping too much in `GameState`, it has too much denormalisation.
+#[expect(clippy::large_enum_variant)]
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum ServerResponse {
     Network(NetworkResponse),

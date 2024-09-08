@@ -105,6 +105,16 @@ impl<K, V> GridXZ<K, V> {
 
 impl<K, V> GridXZ<K, V>
 where
+    K: Into<CoordsXZ>,
+    V: Copy + Default,
+{
+    pub fn get_or_default(&self, k: K) -> V {
+        self.get(k).copied().unwrap_or_else(|| V::default())
+    }
+}
+
+impl<K, V> GridXZ<K, V>
+where
     K: From<CoordsXZ>,
 {
     pub fn coords(&self) -> impl Iterator<Item = K> + '_ {

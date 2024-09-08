@@ -202,9 +202,11 @@ fn handle_buildings_or_tracks_changed(
                     game_state.building_state_mut().remove_station(*station_id);
                     remove_station_entities(*station_id, &mut commands, &station_query);
                 },
-                GameResponse::TrackRemoved(track_id) => {
-                    game_state.building_state_mut().remove_track(*track_id);
-                    remove_track_entities(*track_id, &mut commands, &track_query);
+                GameResponse::TracksRemoved(track_ids) => {
+                    for track_id in track_ids {
+                        game_state.building_state_mut().remove_track(*track_id);
+                        remove_track_entities(*track_id, &mut commands, &track_query);
+                    }
                 },
                 GameResponse::TransportsAdded(_) => {},
                 GameResponse::DynamicInfosSync(..) => {},

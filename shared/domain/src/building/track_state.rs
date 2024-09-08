@@ -1,5 +1,3 @@
-use std::collections::BTreeSet;
-
 use log::warn;
 use serde::{Deserialize, Serialize};
 use shared_util::grid_xz::GridXZ;
@@ -7,6 +5,7 @@ use shared_util::grid_xz::GridXZ;
 use crate::building::track_info::TrackInfo;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::track_type::TrackType;
+use crate::transport::track_type_set::TrackTypeSet;
 use crate::{PlayerId, TrackId};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Default, Debug)]
@@ -15,8 +14,7 @@ pub enum MaybeTracksOnTile {
     Empty,
     SingleOwner {
         owner_id:    PlayerId,
-        // TODO HIGH: Move to `BitSet` if it actually is faster
-        track_types: BTreeSet<TrackType>,
+        track_types: TrackTypeSet,
     },
 }
 
@@ -30,10 +28,10 @@ impl MaybeTracksOnTile {
     }
 
     #[must_use]
-    pub fn track_types(&self) -> BTreeSet<TrackType> {
+    pub fn track_types(&self) -> TrackTypeSet {
         match self {
-            Self::Empty => BTreeSet::new(),
-            Self::SingleOwner { track_types, .. } => track_types.clone(),
+            Self::Empty => TrackTypeSet::new(),
+            Self::SingleOwner { track_types, .. } => *track_types,
         }
     }
 
@@ -43,7 +41,7 @@ impl MaybeTracksOnTile {
                 warn!("Tried to remove track from empty tile: {:?}", track_type);
             },
             Self::SingleOwner { track_types, .. } => {
-                track_types.remove(&track_type);
+                track_types.remove(track_type);
                 if track_types.is_empty() {
                     *self = Self::Empty;
                 }
@@ -56,7 +54,7 @@ impl MaybeTracksOnTile {
             Self::Empty => {
                 *self = Self::SingleOwner {
                     owner_id:    track.owner_id(),
-                    track_types: BTreeSet::from([track.track_type]),
+                    track_types: TrackTypeSet::single(track.track_type),
                 };
             },
             Self::SingleOwner {
@@ -94,14 +92,18 @@ impl TrackState {
         self.grid.get(tile).cloned().unwrap_or_default()
     }
 
-    pub(crate) fn attempt_to_remove_track(
+    pub(crate) fn attempt_to_remove_tracks(
         &mut self,
         requesting_player_id: PlayerId,
-        track_id: TrackId,
+        track_ids: &[TrackId],
     ) -> Result<(), ()> {
-        let track = self.tracks_at(track_id.tile);
-        if track.owner_id() == Some(requesting_player_id) {
-            self.remove_track(track_id);
+        if track_ids
+            .iter()
+            .all(|track_id| self.tracks_at(track_id.tile).owner_id() == Some(requesting_player_id))
+        {
+            for track_id in track_ids {
+                self.remove_track(*track_id);
+            }
             Ok(())
         } else {
             Err(())
@@ -148,18 +150,18 @@ impl TrackState {
                 track_types,
             } = self.tracks_at(tile)
             {
-                let track_infos = track_types
-                    .into_iter()
-                    .map(|track_type| TrackInfo::new(owner_id, tile, track_type));
-                results.extend(track_infos);
+                for track_type in TrackType::all() {
+                    if track_types.contains(track_type) {
+                        results.push(TrackInfo::new(owner_id, tile, track_type));
+                    }
+                }
             }
         }
         results
     }
 
-    // TODO HIGH: This is frequently called and should be optimised
     #[must_use]
-    pub(crate) fn track_types_at(&self, tile: TileCoordsXZ) -> BTreeSet<TrackType> {
+    pub(crate) fn track_types_at(&self, tile: TileCoordsXZ) -> TrackTypeSet {
         self.tracks_at(tile).track_types()
     }
 }

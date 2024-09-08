@@ -39,9 +39,9 @@ pub enum LobbyCommand {
     LeaveGame(GameId),
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum DemolishSelector {
-    Track(TrackId),
+    Tracks(Vec<TrackId>),
     Industry(IndustryBuildingId),
     Station(StationId),
 }
@@ -49,7 +49,7 @@ pub enum DemolishSelector {
 impl Debug for DemolishSelector {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            DemolishSelector::Track(track_id) => write!(f, "Track({track_id:?})"),
+            DemolishSelector::Tracks(track_ids) => write!(f, "Track({track_ids:?})"),
             DemolishSelector::Industry(industry_id) => write!(f, "Industry({industry_id:?})"),
             DemolishSelector::Station(station_id) => write!(f, "Station({station_id:?})"),
         }

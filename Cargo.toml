@@ -31,7 +31,6 @@ bincode = "1.3"
 bigdecimal = "0.4"
 pathfinding = "4.10"
 itertools = "0.13"
-bit-set = "0.8.0"
 
 # Later:    Consider using Frame pacing:
 #           https://github.com/aevyrie/bevy_framepace

@@ -1,6 +1,6 @@
 #![allow(clippy::missing_errors_doc, clippy::result_unit_err)]
 
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
 
 use log::warn;
@@ -21,6 +21,7 @@ use crate::game_time::GameTimeDiff;
 use crate::map_level::map_level::MapLevel;
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
+use crate::transport::track_type_set::TrackTypeSet;
 use crate::{IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackId, TrackType};
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
@@ -39,6 +40,7 @@ pub struct BuildingState {
     tile_industry_buildings: GridXZ<TileCoordsXZ, Option<IndustryBuildingId>>,
     stations:                HashMap<StationId, StationInfo>,
     tile_stations:           GridXZ<TileCoordsXZ, Option<StationId>>,
+    station_track_types_at:  GridXZ<TileCoordsXZ, TrackTypeSet>,
     // Link from each industry building to the closest station
     // Later: Should these be 1:1, N:1 or N:M correspondence between industry & station? Is it a problem if a station can accept & provide the same good and thus does not need trains?
     closest_station_link:    HashMap<IndustryBuildingId, StationId>,
@@ -64,6 +66,7 @@ impl BuildingState {
             tile_industry_buildings: GridXZ::filled_with(size_x, size_z, None),
             stations:                HashMap::new(),
             tile_stations:           GridXZ::filled_with(size_x, size_z, None),
+            station_track_types_at:  GridXZ::filled_with(size_x, size_z, TrackTypeSet::new()),
             closest_station_link:    HashMap::new(),
         }
     }
@@ -75,27 +78,19 @@ impl BuildingState {
         tile: TileCoordsXZ,
         connection: DirectionXZ,
     ) -> impl IntoIterator<Item = TrackType> {
-        self.track_types_at(tile)
+        let track_types = self.track_types_at(tile);
+        TrackType::matching_direction(connection)
             .into_iter()
-            .filter(move |track_type| track_type.connections().contains(&connection))
+            .filter(move |track_type| track_types.contains(*track_type))
     }
 
-    // TODO HIGH: Cache to optimise this?
     #[must_use]
-    pub fn track_types_at(&self, tile: TileCoordsXZ) -> BTreeSet<TrackType> {
+    pub fn track_types_at(&self, tile: TileCoordsXZ) -> TrackTypeSet {
         let from_track = self.tracks.track_types_at(tile);
         if from_track.is_empty() {
-            let mut results = BTreeSet::new();
-
-            if let Some(station) = self.station_at(tile) {
-                for track in station.station_track_types_at(tile) {
-                    results.insert(track);
-                }
-            }
-
-            results
+            self.station_track_types_at.get_or_default(tile)
         } else {
-            from_track.clone()
+            from_track
         }
     }
 
@@ -192,6 +187,11 @@ impl BuildingState {
     pub fn append_station(&mut self, station: StationInfo) {
         for tile in station.covers_tiles().to_set() {
             self.tile_stations[tile] = Some(station.id());
+            for track_type in station.station_track_types_at(tile) {
+                if let Some(found) = self.station_track_types_at.get_mut(tile) {
+                    found.insert(track_type);
+                }
+            }
         }
         self.stations.insert(station.id(), station);
         self.recalculate_cargo_forwarding_links();
@@ -287,7 +287,7 @@ impl BuildingState {
             .any(|player_id| player_id != requesting_player_id);
 
         let has_same_track = {
-            let has_same_track_from_tracks = overlapping_tracks.track_types().contains(&track_type);
+            let has_same_track_from_tracks = overlapping_tracks.track_types().contains(track_type);
 
             has_same_track_from_tracks || has_same_track_from_station
         };
@@ -508,18 +508,21 @@ impl BuildingState {
         if let Some(removed) = self.stations.remove(&station_id) {
             for tile in removed.covers_tiles().to_set() {
                 self.tile_stations[tile] = None;
+                if let Some(found) = self.station_track_types_at.get_mut(tile) {
+                    found.clear();
+                }
             }
         }
         self.recalculate_cargo_forwarding_links();
     }
 
-    pub fn attempt_to_remove_track(
+    pub fn attempt_to_remove_tracks(
         &mut self,
         requesting_player_id: PlayerId,
-        track_id: TrackId,
+        track_ids: &[TrackId],
     ) -> Result<(), ()> {
         self.tracks
-            .attempt_to_remove_track(requesting_player_id, track_id)
+            .attempt_to_remove_tracks(requesting_player_id, track_ids)
     }
 
     pub fn attempt_to_remove_industry_building(

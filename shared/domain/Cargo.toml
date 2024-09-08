@@ -16,7 +16,6 @@ bevy_math.workspace = true
 log.workspace = true
 pathfinding.workspace = true
 itertools.workspace = true
-bit-set.workspace = true
 
 [dependencies.uuid]
 workspace = true

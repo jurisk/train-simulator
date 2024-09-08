@@ -71,7 +71,7 @@ impl GameService {
                 )
             },
             GameCommand::Demolish(demolish_selector) => {
-                self.process_demolish(requesting_player_id, *demolish_selector)
+                self.process_demolish(requesting_player_id, demolish_selector)
             },
             GameCommand::RequestGameStateSnapshot => {
                 self.request_game_state_snapshot(requesting_player_id)
@@ -164,23 +164,23 @@ impl GameService {
     fn process_demolish(
         &mut self,
         requesting_player_id: PlayerId,
-        demolish_selector: DemolishSelector,
+        demolish_selector: &DemolishSelector,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         match demolish_selector {
-            DemolishSelector::Track(track_id) => {
+            DemolishSelector::Tracks(track_ids) => {
                 self.state
-                    .remove_track(requesting_player_id, track_id)
-                    .map(|()| GameResponse::TrackRemoved(track_id))
+                    .remove_tracks(requesting_player_id, track_ids)
+                    .map(|()| GameResponse::TracksRemoved(track_ids.clone()))
             },
             DemolishSelector::Industry(industry_building_id) => {
                 self.state
-                    .remove_industry_building(requesting_player_id, industry_building_id)
-                    .map(|()| GameResponse::IndustryBuildingRemoved(industry_building_id))
+                    .remove_industry_building(requesting_player_id, *industry_building_id)
+                    .map(|()| GameResponse::IndustryBuildingRemoved(*industry_building_id))
             },
             DemolishSelector::Station(station_id) => {
                 self.state
-                    .remove_station(requesting_player_id, station_id)
-                    .map(|()| GameResponse::StationRemoved(station_id))
+                    .remove_station(requesting_player_id, *station_id)
+                    .map(|()| GameResponse::StationRemoved(*station_id))
             },
         }
         .map(|success| {
@@ -189,7 +189,7 @@ impl GameService {
                 success,
             )]
         })
-        .map_err(|()| GameError::CannotDemolish(demolish_selector))
+        .map_err(|()| GameError::CannotDemolish(demolish_selector.clone()))
     }
 
     fn process_update_transport_movement_orders(

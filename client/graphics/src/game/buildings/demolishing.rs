@@ -68,11 +68,14 @@ fn demolish_command(
             GameCommand::Demolish(DemolishSelector::Station(station.id()))
         },
         DemolishType::Tracks => {
+            // TODO: We should let the user to drag the mouse to select which tracks to demolish
             let tracks = building_state.tracks_at(hovered_tile);
             let track_types = tracks.track_types();
-            let selected = track_types.first()?; // Later: Don't just pick the first
-            let track_id = TrackId::new(hovered_tile, *selected);
-            GameCommand::Demolish(DemolishSelector::Track(track_id))
+            let track_ids = track_types
+                .into_iter()
+                .map(|track_type| TrackId::new(hovered_tile, track_type))
+                .collect();
+            GameCommand::Demolish(DemolishSelector::Tracks(track_ids))
         },
     };
 
