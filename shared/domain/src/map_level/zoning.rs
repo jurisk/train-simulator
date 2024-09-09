@@ -64,7 +64,7 @@ impl ZoningInfo {
     }
 }
 
-// TODO: Optimise with GridXZ<TileCoordsXZ, ZoningId> for faster common lookups - but need to deal with serialisation
+// TODO HIGH: Optimise with GridXZ<TileCoordsXZ, ZoningId> for faster common lookups, especially `free_at_tile` - but need to deal with serialisation. Probably have custom Serialize/Deserialize impls.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Zoning(Vec<ZoningInfo>);
 
@@ -88,10 +88,11 @@ impl Zoning {
     }
 
     #[must_use]
-    pub fn zoning_at_tile(&self, tile: TileCoordsXZ) -> Option<&ZoningInfo> {
-        self.all_zonings()
+    pub fn free_at_tile(&self, tile: TileCoordsXZ) -> bool {
+        !self
+            .all_zonings()
             .iter()
-            .find(|zoning_info| zoning_info.covers_tiles().contains(tile))
+            .any(|zoning_info| zoning_info.covers_tiles().contains(tile))
     }
 
     #[must_use]
@@ -109,8 +110,9 @@ impl Zoning {
     }
 
     #[must_use]
+    #[inline]
     pub fn can_build_track(&self, tile: TileCoordsXZ) -> bool {
-        self.zoning_at_tile(tile).is_none()
+        self.free_at_tile(tile)
     }
 
     #[must_use]
@@ -119,7 +121,7 @@ impl Zoning {
             .covers_tiles()
             .to_set()
             .iter()
-            .all(|tile| self.zoning_at_tile(*tile).is_none())
+            .all(|tile| self.free_at_tile(*tile))
     }
 }
 
