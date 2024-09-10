@@ -5,18 +5,6 @@ use shared_util::grid_xz::GridXZ;
 
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::Tile;
 
-#[allow(unused)]
-#[cfg(target_arch = "wasm32")]
-pub fn debug_draw_edge(
-    gizmos: &mut Gizmos,
-    edge: EdgeXZ,
-    tiles: &GridXZ<TileCoordsXZ, Tile>,
-    color: Srgba,
-) {
-    // Later: Temporarily skipped because of https://github.com/bevyengine/bevy/issues/14696
-}
-
-#[cfg(not(target_arch = "wasm32"))]
 pub fn debug_draw_edge(
     gizmos: &mut Gizmos,
     edge: EdgeXZ,

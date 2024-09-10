@@ -36,7 +36,7 @@ itertools = "0.13"
 #           https://github.com/aevyrie/bevy_framepace
 bevy = { version = "0.14", default-features = false, features = [] }
 bevy_math = "0.14"
-bevy_simplenet = { version = "0.12", default-features = false, features = [] }
+bevy_simplenet = { version = "0.13", default-features = false, features = [] }
 
 # https://github.com/jakobhellermann/bevy-inspector-egui
 # https://crates.io/crates/bevy-inspector-egui/versions
