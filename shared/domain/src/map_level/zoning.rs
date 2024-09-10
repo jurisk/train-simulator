@@ -1,6 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
@@ -64,15 +64,39 @@ impl ZoningInfo {
     }
 }
 
-// TODO HIGH: Optimise with GridXZ<TileCoordsXZ, ZoningId> for faster common lookups, especially `free_at_tile` - but need to deal with serialisation. Probably have custom Serialize/Deserialize impls.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+// TODO: Optimise with GridXZ<TileCoordsXZ, ZoningId> for faster common lookups - but need to deal with serialisation
+#[derive(Clone, Debug, PartialEq)]
 pub struct Zoning(Vec<ZoningInfo>);
+
+impl<'de> Deserialize<'de> for Zoning {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let zoning_info: Vec<ZoningInfo> = Vec::deserialize(deserializer)?;
+        Ok(Self::from_vec(zoning_info))
+    }
+}
+
+impl Serialize for Zoning {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::ser::Serializer,
+    {
+        self.all_zonings().serialize(serializer)
+    }
+}
 
 impl Zoning {
     #[must_use]
     #[expect(clippy::new_without_default)]
     pub fn new() -> Self {
         Self(Vec::new())
+    }
+
+    #[must_use]
+    fn from_vec(zoning_info: Vec<ZoningInfo>) -> Self {
+        Self(zoning_info)
     }
 
     #[must_use]
