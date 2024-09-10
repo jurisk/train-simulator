@@ -9,6 +9,7 @@ use crate::building::building_state::CanBuildResponse;
 use crate::building::track_info::TrackInfo;
 use crate::directional_edge::DirectionalEdge;
 use crate::game_state::GameState;
+use crate::metrics::Metrics;
 use crate::transport::track_length::TrackLength;
 use crate::transport::track_type::TrackType;
 use crate::PlayerId;
@@ -55,6 +56,7 @@ pub fn plan_tracks(
     targets: &[DirectionalEdge],
     game_state: &GameState,
     already_exists_coef: f32,
+    metrics: &impl Metrics,
 ) -> Option<(Vec<TrackInfo>, TrackLength)> {
     targets.is_empty().then_none()?;
 
@@ -112,14 +114,16 @@ pub fn plan_tracks(
     } else {
         Level::Trace
     };
+    let lengths = result
+        .as_ref()
+        .map(|(tracks, length)| (tracks.len(), *length));
     log!(
         level,
         "Planning tracks ({:?}) from {current:?} to {targets:?} took {:?}",
-        result
-            .as_ref()
-            .map(|(tracks, length)| (tracks.len(), length)),
+        lengths,
         elapsed,
     );
+    metrics.track_planning_duration(elapsed, lengths);
 
     result
 }

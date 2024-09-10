@@ -11,6 +11,7 @@ use game_logic::server_state::ServerState;
 use shared_domain::client_command::ClientCommandWithClientId;
 use shared_domain::game_time::GameTime;
 use shared_domain::ClientId;
+use shared_domain::metrics::NoopMetrics;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -109,7 +110,10 @@ fn advance_time_locally(
 ) {
     let ClientIdResource(client_id) = *client_id_resource;
     let ServerStateResource(ref mut server_state) = server_state_resource.as_mut();
-    server_state.advance_times(GameTime::from_seconds(time.elapsed_seconds()));
+    server_state.advance_times(
+        GameTime::from_seconds(time.elapsed_seconds()),
+        &NoopMetrics::default(),
+    );
 
     let sync_responses = server_state.sync_games();
     for response in sync_responses {

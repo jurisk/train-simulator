@@ -7,6 +7,7 @@ use shared_domain::client_command::{GameCommand, LobbyCommand};
 use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTime;
 use shared_domain::map_level::map_level::MapLevel;
+use shared_domain::metrics::Metrics;
 use shared_domain::server_response::{
     AddressEnvelope, GameError, GameResponse, LobbyResponse, PlayerInfo, ServerError,
     ServerResponse, ServerResponseWithAddress,
@@ -50,9 +51,9 @@ impl GamesService {
         }
     }
 
-    pub fn advance_times(&mut self, time: GameTime) {
+    pub fn advance_times(&mut self, time: GameTime, metrics: &impl Metrics) {
         for game_service in self.game_map.values_mut() {
-            game_service.advance_time(time);
+            game_service.advance_time(time, metrics);
         }
     }
 

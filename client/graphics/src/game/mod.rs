@@ -20,6 +20,7 @@ use shared_domain::client_command::{
 use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTimeDiff;
 use shared_domain::map_level::map_level::MapLevel;
+use shared_domain::metrics::NoopMetrics;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::server_response::{
     AuthenticationResponse, Colour, GameResponse, ServerResponse,
@@ -112,7 +113,10 @@ pub struct PlayerIdResource(pub PlayerId);
 #[expect(clippy::needless_pass_by_value)]
 fn client_side_time_advance(mut game_state_resource: ResMut<GameStateResource>, time: Res<Time>) {
     let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
-    game_state.advance_time_diff(GameTimeDiff::from_seconds(time.delta_seconds()));
+    game_state.advance_time_diff(
+        GameTimeDiff::from_seconds(time.delta_seconds()),
+        &NoopMetrics::default(),
+    );
 }
 
 #[expect(clippy::needless_pass_by_value)]

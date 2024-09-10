@@ -4,6 +4,7 @@ use shared_domain::building::track_info::TrackInfo;
 use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
+use shared_domain::metrics::NoopMetrics;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::track_planner::{plan_tracks, DEFAULT_ALREADY_EXISTS_COEF};
 use shared_util::bool_ops::BoolOps;
@@ -31,6 +32,7 @@ pub(crate) fn try_plan_tracks(
         &[tail],
         game_state,
         DEFAULT_ALREADY_EXISTS_COEF,
+        &NoopMetrics::default(),
     )
     .map(|(track_infos, _)| track_infos)
 }

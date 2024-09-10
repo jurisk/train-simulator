@@ -6,6 +6,7 @@ use bevy::prelude::{
 use game_ai::{ai_commands, ArtificialIntelligenceState};
 use shared_domain::client_command::ClientCommand;
 use shared_domain::game_state::GameState;
+use shared_domain::metrics::NoopMetrics;
 use shared_domain::PlayerId;
 
 use crate::communication::domain::ClientMessageEvent;
@@ -86,7 +87,7 @@ fn ai_step(
     client_messages: &mut EventWriter<ClientMessageEvent>,
     ai_state: &mut ArtificialIntelligenceState,
 ) {
-    let commands = ai_commands(player_id, game_state, ai_state);
+    let commands = ai_commands(player_id, game_state, ai_state, &NoopMetrics::default());
 
     if let Some(commands) = commands {
         for command in commands {

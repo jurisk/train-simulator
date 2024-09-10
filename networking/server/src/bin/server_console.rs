@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use std::{io, net::SocketAddr};
 
 use axum::body::Body;
+use axum::extract::State;
 use axum::http::{StatusCode, Uri};
 use axum::response::{IntoResponse, Redirect};
 use axum::routing::{get, get_service, MethodRouter};
@@ -12,6 +13,7 @@ use bevy::app::App;
 use bevy::log::LogPlugin;
 use bevy::prelude::{info, trace};
 use bevy::MinimalPlugins;
+use networking_server::metrics::PrometheusMetrics;
 use networking_server::MultiplayerSimpleNetServerPlugin;
 use networking_shared::PORT;
 use tower_http::services::ServeDir;
@@ -31,11 +33,17 @@ async fn static_redirect_gcs(uri: Uri) -> impl IntoResponse {
 
 const SERVE_STATIC_FROM_KEY: &str = "SERVE_STATIC_FROM";
 
+async fn serve_metrics(State(metrics): State<PrometheusMetrics>) -> impl IntoResponse {
+    metrics.render()
+}
+
 /// Depending on `SERVE_STATIC_FROM` environment variable, the server will serve static files from
 /// either local or GCS storage.
 #[tokio::main]
 async fn main() {
     info!("Starting server on {PORT}...");
+    let metrics = PrometheusMetrics::new();
+
     let serve_static = match std::env::var(SERVE_STATIC_FROM_KEY) {
         Ok(value) => {
             match value.as_str() {
@@ -49,7 +57,8 @@ async fn main() {
 
     let router: Router<(), Body> = Router::new()
         .route("/health", get(health_check))
-        .route("/liveness", get(liveness_check));
+        .route("/liveness", get(liveness_check))
+        .route("/metrics", get(serve_metrics).with_state(metrics.clone()));
 
     let serve_dir = ServeDir::new("static");
     let serve_static_local: MethodRouter<(), Body, Infallible> =
@@ -65,6 +74,7 @@ async fn main() {
     };
 
     let router = router.nest_service("/", serve_static_local);
+
     let args: Vec<String> = std::env::args().collect();
     let address = match args.get(1).cloned() {
         None => SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), PORT),
@@ -77,6 +87,7 @@ async fn main() {
 
     let mut app = App::new();
 
+    app.insert_resource(metrics);
     app.add_plugins(MinimalPlugins);
     app.add_plugins(LogPlugin::default());
     app.add_plugins(MultiplayerSimpleNetServerPlugin {

@@ -13,6 +13,7 @@ use crate::building::track_info::TrackInfo;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::map_level::MapLevel;
 use crate::map_level::zoning::ZoningInfo;
+use crate::metrics::Metrics;
 use crate::players::player_state::PlayerState;
 use crate::server_response::{GameInfo, PlayerInfo};
 use crate::tile_coords_xz::TileCoordsXZ;
@@ -75,20 +76,21 @@ impl GameState {
         }
     }
 
-    pub fn advance_time_diff(&mut self, diff: GameTimeDiff) {
-        self.advance_time_diff_internal(diff);
+    pub fn advance_time_diff(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
+        self.advance_time_diff_internal(diff, metrics);
         self.time = self.time + diff;
     }
 
-    fn advance_time_diff_internal(&mut self, diff: GameTimeDiff) {
+    fn advance_time_diff_internal(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
         // Later: If game is paused then no need to advance anything
         self.buildings.advance_time_diff(diff);
-        self.transports.advance_time_diff(diff, &mut self.buildings);
+        self.transports
+            .advance_time_diff(diff, &mut self.buildings, metrics);
     }
 
-    pub fn advance_time(&mut self, time: GameTime) {
+    pub fn advance_time(&mut self, time: GameTime, metrics: &impl Metrics) {
         let diff = time - self.time;
-        self.advance_time_diff_internal(diff);
+        self.advance_time_diff_internal(diff, metrics);
         self.time = time;
         self.time_steps += 1;
     }

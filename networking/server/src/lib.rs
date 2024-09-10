@@ -1,5 +1,7 @@
 #![allow(clippy::expect_used)]
 
+pub mod metrics;
+
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -20,6 +22,8 @@ use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
 use shared_domain::game_time::GameTime;
 use shared_domain::server_response::{GameResponse, ServerResponse, ServerResponseWithClientIds};
 use shared_domain::ClientId;
+
+use crate::metrics::PrometheusMetrics;
 
 pub type GameServerEvent = ServerEventFrom<GameChannel>;
 
@@ -116,6 +120,7 @@ fn process_client_command_with_client_id_events(
     server: ResMut<Server<GameChannel>>,
     mut client_command_with_client_id_events: EventReader<ClientCommandWithClientIdEvent>,
     time: Res<Time>,
+    metrics: Res<PrometheusMetrics>,
 ) {
     let ServerStateResource(ref mut server_state) = server_state_resource.as_mut();
 
@@ -130,7 +135,10 @@ fn process_client_command_with_client_id_events(
         }
     }
 
-    server_state.advance_times(GameTime::from_seconds(time.elapsed_seconds()));
+    server_state.advance_times(
+        GameTime::from_seconds(time.elapsed_seconds()),
+        metrics.as_ref(),
+    );
     for response in server_state.sync_games() {
         send_responses_to_clients(server.as_ref(), &response);
     }

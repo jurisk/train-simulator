@@ -7,6 +7,7 @@ use shared_domain::building::track_info::TrackInfo;
 use shared_domain::client_command::{DemolishSelector, GameCommand};
 use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTime;
+use shared_domain::metrics::Metrics;
 use shared_domain::server_response::{
     AddressEnvelope, GameError, GameInfo, GameResponse, PlayerInfo,
 };
@@ -216,8 +217,8 @@ impl GameService {
         }
     }
 
-    pub(crate) fn advance_time(&mut self, time: GameTime) {
-        self.state.advance_time(time);
+    pub(crate) fn advance_time(&mut self, time: GameTime, metrics: &impl Metrics) {
+        self.state.advance_time(time, metrics);
     }
 
     pub(crate) fn create_game_info(&self) -> GameInfo {

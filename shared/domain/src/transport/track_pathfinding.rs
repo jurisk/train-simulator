@@ -1,7 +1,10 @@
+use std::time::Instant;
+
 use log::{debug, trace};
 use pathfinding::prelude::dijkstra;
 
 use crate::building::building_state::BuildingState;
+use crate::metrics::Metrics;
 use crate::transport::movement_orders::MovementOrderLocation;
 use crate::transport::tile_track::TileTrack;
 use crate::transport::track_length::TrackLength;
@@ -52,6 +55,7 @@ pub fn find_route_to(
     current_tile_track: TileTrack,
     go_to: MovementOrderLocation,
     building_state: &BuildingState,
+    metrics: &impl Metrics,
 ) -> Option<Vec<TileTrack>> {
     let targets = find_location_tile_tracks(go_to, building_state)?;
 
@@ -59,7 +63,7 @@ pub fn find_route_to(
         "Doing pathfinding. Current: {current_tile_track:?}, Go to: {go_to:?}, Targets: {targets:?}"
     );
 
-    find_route_to_tile_tracks(current_tile_track, &targets, building_state)
+    find_route_to_tile_tracks(current_tile_track, &targets, building_state, metrics)
 }
 
 #[must_use]
@@ -67,19 +71,27 @@ pub fn find_route_to_tile_tracks(
     current_tile_track: TileTrack,
     targets: &[TileTrack],
     building_state: &BuildingState,
+    metrics: &impl Metrics,
 ) -> Option<Vec<TileTrack>> {
+    let start = Instant::now();
+
     debug!(
         "Finding route to {:?} from {:?}",
         targets, current_tile_track
     );
 
-    let (path, _length) = dijkstra(
+    let result = dijkstra(
         &current_tile_track,
         |tile_track| successors(*tile_track, building_state),
         |tile_track| targets.contains(tile_track),
-    )?;
+    );
 
-    debug!("Next in path is {:?}", path.get(1));
+    let elapsed = start.elapsed();
+    let lengths = result
+        .as_ref()
+        .map(|(tracks, length)| (tracks.len(), *length));
 
-    Some(path)
+    metrics.track_pathfinding_duration(elapsed, lengths);
+
+    result.map(|(tracks, _length)| tracks)
 }

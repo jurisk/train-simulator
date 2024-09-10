@@ -3,6 +3,7 @@ use log::{debug, error};
 use crate::building::building_state::BuildingState;
 use crate::cargo_map::CargoOps;
 use crate::game_time::GameTimeDiff;
+use crate::metrics::Metrics;
 use crate::transport::cargo_processing::cargo_processing_advance;
 use crate::transport::movement_orders::MovementOrderLocation;
 use crate::transport::progress_within_tile::ProgressWithinTile;
@@ -12,7 +13,11 @@ use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::transport::transport_location::TransportLocation;
 use crate::transport::transport_type::TransportType;
 
-fn jump_tile(transport_info: &mut TransportInfo, building_state: &BuildingState) -> Result<(), ()> {
+fn jump_tile(
+    transport_info: &mut TransportInfo,
+    building_state: &BuildingState,
+    metrics: &impl Metrics,
+) -> Result<(), ()> {
     debug!("Jumping tile: {:?}", transport_info);
 
     let transport_type = transport_info.transport_type().clone();
@@ -21,6 +26,7 @@ fn jump_tile(transport_info: &mut TransportInfo, building_state: &BuildingState)
         transport_info.dynamic_info.location.next_tile_in_path(),
         current_order.go_to,
         building_state,
+        metrics,
     );
 
     // The first one is the current tile, so we take the second one
@@ -66,6 +72,7 @@ fn advance_internal(
     transport_info: &mut TransportInfo,
     building_state: &mut BuildingState,
     diff: GameTimeDiff,
+    metrics: &impl Metrics,
 ) -> GameTimeDiff {
     if transport_info
         .dynamic_info
@@ -124,7 +131,7 @@ fn advance_internal(
                 GameTimeDiff::ZERO
             }
         } else {
-            match jump_tile(transport_info, building_state) {
+            match jump_tile(transport_info, building_state, metrics) {
                 Ok(()) => diff,
                 Err(()) => GameTimeDiff::ZERO,
             }
@@ -138,10 +145,11 @@ pub fn advance(
     transport_info: &mut TransportInfo,
     building_state: &mut BuildingState,
     diff: GameTimeDiff,
+    metrics: &impl Metrics,
 ) {
     let mut remaining = diff;
     loop {
-        remaining = advance_internal(transport_info, building_state, remaining);
+        remaining = advance_internal(transport_info, building_state, remaining, metrics);
         if remaining == GameTimeDiff::ZERO {
             break;
         }

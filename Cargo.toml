@@ -53,17 +53,18 @@ bevy_mod_raycast = "0.18"
 
 clap = {  version = "4.5.16", features = ["derive"] }
 
-# Should only be imported by `networking` code
-enfync = "0.1"
-url = "2.4"
-wasm-bindgen = "0.2"
+metrics = "0.23"
+metrics-exporter-prometheus = {  version = "0.15", default-features = false, features = [] }
 
 # Should only be imported by the `networking-*` code
-# Axum version should match bevy_simplenet's version
+# These versions should match bevy_simplenet's (and dependencies such as enfync) versions
+url = "2.4"
+enfync = "0.1"
 axum = "0.6"
 tokio = { version = "1.38", features = ["full"] }
 tower = { version = "0.4" }
 tower-http = { version = "0.3" }
+wasm-bindgen = "0.2"
 
 # From https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units
 # From https://rapier.rs/docs/user_guides/bevy_plugin/common_mistakes#my-local-build-of-rapier-is-slower-than-the-online-demos

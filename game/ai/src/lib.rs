@@ -8,6 +8,7 @@ use shared_domain::cargo_map::WithCargo;
 use shared_domain::client_command::GameCommand;
 use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
+use shared_domain::metrics::Metrics;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::tile_track::TileTrack;
@@ -26,9 +27,10 @@ pub fn ai_commands(
     player_id: PlayerId,
     game_state: &GameState,
     ai_state: &mut ArtificialIntelligenceState,
+    metrics: &impl Metrics,
 ) -> Option<Vec<GameCommand>> {
     try_building_transports(player_id, game_state)
-        .or_else(|| try_building_tracks(ai_state, player_id, game_state))
+        .or_else(|| try_building_tracks(ai_state, player_id, game_state, metrics))
         .or_else(|| try_building_stations(player_id, game_state))
         .or_else(|| try_building_industry_buildings(player_id, game_state))
 }
@@ -146,6 +148,7 @@ fn try_building_tracks(
     ai_state: &mut ArtificialIntelligenceState,
     player_id: PlayerId,
     game_state: &GameState,
+    metrics: &impl Metrics,
 ) -> Option<Vec<GameCommand>> {
     let connections = track_connections(game_state, logistics_links(player_id, game_state));
     for (source, targets) in connections {
@@ -161,6 +164,7 @@ fn try_building_tracks(
                 &[DirectionalEdge::entrance_to(target)],
                 game_state,
                 DEFAULT_ALREADY_EXISTS_COEF,
+                metrics,
             ) {
                 ai_state.track_connections_built.insert(edge_set);
                 if !route.is_empty() {

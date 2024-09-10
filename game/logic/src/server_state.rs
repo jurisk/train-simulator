@@ -8,6 +8,7 @@ use std::convert::identity;
 
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId, NetworkCommand};
 use shared_domain::game_time::GameTime;
+use shared_domain::metrics::Metrics;
 use shared_domain::server_response::{
     AddressEnvelope, NetworkResponse, ServerResponse, ServerResponseWithAddress,
     ServerResponseWithClientIds,
@@ -32,8 +33,8 @@ impl ServerState {
         }
     }
 
-    pub fn advance_times(&mut self, time: GameTime) {
-        self.games_service.advance_times(time);
+    pub fn advance_times(&mut self, time: GameTime, metrics: &impl Metrics) {
+        self.games_service.advance_times(time, metrics);
     }
 
     #[must_use]

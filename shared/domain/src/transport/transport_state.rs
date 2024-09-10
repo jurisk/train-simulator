@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::building::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
+use crate::metrics::Metrics;
 use crate::transport::advancement::advance;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
@@ -41,9 +42,14 @@ impl TransportState {
             .collect()
     }
 
-    pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff, buildings: &mut BuildingState) {
+    pub(crate) fn advance_time_diff(
+        &mut self,
+        diff: GameTimeDiff,
+        buildings: &mut BuildingState,
+        metrics: &impl Metrics,
+    ) {
         for transport in &mut self.transports {
-            advance(transport, buildings, diff);
+            advance(transport, buildings, diff, metrics);
         }
     }
 

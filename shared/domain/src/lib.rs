@@ -19,6 +19,7 @@ pub mod edge_xz;
 pub mod game_state;
 pub mod game_time;
 pub mod map_level;
+pub mod metrics;
 pub mod players;
 pub mod resource_type;
 pub mod server_response;
