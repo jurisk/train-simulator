@@ -1,4 +1,4 @@
-use std::time::Duration;
+use web_time::Duration;
 
 use crate::transport::track_length::TrackLength;
 

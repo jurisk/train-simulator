@@ -1,7 +1,6 @@
-use std::time::Instant;
-
 use log::{debug, trace};
 use pathfinding::prelude::dijkstra;
+use web_time::Instant;
 
 use crate::building::building_state::BuildingState;
 use crate::metrics::Metrics;

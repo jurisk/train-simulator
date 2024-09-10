@@ -1,7 +1,5 @@
 #![allow(clippy::needless_pass_by_value, clippy::module_name_repetitions)]
 
-use std::time::Duration;
-
 use bevy::app::{App, FixedUpdate};
 use bevy::prelude::{
     info, EventReader, EventWriter, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time, Timer,
@@ -10,6 +8,7 @@ use bevy::time::TimerMode;
 use shared_domain::client_command::{ClientCommand, NetworkCommand};
 use shared_domain::server_response::{NetworkResponse, ServerResponse};
 use uuid::Uuid;
+use web_time::Duration;
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 

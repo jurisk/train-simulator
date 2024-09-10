@@ -1,11 +1,10 @@
-use std::time::Duration;
-
 use bevy::app::App;
 use bevy::dev_tools::fps_overlay::FpsOverlayPlugin;
 use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy::input::ButtonInput;
 use bevy::prelude::{KeyCode, Plugin, Res, ResMut, Resource, Update};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use web_time::Duration;
 
 use crate::debug::test_axis::TestAxisPlugin;
 use crate::key_map;

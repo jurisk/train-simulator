@@ -1,10 +1,10 @@
 #![allow(clippy::module_name_repetitions)]
 
 use std::fmt::{Debug, Formatter};
-use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use web_time::Duration;
 
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;

@@ -1,10 +1,9 @@
-use std::time::Duration;
-
 use bevy::prelude::Resource;
 use metrics::{metadata_var, Histogram, Key, Level, Recorder};
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle, PrometheusRecorder};
 use shared_domain::metrics::Metrics;
 use shared_domain::transport::track_length::TrackLength;
+use web_time::Duration;
 
 // Safe to clone because everything inside is wrapped in `Arc`
 #[expect(clippy::module_name_repetitions)]

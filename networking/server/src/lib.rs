@@ -4,7 +4,6 @@ pub mod metrics;
 
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
 
 use axum::Router;
 use bevy::prelude::{
@@ -22,6 +21,7 @@ use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
 use shared_domain::game_time::GameTime;
 use shared_domain::server_response::{GameResponse, ServerResponse, ServerResponseWithClientIds};
 use shared_domain::ClientId;
+use web_time::Duration;
 
 use crate::metrics::PrometheusMetrics;
 

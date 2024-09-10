@@ -24,7 +24,8 @@ bevy_mod_raycast.workspace = true
 bevy_egui.workspace = true
 egui.workspace = true
 bevy-inspector-egui.workspace = true
-log = "0.4.22"
+log.workspace = true
+web-time.workspace = true
 
 [dependencies.uuid]
 workspace = true

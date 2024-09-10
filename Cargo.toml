@@ -56,6 +56,8 @@ clap = {  version = "4.5.16", features = ["derive"] }
 metrics = "0.23"
 metrics-exporter-prometheus = {  version = "0.15", default-features = false, features = [] }
 
+web-time = "1.1"
+
 # Should only be imported by the `networking-*` code
 # These versions should match bevy_simplenet's (and dependencies such as enfync) versions
 url = "2.4"

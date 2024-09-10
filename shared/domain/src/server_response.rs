@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::time::Duration;
 
 use fastrand::Rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use web_time::Duration;
 
 use crate::building::building_info::BuildingDynamicInfo;
 use crate::building::industry_building_info::IndustryBuildingInfo;

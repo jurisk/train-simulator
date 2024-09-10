@@ -1,9 +1,8 @@
-use std::time::{Duration, Instant};
-
 use itertools::Itertools;
 use log::{info, log, trace, warn, Level};
 use pathfinding::prelude::dijkstra;
 use shared_util::bool_ops::BoolOps;
+use web_time::{Duration, Instant};
 
 use crate::building::building_state::CanBuildResponse;
 use crate::building::track_info::TrackInfo;

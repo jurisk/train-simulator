@@ -1,11 +1,10 @@
-use std::time::Duration;
-
 use bevy::asset::AssetPlugin;
 use bevy::prelude::{info, App, AssetMode, Plugin, PluginGroup};
 use bevy::utils::default;
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution};
 use bevy::DefaultPlugins;
 use bevy_egui::EguiContexts;
+use web_time::Duration;
 
 use crate::assets::GameAssetsPlugin;
 use crate::cameras::CameraPlugin;

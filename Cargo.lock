@@ -1656,6 +1656,7 @@ dependencies = [
  "shared-domain",
  "shared-util",
  "uuid",
+ "web-time",
 ]
 
 [[package]]
@@ -3558,6 +3559,7 @@ dependencies = [
  "shared-domain",
  "tokio",
  "tower-http",
+ "web-time",
 ]
 
 [[package]]
@@ -4614,6 +4616,7 @@ dependencies = [
  "serde_json",
  "shared-util",
  "uuid",
+ "web-time",
 ]
 
 [[package]]
