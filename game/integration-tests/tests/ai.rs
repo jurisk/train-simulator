@@ -4,6 +4,7 @@ use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_time::{GameTime, GameTimeDiff};
+use shared_domain::metrics::NoopMetrics;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::server_response::{Colour, GameResponse, PlayerInfo, ServerResponse};
 use shared_domain::{MapId, PlayerId, PlayerName};
@@ -66,7 +67,12 @@ fn ai_until_final_goods_built() {
             break;
         }
 
-        let commands = ai_commands(player_id, game_state, &mut artificial_intelligence_state);
+        let commands = ai_commands(
+            player_id,
+            game_state,
+            &mut artificial_intelligence_state,
+            &NoopMetrics::default(),
+        );
         if let Some(commands) = commands {
             for command in commands {
                 let _responses = games_service
@@ -76,6 +82,6 @@ fn ai_until_final_goods_built() {
         }
 
         time = time + GameTimeDiff::from_seconds(0.1);
-        games_service.advance_times(time);
+        games_service.advance_times(time, &NoopMetrics::default());
     }
 }

@@ -1,6 +1,7 @@
 use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::map_level::MapLevel;
+use shared_domain::metrics::NoopMetrics;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::transport::track_length::TrackLength;
@@ -31,6 +32,7 @@ fn test_plan_tracks() {
         &[tail],
         &game_state,
         DEFAULT_ALREADY_EXISTS_COEF,
+        &NoopMetrics::default(),
     )
     .expect("Failed to plan tracks");
 
@@ -59,6 +61,7 @@ fn test_plan_tracks() {
         from_tile_track,
         &[to_tile_track],
         game_state.building_state(),
+        &NoopMetrics::default(),
     )
     .unwrap();
     assert_eq!(route.len(), tracks.len());

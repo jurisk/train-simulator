@@ -136,6 +136,7 @@ mod tests {
     use crate::map_level::map_level::{Height, MapLevel, TerrainType};
     use crate::map_level::terrain::Terrain;
     use crate::map_level::zoning::Zoning;
+    use crate::metrics::NoopMetrics;
     use crate::tile_coords_xz::TileCoordsXZ;
     use crate::water::Water;
     use crate::MapId;
@@ -157,6 +158,7 @@ mod tests {
             &[tail],
             &game_state,
             DEFAULT_ALREADY_EXISTS_COEF,
+            &NoopMetrics::default(),
         )
         .unwrap();
 

@@ -10,8 +10,8 @@ use client_graphics::ClientGraphicsPlugin;
 use game_logic::server_state::ServerState;
 use shared_domain::client_command::ClientCommandWithClientId;
 use shared_domain::game_time::GameTime;
-use shared_domain::ClientId;
 use shared_domain::metrics::NoopMetrics;
+use shared_domain::ClientId;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

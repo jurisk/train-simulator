@@ -7,6 +7,7 @@ use shared_domain::metrics::Metrics;
 use shared_domain::transport::track_length::TrackLength;
 
 // Safe to clone because everything inside is wrapped in `Arc`
+#[expect(clippy::module_name_repetitions)]
 #[derive(Clone, Resource)]
 pub struct PrometheusMetrics {
     prometheus_handle:           PrometheusHandle,
