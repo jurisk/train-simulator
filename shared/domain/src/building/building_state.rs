@@ -546,7 +546,7 @@ mod tests {
         let map_level = MapLevel::new(
             Terrain::flat(size_x, size_z, Height::from_u8(1), TerrainType::Grass),
             Water::from_below(Height::from_u8(0)),
-            Zoning::new(),
+            Zoning::new(size_x, size_z),
         );
         let owner_id = PlayerId::random();
         let tile = TileCoordsXZ::new(2, 0);
@@ -560,6 +560,6 @@ mod tests {
             StationType::EW_1_4,
         );
         let result = building_state.can_build_building(owner_id, &station_info, &map_level);
-        assert_eq!(result, false);
+        assert!(!result);
     }
 }

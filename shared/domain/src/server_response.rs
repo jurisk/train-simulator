@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fmt::{Debug, Formatter};
+use std::fmt::Debug;
 use std::time::Duration;
 
 use fastrand::Rng;
@@ -77,7 +77,7 @@ pub struct PlayerInfo {
 }
 
 #[expect(clippy::large_enum_variant)]
-#[derive(Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum GameResponse {
     GameStateSnapshot(GameState),
 
@@ -114,7 +114,7 @@ pub enum GameError {
 }
 
 impl Debug for GameError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             GameError::GameNotFound => write!(f, "GameNotFound"),
             GameError::CannotBuildStation(station_id) => {
@@ -146,7 +146,7 @@ impl Debug for GameResponse {
                     "GameStateSnapshot({:?}, {:?}, {:?})",
                     game_state.time(),
                     game_state.building_state(),
-                    game_state.transport_state()
+                    game_state.transport_state(),
                 )
             },
             GameResponse::PlayersUpdated(players) => {
@@ -216,7 +216,7 @@ pub enum NetworkResponse {
 
 // Later: We are shipping too much in `GameState`, it has too much denormalisation.
 #[expect(clippy::large_enum_variant)]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ServerResponse {
     Network(NetworkResponse),
     Authentication(AuthenticationResponse),
@@ -232,7 +232,7 @@ pub enum AddressEnvelope {
     ToAllPlayersInGame(GameId),
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[expect(clippy::module_name_repetitions)]
 pub struct ServerResponseWithAddress {
     pub address:  AddressEnvelope,
@@ -246,7 +246,7 @@ impl ServerResponseWithAddress {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[expect(clippy::module_name_repetitions)]
 pub struct ServerResponseWithClientIds {
     pub client_ids: Vec<ClientId>,

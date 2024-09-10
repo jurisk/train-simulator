@@ -6,7 +6,7 @@ use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::map_level::terrain::Terrain;
-use crate::map_level::zoning::Zoning;
+use crate::map_level::zoning::{Zoning, ZoningFlattened};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type::TrackType;
@@ -122,11 +122,56 @@ impl Add for Height {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct MapLevel {
     terrain: Terrain,
     water:   Water,
     zoning:  Zoning,
+}
+
+impl Serialize for MapLevel {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let flattened: MapLevelFlattened = self.clone().into();
+        flattened.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for MapLevel {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let flattened = MapLevelFlattened::deserialize(deserializer)?;
+        let map_level: MapLevel = flattened.into();
+        Ok(map_level)
+    }
+}
+
+impl From<MapLevel> for MapLevelFlattened {
+    fn from(value: MapLevel) -> Self {
+        MapLevelFlattened {
+            terrain: value.terrain,
+            water:   value.water,
+            zoning:  value.zoning.into(),
+        }
+    }
+}
+
+impl From<MapLevelFlattened> for MapLevel {
+    fn from(value: MapLevelFlattened) -> Self {
+        let zoning = value.zoning.into();
+        MapLevel::new(value.terrain, value.water, zoning)
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub(crate) struct MapLevelFlattened {
+    terrain: Terrain,
+    water:   Water,
+    zoning:  ZoningFlattened,
 }
 
 impl MapLevel {
@@ -142,10 +187,10 @@ impl MapLevel {
     #[must_use]
     #[expect(clippy::missing_panics_doc)]
     pub fn load(json: &str) -> Self {
-        let result = serde_json::from_str::<MapLevel>(json)
+        let map_level = serde_json::from_str::<MapLevel>(json)
             .unwrap_or_else(|err| panic!("Failed to deserialise {json}: {err}"));
-        assert_eq!(result.is_valid(), Ok(()));
-        result
+        assert_eq!(map_level.is_valid(), Ok(()));
+        map_level
     }
 
     // Could eventually move to some `Validated` instead

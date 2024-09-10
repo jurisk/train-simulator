@@ -285,6 +285,7 @@ impl ResourceTransform {
 }
 
 #[cfg(test)]
+#[expect(clippy::float_cmp)]
 mod tests {
     use crate::building::industry_type::IndustryType;
     use crate::cargo_amount::CargoAmount;
@@ -296,7 +297,7 @@ mod tests {
         let transform = IndustryType::CoalMine.transform_per_second();
         let cargo = CargoMap::new();
         let utilisation = transform.calculate_utilisation_percentage(&cargo, 0.5);
-        assert_eq!(utilisation, 1.0);
+        assert_eq!(utilisation, 1f32);
     }
 
     #[test]
@@ -304,7 +305,7 @@ mod tests {
         let transform = IndustryType::SteelMill.transform_per_second();
         let cargo = CargoMap::new();
         let utilisation = transform.calculate_utilisation_percentage(&cargo, 0.5);
-        assert_eq!(utilisation, 0.0);
+        assert_eq!(utilisation, 0f32);
     }
 
     #[test]
@@ -313,7 +314,7 @@ mod tests {
         let mut cargo = CargoMap::new();
         cargo.add(ResourceType::Coal, CargoAmount::new(4.0));
         let utilisation = transform.calculate_utilisation_percentage(&cargo, 0.5);
-        assert_eq!(utilisation, 0.0);
+        assert_eq!(utilisation, 0f32);
     }
 
     #[test]
@@ -323,7 +324,7 @@ mod tests {
         cargo.add(ResourceType::Coal, CargoAmount::new(4.0));
         cargo.add(ResourceType::Iron, CargoAmount::new(4.0));
         let utilisation = transform.calculate_utilisation_percentage(&cargo, 0.5);
-        assert_eq!(utilisation, 1.0);
+        assert_eq!(utilisation, 1f32);
     }
 
     #[test]
@@ -333,6 +334,6 @@ mod tests {
         cargo.add(ResourceType::Coal, CargoAmount::new(0.025));
         cargo.add(ResourceType::Iron, CargoAmount::new(4.0));
         let utilisation = transform.calculate_utilisation_percentage(&cargo, 0.5);
-        assert_eq!(utilisation, 0.5);
+        assert_eq!(utilisation, 0.5f32);
     }
 }

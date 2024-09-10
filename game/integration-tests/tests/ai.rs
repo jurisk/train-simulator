@@ -41,14 +41,11 @@ fn ai_until_final_goods_built() {
             .process_command(game_id, player_id, &GameCommand::RequestGameStateSnapshot)
             .unwrap();
         let game_state = response.first().unwrap();
-        let game_state =
-            if let ServerResponse::Game(_game_id, GameResponse::GameStateSnapshot(snapshot)) =
-                &game_state.response
-            {
-                snapshot
-            } else {
-                panic!("Expected GameStateSnapshot, got {:?}", game_state.response);
-            };
+        let ServerResponse::Game(_game_id, GameResponse::GameStateSnapshot(game_state)) =
+            &game_state.response
+        else {
+            panic!("Expected GameStateSnapshot, got {:?}", game_state.response);
+        };
 
         let mut cargo = CargoMap::new();
         for station in game_state.building_state().find_players_stations(player_id) {

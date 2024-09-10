@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use log::trace;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 
 use crate::building::building_info::BuildingDynamicInfo;
 use crate::building::building_state::{BuildingState, CanBuildResponse};
@@ -11,7 +11,7 @@ use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::game_time::{GameTime, GameTimeDiff};
-use crate::map_level::map_level::MapLevel;
+use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::ZoningInfo;
 use crate::metrics::Metrics;
 use crate::players::player_state::PlayerState;
@@ -25,7 +25,7 @@ use crate::{GameId, IndustryBuildingId, MapId, PlayerId, StationId, TrackId, Tra
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
 //          So the API gets quite busy because of this. There may be better ways, such as splitting the validation-oriented methods into a server-only trait.
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct GameState {
     game_id:    GameId,
     map_id:     MapId,
@@ -35,6 +35,69 @@ pub struct GameState {
     players:    PlayerState,
     time:       GameTime,
     time_steps: u64,
+}
+
+impl Serialize for GameState {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let flattened = GameStateFlattened::from(self.clone());
+        flattened.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for GameState {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let flattened = GameStateFlattened::deserialize(deserializer)?;
+        let game_state: GameState = flattened.into();
+        Ok(game_state)
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct GameStateFlattened {
+    game_id:    GameId,
+    map_id:     MapId,
+    map_level:  MapLevelFlattened,
+    buildings:  BuildingState,
+    transports: TransportState,
+    players:    PlayerState,
+    time:       GameTime,
+    time_steps: u64,
+}
+
+impl From<GameState> for GameStateFlattened {
+    fn from(value: GameState) -> Self {
+        Self {
+            game_id:    value.game_id,
+            map_id:     value.map_id,
+            map_level:  value.map_level.into(),
+            buildings:  value.buildings.clone(),
+            transports: value.transports.clone(),
+            players:    value.players.clone(),
+            time:       value.time,
+            time_steps: value.time_steps,
+        }
+    }
+}
+
+impl From<GameStateFlattened> for GameState {
+    fn from(value: GameStateFlattened) -> Self {
+        Self {
+            game_id:    value.game_id,
+            map_id:     value.map_id,
+            map_level:  value.map_level.into(),
+            buildings:  value.buildings,
+            transports: value.transports.clone(),
+            players:    value.players.clone(),
+            time:       value.time,
+            time_steps: value.time_steps,
+        }
+    }
 }
 
 impl GameState {
@@ -346,7 +409,7 @@ impl GameState {
         self.map_level
             .zoning()
             .all_zonings()
-            .iter()
+            .into_iter()
             .filter(|zoning| {
                 self.building_state()
                     .industry_building_at(zoning.reference_tile())

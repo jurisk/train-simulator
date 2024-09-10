@@ -1,6 +1,9 @@
 #![allow(clippy::module_name_repetitions)]
 
-use serde::{Deserialize, Deserializer, Serialize};
+use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
+use shared_util::grid_xz::GridXZ;
 
 use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
@@ -64,59 +67,78 @@ impl ZoningInfo {
     }
 }
 
-// TODO: Optimise with GridXZ<TileCoordsXZ, ZoningId> for faster common lookups - but need to deal with serialisation
-#[derive(Clone, Debug, PartialEq)]
-pub struct Zoning(Vec<ZoningInfo>);
+#[derive(Serialize, Deserialize, Clone)]
+pub(crate) struct ZoningFlattened {
+    size_x: usize,
+    size_z: usize,
+    infos:  Vec<ZoningInfo>,
+}
 
-impl<'de> Deserialize<'de> for Zoning {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let zoning_info: Vec<ZoningInfo> = Vec::deserialize(deserializer)?;
-        Ok(Self::from_vec(zoning_info))
+impl From<Zoning> for ZoningFlattened {
+    fn from(value: Zoning) -> Self {
+        let mut infos = Vec::new();
+        for info in value.all_zonings() {
+            infos.push(info.clone());
+        }
+        Self {
+            size_x: value.grid.size_x,
+            size_z: value.grid.size_z,
+            infos,
+        }
     }
 }
 
-impl Serialize for Zoning {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::ser::Serializer,
-    {
-        self.all_zonings().serialize(serializer)
+impl From<ZoningFlattened> for Zoning {
+    fn from(value: ZoningFlattened) -> Self {
+        let mut result = Zoning::new(value.size_x, value.size_z);
+        for info in value.infos {
+            result.add_zoning(info);
+        }
+        result
     }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Zoning {
+    infos: HashMap<ZoningId, ZoningInfo>,
+    grid:  GridXZ<TileCoordsXZ, Option<ZoningId>>,
 }
 
 impl Zoning {
     #[must_use]
-    #[expect(clippy::new_without_default)]
-    pub fn new() -> Self {
-        Self(Vec::new())
+    pub fn new(size_x: usize, size_z: usize) -> Self {
+        Self {
+            infos: HashMap::new(),
+            grid:  GridXZ::filled_with(size_x, size_z, None),
+        }
+    }
+
+    fn add_zoning(&mut self, zoning_info: ZoningInfo) {
+        let coverage = zoning_info.covers_tiles();
+        let id = zoning_info.id;
+        self.infos.insert(id, zoning_info);
+        for tile in coverage.to_set() {
+            self.grid[tile] = Some(id);
+        }
     }
 
     #[must_use]
-    fn from_vec(zoning_info: Vec<ZoningInfo>) -> Self {
-        Self(zoning_info)
-    }
-
-    #[must_use]
-    pub fn all_zonings(&self) -> &Vec<ZoningInfo> {
-        &self.0
+    pub fn all_zonings(&self) -> Vec<&ZoningInfo> {
+        self.infos.values().collect()
     }
 
     #[must_use]
     pub fn zoning_at_reference_tile(&self, tile: TileCoordsXZ) -> Option<&ZoningInfo> {
-        self.all_zonings()
-            .iter()
-            .find(|zoning_info| zoning_info.reference_tile == tile)
+        let found = self.grid.get(tile)?;
+        found.and_then(|id| self.infos.get(&id))
     }
 
     #[must_use]
     pub fn free_at_tile(&self, tile: TileCoordsXZ) -> bool {
-        !self
-            .all_zonings()
-            .iter()
-            .any(|zoning_info| zoning_info.covers_tiles().contains(tile))
+        match self.grid.get(tile) {
+            None => false,
+            Some(found) => found.is_none(),
+        }
     }
 
     #[must_use]
