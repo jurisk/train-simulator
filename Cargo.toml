@@ -59,7 +59,8 @@ metrics-exporter-prometheus = {  version = "0.15", default-features = false, fea
 web-time = "1.1"
 
 # Should only be imported by the `networking-*` code
-# These versions should match bevy_simplenet's (and dependencies such as enfync) versions
+# These versions should match bevy_simplenet's (and dependencies such as `enfync` and `ezsockets`) versions.
+# Note - Updating `tokio` to 1.39 broke `ezsockets` or something near it.
 url = "2.4"
 enfync = "0.1"
 axum = "0.6"

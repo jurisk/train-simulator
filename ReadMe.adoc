@@ -95,9 +95,7 @@ cargo install cargo-duplicates
 cargo duplicates
 ----
 
-Note - Updating `tokio` to 1.39 broke `ezsockets` or something near it.
-
-Removing `~/.cargo/registry` is sometimes needed.
+Removing `~/.cargo/registry` is sometimes needed when `bevy_dylib` breaks.
 
 Frequent:
 
