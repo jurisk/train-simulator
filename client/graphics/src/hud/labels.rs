@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use bevy::prelude::{Camera, EventWriter, GlobalTransform, Query, Res, ResMut, Vec3};
 use bevy_egui::EguiContexts;
-use egui::{Align2, Context, Id, Pos2};
+use egui::{Button, CentralPanel, Color32, Context, Frame, Label, Pos2, Rect, RichText, Ui};
 use shared_domain::building::building_info::WithTileCoverage;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
@@ -14,21 +14,22 @@ use shared_domain::{GameId, IndustryBuildingId, PlayerId};
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::transport::ui::TransportsToShow;
 use crate::game::{center_vec3, GameStateResource, PlayerIdResource};
+use crate::hud::helpers::primary_menu;
 
-// TODO HIGH: This looks ugly and often breaks. And it's on top of left-side menu. Consider using https://docs.rs/egui/latest/egui/struct.Painter.html instead? Or https://bevyengine.org/examples/2d-rendering/text2d/ or https://github.com/kulkalkul/bevy_mod_billboard?
+// TODO HIGH: This looks ugly and often breaks. Consider using https://docs.rs/egui/latest/egui/struct.Painter.html instead? Or https://bevyengine.org/examples/2d-rendering/text2d/ or https://github.com/kulkalkul/bevy_mod_billboard?
 fn with_tile_coverage_label(
-    id: String,
     label: String,
     with_tile_coverage: &dyn WithTileCoverage,
     game_state: &GameState,
-    context: &mut Context,
+    context: &Context,
+    ui: &mut Ui,
     camera: &Camera,
     camera_transform: &GlobalTransform,
 ) {
     let position = center_vec3(with_tile_coverage, game_state.map_level());
-    draw_in_position(position, id, context, camera, camera_transform, |ui| {
-        ui.colored_label(egui::Color32::WHITE, label);
-    });
+    let rect = vec3_to_rect(position, camera, camera_transform, context);
+    let label = RichText::new(label).color(Color32::WHITE);
+    ui.put(rect, Label::new(label));
 }
 
 #[expect(clippy::needless_pass_by_value, clippy::module_name_repetitions)]
@@ -49,23 +50,29 @@ pub fn draw_labels(
 
             let context = contexts.ctx_mut();
 
-            draw_zoning_buttons(
-                game_state,
-                *player_id,
-                context,
-                camera,
-                camera_transform,
-                &mut client_messages,
-            );
-            draw_industry_labels(game_state, context, camera, camera_transform);
-            draw_station_labels(game_state, context, camera, camera_transform);
-            draw_transport_labels(
-                game_state,
-                context,
-                camera,
-                camera_transform,
-                &mut show_transport_details,
-            );
+            CentralPanel::default()
+                .frame(Frame::none())
+                .show(context, |ui| {
+                    draw_zoning_buttons(
+                        game_state,
+                        *player_id,
+                        context,
+                        ui,
+                        camera,
+                        camera_transform,
+                        &mut client_messages,
+                    );
+                    draw_industry_labels(game_state, context, ui, camera, camera_transform);
+                    draw_station_labels(game_state, context, ui, camera, camera_transform);
+                    draw_transport_labels(
+                        game_state,
+                        context,
+                        ui,
+                        camera,
+                        camera_transform,
+                        &mut show_transport_details,
+                    );
+                });
         }
     }
 }
@@ -73,13 +80,13 @@ pub fn draw_labels(
 fn draw_zoning_buttons(
     game_state: &GameState,
     player_id: PlayerId,
-    context: &mut Context,
+    context: &Context,
+    ui: &mut Ui,
     camera: &Camera,
     camera_transform: &GlobalTransform,
     client_messages: &mut EventWriter<ClientMessageEvent>,
 ) {
     for zoning_info in game_state.all_free_zonings() {
-        let id = format!("{:?}", zoning_info.id());
         let game_id = game_state.game_id();
         let label = format!("{:?}", zoning_info.zoning_type());
         let position_3d = center_vec3(zoning_info, game_state.map_level());
@@ -101,8 +108,8 @@ fn draw_zoning_buttons(
         draw_menu(
             label,
             position_3d,
-            id,
             context,
+            ui,
             camera,
             camera_transform,
             game_id,
@@ -114,13 +121,12 @@ fn draw_zoning_buttons(
 
 fn draw_industry_labels(
     game_state: &GameState,
-    context: &mut Context,
+    context: &Context,
+    ui: &mut Ui,
     camera: &Camera,
     camera_transform: &GlobalTransform,
 ) {
     for industry_building in game_state.building_state().all_industry_buildings() {
-        let id = format!("{:?}", industry_building.id());
-
         let label = format!(
             "{:?} {:?}",
             industry_building.industry_type(),
@@ -128,11 +134,11 @@ fn draw_industry_labels(
         );
 
         with_tile_coverage_label(
-            id,
             label,
             industry_building,
             game_state,
             context,
+            ui,
             camera,
             camera_transform,
         );
@@ -141,20 +147,20 @@ fn draw_industry_labels(
 
 fn draw_station_labels(
     game_state: &GameState,
-    context: &mut Context,
+    context: &Context,
+    ui: &mut Ui,
     camera: &Camera,
     camera_transform: &GlobalTransform,
 ) {
     for station in game_state.building_state().all_stations() {
-        let id = format!("{:?}", station.id());
         let label = format!("{:?} {:?}", station.reference_tile(), station.cargo());
 
         with_tile_coverage_label(
-            id,
             label,
             station,
             game_state,
             context,
+            ui,
             camera,
             camera_transform,
         );
@@ -163,7 +169,8 @@ fn draw_station_labels(
 
 fn draw_transport_labels(
     game_state: &GameState,
-    context: &mut Context,
+    context: &Context,
+    ui: &mut Ui,
     camera: &Camera,
     camera_transform: &GlobalTransform,
     show_transport_details: &mut ResMut<TransportsToShow>,
@@ -171,73 +178,61 @@ fn draw_transport_labels(
     for transport in game_state.transport_infos() {
         let id = transport.transport_id();
         let label = transport.cargo_as_string();
-        let label_id = format!("{id:?}");
         let transport_location = transport.location();
         let position = transport_location.tile_path[0].progress_coordinates(
             transport_location.progress_within_tile,
             game_state.map_level().terrain(),
         );
-        draw_in_position(
-            position,
-            label_id,
-            context,
-            camera,
-            camera_transform,
-            |ui| {
-                let selected = show_transport_details.contains(id);
-                if ui
-                    .add(egui::Button::new(label).selected(selected))
-                    .clicked()
-                {
-                    show_transport_details.toggle(id);
-                };
-            },
-        );
+        let rect = vec3_to_rect(position, camera, camera_transform, context);
+        let selected = show_transport_details.contains(id);
+        if ui
+            .put(rect, Button::new(label).selected(selected))
+            .clicked()
+        {
+            show_transport_details.toggle(id);
+        };
     }
-}
-
-fn draw_in_position<F>(
-    position: Vec3,
-    id: String,
-    context: &mut Context,
-    camera: &Camera,
-    camera_transform: &GlobalTransform,
-    f: F,
-) where
-    F: FnOnce(&mut egui::Ui),
-{
-    let position = project_to_screen(position, camera, camera_transform, context);
-
-    egui::Area::new(Id::from(id))
-        .fixed_pos(position)
-        .pivot(Align2::CENTER_CENTER)
-        .constrain(false)
-        .show(context, f);
 }
 
 #[expect(clippy::too_many_arguments)]
 fn draw_menu(
     label: String,
     position: Vec3,
-    id: String,
-    context: &mut Context,
+    context: &Context,
+    ui: &mut Ui,
     camera: &Camera,
     camera_transform: &GlobalTransform,
     game_id: GameId,
     sub_buttons: BTreeMap<String, Box<dyn FnOnce() -> GameCommand>>,
     client_messages: &mut EventWriter<ClientMessageEvent>,
 ) {
-    draw_in_position(position, id, context, camera, camera_transform, |ui| {
-        ui.menu_button(label, |ui| {
-            for (sub_label, f) in sub_buttons {
-                if ui.button(sub_label).clicked() {
-                    let game_command = f();
-                    let client_command = ClientCommand::Game(game_id, game_command);
-                    client_messages.send(ClientMessageEvent::new(client_command));
-                }
+    let rect = vec3_to_rect(position, camera, camera_transform, context);
+
+    let button = ui.put(rect, Button::new(label));
+    primary_menu(&button, |ui| {
+        for (sub_label, f) in sub_buttons {
+            if ui.button(sub_label).clicked() {
+                let game_command = f();
+                let client_command = ClientCommand::Game(game_id, game_command);
+                client_messages.send(ClientMessageEvent::new(client_command));
+                ui.close_menu();
             }
-        });
+        }
     });
+}
+
+fn vec3_to_rect(
+    position: Vec3,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+    context: &Context,
+) -> Rect {
+    let diff = Pos2::new(60.0, 10.0);
+    let pos = project_to_screen(position, camera, camera_transform, context);
+    Rect {
+        min: Pos2::new(pos.x - diff.x, pos.y - diff.y),
+        max: Pos2::new(pos.x + diff.x, pos.y + diff.y),
+    }
 }
 
 #[expect(clippy::let_and_return)]

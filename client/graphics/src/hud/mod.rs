@@ -12,6 +12,7 @@ use crate::states::ClientState;
 
 pub mod bottom_panel;
 pub mod domain;
+mod helpers;
 pub mod labels;
 pub mod left_panel;
 pub mod top_panel;

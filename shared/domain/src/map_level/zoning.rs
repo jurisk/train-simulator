@@ -1,6 +1,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use std::collections::HashMap;
+use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 use shared_util::grid_xz::GridXZ;
@@ -18,10 +19,19 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::ZoningId;
 
-#[derive(Serialize, Deserialize, Hash, Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Hash, Copy, Clone, Eq, PartialEq)]
 pub enum ZoningType {
     Source(ResourceType),
     Industrial,
+}
+
+impl Debug for ZoningType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Source(resource_type) => write!(f, "{resource_type:?}"),
+            ZoningType::Industrial => write!(f, "Industrial"),
+        }
+    }
 }
 
 impl ZoningType {
