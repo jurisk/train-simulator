@@ -8,6 +8,7 @@ use bevy::prelude::{
     in_state, info, DetectChanges, Gizmos, IntoSystemConfigs, MouseButton, Plugin, Query, Res,
     ResMut, Resource, TypePath, Update, Vec3,
 };
+use bevy_egui::EguiContexts;
 use bevy_mod_raycast::deferred::RaycastSource;
 use bevy_mod_raycast::prelude::{DeferredRaycastingPlugin, RaycastPluginState};
 use shared_domain::edge_xz::EdgeXZ;
@@ -19,6 +20,7 @@ use crate::debug::drawing::{debug_draw_edge, debug_draw_tile};
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::{Tile, Tiles};
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
+use crate::on_ui;
 use crate::states::ClientState;
 
 #[derive(Resource, Default, Debug)]
@@ -26,7 +28,7 @@ pub struct ClickedTile(pub Option<TileCoordsXZ>);
 
 impl ClickedTile {
     pub fn should_update(&self, new: Option<TileCoordsXZ>) -> bool {
-        self.0.is_none() && new.is_some()
+        self.0 != new
     }
 
     pub fn update(&mut self, new: Option<TileCoordsXZ>) {
@@ -52,7 +54,7 @@ pub struct ClickedEdge(pub Option<EdgeXZ>);
 
 impl ClickedEdge {
     pub fn should_update(&self, new: Option<EdgeXZ>) -> bool {
-        self.0.is_none() && new.is_some()
+        self.0 != new
     }
 
     pub fn update(&mut self, new: Option<EdgeXZ>) {
@@ -248,7 +250,9 @@ fn closest_edge(
 #[expect(
     clippy::too_many_arguments,
     clippy::needless_pass_by_value,
-    clippy::match_bool
+    clippy::match_bool,
+    clippy::collapsible_else_if,
+    clippy::collapsible_if
 )]
 fn update_selections<T: TypePath + Send + Sync>(
     sources: Query<&RaycastSource<T>>,
@@ -261,7 +265,12 @@ fn update_selections<T: TypePath + Send + Sync>(
     mut clicked_tile: ResMut<ClickedTile>,
     mut clicked_edge: ResMut<ClickedEdge>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
+    mut egui_contexts: EguiContexts,
 ) {
+    if on_ui(&mut egui_contexts) {
+        return;
+    }
+
     for (is_first, intersection) in sources.iter().flat_map(|m| {
         m.intersections()
             .iter()
@@ -290,18 +299,24 @@ fn update_selections<T: TypePath + Send + Sync>(
                     ordered: ordered_selected_tiles,
                 } = selected_tiles.as_mut();
 
-                if mouse_buttons.pressed(MouseButton::Left) {
+                if mouse_buttons.just_pressed(MouseButton::Left) {
                     if clicked_tile.should_update(closest_tile) {
                         clicked_tile.update(closest_tile);
                     }
+                }
 
+                if mouse_buttons.just_released(MouseButton::Left) {
+                    if clicked_tile.should_update(None) {
+                        clicked_tile.update(None);
+                    }
+                }
+
+                if mouse_buttons.pressed(MouseButton::Left) {
                     if let Some(closest) = closest_tile {
                         if !ordered_selected_tiles.contains(&closest) {
                             ordered_selected_tiles.push(closest);
                         }
                     }
-                } else {
-                    clicked_tile.update(None);
                 }
 
                 if let Some(closest_tile) = closest_tile {
@@ -315,18 +330,28 @@ fn update_selections<T: TypePath + Send + Sync>(
                         ordered: ordered_selected_edges,
                     } = selected_edges.as_mut();
 
-                    if mouse_buttons.pressed(MouseButton::Left) {
+                    if mouse_buttons.just_pressed(MouseButton::Left) {
                         if clicked_edge.should_update(closest_edge) {
                             clicked_edge.update(closest_edge);
                         }
+                    }
 
+                    if mouse_buttons.just_released(MouseButton::Left) {
+                        if clicked_edge.should_update(None) {
+                            clicked_edge.update(None);
+                        }
+                    }
+
+                    if mouse_buttons.pressed(MouseButton::Left) {
                         if let Some(closest) = closest_edge {
                             if !ordered_selected_edges.contains(&closest) {
                                 ordered_selected_edges.push(closest);
                             }
                         }
                     } else {
-                        clicked_edge.update(None);
+                        if clicked_edge.should_update(None) {
+                            clicked_edge.update(None);
+                        }
                     }
                 }
 

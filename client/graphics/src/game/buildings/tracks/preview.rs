@@ -1,5 +1,5 @@
 use bevy::color::palettes::basic::BLUE;
-use bevy::prelude::{DetectChanges, Gizmos, Res, ResMut, Resource};
+use bevy::prelude::{info, DetectChanges, Gizmos, Res, ResMut, Resource};
 use bevy_egui::EguiContexts;
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::map_level::terrain::Terrain;
@@ -15,7 +15,17 @@ pub(crate) struct TrackPreviewResource(pub Vec<TrackInfo>);
 
 impl TrackPreviewResource {
     pub fn take(&mut self) -> Vec<TrackInfo> {
+        info!("TrackPreviewResource::take {}", self.0.len());
         std::mem::take(&mut self.0)
+    }
+
+    pub fn should_update(&self, new: &[TrackInfo]) -> bool {
+        self.0 != new
+    }
+
+    pub fn update(&mut self, planned: Vec<TrackInfo>) {
+        info!("TrackPreviewResource::update {}", planned.len());
+        self.0 = planned;
     }
 }
 
@@ -31,9 +41,8 @@ pub(crate) fn update_track_preview(
     game_state_resource: Res<GameStateResource>,
     selected_mode_resource: Res<SelectedMode>,
     egui_contexts: EguiContexts,
-    mut track_preview_resource: ResMut<TrackPreviewResource>,
+    mut track_preview: ResMut<TrackPreviewResource>,
 ) {
-    let TrackPreviewResource(track_preview) = &mut *track_preview_resource;
     if selected_mode_resource.as_ref() == &SelectedMode::Tracks {
         let changed = clicked_tile.is_changed()
             || clicked_edge.is_changed()
@@ -51,11 +60,12 @@ pub(crate) fn update_track_preview(
             )
             .unwrap_or_default();
 
-            *track_preview = planned;
+            // TODO HIGH: There are some race conditions if the `clicked_*` is updated to `None` upon mouse release, and then `track_preview` is cleared, and only then we try to build the tracks.
+            if track_preview.should_update(&planned) {
+                track_preview.update(planned);
+            }
         }
-    } else {
-        *track_preview = vec![];
-    };
+    }
 }
 
 pub(crate) fn draw_track_preview(

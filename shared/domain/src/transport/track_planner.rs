@@ -61,7 +61,7 @@ pub fn plan_tracks(
 
     let start = Instant::now();
 
-    info!("Planning tracks at {start:?} from {current:?} to {targets:?}");
+    trace!("Planning tracks at {start:?} from {current:?} to {targets:?}");
 
     let path = dijkstra(
         &current,
@@ -70,7 +70,11 @@ pub fn plan_tracks(
     );
 
     let path_length = path.as_ref().map(|(path, _length)| path.len());
-    info!("Found path: {:?} in {:?}", path_length, start.elapsed());
+    info!(
+        "Found path from {current:?} to {targets:?} in {:?}: {:?} length",
+        start.elapsed(),
+        path_length
+    );
 
     let result = path.map(|(path, length)| {
         let mut tracks = vec![];
