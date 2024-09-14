@@ -96,6 +96,7 @@ impl Plugin for ClientGraphicsPlugin {
 // This needs to be called from `PostUpdate` as otherwise Egui areas are not calculated yet, and thus it won't work reliably
 fn on_ui(egui_contexts: &mut EguiContexts) -> bool {
     // TODO HIGH: Labels are Egui areas, so this means that actually building buildings is sometimes difficult, as you have to click on the center tile, but outside of a label!
+    // TODO: CentralPanel is transparent so we don't want to consider it as `on_ui`, but I think it gets considered as such anyway
     let ctx = egui_contexts.ctx_mut();
     ctx.is_pointer_over_area()
         || ctx.is_using_pointer()

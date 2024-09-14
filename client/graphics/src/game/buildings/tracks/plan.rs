@@ -1,5 +1,4 @@
 use bevy::prelude::Res;
-use bevy_egui::EguiContexts;
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::edge_xz::EdgeXZ;
@@ -7,23 +6,19 @@ use shared_domain::game_state::GameState;
 use shared_domain::metrics::NoopMetrics;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::track_planner::{plan_tracks, DEFAULT_ALREADY_EXISTS_COEF};
-use shared_util::bool_ops::BoolOps;
 
 use crate::game::PlayerIdResource;
-use crate::on_ui;
 
 // TODO: If the selected first/last tile is a station, we should snap to the station's edge
 // TODO: We could improve the snapping logic, e.g. by passing in multiple tail `DirectionalEdge`-s into the pathfinding logic
 pub(crate) fn try_plan_tracks(
     player_id_resource: Res<PlayerIdResource>,
     game_state: &GameState,
-    head: (Option<TileCoordsXZ>, Option<EdgeXZ>),
-    tail: (Option<TileCoordsXZ>, Option<EdgeXZ>),
-    mut egui_contexts: EguiContexts,
+    head: DirectionalEdge,
+    tail_tile: Option<TileCoordsXZ>,
+    tail_edge: Option<EdgeXZ>,
 ) -> Option<Vec<TrackInfo>> {
-    on_ui(&mut egui_contexts).then_none()?;
-
-    let (head, tail) = resolve_edges(head, tail)?;
+    let tail = resolve_tail(tail_tile, tail_edge)?;
 
     let PlayerIdResource(player_id) = *player_id_resource;
     plan_tracks(
@@ -37,27 +32,29 @@ pub(crate) fn try_plan_tracks(
     .map(|(track_infos, _)| track_infos)
 }
 
-// Later: This is a bit clumsy as it could be resolved already in `selection` logic.
-fn resolve_edges(
-    head: (Option<TileCoordsXZ>, Option<EdgeXZ>),
-    tail: (Option<TileCoordsXZ>, Option<EdgeXZ>),
-) -> Option<(DirectionalEdge, DirectionalEdge)> {
-    let (head_tile, head_edge) = head;
-    let (tail_tile, tail_edge) = tail;
-
+pub(crate) fn resolve_head(
+    head_tile: Option<TileCoordsXZ>,
+    head_edge: Option<EdgeXZ>,
+) -> Option<DirectionalEdge> {
     let head_tile = head_tile?;
     let head_edge = head_edge?;
 
+    let head = DirectionalEdge::from_tile_and_edge(head_tile, head_edge)?;
+
+    Some(head)
+}
+
+fn resolve_tail(
+    tail_tile: Option<TileCoordsXZ>,
+    tail_edge: Option<EdgeXZ>,
+) -> Option<DirectionalEdge> {
     let tail_tile = tail_tile?;
     let tail_edge = tail_edge?;
 
-    (head_edge == tail_edge).then_none()?;
-
-    let head = DirectionalEdge::from_tile_and_edge(head_tile, head_edge)?;
     let tail = DirectionalEdge::from_tile_and_edge(tail_tile, tail_edge)?;
     let tail = tail.mirror();
 
-    Some((head, tail))
+    Some(tail)
 }
 
 #[cfg(test)]
@@ -72,8 +69,8 @@ mod tests {
         let head_edge = EdgeXZ::from_tile_and_direction(tile, DirectionXZ::West);
         let tail_edge = EdgeXZ::from_tile_and_direction(tile, DirectionXZ::North);
 
-        let (head, tail) =
-            resolve_edges((Some(tile), Some(head_edge)), (Some(tile), Some(tail_edge))).unwrap();
+        let head = resolve_head(Some(tile), Some(head_edge)).unwrap();
+        let tail = resolve_tail(Some(tile), Some(tail_edge)).unwrap();
 
         let expected_head = DirectionalEdge::new(tile, DirectionXZ::West);
         let expected_tail = DirectionalEdge::new(tile + DirectionXZ::North, DirectionXZ::South);

@@ -7,7 +7,7 @@ use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::transport_type::TransportType;
 
 use crate::ai::ArtificialIntelligenceTimer;
-use crate::hud::domain::{DemolishType, SelectedMode};
+use crate::hud::domain::{DemolishType, SelectedMode, TracksBuildingType};
 
 const MIN_X: f32 = 200.0;
 const MIN_Y: f32 = 40.0;
@@ -62,12 +62,12 @@ fn tracks_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     if ui
         .add(
             egui::Button::new("🚆 Tracks")
-                .selected(matches!(*selected_mode.as_ref(), SelectedMode::Tracks))
+                .selected(matches!(*selected_mode.as_ref(), SelectedMode::Tracks(_)))
                 .min_size(egui::vec2(MIN_X, MIN_Y)),
         )
         .clicked()
     {
-        *selected_mode.as_mut() = SelectedMode::Tracks;
+        *selected_mode.as_mut() = SelectedMode::Tracks(TracksBuildingType::SelectStart);
         ui.close_menu();
     }
 }

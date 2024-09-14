@@ -8,7 +8,6 @@ use bevy::prelude::{
     in_state, info, DetectChanges, Gizmos, IntoSystemConfigs, MouseButton, Plugin, Query, Res,
     ResMut, Resource, TypePath, Update, Vec3,
 };
-use bevy_egui::EguiContexts;
 use bevy_mod_raycast::deferred::RaycastSource;
 use bevy_mod_raycast::prelude::{DeferredRaycastingPlugin, RaycastPluginState};
 use shared_domain::edge_xz::EdgeXZ;
@@ -20,7 +19,6 @@ use crate::debug::drawing::{debug_draw_edge, debug_draw_tile};
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::{Tile, Tiles};
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::SelectedMode;
-use crate::on_ui;
 use crate::states::ClientState;
 
 #[derive(Resource, Default, Debug)]
@@ -129,8 +127,6 @@ impl Plugin for SelectionPlugin {
     }
 }
 
-// TODO:    This doesn't always work, we sometimes switch modes and end up with a selection that we build as tracks.
-//          Possibly this is due to race conditions - this system executes after the system that builds tracks?
 fn remove_selection_when_selected_mode_changes(
     selected_mode: Res<SelectedMode>,
     mut selected_tiles: ResMut<SelectedTiles>,
@@ -265,12 +261,7 @@ fn update_selections<T: TypePath + Send + Sync>(
     mut clicked_tile: ResMut<ClickedTile>,
     mut clicked_edge: ResMut<ClickedEdge>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
-    mut egui_contexts: EguiContexts,
 ) {
-    if on_ui(&mut egui_contexts) {
-        return;
-    }
-
     for (is_first, intersection) in sources.iter().flat_map(|m| {
         m.intersections()
             .iter()

@@ -5,6 +5,7 @@ use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::station_type::StationType;
 use shared_domain::client_command::GameCommand;
+use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
@@ -23,11 +24,17 @@ pub enum SelectType {
     StationToAppendToTransportMovementInstructions(TransportId),
 }
 
+#[derive(Resource, Eq, PartialEq, Debug, Clone)]
+pub enum TracksBuildingType {
+    SelectStart,
+    SelectEnd { start: DirectionalEdge },
+}
+
 // Later: Structure this more logically, it's too flattened
 #[derive(Resource, Eq, PartialEq, Debug, Clone)]
 pub enum SelectedMode {
     Info,
-    Tracks,
+    Tracks(TracksBuildingType),
     Stations(StationType),
     Industry(IndustryType),
     Military,
@@ -46,7 +53,7 @@ impl SelectedMode {
 
     #[must_use]
     pub fn show_hovered_edge(&self) -> bool {
-        matches!(self, SelectedMode::Tracks) || matches!(self, SelectedMode::Transport(_))
+        matches!(self, SelectedMode::Tracks(_)) || matches!(self, SelectedMode::Transport(_))
     }
 
     #[must_use]

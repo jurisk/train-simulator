@@ -1,7 +1,7 @@
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::input::ButtonInput;
 use bevy::math::{Dir3, Vec3};
-use bevy::prelude::{info, warn, EventReader, KeyCode, Mat3, Mut, Res, Transform};
+use bevy::prelude::{info, trace, warn, EventReader, KeyCode, Mat3, Mut, Res, Transform};
 use bevy_egui::EguiContexts;
 
 use crate::on_ui;
@@ -61,7 +61,7 @@ pub(crate) fn zoom_value(
     for ev in mouse_wheel.read() {
         info!("Mouse zoom: {ev:?} {result}"); // TODO: This results in very weird and choppy scrolling sometimes, needs to be rethought.
         if on_ui(egui_contexts) {
-            info!("Ignoring as we are over Egui area.");
+            trace!("Ignoring as we are over Egui area.");
         } else {
             match ev.unit {
                 MouseScrollUnit::Line => {

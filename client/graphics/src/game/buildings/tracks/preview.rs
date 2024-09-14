@@ -1,14 +1,13 @@
 use bevy::color::palettes::basic::BLUE;
-use bevy::prelude::{info, DetectChanges, Gizmos, Res, ResMut, Resource};
-use bevy_egui::EguiContexts;
+use bevy::prelude::{info, ButtonInput, DetectChanges, Gizmos, MouseButton, Res, ResMut, Resource};
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::map_level::terrain::Terrain;
 
-use crate::game::buildings::tracks::plan::try_plan_tracks;
+use crate::game::buildings::tracks::plan::{resolve_head, try_plan_tracks};
 use crate::game::buildings::tracks::positions::rail_positions;
 use crate::game::{GameStateResource, PlayerIdResource};
-use crate::hud::domain::SelectedMode;
-use crate::selection::{ClickedEdge, ClickedTile, HoveredEdge, HoveredTile};
+use crate::hud::domain::{SelectedMode, TracksBuildingType};
+use crate::selection::{HoveredEdge, HoveredTile};
 
 #[derive(Resource, Default)]
 pub(crate) struct TrackPreviewResource(pub Vec<TrackInfo>);
@@ -29,38 +28,49 @@ impl TrackPreviewResource {
     }
 }
 
+pub(crate) fn select_track_start(
+    mut selected_mode_resource: ResMut<SelectedMode>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
+    hovered_tile: Res<HoveredTile>,
+    hovered_edge: Res<HoveredEdge>,
+) {
+    let selected_mode = selected_mode_resource.as_ref();
+    if let SelectedMode::Tracks(TracksBuildingType::SelectStart) = selected_mode {
+        if mouse_buttons.just_pressed(MouseButton::Left) {
+            let directional_edge = resolve_head(hovered_tile.0, hovered_edge.0);
+            if let Some(start) = directional_edge {
+                *selected_mode_resource.as_mut() =
+                    SelectedMode::Tracks(TracksBuildingType::SelectEnd { start });
+            }
+        }
+    }
+}
+
 // Later: Do the planning for preview `async` using https://github.com/loopystudios/bevy_async_task
 // Later: Don't instantly plan when mouse is being rapidly moved, instead wait for a small delay
-#[expect(clippy::too_many_arguments)]
 pub(crate) fn update_track_preview(
-    clicked_tile: Res<ClickedTile>,
     hovered_tile: Res<HoveredTile>,
-    clicked_edge: Res<ClickedEdge>,
     hovered_edge: Res<HoveredEdge>,
     player_id_resource: Res<PlayerIdResource>,
     game_state_resource: Res<GameStateResource>,
     selected_mode_resource: Res<SelectedMode>,
-    egui_contexts: EguiContexts,
     mut track_preview: ResMut<TrackPreviewResource>,
 ) {
-    if selected_mode_resource.as_ref() == &SelectedMode::Tracks {
-        let changed = clicked_tile.is_changed()
-            || clicked_edge.is_changed()
-            || hovered_tile.is_changed()
-            || hovered_edge.is_changed();
+    let selected_mode = selected_mode_resource.as_ref();
+    if let SelectedMode::Tracks(TracksBuildingType::SelectEnd { start }) = selected_mode {
+        let changed = hovered_tile.is_changed() || hovered_edge.is_changed();
         if changed {
             let GameStateResource(game_state) = game_state_resource.as_ref();
 
             let planned = try_plan_tracks(
                 player_id_resource,
                 game_state,
-                (hovered_tile.0, hovered_edge.0),
-                (clicked_tile.0, clicked_edge.0),
-                egui_contexts,
+                *start,
+                hovered_tile.0,
+                hovered_edge.0,
             )
             .unwrap_or_default();
 
-            // TODO HIGH: There are some race conditions if the `clicked_*` is updated to `None` upon mouse release, and then `track_preview` is cleared, and only then we try to build the tracks.
             if track_preview.should_update(&planned) {
                 track_preview.update(planned);
             }

@@ -19,7 +19,7 @@ use crate::game::buildings::building::build_building_when_mouse_released;
 use crate::game::buildings::demolishing::demolish_when_mouse_released;
 use crate::game::buildings::tracks::build::build_tracks_when_mouse_released;
 use crate::game::buildings::tracks::preview::{
-    draw_track_preview, update_track_preview, TrackPreviewResource,
+    draw_track_preview, select_track_start, update_track_preview, TrackPreviewResource,
 };
 use crate::game::buildings::tracks::spawn::{create_rails, create_track, remove_track_entities};
 use crate::game::{create_object_entity, player_colour, GameStateResource};
@@ -64,6 +64,10 @@ impl Plugin for BuildingsPlugin {
         app.add_systems(
             Update,
             demolish_when_mouse_released.run_if(in_state(ClientState::Playing)),
+        );
+        app.add_systems(
+            Update,
+            select_track_start.run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(
             Update,
