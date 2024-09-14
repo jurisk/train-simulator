@@ -156,6 +156,7 @@ cargo +nightly llvm-cov --branch
 cargo +nightly llvm-cov --branch --open
 cargo +nightly llvm-cov nextest --branch
 cargo +nightly llvm-cov nextest --branch --open
+cargo +nightly llvm-cov nextest --branch --package shared-domain --open
 ----
 
 === Profiling

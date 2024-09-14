@@ -269,7 +269,6 @@ impl GameState {
         }
     }
 
-    // TODO HIGH: For whatever reason, preview allows tracks on steep slopes, and then when built they fail.
     pub(crate) fn can_build_track_internal(
         &self,
         player_id: PlayerId,

@@ -39,7 +39,8 @@ pub enum IndustryType {
     TrainFactory,
     WeaponsFactory,
     AmmunitionFactory,
-    Warehouse,
+    MilitaryBase,
+    ConstructionYard,
 }
 
 impl Debug for IndustryType {
@@ -67,14 +68,19 @@ impl Debug for IndustryType {
             TrainFactory => write!(f, "TrainFactory"),
             WeaponsFactory => write!(f, "WeaponsFactory"),
             AmmunitionFactory => write!(f, "AmmunitionFactory"),
-            Warehouse => write!(f, "Warehouse"),
+            MilitaryBase => write!(f, "MilitaryBase"),
+            ConstructionYard => write!(f, "ConstructionYard"),
         }
     }
 }
 
+const X0: f32 = 0.0;
+const X1: f32 = 1.0;
+const X2: f32 = 2.0;
+
 impl IndustryType {
     #[must_use]
-    pub const fn all() -> [Self; 23] {
+    pub const fn all() -> [Self; 24] {
         [
             CoalMine,
             OilWell,
@@ -98,7 +104,8 @@ impl IndustryType {
             TrainFactory,
             WeaponsFactory,
             AmmunitionFactory,
-            Warehouse,
+            MilitaryBase,
+            ConstructionYard,
         ]
     }
 
@@ -127,7 +134,8 @@ impl IndustryType {
             TrainFactory => Industrial,
             WeaponsFactory => Industrial,
             AmmunitionFactory => Industrial,
-            Warehouse => Industrial,
+            MilitaryBase => Industrial,
+            ConstructionYard => Industrial,
         }
     }
 
@@ -154,10 +162,6 @@ impl IndustryType {
 
     #[must_use]
     pub fn transform_per_second(self) -> ResourceTransform {
-        const X0: f32 = 0.0;
-        const X1: f32 = 1.0;
-        const X2: f32 = 2.0;
-
         match self {
             SteelMill => {
                 // https://marketrealist.com/2015/01/coke-fit-steelmaking-process/
@@ -187,15 +191,8 @@ impl IndustryType {
             AmmunitionFactory => {
                 ResourceTransform::make(vec![(Steel, X1), (Explosives, X1)], vec![(Ammunition, X1)])
             },
-            Warehouse => {
-                // TODO: Rethink the idea of warehouses, as right now they are just a "black hole" for resources.
-                // TODO: Not all of the resources "accepted" are "final" - `Steel` is also used in some supply chains. Should `Steel` + `Timber` result in `TrackBuildingCapacity`?
-                let inputs = [Ammunition, Concrete, Food, Fuel, Steel, Timber, Weapons]
-                    .into_iter()
-                    .map(|resource| (resource, X0))
-                    .collect();
-                ResourceTransform::make(inputs, vec![])
-            },
+            MilitaryBase => ResourceTransform::warehouse(&[Ammunition, Food, Fuel, Weapons]),
+            ConstructionYard => ResourceTransform::warehouse(&[Concrete, Steel, Timber]),
             IronMine | CoalMine | OilWell | NitrateMine | SulfurMine | Farm | Forestry
             | ClayPit | LimestoneMine | SandAndGravelQuarry => {
                 match self.required_zoning() {
@@ -261,6 +258,12 @@ impl ResourceTransform {
                 })
                 .collect(),
         )
+    }
+
+    #[must_use]
+    pub fn warehouse(inputs: &[ResourceType]) -> Self {
+        let inputs = inputs.iter().map(|resource| (*resource, X0)).collect();
+        ResourceTransform::make(inputs, vec![])
     }
 
     // Later: How do we handle when the stock is too full, and we should stop producing due to that?
