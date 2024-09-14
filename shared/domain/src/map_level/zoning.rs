@@ -156,12 +156,17 @@ impl Zoning {
         &self,
         industry_building_info: &IndustryBuildingInfo,
     ) -> bool {
-        let zoning_info = self.zoning_at_reference_tile(industry_building_info.reference_tile());
-        match zoning_info {
-            Some(zoning_info) => {
-                industry_building_info.required_zoning() == zoning_info.zoning_type
-            },
-            None => false,
+        let required = industry_building_info.required_zoning();
+        if required.is_some() {
+            self.zoning_at_reference_tile(industry_building_info.reference_tile())
+                .map(|zoning| zoning.zoning_type)
+                == required
+        } else {
+            industry_building_info
+                .covers_tiles()
+                .to_set()
+                .iter()
+                .all(|tile| self.free_at_tile(*tile))
         }
     }
 

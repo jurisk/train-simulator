@@ -80,7 +80,7 @@ impl IndustryBuildingInfo {
     }
 
     #[must_use]
-    pub fn required_zoning(&self) -> ZoningType {
+    pub fn required_zoning(&self) -> Option<ZoningType> {
         self.industry_type.required_zoning()
     }
 

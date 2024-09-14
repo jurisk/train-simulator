@@ -49,8 +49,9 @@ fn try_building_industry_buildings(
         if existing.is_empty() {
             let candidates: Vec<_> = free
                 .iter()
-                .filter(|zoning| zoning.zoning_type() == industry_type.required_zoning())
+                .filter(|zoning| Some(zoning.zoning_type()) == industry_type.required_zoning())
                 .collect();
+            // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place.
             if let Some(chosen) = candidates.first() {
                 let info = IndustryBuildingInfo::new(
                     player_id,

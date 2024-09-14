@@ -110,32 +110,32 @@ impl IndustryType {
     }
 
     #[must_use]
-    pub fn required_zoning(self) -> ZoningType {
+    pub fn required_zoning(self) -> Option<ZoningType> {
         match self {
-            CoalMine => Source(Coal),
-            OilWell => Source(Oil),
-            IronMine => Source(Iron),
-            NitrateMine => Source(Nitrates),
-            SulfurMine => Source(Sulfur),
-            Farm => Source(FarmProducts),
-            Forestry => Source(Wood),
-            ClayPit => Source(Clay),
-            LimestoneMine => Source(Limestone),
-            SandAndGravelQuarry => Source(SandAndGravel),
-            PowerPlant => Industrial,
-            CoalToOilPlant => Industrial,
-            SteelMill => Industrial,
-            ExplosivesPlant => Industrial,
-            FoodProcessingPlant => Industrial,
-            LumberMill => Industrial,
-            CementPlant => Industrial,
-            OilRefinery => Industrial,
-            ConcretePlant => Industrial,
-            TrainFactory => Industrial,
-            WeaponsFactory => Industrial,
-            AmmunitionFactory => Industrial,
-            MilitaryBase => Industrial,
-            ConstructionYard => Industrial,
+            CoalMine => Some(Source(Coal)),
+            OilWell => Some(Source(Oil)),
+            IronMine => Some(Source(Iron)),
+            NitrateMine => Some(Source(Nitrates)),
+            SulfurMine => Some(Source(Sulfur)),
+            Farm => Some(Source(FarmProducts)),
+            Forestry => Some(Source(Wood)),
+            ClayPit => Some(Source(Clay)),
+            LimestoneMine => Some(Source(Limestone)),
+            SandAndGravelQuarry => Some(Source(SandAndGravel)),
+            PowerPlant => Some(Industrial),
+            CoalToOilPlant => Some(Industrial),
+            SteelMill => Some(Industrial),
+            ExplosivesPlant => Some(Industrial),
+            FoodProcessingPlant => Some(Industrial),
+            LumberMill => Some(Industrial),
+            CementPlant => Some(Industrial),
+            OilRefinery => Some(Industrial),
+            ConcretePlant => Some(Industrial),
+            TrainFactory => Some(Industrial),
+            WeaponsFactory => Some(Industrial),
+            AmmunitionFactory => Some(Industrial),
+            MilitaryBase => Some(Industrial),
+            ConstructionYard => Some(Industrial),
         }
     }
 
@@ -161,6 +161,7 @@ impl IndustryType {
     }
 
     #[must_use]
+    #[expect(clippy::missing_panics_doc)]
     pub fn transform_per_second(self) -> ResourceTransform {
         match self {
             SteelMill => {
@@ -196,9 +197,9 @@ impl IndustryType {
             IronMine | CoalMine | OilWell | NitrateMine | SulfurMine | Farm | Forestry
             | ClayPit | LimestoneMine | SandAndGravelQuarry => {
                 match self.required_zoning() {
-                    Source(resource) => ResourceTransform::make(vec![], vec![(resource, X1)]),
-                    Industrial => {
-                        unreachable!("{self:?} should not be in Industrial zoning")
+                    Some(Source(resource)) => ResourceTransform::make(vec![], vec![(resource, X1)]),
+                    other => {
+                        panic!("Unexpected zoning for {self:?}: {other:?}")
                     },
                 }
             },
