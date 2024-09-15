@@ -177,7 +177,7 @@ impl WithRelativeTileCoverage for TrackType {
 }
 
 impl WithCostToBuild for TrackType {
-    fn cost_to_build(self) -> (IndustryType, CargoMap) {
+    fn cost_to_build(&self) -> (IndustryType, CargoMap) {
         (
             IndustryType::ConstructionYard,
             CargoMap::from([(ResourceType::Steel, 0.1), (ResourceType::Timber, 0.1)]),

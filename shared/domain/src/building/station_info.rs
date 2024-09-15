@@ -6,8 +6,9 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::building::building_info::{
     BuildingDynamicInfo, BuildingInfo, BuildingStaticInfo, WithBuildingDynamicInfo,
-    WithBuildingDynamicInfoMut, WithOwner, WithTileCoverage,
+    WithBuildingDynamicInfoMut, WithCostToBuild, WithOwner, WithTileCoverage,
 };
+use crate::building::industry_type::IndustryType;
 use crate::building::station_type::StationType;
 use crate::building::WithRelativeTileCoverage;
 use crate::cargo_map::{CargoMap, WithCargo};
@@ -175,5 +176,11 @@ impl WithOwner for StationInfo {
 impl WithTileCoverage for StationInfo {
     fn covers_tiles(&self) -> TileCoverage {
         self.relative_tiles_used().offset_by(self.reference_tile())
+    }
+}
+
+impl WithCostToBuild for StationInfo {
+    fn cost_to_build(&self) -> (IndustryType, CargoMap) {
+        self.station_type.cost_to_build()
     }
 }

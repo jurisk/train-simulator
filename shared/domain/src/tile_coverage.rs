@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
 
-use crate::tile_coords_xz::TileCoordsXZ;
+use crate::tile_coords_xz::{TileCoordsXZ, TileDistance};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub enum TileCoverage {
@@ -72,8 +72,12 @@ impl TileCoverage {
         }
     }
 
+    // TODO HIGH: This gets called often enough that you should optimise it
     #[must_use]
-    pub fn manhattan_distance_between_closest_tiles(a: &TileCoverage, b: &TileCoverage) -> i32 {
+    pub fn manhattan_distance_between_closest_tiles(
+        a: &TileCoverage,
+        b: &TileCoverage,
+    ) -> TileDistance {
         let mut result = i32::MAX;
         for a in a.to_set() {
             for b in b.to_set() {

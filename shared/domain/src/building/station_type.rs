@@ -162,7 +162,7 @@ impl WithRelativeTileCoverage for StationType {
 
 impl WithCostToBuild for StationType {
     #[expect(clippy::cast_precision_loss)]
-    fn cost_to_build(self) -> (IndustryType, CargoMap) {
+    fn cost_to_build(&self) -> (IndustryType, CargoMap) {
         let (industry_type, mut cargo_map) = self.track_type().cost_to_build();
         cargo_map += &CargoMap::single(ResourceType::Concrete, 0.1);
         cargo_map *= self.relative_tiles_used().len() as f32;

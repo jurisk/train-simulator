@@ -300,7 +300,7 @@ impl ResourceTransform {
 
 impl WithCostToBuild for IndustryType {
     #[must_use]
-    fn cost_to_build(self) -> (IndustryType, CargoMap) {
+    fn cost_to_build(&self) -> (IndustryType, CargoMap) {
         (
             ConstructionYard,
             CargoMap::from([(Concrete, 8.0), (Steel, 4.0)]),

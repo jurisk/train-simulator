@@ -96,5 +96,5 @@ impl<T: WithBuildingDynamicInfoMut> WithCargoMut for T {
 
 pub trait WithCostToBuild {
     /// Returns what building is needed in supply range to build this building, and how many resources it requires.
-    fn cost_to_build(self) -> (IndustryType, CargoMap);
+    fn cost_to_build(&self) -> (IndustryType, CargoMap);
 }

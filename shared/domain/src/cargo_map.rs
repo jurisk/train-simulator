@@ -129,6 +129,16 @@ impl CargoMap {
         }
         result
     }
+
+    #[must_use]
+    pub fn is_superset_of(&self, other: &Self) -> bool {
+        for (resource, amount) in &other.map {
+            if self.get(*resource) < *amount {
+                return false;
+            }
+        }
+        true
+    }
 }
 
 impl Debug for CargoMap {

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::building::building_info::{
     BuildingDynamicInfo, BuildingInfo, BuildingStaticInfo, WithBuildingDynamicInfo,
-    WithBuildingDynamicInfoMut, WithOwner, WithTileCoverage,
+    WithBuildingDynamicInfoMut, WithCostToBuild, WithOwner, WithTileCoverage,
 };
 use crate::building::industry_type::IndustryType;
 use crate::building::station_type::StationType;
@@ -174,5 +174,11 @@ impl WithOwner for IndustryBuildingInfo {
 impl WithTileCoverage for IndustryBuildingInfo {
     fn covers_tiles(&self) -> TileCoverage {
         self.relative_tiles_used().offset_by(self.reference_tile())
+    }
+}
+
+impl WithCostToBuild for IndustryBuildingInfo {
+    fn cost_to_build(&self) -> (IndustryType, CargoMap) {
+        self.industry_type.cost_to_build()
     }
 }

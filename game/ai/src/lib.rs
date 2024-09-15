@@ -51,6 +51,7 @@ fn try_building_industry_buildings(
                 .iter()
                 .filter(|zoning| Some(zoning.zoning_type()) == industry_type.required_zoning())
                 .collect();
+            // TODO HIGH: Check which ones we can pay for in terms of building cost
             // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place.
             if let Some(chosen) = candidates.first() {
                 let info = IndustryBuildingInfo::new(

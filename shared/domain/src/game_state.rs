@@ -5,11 +5,12 @@ use std::collections::HashMap;
 use log::trace;
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::building::building_info::BuildingDynamicInfo;
+use crate::building::building_info::{BuildingDynamicInfo, WithCostToBuild, WithTileCoverage};
 use crate::building::building_state::{BuildingState, CanBuildResponse};
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
+use crate::cargo_map::WithCargo;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::ZoningInfo;
@@ -17,6 +18,7 @@ use crate::metrics::Metrics;
 use crate::players::player_state::PlayerState;
 use crate::server_response::{GameInfo, PlayerInfo};
 use crate::tile_coords_xz::TileCoordsXZ;
+use crate::tile_coverage::TileCoverage;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::track_type::TrackType;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
@@ -229,7 +231,6 @@ impl GameState {
         tracks: &[TrackInfo],
     ) -> Result<Vec<TrackInfo>, ()> {
         // TODO HIGH: Subtract resource cost
-        // Later: Actually, if we have multiple tracks at the same location in a batch, we end up building duplicate tracks!
         match self.can_build_tracks(requesting_player_id, tracks) {
             None => Err(()),
             Some(filtered) => {
@@ -291,8 +292,8 @@ impl GameState {
         requesting_player_id: PlayerId,
         building: &IndustryBuildingInfo,
     ) -> bool {
-        // TODO HIGH: Check you have resources to build
-        self.map_level.can_build_industry_building(building)
+        self.can_pay_cost(requesting_player_id, building).is_some()
+            && self.map_level.can_build_industry_building(building)
             && self
                 .buildings
                 .can_build_building(requesting_player_id, building)
@@ -314,11 +315,42 @@ impl GameState {
 
     #[must_use]
     pub fn can_build_station(&self, requesting_player_id: PlayerId, station: &StationInfo) -> bool {
-        // TODO HIGH: Check you have resources to build
-        self.map_level.can_build_station(station)
+        self.can_pay_cost(requesting_player_id, station).is_some()
+            && self.map_level.can_build_station(station)
             && self
                 .buildings
                 .can_build_building(requesting_player_id, station)
+    }
+
+    #[expect(clippy::collapsible_if)]
+    fn can_pay_cost<T: WithCostToBuild + WithTileCoverage>(
+        &self,
+        player_id: PlayerId,
+        something: &T,
+    ) -> Option<IndustryBuildingId> {
+        let (industry_type, cost) = something.cost_to_build();
+        let coverage = something.covers_tiles();
+        if let Some(supply_range) = industry_type.supply_range_in_tiles() {
+            for building in self
+                .buildings
+                .find_industry_building_by_owner_and_type(player_id, industry_type)
+            {
+                let distance = TileCoverage::manhattan_distance_between_closest_tiles(
+                    &coverage,
+                    &building.covers_tiles(),
+                );
+                if distance <= supply_range {
+                    if building.cargo().is_superset_of(&cost) {
+                        // Later. We currently return the first one that satisfies the conditions - we could instead return the closest one, or the one with most resources.
+                        return Some(building.id());
+                    }
+                }
+            }
+
+            None
+        } else {
+            None
+        }
     }
 
     pub fn build_station(
