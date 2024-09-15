@@ -35,6 +35,12 @@ impl TileCoverage {
     }
 
     #[must_use]
+    #[expect(clippy::len_without_is_empty)]
+    pub fn len(&self) -> usize {
+        self.to_set().len()
+    }
+
+    #[must_use]
     pub fn contains(&self, tile: TileCoordsXZ) -> bool {
         match self {
             TileCoverage::Single(single_tile) => *single_tile == tile,

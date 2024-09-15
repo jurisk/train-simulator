@@ -4,6 +4,7 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::building::building_info::WithCostToBuild;
 use crate::building::industry_type::IndustryType::*;
 use crate::building::WithRelativeTileCoverage;
 use crate::cargo_amount::CargoAmount;
@@ -12,7 +13,7 @@ use crate::map_level::zoning::ZoningType;
 use crate::map_level::zoning::ZoningType::{Industrial, Source};
 use crate::resource_type::ResourceType;
 use crate::resource_type::ResourceType::*;
-use crate::tile_coords_xz::TileCoordsXZ;
+use crate::tile_coords_xz::{TileCoordsXZ, TileDistance};
 use crate::tile_coverage::TileCoverage;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
@@ -161,6 +162,15 @@ impl IndustryType {
     }
 
     #[must_use]
+    pub fn supply_range_in_tiles(self) -> Option<TileDistance> {
+        match self {
+            ConstructionYard => Some(64),
+            MilitaryBase => Some(32),
+            _ => None,
+        }
+    }
+
+    #[must_use]
     #[expect(clippy::missing_panics_doc)]
     pub fn transform_per_second(self) -> ResourceTransform {
         match self {
@@ -285,6 +295,16 @@ impl ResourceTransform {
     #[must_use]
     pub fn new(inputs: Vec<ResourceTransformItem>, outputs: Vec<ResourceTransformItem>) -> Self {
         Self { inputs, outputs }
+    }
+}
+
+impl WithCostToBuild for IndustryType {
+    #[must_use]
+    fn cost_to_build(self) -> (IndustryType, CargoMap) {
+        (
+            ConstructionYard,
+            CargoMap::from([(Concrete, 8.0), (Steel, 4.0)]),
+        )
     }
 }
 

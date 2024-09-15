@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
-use std::ops::{AddAssign, Mul, Neg, Sub, SubAssign};
+use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use serde::{Deserialize, Serialize};
 
@@ -41,12 +41,34 @@ impl Default for CargoMap {
     }
 }
 
+impl<const N: usize> From<[(ResourceType, CargoAmount); N]> for CargoMap {
+    fn from(arr: [(ResourceType, CargoAmount); N]) -> Self {
+        Self {
+            map: HashMap::from(arr),
+        }
+    }
+}
+
+impl<const N: usize> From<[(ResourceType, f32); N]> for CargoMap {
+    fn from(arr: [(ResourceType, f32); N]) -> Self {
+        let arr = arr.map(|(resource, amount)| (resource, CargoAmount::new(amount)));
+        Self::from(arr)
+    }
+}
+
 impl CargoMap {
     #[must_use]
     pub fn new() -> Self {
         Self {
             map: HashMap::new(),
         }
+    }
+
+    #[must_use]
+    pub fn single(resource: ResourceType, amount: f32) -> Self {
+        let mut map = HashMap::new();
+        map.insert(resource, CargoAmount::new(amount));
+        Self { map }
     }
 
     pub(crate) fn add(&mut self, resource: ResourceType, amount: CargoAmount) {
@@ -191,6 +213,14 @@ impl SubAssign<&CargoMap> for &mut CargoMap {
     fn sub_assign(&mut self, rhs: &CargoMap) {
         for (resource, amount) in &rhs.map {
             self.add(*resource, -*amount);
+        }
+    }
+}
+
+impl MulAssign<f32> for CargoMap {
+    fn mul_assign(&mut self, rhs: f32) {
+        for amount in self.map.values_mut() {
+            *amount *= rhs;
         }
     }
 }

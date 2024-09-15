@@ -32,6 +32,7 @@ pub struct GameState {
     map_level:  MapLevel,
     buildings:  BuildingState,
     transports: TransportState,
+    // TODO HIGH: The players are actually 'Nation'-s or 'Polity'-s, and the players just control them. This is needed so we have scenarios / save games without specific players already assigned.
     players:    PlayerState,
     time:       GameTime,
     time_steps: u64,
@@ -227,6 +228,7 @@ impl GameState {
         requesting_player_id: PlayerId,
         tracks: &[TrackInfo],
     ) -> Result<Vec<TrackInfo>, ()> {
+        // TODO HIGH: Subtract resource cost
         // Later: Actually, if we have multiple tracks at the same location in a batch, we end up building duplicate tracks!
         match self.can_build_tracks(requesting_player_id, tracks) {
             None => Err(()),
@@ -242,6 +244,7 @@ impl GameState {
         requesting_player_id: PlayerId,
         track_infos: &[TrackInfo],
     ) -> Option<Vec<TrackInfo>> {
+        // TODO HIGH: Check you have resources to build
         let mut results = vec![];
         for track_info in track_infos {
             match self.can_build_track(requesting_player_id, track_info) {
@@ -288,6 +291,7 @@ impl GameState {
         requesting_player_id: PlayerId,
         building: &IndustryBuildingInfo,
     ) -> bool {
+        // TODO HIGH: Check you have resources to build
         self.map_level
             .zoning()
             .can_build_industry_building(building)
@@ -301,6 +305,7 @@ impl GameState {
         requesting_player_id: PlayerId,
         building: &IndustryBuildingInfo,
     ) -> Result<(), ()> {
+        // TODO HIGH: Subtract resource cost
         if self.can_build_industry_building(requesting_player_id, building) {
             self.buildings
                 .build_industry_building(requesting_player_id, building, &self.map_level)
@@ -311,6 +316,7 @@ impl GameState {
 
     #[must_use]
     pub fn can_build_station(&self, requesting_player_id: PlayerId, station: &StationInfo) -> bool {
+        // TODO HIGH: Check you have resources to build
         self.map_level.zoning().can_build_station(station)
             && self
                 .buildings
@@ -322,6 +328,7 @@ impl GameState {
         requesting_player_id: PlayerId,
         station: &StationInfo,
     ) -> Result<(), ()> {
+        // TODO HIGH: Subtract resource cost
         if self.can_build_station(requesting_player_id, station) {
             self.buildings
                 .build_station(requesting_player_id, station, &self.map_level)

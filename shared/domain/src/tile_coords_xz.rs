@@ -7,17 +7,19 @@ use shared_util::direction_xz::DirectionXZ;
 
 use crate::vertex_coords_xz::VertexCoordsXZ;
 
+pub type TileDistance = i32;
+
 #[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone, Ord, PartialOrd)]
 pub struct TileCoordsXZ {
-    pub x: i32,
-    pub z: i32,
+    pub x: TileDistance,
+    pub z: TileDistance,
 }
 
 impl TileCoordsXZ {
     pub const ZERO: TileCoordsXZ = TileCoordsXZ::new(0, 0);
 
     #[must_use]
-    pub const fn new(x: i32, z: i32) -> Self {
+    pub const fn new(x: TileDistance, z: TileDistance) -> Self {
         Self { x, z }
     }
 
@@ -25,8 +27,8 @@ impl TileCoordsXZ {
     #[expect(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
     pub const fn from_usizes(x: usize, z: usize) -> Self {
         Self {
-            x: x as i32,
-            z: z as i32,
+            x: x as TileDistance,
+            z: z as TileDistance,
         }
     }
 
@@ -92,7 +94,7 @@ impl TileCoordsXZ {
     }
 
     #[must_use]
-    pub fn manhattan_distance(self, other: TileCoordsXZ) -> i32 {
+    pub fn manhattan_distance(self, other: TileCoordsXZ) -> TileDistance {
         (self.x - other.x).abs() + (self.z - other.z).abs()
     }
 }

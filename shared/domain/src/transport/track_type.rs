@@ -4,7 +4,11 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
+use crate::building::building_info::WithCostToBuild;
+use crate::building::industry_type::IndustryType;
 use crate::building::WithRelativeTileCoverage;
+use crate::cargo_map::CargoMap;
+use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_length::TrackLength;
@@ -169,5 +173,14 @@ impl WithRelativeTileCoverage for TrackType {
     #[must_use]
     fn relative_tiles_used(&self) -> TileCoverage {
         TileCoverage::Single(TileCoordsXZ::ZERO)
+    }
+}
+
+impl WithCostToBuild for TrackType {
+    fn cost_to_build(self) -> (IndustryType, CargoMap) {
+        (
+            IndustryType::ConstructionYard,
+            CargoMap::from([(ResourceType::Steel, 0.1), (ResourceType::Timber, 0.1)]),
+        )
     }
 }

@@ -251,8 +251,6 @@ impl BuildingState {
     ) -> bool {
         let valid_player_id = building_info.owner_id() == requesting_player_id;
 
-        // TODO: Check that this is a valid building and there is enough money to build it, subtract money
-
         let coverage = building_info.covers_tiles();
         let can_build = self.can_build_for_coverage(&coverage) == CanBuildResponse::Ok
             && map_level.can_build_for_coverage(&coverage);

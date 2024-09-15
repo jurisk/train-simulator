@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 use std::fmt::{Debug, Formatter};
-use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub};
 
 use serde::{Deserialize, Serialize};
 
@@ -91,5 +91,11 @@ impl PartialOrd<Self> for CargoAmount {
 impl Ord for CargoAmount {
     fn cmp(&self, other: &Self) -> Ordering {
         self.0.partial_cmp(&other.0).unwrap()
+    }
+}
+
+impl MulAssign<f32> for CargoAmount {
+    fn mul_assign(&mut self, rhs: f32) {
+        self.0 *= rhs;
     }
 }

@@ -2,6 +2,7 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::building::industry_type::IndustryType;
 use crate::cargo_map::{CargoMap, WithCargo, WithCargoMut};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
@@ -91,4 +92,9 @@ impl<T: WithBuildingDynamicInfoMut> WithCargoMut for T {
     fn cargo_mut(&mut self) -> &mut CargoMap {
         &mut self.dynamic_info_mut().cargo
     }
+}
+
+pub trait WithCostToBuild {
+    /// Returns what building is needed in supply range to build this building, and how many resources it requires.
+    fn cost_to_build(self) -> (IndustryType, CargoMap);
 }

@@ -3,7 +3,11 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
+use crate::building::building_info::WithCostToBuild;
+use crate::building::industry_type::IndustryType;
 use crate::building::WithRelativeTileCoverage;
+use crate::cargo_map::CargoMap;
+use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::tile_track::TileTrack;
@@ -153,6 +157,16 @@ impl WithRelativeTileCoverage for StationType {
                 }
             },
         }
+    }
+}
+
+impl WithCostToBuild for StationType {
+    #[expect(clippy::cast_precision_loss)]
+    fn cost_to_build(self) -> (IndustryType, CargoMap) {
+        let (industry_type, mut cargo_map) = self.track_type().cost_to_build();
+        cargo_map += &CargoMap::single(ResourceType::Concrete, 0.1);
+        cargo_map *= self.relative_tiles_used().len() as f32;
+        (industry_type, cargo_map)
     }
 }
 
