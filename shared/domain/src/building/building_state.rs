@@ -18,7 +18,6 @@ use crate::building::track_info::TrackInfo;
 use crate::building::track_state::{MaybeTracksOnTile, TrackState};
 use crate::cargo_map::CargoOps;
 use crate::game_time::GameTimeDiff;
-use crate::map_level::map_level::MapLevel;
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type_set::TrackTypeSet;
@@ -247,14 +246,11 @@ impl BuildingState {
         &self,
         requesting_player_id: PlayerId,
         building_info: &T,
-        map_level: &MapLevel,
     ) -> bool {
         let valid_player_id = building_info.owner_id() == requesting_player_id;
 
         let coverage = building_info.covers_tiles();
-        let can_build = self.can_build_for_coverage(&coverage) == CanBuildResponse::Ok
-            && map_level.can_build_for_coverage(&coverage);
-
+        let can_build = self.can_build_for_coverage(&coverage) == CanBuildResponse::Ok;
         valid_player_id && can_build
     }
 
@@ -315,9 +311,8 @@ impl BuildingState {
         &mut self,
         requesting_player_id: PlayerId,
         industry_building_info: &IndustryBuildingInfo,
-        map_level: &MapLevel,
     ) -> Result<(), ()> {
-        if self.can_build_building(requesting_player_id, industry_building_info, map_level) {
+        if self.can_build_building(requesting_player_id, industry_building_info) {
             self.append_industry_building(industry_building_info.clone());
             Ok(())
         } else {
@@ -329,9 +324,8 @@ impl BuildingState {
         &mut self,
         requesting_player_id: PlayerId,
         station_info: &StationInfo,
-        map_level: &MapLevel,
     ) -> Result<(), ()> {
-        if self.can_build_building(requesting_player_id, station_info, map_level) {
+        if self.can_build_building(requesting_player_id, station_info) {
             self.append_station(station_info.clone());
             Ok(())
         } else {
@@ -531,21 +525,12 @@ impl BuildingState {
 mod tests {
     use super::*;
     use crate::building::station_type::StationType;
-    use crate::map_level::map_level::{Height, TerrainType};
-    use crate::map_level::terrain::Terrain;
-    use crate::map_level::zoning::Zoning;
-    use crate::water::Water;
 
     #[test]
     fn test_disallow_build_station_over_tracks() {
         let size_x = 4;
         let size_z = 1;
         let mut building_state = BuildingState::new(size_x, size_z);
-        let map_level = MapLevel::new(
-            Terrain::flat(size_x, size_z, Height::from_u8(1), TerrainType::Grass),
-            Water::from_below(Height::from_u8(0)),
-            Zoning::new(size_x, size_z),
-        );
         let owner_id = PlayerId::random();
         let tile = TileCoordsXZ::new(2, 0);
         let track_type = TrackType::NorthWest;
@@ -557,7 +542,7 @@ mod tests {
             TileCoordsXZ::new(0, 0),
             StationType::EW_1_4,
         );
-        let result = building_state.can_build_building(owner_id, &station_info, &map_level);
+        let result = building_state.can_build_building(owner_id, &station_info);
         assert!(!result);
     }
 }

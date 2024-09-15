@@ -5,6 +5,9 @@ use itertools::Itertools;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::building::building_info::WithTileCoverage;
+use crate::building::industry_building_info::IndustryBuildingInfo;
+use crate::building::station_info::StationInfo;
 use crate::map_level::terrain::Terrain;
 use crate::map_level::zoning::{Zoning, ZoningFlattened};
 use crate::tile_coords_xz::TileCoordsXZ;
@@ -244,7 +247,21 @@ impl MapLevel {
             && self.zoning.can_build_track(tile)
     }
 
-    pub(crate) fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> bool {
+    pub(crate) fn can_build_industry_building(
+        &self,
+        industry_building_info: &IndustryBuildingInfo,
+    ) -> bool {
+        self.zoning
+            .can_build_industry_building(industry_building_info)
+            && self.can_build_for_coverage(&industry_building_info.covers_tiles())
+    }
+
+    pub(crate) fn can_build_station(&self, station_info: &StationInfo) -> bool {
+        self.zoning.can_build_station(station_info)
+            && self.can_build_for_coverage(&station_info.covers_tiles())
+    }
+
+    fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> bool {
         let vertex_coords: Vec<_> = tile_coverage
             .to_set()
             .into_iter()

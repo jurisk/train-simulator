@@ -292,12 +292,10 @@ impl GameState {
         building: &IndustryBuildingInfo,
     ) -> bool {
         // TODO HIGH: Check you have resources to build
-        self.map_level
-            .zoning()
-            .can_build_industry_building(building)
+        self.map_level.can_build_industry_building(building)
             && self
                 .buildings
-                .can_build_building(requesting_player_id, building, &self.map_level)
+                .can_build_building(requesting_player_id, building)
     }
 
     pub fn build_industry_building(
@@ -308,7 +306,7 @@ impl GameState {
         // TODO HIGH: Subtract resource cost
         if self.can_build_industry_building(requesting_player_id, building) {
             self.buildings
-                .build_industry_building(requesting_player_id, building, &self.map_level)
+                .build_industry_building(requesting_player_id, building)
         } else {
             Err(())
         }
@@ -317,10 +315,10 @@ impl GameState {
     #[must_use]
     pub fn can_build_station(&self, requesting_player_id: PlayerId, station: &StationInfo) -> bool {
         // TODO HIGH: Check you have resources to build
-        self.map_level.zoning().can_build_station(station)
+        self.map_level.can_build_station(station)
             && self
                 .buildings
-                .can_build_building(requesting_player_id, station, &self.map_level)
+                .can_build_building(requesting_player_id, station)
     }
 
     pub fn build_station(
@@ -330,8 +328,7 @@ impl GameState {
     ) -> Result<(), ()> {
         // TODO HIGH: Subtract resource cost
         if self.can_build_station(requesting_player_id, station) {
-            self.buildings
-                .build_station(requesting_player_id, station, &self.map_level)
+            self.buildings.build_station(requesting_player_id, station)
         } else {
             Err(())
         }
