@@ -151,7 +151,7 @@ fn handle_game_state_snapshot(
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
             match game_response {
-                GameResponse::GameStateSnapshot(game_state) => {
+                GameResponse::GameJoined(_player_id, game_state) => {
                     for transport_info in game_state.transport_infos() {
                         create_transport(
                             transport_info,

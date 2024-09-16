@@ -85,6 +85,7 @@ pub struct UserInfo {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum GameResponse {
+    // Later: Remove as this is for testing purposes only
     GameStateSnapshot(GameState),
 
     // Later: Actually, many of these should be sending `GameTime` (if it's not already included in other structures such as `GameState`), and it should be handled on the client.

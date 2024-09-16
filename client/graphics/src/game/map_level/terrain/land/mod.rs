@@ -54,7 +54,7 @@ fn handle_map_level_updated(
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
-            if let GameResponse::GameStateSnapshot(game_state) = game_response {
+            if let GameResponse::GameJoined(_player_id, game_state) = game_response {
                 let map_level = game_state.map_level();
                 create_land(
                     &mut commands,

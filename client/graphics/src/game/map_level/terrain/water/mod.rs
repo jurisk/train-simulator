@@ -28,7 +28,7 @@ fn handle_game_state_snapshot(
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
-            if let GameResponse::GameStateSnapshot(game_state) = game_response {
+            if let GameResponse::GameJoined(_player_id, game_state) = game_response {
                 create_water(
                     &mut commands,
                     &mut meshes,
