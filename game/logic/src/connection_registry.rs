@@ -1,11 +1,11 @@
 #![allow(dead_code, clippy::trivially_copy_pass_by_ref)]
 
 use bimap::BiMap;
-use shared_domain::{ClientId, PlayerId};
+use shared_domain::{ClientId, UserId};
 
 #[derive(Default)]
 pub(crate) struct ConnectionRegistry {
-    map: BiMap<PlayerId, ClientId>,
+    map: BiMap<UserId, ClientId>,
 }
 
 impl ConnectionRegistry {
@@ -14,30 +14,30 @@ impl ConnectionRegistry {
         Self { map: BiMap::new() }
     }
 
-    pub fn register(&mut self, player_id: PlayerId, client_id: ClientId) {
-        self.map.insert(player_id, client_id);
+    pub fn register(&mut self, user_id: UserId, client_id: ClientId) {
+        self.map.insert(user_id, client_id);
     }
 
-    pub fn unregister_by_player_id(&mut self, player_id: PlayerId) {
-        self.map.remove_by_left(&player_id);
+    pub fn unregister_by_user_id(&mut self, user_id: &UserId) {
+        self.map.remove_by_left(user_id);
     }
 
-    pub fn unregister_by_client_id(&mut self, client_id: ClientId) {
-        self.map.remove_by_right(&client_id);
-    }
-
-    #[must_use]
-    pub fn get_client_id(&self, player_id: &PlayerId) -> Option<&ClientId> {
-        self.map.get_by_left(player_id)
+    pub fn unregister_by_client_id(&mut self, client_id: &ClientId) {
+        self.map.remove_by_right(client_id);
     }
 
     #[must_use]
-    pub fn get_player_id(&self, client_id: &ClientId) -> Option<&PlayerId> {
+    pub fn get_client_id(&self, user_id: &UserId) -> Option<&ClientId> {
+        self.map.get_by_left(user_id)
+    }
+
+    #[must_use]
+    pub fn get_user_id(&self, client_id: &ClientId) -> Option<&UserId> {
         self.map.get_by_right(client_id)
     }
 
     #[must_use]
-    pub fn get_all_player_ids(&self) -> Vec<&PlayerId> {
+    pub fn get_all_user_ids(&self) -> Vec<&UserId> {
         self.map.left_values().collect()
     }
 

@@ -9,10 +9,10 @@ use shared_domain::game_time::GameTime;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::metrics::Metrics;
 use shared_domain::server_response::{
-    AddressEnvelope, GameError, GameResponse, LobbyResponse, PlayerInfo, ServerError,
-    ServerResponse, ServerResponseWithAddress,
+    AddressEnvelope, GameError, GameResponse, LobbyResponse, ServerError, ServerResponse,
+    ServerResponseWithAddress, UserInfo,
 };
-use shared_domain::{GameId, MapId, PlayerId};
+use shared_domain::{GameId, MapId, PlayerId, UserId};
 
 use crate::game_service::{GameResponseWithAddress, GameService};
 
@@ -51,6 +51,13 @@ impl GamesService {
         }
     }
 
+    pub(crate) fn user_ids_for_player(&self, game_id: GameId, player_id: PlayerId) -> Vec<UserId> {
+        self.game_map
+            .get(&game_id)
+            .map(|game_service| game_service.user_ids_for_player(player_id))
+            .unwrap_or_default()
+    }
+
     pub fn advance_times(&mut self, time: GameTime, metrics: &impl Metrics) {
         for game_service in self.game_map.values_mut() {
             game_service.advance_time(time, metrics);
@@ -77,7 +84,7 @@ impl GamesService {
 
     fn create_game_infos(
         &self,
-        requesting_player_id: PlayerId,
+        requesting_user_id: UserId,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         let game_infos = self
             .game_map
@@ -85,14 +92,14 @@ impl GamesService {
             .map(GameService::create_game_info)
             .collect();
         Ok(vec![ServerResponseWithAddress::new(
-            AddressEnvelope::ToPlayer(requesting_player_id),
+            AddressEnvelope::ToUser(requesting_user_id),
             ServerResponse::Lobby(LobbyResponse::AvailableGames(game_infos)),
         )])
     }
 
     pub fn create_and_join_game(
         &mut self,
-        requesting_player_info: &PlayerInfo,
+        requesting_user_info: &UserInfo,
         map_id: &MapId,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         // Later: Don't allow starting a game if is already a part of another game?
@@ -101,10 +108,16 @@ impl GamesService {
                 map_id.clone(),
             )))
         })?;
+
         let mut game_service = GameService::from_prototype(prototype);
         let game_id = game_service.game_id();
+
+        // Later: Allow picking a particular `player_id` to be chosen
+        // let player_id = prototype.players().ids().first().copied();
+        // let player_id = player_id.ok_or(ServerResponse::Game(game_id, GameResponse::Error(GameError::UnspecifiedError)))?;
+
         let results = game_service
-            .join_game(requesting_player_info)
+            .join_game(requesting_user_info)
             .map_err(|err| ServerResponse::Game(game_id, GameResponse::Error(err)))?;
         self.game_map.insert(game_id, game_service);
         Self::convert_game_response_to_server_response(game_id, Ok(results))
@@ -138,10 +151,16 @@ impl GamesService {
     pub fn process_command(
         &mut self,
         game_id: GameId,
-        player_id: PlayerId,
+        requesting_user_id: UserId,
         game_command: &GameCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         let game_service = self.lookup_game_service_mut(game_id)?;
+        let player_id = game_service
+            .player_id_for_user_id(requesting_user_id)
+            .ok_or(ServerResponse::Game(
+                game_id,
+                GameResponse::Error(GameError::UnspecifiedError),
+            ))?;
         Self::convert_game_response_to_server_response(
             game_id,
             game_service.process_command(player_id, game_command),
@@ -177,17 +196,17 @@ impl GamesService {
 
     pub(crate) fn process_lobby_command(
         &mut self,
-        player_info: &PlayerInfo,
+        user_info: &UserInfo,
         lobby_command: &LobbyCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match lobby_command {
-            LobbyCommand::ListGames => self.create_game_infos(player_info.id),
-            LobbyCommand::CreateGame(map_id) => self.create_and_join_game(player_info, map_id),
+            LobbyCommand::ListGames => self.create_game_infos(user_info.id),
+            LobbyCommand::CreateGame(map_id) => self.create_and_join_game(user_info, map_id),
             LobbyCommand::JoinExistingGame(game_id) => {
                 let game_service = self.lookup_game_service_mut(*game_id)?;
                 Self::convert_game_response_to_server_response(
                     *game_id,
-                    game_service.join_game(player_info),
+                    game_service.join_game(user_info),
                 )
             },
             LobbyCommand::LeaveGame(game_id) => {
@@ -195,7 +214,7 @@ impl GamesService {
                 let game_service = self.lookup_game_service_mut(*game_id)?;
                 Self::convert_game_response_to_server_response(
                     *game_id,
-                    game_service.remove_player(player_info.id),
+                    game_service.remove_player(user_info.id),
                 )
             },
         }

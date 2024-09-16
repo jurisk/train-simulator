@@ -63,11 +63,6 @@ pub struct PlayerName(String);
 
 impl PlayerName {
     #[must_use]
-    pub fn random(seed: u64) -> Self {
-        Self(generate_random_string(6, seed))
-    }
-
-    #[must_use]
     pub fn new(name: String) -> Self {
         Self(name)
     }
@@ -78,6 +73,21 @@ impl Display for PlayerName {
         write!(f, "{}", self.0)
     }
 }
+
+impl UserName {
+    #[must_use]
+    pub fn random(seed: u64) -> Self {
+        Self(generate_random_string(6, seed))
+    }
+
+    #[must_use]
+    pub fn new(name: String) -> Self {
+        Self(name)
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord)]
+pub struct UserName(String);
 
 macro_rules! newtype_uuid {
     ($name:ident, $prefix:expr) => {
@@ -120,15 +130,18 @@ macro_rules! newtype_uuid {
     };
 }
 
-newtype_uuid!(PlayerId, "P");
+newtype_uuid!(UserId, "U");
 
-impl PlayerId {
+impl UserId {
     #[must_use]
     pub fn hash_to_u64(self) -> u64 {
         let (a, b) = self.0.as_u64_pair();
         a ^ b
     }
 }
+
+// TODO HIGH: `PlayerId` could actually have `String` underlying or even be `enum`?
+newtype_uuid!(PlayerId, "P");
 
 newtype_uuid!(GameId, "G");
 newtype_uuid!(StationId, "S");

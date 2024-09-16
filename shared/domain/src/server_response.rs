@@ -16,12 +16,12 @@ use crate::game_time::GameTime;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::{
     ClientId, GameId, IndustryBuildingId, MapId, PlayerId, PlayerName, StationId, TrackId,
-    TransportId,
+    TransportId, UserId, UserName,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum AuthenticationResponse {
-    LoginSucceeded(PlayerId),
+    LoginSucceeded(UserId),
     LogoutSucceeded,
 
     Error(AuthenticationError),
@@ -35,9 +35,10 @@ pub enum AuthenticationError {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct GameInfo {
-    pub map_id:  MapId,
-    pub game_id: GameId,
-    pub players: Vec<PlayerInfo>,
+    pub map_id:       MapId,
+    pub game_id:      GameId,
+    pub players:      Vec<PlayerInfo>,
+    pub user_players: Vec<(UserId, PlayerId)>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -76,13 +77,19 @@ pub struct PlayerInfo {
     pub colour: Colour,
 }
 
-#[expect(clippy::large_enum_variant)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+pub struct UserInfo {
+    pub id:   UserId,
+    pub name: UserName,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub enum GameResponse {
+    // Later: Remove as this is for testing purposes only
     GameStateSnapshot(GameState),
 
     // Later: Actually, many of these should be sending `GameTime` (if it's not already included in other structures such as `GameState`), and it should be handled on the client.
-    PlayersUpdated(Vec<PlayerInfo>),
+    PlayersUpdated(Vec<(UserId, PlayerId)>),
     IndustryBuildingAdded(IndustryBuildingInfo),
     IndustryBuildingRemoved(IndustryBuildingId),
     StationAdded(StationInfo),
@@ -96,7 +103,7 @@ pub enum GameResponse {
         HashMap<StationId, BuildingDynamicInfo>,
         HashMap<TransportId, TransportDynamicInfo>,
     ),
-    GameJoined,
+    GameJoined(PlayerId, GameState),
     GameLeft,
 
     Error(GameError),
@@ -182,7 +189,9 @@ impl Debug for GameResponse {
                     transports.len()
                 )
             },
-            GameResponse::GameJoined => write!(f, "GameJoined"),
+            GameResponse::GameJoined(player_id, _game_state) => {
+                write!(f, "GameJoined({player_id:?})")
+            },
             GameResponse::GameLeft => write!(f, "GameLeft"),
             GameResponse::Error(error) => {
                 write!(f, "Error({error:?})")
@@ -228,7 +237,8 @@ pub enum ServerResponse {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum AddressEnvelope {
     ToClient(ClientId),
-    ToPlayer(PlayerId),
+    ToUser(UserId),
+    ToPlayer(GameId, PlayerId),
     ToAllPlayersInGame(GameId),
 }
 

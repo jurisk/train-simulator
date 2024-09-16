@@ -86,7 +86,7 @@ fn handle_game_state_snapshot(
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
             match game_response {
-                GameResponse::GameStateSnapshot(game_state) => {
+                GameResponse::GameJoined(_player_id, game_state) => {
                     for industry_building_info in
                         game_state.building_state().all_industry_buildings()
                     {
@@ -214,7 +214,7 @@ fn handle_buildings_or_tracks_changed(
                 },
                 GameResponse::TransportsAdded(_) => {},
                 GameResponse::DynamicInfosSync(..) => {},
-                GameResponse::GameJoined => {},
+                GameResponse::GameJoined(..) => {},
                 GameResponse::GameLeft => {},
                 GameResponse::Error(_) => {},
             }

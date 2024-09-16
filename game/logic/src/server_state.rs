@@ -13,7 +13,7 @@ use shared_domain::server_response::{
     AddressEnvelope, NetworkResponse, ServerResponse, ServerResponseWithAddress,
     ServerResponseWithClientIds,
 };
-use shared_domain::ClientId;
+use shared_domain::{ClientId, GameId, PlayerId, UserId};
 
 use crate::authentication_service::AuthenticationService;
 use crate::games_service::GamesService;
@@ -46,22 +46,31 @@ impl ServerState {
             .collect()
     }
 
+    fn user_ids_for_player(&self, game_id: GameId, player_id: PlayerId) -> Vec<UserId> {
+        self.games_service.user_ids_for_player(game_id, player_id)
+    }
+
     fn translate_response(
         &self,
         server_response_with_address: ServerResponseWithAddress,
     ) -> ServerResponseWithClientIds {
         let client_ids = match server_response_with_address.address {
             AddressEnvelope::ToClient(client_id) => vec![client_id],
-            AddressEnvelope::ToPlayer(player_id) => {
-                self.authentication_service.client_ids_for_player(player_id)
+            AddressEnvelope::ToPlayer(game_id, player_id) => {
+                self.user_ids_for_player(game_id, player_id)
+                    .into_iter()
+                    .flat_map(|user_id| self.authentication_service.client_ids_for_user(user_id))
+                    .collect()
+            },
+            AddressEnvelope::ToUser(user_id) => {
+                self.authentication_service.client_ids_for_user(user_id)
             },
             AddressEnvelope::ToAllPlayersInGame(game_id) => {
                 let player_ids = self.games_service.players_in_game(game_id);
                 player_ids
                     .into_iter()
-                    .flat_map(|player_id| {
-                        self.authentication_service.client_ids_for_player(player_id)
-                    })
+                    .flat_map(|player_id| self.user_ids_for_player(game_id, player_id))
+                    .flat_map(|user_id| self.authentication_service.client_ids_for_user(user_id))
                     .collect()
             },
         };
@@ -103,20 +112,16 @@ impl ServerState {
                     .process_authentication_command(client_id, authentication_command)
             },
             ClientCommand::Lobby(lobby_command) => {
-                let requesting_player_id =
-                    self.authentication_service.lookup_player_id(client_id)?;
+                let requesting_user_id = self.authentication_service.lookup_user_id(client_id)?;
                 self.games_service.process_lobby_command(
-                    &self
-                        .authentication_service
-                        .player_info(requesting_player_id),
+                    &self.authentication_service.user_info(requesting_user_id),
                     lobby_command,
                 )
             },
             ClientCommand::Game(game_id, game_command) => {
-                let requesting_player_id =
-                    self.authentication_service.lookup_player_id(client_id)?;
+                let requesting_user_id = self.authentication_service.lookup_user_id(client_id)?;
                 self.games_service
-                    .process_command(*game_id, requesting_player_id, game_command)
+                    .process_command(*game_id, requesting_user_id, game_command)
             },
         }
     }

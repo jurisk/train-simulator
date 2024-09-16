@@ -16,7 +16,6 @@ use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::ZoningInfo;
 use crate::metrics::Metrics;
 use crate::players::player_state::PlayerState;
-use crate::server_response::{GameInfo, PlayerInfo};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::movement_orders::MovementOrders;
@@ -34,7 +33,6 @@ pub struct GameState {
     map_level:  MapLevel,
     buildings:  BuildingState,
     transports: TransportState,
-    // TODO HIGH: The players are actually 'Nation'-s or 'Polity'-s, and the players just control them. This is needed so we have scenarios / save games without specific players already assigned.
     players:    PlayerState,
     time:       GameTime,
     time_steps: u64,
@@ -110,13 +108,16 @@ impl GameState {
         let terrain = map_level.terrain();
         let size_x = terrain.tile_count_x();
         let size_z = terrain.tile_count_z();
+
+        let players = PlayerState::two_players();
+
         Self {
             game_id,
             map_id,
             map_level,
             buildings: BuildingState::new(size_x, size_z),
             transports: TransportState::empty(),
-            players: PlayerState::empty(),
+            players,
             time: GameTime::new(),
             time_steps: 0,
         }
@@ -162,17 +163,13 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn create_game_info(&self) -> GameInfo {
-        GameInfo {
-            map_id:  self.map_id.clone(),
-            game_id: self.game_id,
-            players: self.players.infos_cloned(),
-        }
+    pub fn game_id(&self) -> GameId {
+        self.game_id
     }
 
     #[must_use]
-    pub fn game_id(&self) -> GameId {
-        self.game_id
+    pub fn map_id(&self) -> MapId {
+        self.map_id.clone()
     }
 
     #[must_use]
@@ -198,18 +195,6 @@ impl GameState {
     #[must_use]
     pub fn players(&self) -> &PlayerState {
         &self.players
-    }
-
-    pub fn update_player_infos(&mut self, new_player_infos: &Vec<PlayerInfo>) {
-        self.players.update_many(new_player_infos);
-    }
-
-    pub fn insert_player(&mut self, player_info: PlayerInfo) {
-        self.players.insert(player_info);
-    }
-
-    pub fn remove_player(&mut self, player_id: PlayerId) {
-        self.players.remove(player_id);
     }
 
     pub fn upsert_transport(&mut self, transport: TransportInfo) {

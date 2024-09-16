@@ -2,9 +2,10 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::server_response::PlayerInfo;
-use crate::PlayerId;
+use crate::server_response::{Colour, PlayerInfo};
+use crate::{PlayerId, PlayerName};
 
+// TODO: The players are actually 'Nation'-s or 'Polity'-s, and the players just control them.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct PlayerState {
     infos: HashMap<PlayerId, PlayerInfo>,
@@ -12,10 +13,21 @@ pub struct PlayerState {
 
 impl PlayerState {
     #[must_use]
-    pub fn empty() -> Self {
-        Self {
+    pub fn two_players() -> Self {
+        let mut result = Self {
             infos: HashMap::new(),
-        }
+        };
+        result.insert(PlayerInfo {
+            id:     PlayerId::random(),
+            name:   PlayerName("Union".to_string()),
+            colour: Colour::rgb(153, 51, 255),
+        });
+        result.insert(PlayerInfo {
+            id:     PlayerId::random(),
+            name:   PlayerName("Alliance".to_string()),
+            colour: Colour::rgb(255, 51, 51),
+        });
+        result
     }
 
     #[must_use]
@@ -33,20 +45,8 @@ impl PlayerState {
         self.infos.keys().copied().collect()
     }
 
-    pub fn insert(&mut self, player_info: PlayerInfo) {
+    fn insert(&mut self, player_info: PlayerInfo) {
         self.infos.insert(player_info.id, player_info);
-    }
-
-    pub fn update_many(&mut self, player_infos: &Vec<PlayerInfo>) {
-        for player_info in player_infos {
-            self.insert(player_info.clone());
-        }
-    }
-
-    // Later:   Consider if there even is `remove` - perhaps it is just going disconnected, but we
-    //          don't remove the information we had.
-    pub fn remove(&mut self, player_id: PlayerId) {
-        self.infos.remove(&player_id);
     }
 
     #[must_use]
