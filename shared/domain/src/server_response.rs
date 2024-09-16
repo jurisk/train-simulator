@@ -83,7 +83,6 @@ pub struct UserInfo {
     pub name: UserName,
 }
 
-#[expect(clippy::large_enum_variant)]
 #[derive(Serialize, Deserialize, Clone)]
 pub enum GameResponse {
     GameStateSnapshot(GameState),
@@ -103,7 +102,7 @@ pub enum GameResponse {
         HashMap<StationId, BuildingDynamicInfo>,
         HashMap<TransportId, TransportDynamicInfo>,
     ),
-    GameJoined(PlayerId),
+    GameJoined(PlayerId, GameState),
     GameLeft,
 
     Error(GameError),
@@ -189,7 +188,9 @@ impl Debug for GameResponse {
                     transports.len()
                 )
             },
-            GameResponse::GameJoined(player_id) => write!(f, "GameJoined({player_id:?})"),
+            GameResponse::GameJoined(player_id, _game_state) => {
+                write!(f, "GameJoined({player_id:?})")
+            },
             GameResponse::GameLeft => write!(f, "GameLeft"),
             GameResponse::Error(error) => {
                 write!(f, "Error({error:?})")

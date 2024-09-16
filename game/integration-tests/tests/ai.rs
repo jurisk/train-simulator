@@ -25,14 +25,9 @@ fn ai_until_final_goods_built() {
 
     let response = response.first().unwrap();
 
-    let (game_id, player_id) = if let ServerResponse::Game(game_id, GameResponse::GameJoined(player_id)) =
-        response.response
-    {
-        (game_id, player_id)
-    } else {
-        panic!(
-            "Expected response, got {response:?}",
-        );
+    let ServerResponse::Game(game_id, GameResponse::GameJoined(player_id, _)) = response.response
+    else {
+        panic!("Expected response, got {response:?}",);
     };
 
     let mut time = GameTime::new();

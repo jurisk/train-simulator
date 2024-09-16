@@ -53,7 +53,7 @@ impl GameService {
         self.user_players
             .get_by_right(&player_id)
             .map(|user_id| vec![*user_id])
-            .unwrap_or_else(Vec::new)
+            .unwrap_or_default()
     }
 
     pub(crate) fn player_id_for_user_id(&self, user_id: UserId) -> Option<PlayerId> {
@@ -270,13 +270,11 @@ impl GameService {
     }
 
     fn first_free_player_id(&self) -> Option<PlayerId> {
-        for player_id in self.state.players().ids() {
-            if !self.user_players.contains_right(&player_id) {
-                return Some(player_id);
-            }
-        }
-
-        None
+        self.state
+            .players()
+            .ids()
+            .into_iter()
+            .find(|&player_id| !self.user_players.contains_right(&player_id))
     }
 
     pub(crate) fn join_game(
@@ -287,20 +285,16 @@ impl GameService {
 
         let user_id = requesting_user_info.id;
         if let Some(player_id) = self.first_free_player_id() {
-            self.user_players.insert(user_id, player_id.clone());
+            self.user_players.insert(user_id, player_id);
 
             Ok(vec![
                 GameResponseWithAddress::new(
                     AddressEnvelope::ToUser(user_id),
-                    GameResponse::GameJoined(player_id.clone()),
+                    GameResponse::GameJoined(player_id, self.state.clone()),
                 ),
                 GameResponseWithAddress::new(
                     AddressEnvelope::ToAllPlayersInGame(self.game_id()),
                     GameResponse::PlayersUpdated(self.user_players_vec()),
-                ),
-                GameResponseWithAddress::new(
-                    AddressEnvelope::ToPlayer(self.game_id(), player_id.clone()),
-                    GameResponse::GameStateSnapshot(self.state.clone()),
                 ),
             ])
         } else {

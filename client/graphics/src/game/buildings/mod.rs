@@ -214,7 +214,7 @@ fn handle_buildings_or_tracks_changed(
                 },
                 GameResponse::TransportsAdded(_) => {},
                 GameResponse::DynamicInfosSync(..) => {},
-                GameResponse::GameJoined(_) => {},
+                GameResponse::GameJoined(..) => {},
                 GameResponse::GameLeft => {},
                 GameResponse::Error(_) => {},
             }

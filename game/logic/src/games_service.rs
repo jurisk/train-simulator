@@ -55,7 +55,7 @@ impl GamesService {
         self.game_map
             .get(&game_id)
             .map(|game_service| game_service.user_ids_for_player(player_id))
-            .unwrap_or_else(Vec::new)
+            .unwrap_or_default()
     }
 
     pub fn advance_times(&mut self, time: GameTime, metrics: &impl Metrics) {

@@ -9,7 +9,7 @@ use bevy::log::{error, warn};
 use bevy::math::Vec3;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
-    default, in_state, info, Bundle, Commands, EventReader, EventWriter, FixedUpdate,
+    default, in_state, info, trace, Bundle, Commands, EventReader, EventWriter, FixedUpdate,
     IntoSystemConfigs, Mesh, NextState, OnEnter, Plugin, Res, ResMut, Resource, Time, Transform,
     Update,
 };
@@ -97,7 +97,7 @@ impl Plugin for GamePlugin {
             FixedUpdate,
             handle_login_successful.run_if(in_state(ClientState::LoggingIn)),
         );
-        app.add_systems(FixedUpdate, handle_game_state_snapshot);
+        app.add_systems(FixedUpdate, handle_game_joining_and_game_state_snapshot);
         app.add_systems(
             Update,
             client_side_time_advance.run_if(in_state(ClientState::Playing)),
@@ -157,32 +157,45 @@ fn handle_login_successful(
     }
 }
 
-fn handle_players_updated(
-    mut server_messages: EventReader<ServerMessageEvent>,
-    mut game_state_resource: ResMut<GameStateResource>,
-) {
-    let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
+fn handle_players_updated(mut server_messages: EventReader<ServerMessageEvent>) {
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, GameResponse::PlayersUpdated(new_player_infos)) =
             &message.response
         {
-            info!("Players updated: {new_player_infos:?}");
+            trace!("Players updated: {new_player_infos:?}");
             // Later: Consider if we use this somewhere
         }
     }
 }
 
-#[expect(clippy::collapsible_match)]
-fn handle_game_state_snapshot(
+#[expect(clippy::match_same_arms)]
+fn handle_game_joining_and_game_state_snapshot(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut client_state: ResMut<NextState<ClientState>>,
     mut commands: Commands,
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
-            if let GameResponse::GameStateSnapshot(game_state) = game_response {
-                commands.insert_resource(GameStateResource(game_state.clone()));
-                client_state.set(ClientState::Playing);
+            match game_response {
+                GameResponse::GameStateSnapshot(snapshot) => {
+                    commands.insert_resource(GameStateResource(snapshot.clone()));
+                },
+                GameResponse::PlayersUpdated(_) => {},
+                GameResponse::IndustryBuildingAdded(_) => {},
+                GameResponse::IndustryBuildingRemoved(_) => {},
+                GameResponse::StationAdded(_) => {},
+                GameResponse::StationRemoved(_) => {},
+                GameResponse::TracksAdded(_) => {},
+                GameResponse::TracksRemoved(_) => {},
+                GameResponse::TransportsAdded(_) => {},
+                GameResponse::DynamicInfosSync(..) => {},
+                GameResponse::GameJoined(player_id, snapshot) => {
+                    commands.insert_resource(GameStateResource(snapshot.clone()));
+                    commands.insert_resource(PlayerIdResource(*player_id));
+                    client_state.set(ClientState::Playing);
+                },
+                GameResponse::GameLeft => {},
+                GameResponse::Error(_) => {},
             }
         }
     }
