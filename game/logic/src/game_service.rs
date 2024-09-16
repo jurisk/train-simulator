@@ -1,5 +1,6 @@
 #![allow(clippy::unnecessary_wraps, clippy::missing_errors_doc)]
 
+use bimap::BiMap;
 use shared_domain::building::building_info::WithBuildingDynamicInfo;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
@@ -9,11 +10,11 @@ use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTime;
 use shared_domain::metrics::Metrics;
 use shared_domain::server_response::{
-    AddressEnvelope, GameError, GameInfo, GameResponse, PlayerInfo,
+    AddressEnvelope, GameError, GameInfo, GameResponse, UserInfo,
 };
 use shared_domain::transport::movement_orders::MovementOrders;
 use shared_domain::transport::transport_info::TransportInfo;
-use shared_domain::{GameId, PlayerId, TransportId};
+use shared_domain::{GameId, PlayerId, TransportId, UserId};
 
 #[derive(Clone)]
 pub(crate) struct GameResponseWithAddress {
@@ -28,7 +29,8 @@ impl GameResponseWithAddress {
 }
 
 pub struct GameService {
-    state: GameState,
+    state:        GameState,
+    user_players: BiMap<UserId, PlayerId>,
 }
 
 const SYNC_EVERY_N_TIMESTEPS: u64 = 100;
@@ -37,13 +39,25 @@ impl GameService {
     #[must_use]
     pub fn from_prototype(prototype: &GameState) -> Self {
         Self {
-            state: GameState::from_prototype(prototype),
+            state:        GameState::from_prototype(prototype),
+            user_players: BiMap::new(),
         }
     }
 
     #[must_use]
     pub fn game_id(&self) -> GameId {
         self.state.game_id()
+    }
+
+    pub(crate) fn user_ids_for_player(&self, player_id: PlayerId) -> Vec<UserId> {
+        self.user_players
+            .get_by_right(&player_id)
+            .map(|user_id| vec![*user_id])
+            .unwrap_or_else(Vec::new)
+    }
+
+    pub(crate) fn player_id_for_user_id(&self, user_id: UserId) -> Option<PlayerId> {
+        self.user_players.get_by_left(&user_id).copied()
     }
 
     pub(crate) fn process_command(
@@ -85,7 +99,7 @@ impl GameService {
         requesting_player_id: PlayerId,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         Ok(vec![GameResponseWithAddress::new(
-            AddressEnvelope::ToPlayer(requesting_player_id),
+            AddressEnvelope::ToPlayer(self.game_id(), requesting_player_id),
             GameResponse::GameStateSnapshot(self.state.clone()),
         )])
     }
@@ -221,8 +235,14 @@ impl GameService {
         self.state.advance_time(time, metrics);
     }
 
-    pub(crate) fn create_game_info(&self) -> GameInfo {
-        self.state.create_game_info()
+    #[must_use]
+    pub fn create_game_info(&self) -> GameInfo {
+        GameInfo {
+            map_id:       self.state.map_id(),
+            game_id:      self.state.game_id(),
+            players:      self.state.players().infos_cloned(),
+            user_players: self.user_players_vec(),
+        }
     }
 
     pub(crate) fn player_ids(&self) -> Vec<PlayerId> {
@@ -231,38 +251,68 @@ impl GameService {
 
     pub(crate) fn remove_player(
         &mut self,
-        player_id: PlayerId,
+        user_id: UserId,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
-        self.state.remove_player(player_id);
-        Ok(vec![GameResponseWithAddress::new(
-            AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-            GameResponse::GameLeft,
-        )])
+        if let Some((user_id, _)) = self.user_players.remove_by_left(&user_id) {
+            Ok(vec![
+                GameResponseWithAddress::new(
+                    AddressEnvelope::ToUser(user_id),
+                    GameResponse::GameLeft,
+                ),
+                GameResponseWithAddress::new(
+                    AddressEnvelope::ToAllPlayersInGame(self.game_id()),
+                    GameResponse::PlayersUpdated(self.user_players_vec()),
+                ),
+            ])
+        } else {
+            Err(GameError::UnspecifiedError)
+        }
+    }
+
+    fn first_free_player_id(&self) -> Option<PlayerId> {
+        for player_id in self.state.players().ids() {
+            if !self.user_players.contains_right(&player_id) {
+                return Some(player_id);
+            }
+        }
+
+        None
     }
 
     pub(crate) fn join_game(
         &mut self,
-        requesting_player_info: &PlayerInfo,
+        requesting_user_info: &UserInfo,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         // Later: Don't allow joining multiple games at once
 
-        let player_id = requesting_player_info.id;
-        self.state.insert_player(requesting_player_info.clone());
+        let user_id = requesting_user_info.id;
+        if let Some(player_id) = self.first_free_player_id() {
+            self.user_players.insert(user_id, player_id.clone());
 
-        Ok(vec![
-            GameResponseWithAddress::new(
-                AddressEnvelope::ToPlayer(player_id),
-                GameResponse::GameJoined,
-            ),
-            GameResponseWithAddress::new(
-                AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-                GameResponse::PlayersUpdated(self.state.players().infos_cloned()),
-            ),
-            GameResponseWithAddress::new(
-                AddressEnvelope::ToPlayer(player_id),
-                GameResponse::GameStateSnapshot(self.state.clone()),
-            ),
-        ])
+            Ok(vec![
+                GameResponseWithAddress::new(
+                    AddressEnvelope::ToUser(user_id),
+                    GameResponse::GameJoined(player_id.clone()),
+                ),
+                GameResponseWithAddress::new(
+                    AddressEnvelope::ToAllPlayersInGame(self.game_id()),
+                    GameResponse::PlayersUpdated(self.user_players_vec()),
+                ),
+                GameResponseWithAddress::new(
+                    AddressEnvelope::ToPlayer(self.game_id(), player_id.clone()),
+                    GameResponse::GameStateSnapshot(self.state.clone()),
+                ),
+            ])
+        } else {
+            Err(GameError::UnspecifiedError)
+        }
+    }
+
+    fn user_players_vec(&self) -> Vec<(UserId, PlayerId)> {
+        self.user_players
+            .iter()
+            .map(|(user_id, player_id)| (*user_id, *player_id))
+            .collect()
     }
 
     pub(crate) fn sync(&self) -> Vec<GameResponseWithAddress> {

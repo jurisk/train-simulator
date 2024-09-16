@@ -3,77 +3,70 @@ use std::collections::HashMap;
 use log::{info, warn};
 use shared_domain::client_command::{AccessToken, AuthenticationCommand};
 use shared_domain::server_response::{
-    AddressEnvelope, AuthenticationError, AuthenticationResponse, Colour, PlayerInfo, ServerError,
-    ServerResponse, ServerResponseWithAddress,
+    AddressEnvelope, AuthenticationError, AuthenticationResponse, ServerError, ServerResponse,
+    ServerResponseWithAddress, UserInfo,
 };
-use shared_domain::{ClientId, PlayerId, PlayerName};
+use shared_domain::{ClientId, UserId, UserName};
 use uuid::uuid;
 
 use crate::connection_registry::ConnectionRegistry;
 
 pub(crate) struct AuthenticationService {
     connection_registry: ConnectionRegistry,
-    player_infos:        HashMap<PlayerId, PlayerInfo>,
+    user_infos:          HashMap<UserId, UserInfo>,
 }
 
 impl AuthenticationService {
     pub(crate) fn new() -> Self {
         Self {
             connection_registry: ConnectionRegistry::new(),
-            // Later: Have a proper player database.
-            player_infos:        vec![
+            // Later: Have a proper user database.
+            user_infos:          vec![
                 (
-                    PlayerId::new(uuid!("ee6b4aa1-67e0-4d6b-a42c-56320f61390e")),
-                    PlayerName::new("Juris".to_string()),
-                    Colour::rgb(153, 51, 255),
+                    UserId::new(uuid!("ee6b4aa1-67e0-4d6b-a42c-56320f61390e")),
+                    UserName::new("Juris".to_string()),
                 ),
                 (
-                    PlayerId::new(uuid!("dd761bc8-cc22-4035-aab9-c79ab4a3b941")),
-                    PlayerName::new("Isaak".to_string()),
-                    Colour::rgb(255, 51, 51),
+                    UserId::new(uuid!("dd761bc8-cc22-4035-aab9-c79ab4a3b941")),
+                    UserName::new("Isaak".to_string()),
                 ),
                 (
-                    PlayerId::new(uuid!("2628b18e-cd05-4be3-a6ad-05b9128ab01f")),
-                    PlayerName::new("Jānis".to_string()),
-                    Colour::rgb(51, 51, 255),
+                    UserId::new(uuid!("2628b18e-cd05-4be3-a6ad-05b9128ab01f")),
+                    UserName::new("Jānis".to_string()),
                 ),
                 (
-                    PlayerId::new(uuid!("e4eca11c-f88b-4b45-8046-ae93b99fa9df")),
-                    PlayerName::new("Арцём".to_string()),
-                    Colour::rgb(153, 0, 0),
+                    UserId::new(uuid!("e4eca11c-f88b-4b45-8046-ae93b99fa9df")),
+                    UserName::new("Арцём".to_string()),
                 ),
                 (
-                    PlayerId::new(uuid!("c11f557b-57d8-4820-a363-615fe024155d")),
-                    PlayerName::new("Imants".to_string()),
-                    Colour::rgb(255, 255, 0),
+                    UserId::new(uuid!("c11f557b-57d8-4820-a363-615fe024155d")),
+                    UserName::new("Imants".to_string()),
                 ),
             ]
             .into_iter()
-            .map(|(id, name, colour)| (id, PlayerInfo { id, name, colour }))
+            .map(|(id, name)| (id, UserInfo { id, name }))
             .collect(),
         }
     }
 
-    pub(crate) fn player_info(&self, player_id: PlayerId) -> PlayerInfo {
-        match self.player_infos.get(&player_id) {
+    pub(crate) fn user_info(&self, user_id: UserId) -> UserInfo {
+        match self.user_infos.get(&user_id) {
             None => {
-                info!("Failed to find player_name for {player_id:?}, returning a random name.");
+                info!("Failed to find user_name for {user_id:?}, returning a random name.");
                 // Later: This is just for debug, we should stop doing this
-                PlayerInfo {
-                    id:     player_id,
-                    name:   PlayerName::random(player_id.hash_to_u64()),
-                    // TODO: Have a pool of supported colors and pass the material through Assets.
-                    colour: Colour::random(player_id.hash_to_u64()),
+                UserInfo {
+                    id:   user_id,
+                    name: UserName::random(user_id.hash_to_u64()),
                 }
             },
-            Some(player_info) => player_info.clone(),
+            Some(user_info) => user_info.clone(),
         }
     }
 
-    pub(crate) fn client_ids_for_player(&self, player_id: PlayerId) -> Vec<ClientId> {
-        match self.connection_registry.get_client_id(&player_id) {
+    pub(crate) fn client_ids_for_user(&self, user_id: UserId) -> Vec<ClientId> {
+        match self.connection_registry.get_client_id(&user_id) {
             None => {
-                warn!("Failed to find client_id for {player_id:?}");
+                warn!("Failed to find client_id for {user_id:?}");
                 vec![]
             },
             Some(client_id) => vec![*client_id],
@@ -86,15 +79,15 @@ impl AuthenticationService {
         authentication_command: &AuthenticationCommand,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match authentication_command {
-            AuthenticationCommand::Login(player_id, access_token) => {
+            AuthenticationCommand::Login(user_id, access_token) => {
                 // Later: Check the token for validity.
                 if *access_token == AccessToken::new("valid-token".to_string()) {
-                    self.connection_registry.register(*player_id, client_id);
+                    self.connection_registry.register(*user_id, client_id);
 
                     Ok(vec![ServerResponseWithAddress::new(
                         AddressEnvelope::ToClient(client_id),
                         ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(
-                            *player_id,
+                            *user_id,
                         )),
                     )])
                 } else {
@@ -104,7 +97,7 @@ impl AuthenticationService {
                 }
             },
             AuthenticationCommand::Logout => {
-                self.connection_registry.unregister_by_client_id(client_id);
+                self.connection_registry.unregister_by_client_id(&client_id);
 
                 Ok(vec![ServerResponseWithAddress::new(
                     AddressEnvelope::ToClient(client_id),
@@ -114,13 +107,13 @@ impl AuthenticationService {
         }
     }
 
-    pub(crate) fn lookup_player_id(
+    pub(crate) fn lookup_user_id(
         &self,
         client_id: ClientId,
-    ) -> Result<PlayerId, Box<ServerResponse>> {
-        match self.connection_registry.get_player_id(&client_id) {
+    ) -> Result<UserId, Box<ServerResponse>> {
+        match self.connection_registry.get_user_id(&client_id) {
             None => Err(Box::new(ServerResponse::Error(ServerError::NotAuthorized))),
-            Some(requesting_player_id) => Ok(*requesting_player_id),
+            Some(requesting_user_id) => Ok(*requesting_user_id),
         }
     }
 }

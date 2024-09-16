@@ -6,31 +6,32 @@ use shared_domain::client_command::GameCommand;
 use shared_domain::game_time::{GameTime, GameTimeDiff};
 use shared_domain::metrics::NoopMetrics;
 use shared_domain::resource_type::ResourceType;
-use shared_domain::server_response::{Colour, GameResponse, PlayerInfo, ServerResponse};
-use shared_domain::{MapId, PlayerId, PlayerName};
+use shared_domain::server_response::{GameResponse, ServerResponse, UserInfo};
+use shared_domain::{MapId, UserId, UserName};
 
 #[test]
 fn ai_until_final_goods_built() {
-    let player_id = PlayerId::random();
-    let player_info = PlayerInfo {
-        id:     player_id,
-        name:   PlayerName::new("Test AI".to_string()),
-        colour: Colour::random(0),
+    let user_id = UserId::random();
+    let user_info = UserInfo {
+        id:   user_id,
+        name: UserName::new("Test AI".to_string()),
     };
     let mut artificial_intelligence_state = ArtificialIntelligenceState::default();
 
     let mut games_service = GamesService::new();
     let response = games_service
-        .create_and_join_game(&player_info, MapId::all().first().unwrap())
+        .create_and_join_game(&user_info, MapId::all().first().unwrap())
         .unwrap();
 
-    let game_state_snapshot = response.first().unwrap();
-    let game_id = if let ServerResponse::Game(game_id, _) = &game_state_snapshot.response {
-        *game_id
+    let response = response.first().unwrap();
+
+    let (game_id, player_id) = if let ServerResponse::Game(game_id, GameResponse::GameJoined(player_id)) =
+        response.response
+    {
+        (game_id, player_id)
     } else {
         panic!(
-            "Expected Game response, got {:?}",
-            game_state_snapshot.response
+            "Expected response, got {response:?}",
         );
     };
 
@@ -38,7 +39,7 @@ fn ai_until_final_goods_built() {
 
     loop {
         let response = games_service
-            .process_command(game_id, player_id, &GameCommand::RequestGameStateSnapshot)
+            .process_command(game_id, user_id, &GameCommand::RequestGameStateSnapshot)
             .unwrap();
         let game_state = response.first().unwrap();
         let ServerResponse::Game(_game_id, GameResponse::GameStateSnapshot(game_state)) =
@@ -73,7 +74,7 @@ fn ai_until_final_goods_built() {
         if let Some(commands) = commands {
             for command in commands {
                 let _responses = games_service
-                    .process_command(game_id, player_id, &command)
+                    .process_command(game_id, user_id, &command)
                     .unwrap();
             }
         }

@@ -26,7 +26,7 @@ use shared_domain::server_response::{
     AuthenticationResponse, Colour, GameResponse, ServerResponse,
 };
 use shared_domain::tile_coverage::TileCoverage;
-use shared_domain::{GameId, MapId, PlayerId};
+use shared_domain::{GameId, MapId, PlayerId, UserId};
 use shared_util::tap::TapErr;
 
 use crate::ai::ArtificialIntelligencePlugin;
@@ -51,7 +51,7 @@ pub struct GamePlugin {
 // Later: Improve to make invalid combinations impossible on type level
 #[derive(Resource, Clone, Debug)]
 pub struct GameLaunchParams {
-    pub player_id:    PlayerId,
+    pub user_id:      UserId,
     pub access_token: AccessToken,
     pub game_id:      Option<GameId>,
     pub map_id:       Option<MapId>,
@@ -59,10 +59,10 @@ pub struct GameLaunchParams {
 
 impl GameLaunchParams {
     #[must_use]
-    pub fn new(player_id: &str, access_token: &str, map_id: &str, game_id: &str) -> Self {
-        let player_id = PlayerId::from_str(player_id).unwrap_or_else(|err| {
-            warn!("Invalid player ID {player_id:?}: {err}");
-            PlayerId::random()
+    pub fn new(user_id: &str, access_token: &str, map_id: &str, game_id: &str) -> Self {
+        let user_id = UserId::from_str(user_id).unwrap_or_else(|err| {
+            warn!("Invalid user ID {user_id:?}: {err}");
+            UserId::random()
         });
         let access_token = AccessToken::new(access_token.to_string());
         let map_id = MapId::from_str(map_id)
@@ -73,7 +73,7 @@ impl GameLaunchParams {
             .ok();
 
         Self {
-            player_id,
+            user_id,
             access_token,
             game_id,
             map_id,
@@ -107,6 +107,9 @@ impl Plugin for GamePlugin {
 }
 
 #[derive(Resource)]
+pub struct UserIdResource(pub UserId);
+
+#[derive(Resource)]
 pub struct PlayerIdResource(pub PlayerId);
 
 // Movement prediction on the client side
@@ -126,7 +129,7 @@ fn initiate_login(
 ) {
     client_messages.send(ClientMessageEvent::new(ClientCommand::Authentication(
         AuthenticationCommand::Login(
-            game_launch_params.player_id,
+            game_launch_params.user_id,
             game_launch_params.access_token.clone(),
         ),
     )));
@@ -139,11 +142,11 @@ fn handle_login_successful(
     mut client_state: ResMut<NextState<ClientState>>,
 ) {
     for message in server_messages.read() {
-        if let ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(player_id)) =
+        if let ServerResponse::Authentication(AuthenticationResponse::LoginSucceeded(user_id)) =
             &message.response
         {
-            info!("Login successful, player_id: {player_id:?}");
-            commands.insert_resource(PlayerIdResource(*player_id));
+            info!("Login successful, user_id: {user_id:?}");
+            commands.insert_resource(UserIdResource(*user_id));
 
             client_state.set(ClientState::JoiningGame);
 
@@ -163,7 +166,8 @@ fn handle_players_updated(
         if let ServerResponse::Game(_game_id, GameResponse::PlayersUpdated(new_player_infos)) =
             &message.response
         {
-            game_state.update_player_infos(new_player_infos);
+            info!("Players updated: {new_player_infos:?}");
+            // Later: Consider if we use this somewhere
         }
     }
 }

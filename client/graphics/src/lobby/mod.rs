@@ -3,10 +3,10 @@ use bevy::prelude::{
 };
 use shared_domain::client_command::{ClientCommand, LobbyCommand};
 use shared_domain::server_response::{GameInfo, LobbyResponse, ServerResponse};
-use shared_domain::{GameId, PlayerId};
+use shared_domain::{GameId, UserId};
 
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
-use crate::game::{GameLaunchParams, PlayerIdResource};
+use crate::game::{GameLaunchParams, UserIdResource};
 use crate::states::ClientState;
 
 pub(crate) struct LobbyHandlerPlugin;
@@ -23,15 +23,15 @@ impl Plugin for LobbyHandlerPlugin {
 fn select_game_to_join(
     games: &[GameInfo],
     game_launch_params: &GameLaunchParams,
-    player_id: PlayerId,
+    user_id: UserId,
 ) -> Option<GameId> {
-    let game_with_player = games
+    let game_with_user = games
         .iter()
         .find(|game_info| {
             game_info
-                .players
+                .user_players
                 .iter()
-                .any(|player_info| player_info.id == player_id)
+                .any(|(that_user_id, _player_id)| *that_user_id == user_id)
         })
         .map(|game_info| game_info.game_id);
 
@@ -49,17 +49,17 @@ fn select_game_to_join(
         },
     };
 
-    if game_with_player.is_some()
+    if game_with_user.is_some()
         && game_matching_game_id.is_some()
-        && game_with_player != game_matching_game_id
+        && game_with_user != game_matching_game_id
     {
         warn!(
-            "Player is in a game {game_with_player:?} that doesn't match the game ID provided {game_matching_game_id:?}"
+            "Player is in a game {game_with_user:?} that doesn't match the game ID provided {game_matching_game_id:?}"
         );
     }
 
     game_matching_game_id
-        .or(game_with_player)
+        .or(game_with_user)
         .or(game_matching_map_id)
 }
 
@@ -68,16 +68,16 @@ fn handle_available_games(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut client_messages: EventWriter<ClientMessageEvent>,
     game_launch_params: Res<GameLaunchParams>,
-    player_id_resource: Res<PlayerIdResource>,
+    user_id_resource: Res<UserIdResource>,
 ) {
     for message in server_messages.read() {
         if let ServerResponse::Lobby(LobbyResponse::AvailableGames(games)) = &message.response {
-            let PlayerIdResource(player_id) = player_id_resource.as_ref();
+            let UserIdResource(user_id) = user_id_resource.as_ref();
             let game_launch_params = game_launch_params.as_ref();
 
-            let selected_game_id = select_game_to_join(games, game_launch_params, *player_id);
+            let selected = select_game_to_join(games, game_launch_params, *user_id);
 
-            let command = match selected_game_id {
+            let command = match selected {
                 None => {
                     LobbyCommand::CreateGame(game_launch_params.map_id.clone().unwrap_or_default())
                 },
