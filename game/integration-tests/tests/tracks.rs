@@ -15,7 +15,7 @@ use shared_util::direction_xz::DirectionXZ;
 fn test_plan_tracks() {
     let player_id = PlayerId::random();
 
-    let mut game_state = GameState::empty_from_level(
+    let mut game_state = GameState::new_from_level(
         MapId("usa_east".to_string()),
         MapLevel::load(include_str!("../../../assets/map_levels/usa_east.json")),
     );

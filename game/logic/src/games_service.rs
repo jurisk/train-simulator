@@ -40,7 +40,7 @@ impl GamesService {
                 _ => USA_LEVEL_JSON,
             };
             let map_level = MapLevel::load(level_json);
-            let game_prototype = GameState::empty_from_level(map_id.clone(), map_level);
+            let game_prototype = GameState::new_from_level(map_id.clone(), map_level);
 
             game_prototypes.insert(map_id, game_prototype.clone());
         }

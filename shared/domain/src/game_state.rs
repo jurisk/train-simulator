@@ -5,17 +5,22 @@ use std::collections::HashMap;
 use log::trace;
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::building::building_info::{BuildingDynamicInfo, WithCostToBuild, WithTileCoverage};
+use crate::building::building_info::{
+    BuildingDynamicInfo, WithBuildingDynamicInfoMut, WithCostToBuild, WithTileCoverage,
+};
 use crate::building::building_state::{BuildingState, CanBuildResponse};
 use crate::building::industry_building_info::IndustryBuildingInfo;
+use crate::building::industry_type::IndustryType;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
-use crate::cargo_map::WithCargo;
+use crate::cargo_amount::CargoAmount;
+use crate::cargo_map::{WithCargo, WithCargoMut};
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
-use crate::map_level::zoning::ZoningInfo;
+use crate::map_level::zoning::{ZoningInfo, ZoningType};
 use crate::metrics::Metrics;
 use crate::players::player_state::PlayerState;
+use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::movement_orders::MovementOrders;
@@ -102,8 +107,9 @@ impl From<GameStateFlattened> for GameState {
 }
 
 impl GameState {
+    #[expect(clippy::unwrap_used, clippy::missing_panics_doc)]
     #[must_use]
-    pub fn empty_from_level(map_id: MapId, map_level: MapLevel) -> Self {
+    pub fn new_from_level(map_id: MapId, map_level: MapLevel) -> Self {
         let game_id = GameId::random();
         let terrain = map_level.terrain();
         let size_x = terrain.tile_count_x();
@@ -111,7 +117,7 @@ impl GameState {
 
         let players = PlayerState::two_players();
 
-        Self {
+        let mut result = Self {
             game_id,
             map_id,
             map_level,
@@ -120,7 +126,39 @@ impl GameState {
             players,
             time: GameTime::new(),
             time_steps: 0,
+        };
+
+        // TODO: Actually, this should be part of the game level already
+        for player_id in result.players.ids() {
+            if let Some(free) = result
+                .all_free_zonings()
+                .into_iter()
+                .find(|zoning| zoning.zoning_type() == ZoningType::Industrial)
+            {
+                let construction_yard_id = IndustryBuildingId::random();
+                let construction_yard = IndustryBuildingInfo::new(
+                    player_id,
+                    construction_yard_id,
+                    free.reference_tile(),
+                    IndustryType::ConstructionYard,
+                );
+                let () = result
+                    .buildings
+                    .build_industry_building(player_id, &construction_yard)
+                    .unwrap();
+                let construction_yard = result
+                    .buildings
+                    .find_industry_building_mut(construction_yard_id)
+                    .unwrap();
+                let mut dynamic_info = construction_yard.dynamic_info_mut();
+                let cargo = dynamic_info.cargo_mut();
+                cargo.add(ResourceType::Concrete, CargoAmount::new(100.0));
+                cargo.add(ResourceType::Iron, CargoAmount::new(20.0));
+                cargo.add(ResourceType::Timber, CargoAmount::new(20.0));
+            }
         }
+
+        result
     }
 
     #[must_use]

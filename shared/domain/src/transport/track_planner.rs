@@ -154,7 +154,7 @@ mod tests {
         let water = Water::new(Height::from_u8(0), Height::from_u8(1));
         let zoning = Zoning::new(size_x, size_z);
         let map_level = MapLevel::new(terrain, water.expect("valid water"), zoning);
-        let game_state = GameState::empty_from_level(MapId("test".to_string()), map_level);
+        let game_state = GameState::new_from_level(MapId("test".to_string()), map_level);
         let head = DirectionalEdge::new(tile, DirectionXZ::West);
         let tail = DirectionalEdge::new(tile + DirectionXZ::East, DirectionXZ::West);
         let (results, length) = plan_tracks(
