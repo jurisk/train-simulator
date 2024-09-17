@@ -13,6 +13,7 @@ use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::industry_type::IndustryType;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
+use crate::building::{BuildCosts, BuildError};
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::{WithCargo, WithCargoMut};
 use crate::game_time::{GameTime, GameTimeDiff};
@@ -252,11 +253,11 @@ impl GameState {
         &mut self,
         requesting_player_id: PlayerId,
         tracks: &[TrackInfo],
-    ) -> Result<Vec<TrackInfo>, ()> {
+    ) -> Result<Vec<TrackInfo>, BuildError> {
         // TODO HIGH: Subtract resource cost
         match self.can_build_tracks(requesting_player_id, tracks) {
-            None => Err(()),
-            Some(filtered) => {
+            Err(error) => Err(error),
+            Ok(filtered) => {
                 self.buildings.append_tracks(filtered.clone());
                 Ok(filtered)
             },
@@ -267,8 +268,8 @@ impl GameState {
         &mut self,
         requesting_player_id: PlayerId,
         track_infos: &[TrackInfo],
-    ) -> Option<Vec<TrackInfo>> {
-        // TODO HIGH: Check you have resources to build
+    ) -> Result<Vec<TrackInfo>, BuildError> {
+        // TODO HIGH: Check you have resources to build - and you have to aggregate the costs of all tracks!
         let mut results = vec![];
         for track_info in track_infos {
             match self.can_build_track(requesting_player_id, track_info) {
@@ -276,12 +277,12 @@ impl GameState {
                     results.push(track_info.clone());
                 },
                 CanBuildResponse::AlreadyExists => {},
-                CanBuildResponse::Invalid => {
-                    return None;
+                CanBuildResponse::Invalid(error) => {
+                    return Err(error);
                 },
             }
         }
-        Some(results)
+        Ok(results)
     }
 
     pub(crate) fn can_build_track(
@@ -292,7 +293,7 @@ impl GameState {
         if track.owner_id() == player_id {
             self.can_build_track_internal(player_id, track.tile, track.track_type)
         } else {
-            CanBuildResponse::Invalid
+            CanBuildResponse::Invalid(BuildError::InvalidOwner)
         }
     }
 
@@ -302,47 +303,46 @@ impl GameState {
         tile: TileCoordsXZ,
         track_type: TrackType,
     ) -> CanBuildResponse {
-        if self.map_level.can_build_track(tile, track_type) {
-            self.buildings.can_build_track(player_id, tile, track_type)
-        } else {
-            CanBuildResponse::Invalid
+        match self.map_level.can_build_track(tile, track_type) {
+            Ok(()) => self.buildings.can_build_track(player_id, tile, track_type),
+            Err(err) => CanBuildResponse::Invalid(err),
         }
     }
 
-    #[must_use]
+    #[expect(clippy::missing_errors_doc)]
     pub fn can_build_industry_building(
         &self,
         requesting_player_id: PlayerId,
         building: &IndustryBuildingInfo,
-    ) -> bool {
-        self.can_pay_cost(requesting_player_id, building).is_some()
-            && self.map_level.can_build_industry_building(building)
-            && self
-                .buildings
-                .can_build_building(requesting_player_id, building)
+    ) -> Result<BuildCosts, BuildError> {
+        self.map_level.can_build_industry_building(building)?;
+        self.buildings
+            .can_build_building(requesting_player_id, building)?;
+
+        self.can_pay_cost(requesting_player_id, building)
     }
 
     pub fn build_industry_building(
         &mut self,
         requesting_player_id: PlayerId,
         building: &IndustryBuildingInfo,
-    ) -> Result<(), ()> {
-        // TODO HIGH: Subtract resource cost
-        if self.can_build_industry_building(requesting_player_id, building) {
-            self.buildings
-                .build_industry_building(requesting_player_id, building)
-        } else {
-            Err(())
-        }
+    ) -> Result<(), BuildError> {
+        let _costs = self.can_build_industry_building(requesting_player_id, building)?;
+        // TODO HIGH: Subtract resource costs
+        self.buildings
+            .build_industry_building(requesting_player_id, building)
     }
 
-    #[must_use]
-    pub fn can_build_station(&self, requesting_player_id: PlayerId, station: &StationInfo) -> bool {
-        self.can_pay_cost(requesting_player_id, station).is_some()
-            && self.map_level.can_build_station(station)
-            && self
-                .buildings
-                .can_build_building(requesting_player_id, station)
+    #[expect(clippy::missing_errors_doc)]
+    pub fn can_build_station(
+        &self,
+        requesting_player_id: PlayerId,
+        station: &StationInfo,
+    ) -> Result<BuildCosts, BuildError> {
+        self.map_level.can_build_station(station)?;
+        self.buildings
+            .can_build_building(requesting_player_id, station)?;
+        self.can_pay_cost(requesting_player_id, station)
     }
 
     #[expect(clippy::collapsible_if)]
@@ -350,7 +350,7 @@ impl GameState {
         &self,
         player_id: PlayerId,
         something: &T,
-    ) -> Option<IndustryBuildingId> {
+    ) -> Result<BuildCosts, BuildError> {
         let (industry_type, cost) = something.cost_to_build();
         let coverage = something.covers_tiles();
         if let Some(supply_range) = industry_type.supply_range_in_tiles() {
@@ -365,14 +365,14 @@ impl GameState {
                 if distance <= supply_range {
                     if building.cargo().is_superset_of(&cost) {
                         // Later. We currently return the first one that satisfies the conditions - we could instead return the closest one, or the one with most resources.
-                        return Some(building.id());
+                        return Ok(BuildCosts::single(building.id(), cost));
                     }
                 }
             }
 
-            None
+            Err(BuildError::NotEnoughResources)
         } else {
-            None
+            Err(BuildError::UnknownError)
         }
     }
 
@@ -380,13 +380,10 @@ impl GameState {
         &mut self,
         requesting_player_id: PlayerId,
         station: &StationInfo,
-    ) -> Result<(), ()> {
+    ) -> Result<(), BuildError> {
         // TODO HIGH: Subtract resource cost
-        if self.can_build_station(requesting_player_id, station) {
-            self.buildings.build_station(requesting_player_id, station)
-        } else {
-            Err(())
-        }
+        self.can_build_station(requesting_player_id, station)?;
+        self.buildings.build_station(requesting_player_id, station)
     }
 
     pub fn remove_tracks(

@@ -81,7 +81,11 @@ fn try_building_stations(player_id: PlayerId, game_state: &GameState) -> Option<
             .map(|(tile, station_type)| {
                 StationInfo::new(player_id, StationId::random(), tile, station_type)
             })
-            .filter(|station_info| game_state.can_build_station(player_id, station_info))
+            .filter(|station_info| {
+                game_state
+                    .can_build_station(player_id, station_info)
+                    .is_ok()
+            })
             .collect::<Vec<_>>();
 
         // Later: Don't choose randomly, but the "best" (not sure what that means yet) location

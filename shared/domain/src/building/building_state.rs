@@ -5,6 +5,7 @@ use std::fmt::{Debug, Formatter};
 
 use log::warn;
 use serde::{Deserialize, Serialize};
+use shared_util::bool_ops::BoolResultOps;
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
@@ -16,6 +17,7 @@ use crate::building::industry_type::IndustryType;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::track_state::{MaybeTracksOnTile, TrackState};
+use crate::building::BuildError;
 use crate::cargo_map::CargoOps;
 use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;
@@ -27,7 +29,7 @@ use crate::{IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackId, Trac
 pub enum CanBuildResponse {
     Ok, // Add `price` here later?
     AlreadyExists,
-    Invalid,
+    Invalid(BuildError),
 }
 
 // Later: There is a dual nature here to both be the "validator" (check if something can be built) and the "state" (store what has been built).
@@ -246,12 +248,11 @@ impl BuildingState {
         &self,
         requesting_player_id: PlayerId,
         building_info: &T,
-    ) -> bool {
-        let valid_player_id = building_info.owner_id() == requesting_player_id;
-
-        let coverage = building_info.covers_tiles();
-        let can_build = self.can_build_for_coverage(&coverage) == CanBuildResponse::Ok;
-        valid_player_id && can_build
+    ) -> Result<(), BuildError> {
+        (building_info.owner_id() == requesting_player_id)
+            .then_ok_unit(|| BuildError::InvalidOwner)?;
+        self.can_build_for_coverage(&building_info.covers_tiles())?;
+        Ok(())
     }
 
     // TODO: Needs test coverage
@@ -287,7 +288,7 @@ impl BuildingState {
         };
 
         if overlapping_other_players_tracks || invalid_overlaps {
-            CanBuildResponse::Invalid
+            CanBuildResponse::Invalid(BuildError::InvalidOverlap)
         } else if has_same_track {
             CanBuildResponse::AlreadyExists
         } else {
@@ -295,42 +296,35 @@ impl BuildingState {
         }
     }
 
-    pub(crate) fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> CanBuildResponse {
+    pub(crate) fn can_build_for_coverage(
+        &self,
+        tile_coverage: &TileCoverage,
+    ) -> Result<(), BuildError> {
         let invalid_overlaps = tile_coverage.to_set().into_iter().any(|tile| {
             self.building_at(tile).is_some() || self.tracks_at(tile) != MaybeTracksOnTile::Empty
         });
 
-        if invalid_overlaps {
-            CanBuildResponse::Invalid
-        } else {
-            CanBuildResponse::Ok
-        }
+        invalid_overlaps.then_err_unit(|| BuildError::InvalidOverlap)
     }
 
     pub(crate) fn build_industry_building(
         &mut self,
         requesting_player_id: PlayerId,
         industry_building_info: &IndustryBuildingInfo,
-    ) -> Result<(), ()> {
-        if self.can_build_building(requesting_player_id, industry_building_info) {
-            self.append_industry_building(industry_building_info.clone());
-            Ok(())
-        } else {
-            Err(())
-        }
+    ) -> Result<(), BuildError> {
+        self.can_build_building(requesting_player_id, industry_building_info)?;
+        self.append_industry_building(industry_building_info.clone());
+        Ok(())
     }
 
     pub(crate) fn build_station(
         &mut self,
         requesting_player_id: PlayerId,
         station_info: &StationInfo,
-    ) -> Result<(), ()> {
-        if self.can_build_building(requesting_player_id, station_info) {
-            self.append_station(station_info.clone());
-            Ok(())
-        } else {
-            Err(())
-        }
+    ) -> Result<(), BuildError> {
+        self.can_build_building(requesting_player_id, station_info)?;
+        self.append_station(station_info.clone());
+        Ok(())
     }
 
     #[must_use]
@@ -543,6 +537,6 @@ mod tests {
             StationType::EW_1_4,
         );
         let result = building_state.can_build_building(owner_id, &station_info);
-        assert!(!result);
+        assert_eq!(result, Err(BuildError::InvalidOverlap));
     }
 }

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use shared_util::bool_ops::BoolResultOps;
 
 use crate::map_level::map_level::Height;
 
@@ -26,13 +27,8 @@ impl Water {
     #[expect(clippy::missing_errors_doc)]
     pub fn is_valid(&self) -> Result<(), String> {
         let (below, above) = &self.between;
-        if below.as_u8() + 1 == above.as_u8() {
-            Ok(())
-        } else {
-            Err(format!(
-                "Water height range is invalid: {below:?} - {above:?}",
-            ))
-        }
+        (below.as_u8() + 1 == above.as_u8())
+            .then_ok_unit(|| format!("Water height range is invalid: {below:?} - {above:?}",))
     }
 
     #[must_use]

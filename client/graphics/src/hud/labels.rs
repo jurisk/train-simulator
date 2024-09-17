@@ -98,7 +98,10 @@ fn draw_zoning_buttons(
                 zoning_info.reference_tile(),
                 industry_type,
             );
-            if game_state.can_build_industry_building(player_id, &hypothetical_building) {
+            if game_state
+                .can_build_industry_building(player_id, &hypothetical_building)
+                .is_ok()
+            {
                 sub_buttons.insert(
                     format!("Build {industry_type:?}"),
                     Box::new(|| GameCommand::BuildIndustryBuilding(hypothetical_building)),

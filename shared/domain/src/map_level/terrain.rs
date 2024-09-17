@@ -2,10 +2,12 @@ use std::fmt::{Debug, Formatter};
 
 use bevy_math::Vec3;
 use serde::{Deserialize, Serialize};
+use shared_util::bool_ops::BoolResultOps;
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
+use crate::building::BuildError;
 use crate::map_level::map_level::{Height, TerrainType};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::tile_track::TileTrack;
@@ -148,9 +150,16 @@ impl Terrain {
     }
 
     // TODO: Optimise with `GridXZ<TileCoordsXZ, TrackTypeSet>` for faster common lookups - but need to deal with serialisation
-    #[must_use]
-    #[expect(clippy::items_after_statements, clippy::similar_names)]
-    pub fn can_build_track(&self, tile: TileCoordsXZ, track_type: TrackType) -> bool {
+    #[expect(
+        clippy::items_after_statements,
+        clippy::similar_names,
+        clippy::missing_errors_doc
+    )]
+    pub fn can_build_track(
+        &self,
+        tile: TileCoordsXZ,
+        track_type: TrackType,
+    ) -> Result<(), BuildError> {
         // Later: Do not allow tracks that go out of bounds (where any connection is on the edge)
         let in_bounds = self.tile_in_bounds(tile);
 
@@ -166,6 +175,7 @@ impl Terrain {
         const MAX_HEIGHT_DIFF: Height = Height::from_u8(1);
         let valid_height_diff = ha1.min(hb1) + MAX_HEIGHT_DIFF >= ha2.max(hb2);
 
-        train_is_not_tilted && valid_height_diff && in_bounds
+        (train_is_not_tilted && valid_height_diff && in_bounds)
+            .then_ok_unit(|| BuildError::InvalidTerrain)
     }
 }

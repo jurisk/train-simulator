@@ -106,13 +106,17 @@ impl SelectedMode {
             Some(GameCommand::BuildStation(station_info)) => {
                 Some((
                     station_info.covers_tiles(),
-                    game_state.can_build_station(player_id, &station_info),
+                    game_state
+                        .can_build_station(player_id, &station_info)
+                        .is_ok(),
                 ))
             },
             Some(GameCommand::BuildIndustryBuilding(industry_info)) => {
                 Some((
                     industry_info.covers_tiles(),
-                    game_state.can_build_industry_building(player_id, &industry_info),
+                    game_state
+                        .can_build_industry_building(player_id, &industry_info)
+                        .is_ok(),
                 ))
             },
             _ => None,

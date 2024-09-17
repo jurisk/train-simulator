@@ -6,6 +6,7 @@ use std::ops::{Index, IndexMut};
 
 use serde::{Deserialize, Serialize};
 
+use crate::bool_ops::BoolResultOps;
 use crate::coords_xz::CoordsXZ;
 
 #[derive(Clone, Serialize, Deserialize, Eq, PartialEq)]
@@ -49,11 +50,10 @@ impl<K, V> GridXZ<K, V> {
     #[expect(clippy::missing_errors_doc)]
     pub fn is_valid(&self) -> Result<(), String> {
         if self.data.len() == self.size_z {
-            if self.data.iter().all(|row| row.len() == self.size_x) {
-                Ok(())
-            } else {
-                Err("GridXZ size_x mismatch".to_string())
-            }
+            self.data
+                .iter()
+                .all(|row| row.len() == self.size_x)
+                .then_ok_unit(|| "GridXZ size_x mismatch".to_string())
         } else {
             Err(format!(
                 "GridXZ size_z mismatch: expected {}, got {}",

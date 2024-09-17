@@ -4,10 +4,12 @@ use std::ops::Add;
 use itertools::Itertools;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use shared_util::bool_ops::BoolResultOps;
 
 use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
+use crate::building::BuildError;
 use crate::map_level::terrain::Terrain;
 use crate::map_level::zoning::{Zoning, ZoningFlattened};
 use crate::tile_coords_xz::TileCoordsXZ;
@@ -233,8 +235,12 @@ impl MapLevel {
         self.terrain.tile_in_bounds(tile)
     }
 
-    #[must_use]
-    pub fn can_build_track(&self, tile: TileCoordsXZ, track_type: TrackType) -> bool {
+    #[expect(clippy::missing_errors_doc)]
+    pub fn can_build_track(
+        &self,
+        tile: TileCoordsXZ,
+        track_type: TrackType,
+    ) -> Result<(), BuildError> {
         // TODO: We should cache this (have a `Tile` => `TrackTypeSet` grid)
         let vertex_coords = tile.vertex_coords();
 
@@ -242,26 +248,30 @@ impl MapLevel {
             .into_iter()
             .any(|vertex| self.under_water(vertex));
 
-        !any_vertex_under_water
-            && self.terrain.can_build_track(tile, track_type)
-            && self.zoning.can_build_track(tile)
+        any_vertex_under_water.then_err_unit(|| BuildError::InvalidTerrain)?;
+        self.terrain.can_build_track(tile, track_type)?;
+        self.zoning.can_build_track(tile)?;
+
+        Ok(())
     }
 
     pub(crate) fn can_build_industry_building(
         &self,
         industry_building_info: &IndustryBuildingInfo,
-    ) -> bool {
+    ) -> Result<(), BuildError> {
         self.zoning
-            .can_build_industry_building(industry_building_info)
-            && self.can_build_for_coverage(&industry_building_info.covers_tiles())
+            .can_build_industry_building(industry_building_info)?;
+        self.can_build_for_coverage(&industry_building_info.covers_tiles())?;
+        Ok(())
     }
 
-    pub(crate) fn can_build_station(&self, station_info: &StationInfo) -> bool {
-        self.zoning.can_build_station(station_info)
-            && self.can_build_for_coverage(&station_info.covers_tiles())
+    pub(crate) fn can_build_station(&self, station_info: &StationInfo) -> Result<(), BuildError> {
+        self.zoning.can_build_station(station_info)?;
+        self.can_build_for_coverage(&station_info.covers_tiles())?;
+        Ok(())
     }
 
-    fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> bool {
+    fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> Result<(), BuildError> {
         let vertex_coords: Vec<_> = tile_coverage
             .to_set()
             .into_iter()
@@ -280,7 +290,8 @@ impl MapLevel {
             .map(|vertex| self.height_at(vertex))
             .all_equal();
 
-        equal_heights && !any_tile_out_of_bounds && !any_vertex_under_water
+        (equal_heights && !any_tile_out_of_bounds && !any_vertex_under_water)
+            .then_ok_unit(|| BuildError::InvalidTerrain)
     }
 }
 

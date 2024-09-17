@@ -4,12 +4,13 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
+use shared_util::bool_ops::BoolResultOps;
 use shared_util::grid_xz::GridXZ;
 
 use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
-use crate::building::WithRelativeTileCoverage;
+use crate::building::{BuildError, WithRelativeTileCoverage};
 use crate::map_level::zoning::ZoningType::Source;
 use crate::resource_type::ResourceType;
 use crate::resource_type::ResourceType::{
@@ -151,38 +152,43 @@ impl Zoning {
         }
     }
 
-    #[must_use]
+    #[expect(clippy::missing_errors_doc)]
     pub fn can_build_industry_building(
         &self,
         industry_building_info: &IndustryBuildingInfo,
-    ) -> bool {
+    ) -> Result<(), BuildError> {
         let required = industry_building_info.required_zoning();
         if required.is_some() {
-            self.zoning_at_reference_tile(industry_building_info.reference_tile())
+            (self
+                .zoning_at_reference_tile(industry_building_info.reference_tile())
                 .map(|zoning| zoning.zoning_type)
-                == required
+                == required)
+                .then_ok_unit(|| BuildError::InvalidZoning)
         } else {
-            industry_building_info
+            (industry_building_info
                 .covers_tiles()
                 .to_set()
                 .iter()
-                .all(|tile| self.free_at_tile(*tile))
+                .all(|tile| self.free_at_tile(*tile)))
+            .then_ok_unit(|| BuildError::InvalidOverlap)
         }
     }
 
-    #[must_use]
     #[inline]
-    pub fn can_build_track(&self, tile: TileCoordsXZ) -> bool {
+    #[expect(clippy::missing_errors_doc)]
+    pub fn can_build_track(&self, tile: TileCoordsXZ) -> Result<(), BuildError> {
         self.free_at_tile(tile)
+            .then_ok_unit(|| BuildError::InvalidOverlap)
     }
 
-    #[must_use]
-    pub fn can_build_station(&self, station_info: &StationInfo) -> bool {
+    #[expect(clippy::missing_errors_doc)]
+    pub fn can_build_station(&self, station_info: &StationInfo) -> Result<(), BuildError> {
         station_info
             .covers_tiles()
             .to_set()
             .iter()
             .all(|tile| self.free_at_tile(*tile))
+            .then_ok_unit(|| BuildError::InvalidOverlap)
     }
 }
 

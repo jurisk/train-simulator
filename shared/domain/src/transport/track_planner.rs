@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use log::{info, log, trace, warn, Level};
 use pathfinding::prelude::dijkstra;
-use shared_util::bool_ops::BoolOps;
+use shared_util::bool_ops::BoolOptionOps;
 use web_time::{Duration, Instant};
 
 use crate::building::building_state::CanBuildResponse;
@@ -44,7 +44,7 @@ fn response_to_coef(can_build_response: CanBuildResponse, already_exists_coef: f
     match can_build_response {
         CanBuildResponse::Ok => Some(1f32),
         CanBuildResponse::AlreadyExists => Some(already_exists_coef),
-        CanBuildResponse::Invalid => None,
+        CanBuildResponse::Invalid(_) => None,
     }
 }
 
@@ -92,10 +92,9 @@ pub fn plan_tracks(
                     CanBuildResponse::AlreadyExists => {
                         // Expected if we are building an addition to existing track
                     },
-                    CanBuildResponse::Invalid => {
+                    CanBuildResponse::Invalid(error) => {
                         warn!(
-                            "Unexpected state - our found path includes invalid tracks: {:?}",
-                            current,
+                            "Unexpected state - our found path includes invalid tracks: {current:?}, {error:?}",
                         );
                     },
                 }

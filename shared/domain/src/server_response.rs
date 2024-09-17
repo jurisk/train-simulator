@@ -10,6 +10,7 @@ use crate::building::building_info::BuildingDynamicInfo;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
+use crate::building::BuildError;
 use crate::client_command::DemolishSelector;
 use crate::game_state::GameState;
 use crate::game_time::GameTime;
@@ -112,9 +113,9 @@ pub enum GameResponse {
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameError {
     GameNotFound,
-    CannotBuildStation(StationId),
-    CannotBuildIndustryBuilding(IndustryBuildingId),
-    CannotBuildTracks(Vec<TrackId>),
+    CannotBuildStation(StationId, BuildError),
+    CannotBuildIndustryBuilding(IndustryBuildingId, BuildError),
+    CannotBuildTracks(Vec<TrackId>, BuildError),
     CannotPurchase(TransportId),
     CannotDemolish(DemolishSelector),
     UnspecifiedError,
@@ -124,14 +125,21 @@ impl Debug for GameError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             GameError::GameNotFound => write!(f, "GameNotFound"),
-            GameError::CannotBuildStation(station_id) => {
-                write!(f, "CannotBuildStation({station_id:?})")
+            GameError::CannotBuildStation(station_id, error) => {
+                write!(f, "CannotBuildStation({station_id:?}: {error:?})")
             },
-            GameError::CannotBuildIndustryBuilding(industry_building_id) => {
-                write!(f, "CannotBuildIndustryBuilding({industry_building_id:?})")
+            GameError::CannotBuildIndustryBuilding(industry_building_id, error) => {
+                write!(
+                    f,
+                    "CannotBuildIndustryBuilding({industry_building_id:?}: {error:?})"
+                )
             },
-            GameError::CannotBuildTracks(track_ids) => {
-                write!(f, "CannotBuildTracks({} tracks)", track_ids.len())
+            GameError::CannotBuildTracks(track_ids, error) => {
+                write!(
+                    f,
+                    "CannotBuildTracks({} tracks: {error:?})",
+                    track_ids.len()
+                )
             },
             GameError::CannotPurchase(transport_id) => {
                 write!(f, "CannotPurchase({transport_id:?})")

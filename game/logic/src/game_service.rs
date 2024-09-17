@@ -117,7 +117,7 @@ impl GameService {
                     GameResponse::IndustryBuildingAdded(industry_building.clone()),
                 )]
             })
-            .map_err(|()| GameError::CannotBuildIndustryBuilding(industry_building.id()))
+            .map_err(|error| GameError::CannotBuildIndustryBuilding(industry_building.id(), error))
     }
 
     fn process_build_station(
@@ -133,7 +133,7 @@ impl GameService {
                     GameResponse::StationAdded(station.clone()),
                 )]
             })
-            .map_err(|()| GameError::CannotBuildStation(station.id()))
+            .map_err(|error| GameError::CannotBuildStation(station.id(), error))
     }
 
     fn process_build_tracks(
@@ -148,9 +148,10 @@ impl GameService {
                     GameResponse::TracksAdded(built),
                 )])
             },
-            Err(()) => {
+            Err(error) => {
                 Err(GameError::CannotBuildTracks(
                     track_infos.iter().map(TrackInfo::id).collect(),
+                    error,
                 ))
             },
         }
