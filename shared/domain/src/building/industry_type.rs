@@ -164,7 +164,7 @@ impl IndustryType {
     #[must_use]
     pub fn supply_range_in_tiles(self) -> Option<TileDistance> {
         match self {
-            ConstructionYard => Some(64),
+            ConstructionYard => Some(128),
             MilitaryBase => Some(32),
             _ => None,
         }

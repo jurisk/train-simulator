@@ -145,7 +145,7 @@ impl GameState {
                 );
                 let () = result
                     .buildings
-                    .build_industry_building(player_id, &construction_yard)
+                    .build_industry_building(player_id, &construction_yard, BuildCosts::none())
                     .unwrap();
                 let construction_yard = result
                     .buildings
@@ -154,7 +154,7 @@ impl GameState {
                 let mut dynamic_info = construction_yard.dynamic_info_mut();
                 let cargo = dynamic_info.cargo_mut();
                 cargo.add(ResourceType::Concrete, CargoAmount::new(100.0));
-                cargo.add(ResourceType::Iron, CargoAmount::new(20.0));
+                cargo.add(ResourceType::Steel, CargoAmount::new(20.0));
                 cargo.add(ResourceType::Timber, CargoAmount::new(20.0));
             }
         }
@@ -327,10 +327,9 @@ impl GameState {
         requesting_player_id: PlayerId,
         building: &IndustryBuildingInfo,
     ) -> Result<(), BuildError> {
-        let _costs = self.can_build_industry_building(requesting_player_id, building)?;
-        // TODO HIGH: Subtract resource costs
+        let costs = self.can_build_industry_building(requesting_player_id, building)?;
         self.buildings
-            .build_industry_building(requesting_player_id, building)
+            .build_industry_building(requesting_player_id, building, costs)
     }
 
     #[expect(clippy::missing_errors_doc)]
@@ -345,7 +344,6 @@ impl GameState {
         self.can_pay_cost(requesting_player_id, station)
     }
 
-    #[expect(clippy::collapsible_if)]
     fn can_pay_cost<T: WithCostToBuild + WithTileCoverage>(
         &self,
         player_id: PlayerId,
@@ -363,6 +361,10 @@ impl GameState {
                     &building.covers_tiles(),
                 );
                 if distance <= supply_range {
+                    trace!(
+                        "Supply building at distance {distance} with supply range {supply_range} has cargo {:?} and we need cost {cost:?}",
+                        building.cargo()
+                    );
                     if building.cargo().is_superset_of(&cost) {
                         // Later. We currently return the first one that satisfies the conditions - we could instead return the closest one, or the one with most resources.
                         return Ok(BuildCosts::single(building.id(), cost));
@@ -381,9 +383,9 @@ impl GameState {
         requesting_player_id: PlayerId,
         station: &StationInfo,
     ) -> Result<(), BuildError> {
-        // TODO HIGH: Subtract resource cost
-        self.can_build_station(requesting_player_id, station)?;
-        self.buildings.build_station(requesting_player_id, station)
+        let costs = self.can_build_station(requesting_player_id, station)?;
+        self.buildings
+            .build_station(requesting_player_id, station, costs)
     }
 
     pub fn remove_tracks(

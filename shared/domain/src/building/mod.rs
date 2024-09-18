@@ -27,6 +27,13 @@ pub struct BuildCosts {
 
 impl BuildCosts {
     #[must_use]
+    pub fn none() -> Self {
+        Self {
+            costs: HashMap::new(),
+        }
+    }
+
+    #[must_use]
     pub fn single(industry_building_id: IndustryBuildingId, cargo_map: CargoMap) -> Self {
         let mut costs = HashMap::new();
         costs.insert(industry_building_id, cargo_map);

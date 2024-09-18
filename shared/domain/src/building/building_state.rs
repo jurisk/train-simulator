@@ -17,7 +17,7 @@ use crate::building::industry_type::IndustryType;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::track_state::{MaybeTracksOnTile, TrackState};
-use crate::building::BuildError;
+use crate::building::{BuildCosts, BuildError};
 use crate::cargo_map::CargoOps;
 use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;
@@ -311,18 +311,33 @@ impl BuildingState {
         &mut self,
         requesting_player_id: PlayerId,
         industry_building_info: &IndustryBuildingInfo,
+        costs: BuildCosts,
     ) -> Result<(), BuildError> {
         self.can_build_building(requesting_player_id, industry_building_info)?;
+        self.pay_costs(costs);
         self.append_industry_building(industry_building_info.clone());
         Ok(())
+    }
+
+    fn pay_costs(&mut self, costs: BuildCosts) {
+        for (industry_building_id, cargo_map) in costs.costs {
+            if let Some(industry_building) = self.industry_buildings.get_mut(&industry_building_id)
+            {
+                industry_building.remove_cargo(&cargo_map);
+            } else {
+                warn!("Could not find industry building with id {industry_building_id:?}");
+            }
+        }
     }
 
     pub(crate) fn build_station(
         &mut self,
         requesting_player_id: PlayerId,
         station_info: &StationInfo,
+        costs: BuildCosts,
     ) -> Result<(), BuildError> {
         self.can_build_building(requesting_player_id, station_info)?;
+        self.pay_costs(costs);
         self.append_station(station_info.clone());
         Ok(())
     }
