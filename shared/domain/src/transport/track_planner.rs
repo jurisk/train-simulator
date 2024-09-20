@@ -25,7 +25,7 @@ fn successors(
     let tile = current.into_tile;
     for track_type in TrackType::matching_direction(current.from_direction) {
         let response = game_state.can_build_track_internal(player_id, tile, track_type);
-        let coef = response_to_coef(response, already_exists_coef);
+        let coef = response_to_coef(&response, already_exists_coef);
         if let Some(coef) = coef {
             let adjusted_length = track_type.length() * coef;
             if let Some(exit_direction) = track_type.other_end(current.from_direction) {
@@ -40,9 +40,12 @@ fn successors(
     results
 }
 
-fn response_to_coef(can_build_response: CanBuildResponse, already_exists_coef: f32) -> Option<f32> {
+fn response_to_coef(
+    can_build_response: &CanBuildResponse,
+    already_exists_coef: f32,
+) -> Option<f32> {
     match can_build_response {
-        CanBuildResponse::Ok => Some(1f32),
+        CanBuildResponse::Ok(_) => Some(1f32),
         CanBuildResponse::AlreadyExists => Some(already_exists_coef),
         CanBuildResponse::Invalid(_) => None,
     }
@@ -86,7 +89,7 @@ pub fn plan_tracks(
                 let track_info = TrackInfo::new(player_id, a.into_tile, track_type);
                 let response = game_state.can_build_track(player_id, &track_info);
                 match response {
-                    CanBuildResponse::Ok => {
+                    CanBuildResponse::Ok(_) => {
                         tracks.push(track_info);
                     },
                     CanBuildResponse::AlreadyExists => {

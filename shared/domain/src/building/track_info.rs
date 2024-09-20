@@ -1,7 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+use crate::building::building_info::{WithCostToBuild, WithTileCoverage};
+use crate::building::industry_type::IndustryType;
+use crate::cargo_map::CargoMap;
 use crate::edge_xz::EdgeXZ;
 use crate::tile_coords_xz::TileCoordsXZ;
+use crate::tile_coverage::TileCoverage;
 use crate::transport::tile_track::TileTrack;
 use crate::transport::track_type::TrackType;
 use crate::{PlayerId, TrackId};
@@ -49,5 +53,17 @@ impl TrackInfo {
             EdgeXZ::from_tile_and_direction(self.tile, a),
             EdgeXZ::from_tile_and_direction(self.tile, b),
         ]
+    }
+}
+
+impl WithCostToBuild for TrackInfo {
+    fn cost_to_build(&self) -> (IndustryType, CargoMap) {
+        self.track_type.cost_to_build()
+    }
+}
+
+impl WithTileCoverage for TrackInfo {
+    fn covers_tiles(&self) -> TileCoverage {
+        TileCoverage::Single(self.tile)
     }
 }

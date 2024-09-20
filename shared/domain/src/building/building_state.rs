@@ -3,14 +3,14 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter};
 
-use log::warn;
+use log::{trace, warn};
 use serde::{Deserialize, Serialize};
 use shared_util::bool_ops::BoolResultOps;
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::building::building_info::{
-    BuildingDynamicInfo, BuildingInfo, WithOwner, WithTileCoverage,
+    BuildingDynamicInfo, BuildingInfo, WithCostToBuild, WithOwner, WithTileCoverage,
 };
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::industry_type::IndustryType;
@@ -18,16 +18,16 @@ use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::track_state::{MaybeTracksOnTile, TrackState};
 use crate::building::{BuildCosts, BuildError};
-use crate::cargo_map::CargoOps;
+use crate::cargo_map::{CargoOps, WithCargo};
 use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type_set::TrackTypeSet;
 use crate::{IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackId, TrackType};
 
-#[derive(Eq, PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum CanBuildResponse {
-    Ok, // Add `price` here later?
+    Ok(BuildCosts), // Add `price` here later?
     AlreadyExists,
     Invalid(BuildError),
 }
@@ -255,6 +255,11 @@ impl BuildingState {
         Ok(())
     }
 
+    pub(crate) fn build_tracks(&mut self, tracks: Vec<TrackInfo>, costs: BuildCosts) {
+        self.append_tracks(tracks);
+        self.pay_costs(costs);
+    }
+
     // TODO: Needs test coverage
     pub(crate) fn can_build_track(
         &self,
@@ -292,7 +297,43 @@ impl BuildingState {
         } else if has_same_track {
             CanBuildResponse::AlreadyExists
         } else {
-            CanBuildResponse::Ok
+            let track_info = TrackInfo::new(requesting_player_id, tile, track_type);
+            match self.can_pay_cost(requesting_player_id, &track_info) {
+                Ok(costs) => CanBuildResponse::Ok(costs),
+                Err(err) => CanBuildResponse::Invalid(err),
+            }
+        }
+    }
+
+    pub(crate) fn can_pay_cost<T: WithCostToBuild + WithTileCoverage>(
+        &self,
+        player_id: PlayerId,
+        something: &T,
+    ) -> Result<BuildCosts, BuildError> {
+        let (industry_type, cost) = something.cost_to_build();
+        let coverage = something.covers_tiles();
+        if let Some(supply_range) = industry_type.supply_range_in_tiles() {
+            for building in self.find_industry_building_by_owner_and_type(player_id, industry_type)
+            {
+                let distance = TileCoverage::manhattan_distance_between_closest_tiles(
+                    &coverage,
+                    &building.covers_tiles(),
+                );
+                if distance <= supply_range {
+                    trace!(
+                        "Supply building at distance {distance} with supply range {supply_range} has cargo {:?} and we need cost {cost:?}",
+                        building.cargo()
+                    );
+                    if building.cargo().is_superset_of(&cost) {
+                        // Later. We currently return the first one that satisfies the conditions - we could instead return the closest one, or the one with most resources.
+                        return Ok(BuildCosts::single(building.id(), cost));
+                    }
+                }
+            }
+
+            Err(BuildError::NotEnoughResources)
+        } else {
+            Err(BuildError::UnknownError)
         }
     }
 

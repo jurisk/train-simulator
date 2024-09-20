@@ -15,7 +15,7 @@ use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::{BuildCosts, BuildError};
 use crate::cargo_amount::CargoAmount;
-use crate::cargo_map::{WithCargo, WithCargoMut};
+use crate::cargo_map::WithCargoMut;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::{ZoningInfo, ZoningType};
@@ -23,7 +23,6 @@ use crate::metrics::Metrics;
 use crate::players::player_state::PlayerState;
 use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;
-use crate::tile_coverage::TileCoverage;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::track_type::TrackType;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
@@ -154,7 +153,7 @@ impl GameState {
                 let mut dynamic_info = construction_yard.dynamic_info_mut();
                 let cargo = dynamic_info.cargo_mut();
                 cargo.add(ResourceType::Concrete, CargoAmount::new(100.0));
-                cargo.add(ResourceType::Steel, CargoAmount::new(20.0));
+                cargo.add(ResourceType::Steel, CargoAmount::new(40.0));
                 cargo.add(ResourceType::Timber, CargoAmount::new(20.0));
             }
         }
@@ -254,27 +253,24 @@ impl GameState {
         requesting_player_id: PlayerId,
         tracks: &[TrackInfo],
     ) -> Result<Vec<TrackInfo>, BuildError> {
-        // TODO HIGH: Subtract resource cost
-        match self.can_build_tracks(requesting_player_id, tracks) {
-            Err(error) => Err(error),
-            Ok(filtered) => {
-                self.buildings.append_tracks(filtered.clone());
-                Ok(filtered)
-            },
-        }
+        let (filtered, costs) = self.can_build_tracks(requesting_player_id, tracks)?;
+        self.buildings.build_tracks(filtered.clone(), costs);
+        Ok(filtered)
     }
 
     pub fn can_build_tracks(
         &mut self,
         requesting_player_id: PlayerId,
         track_infos: &[TrackInfo],
-    ) -> Result<Vec<TrackInfo>, BuildError> {
+    ) -> Result<(Vec<TrackInfo>, BuildCosts), BuildError> {
         // TODO HIGH: Check you have resources to build - and you have to aggregate the costs of all tracks!
         let mut results = vec![];
+        let mut costs = BuildCosts::none();
         for track_info in track_infos {
             match self.can_build_track(requesting_player_id, track_info) {
-                CanBuildResponse::Ok => {
+                CanBuildResponse::Ok(cost) => {
                     results.push(track_info.clone());
+                    costs += cost;
                 },
                 CanBuildResponse::AlreadyExists => {},
                 CanBuildResponse::Invalid(error) => {
@@ -282,7 +278,7 @@ impl GameState {
                 },
             }
         }
-        Ok(results)
+        Ok((results, costs))
     }
 
     pub(crate) fn can_build_track(
@@ -349,33 +345,7 @@ impl GameState {
         player_id: PlayerId,
         something: &T,
     ) -> Result<BuildCosts, BuildError> {
-        let (industry_type, cost) = something.cost_to_build();
-        let coverage = something.covers_tiles();
-        if let Some(supply_range) = industry_type.supply_range_in_tiles() {
-            for building in self
-                .buildings
-                .find_industry_building_by_owner_and_type(player_id, industry_type)
-            {
-                let distance = TileCoverage::manhattan_distance_between_closest_tiles(
-                    &coverage,
-                    &building.covers_tiles(),
-                );
-                if distance <= supply_range {
-                    trace!(
-                        "Supply building at distance {distance} with supply range {supply_range} has cargo {:?} and we need cost {cost:?}",
-                        building.cargo()
-                    );
-                    if building.cargo().is_superset_of(&cost) {
-                        // Later. We currently return the first one that satisfies the conditions - we could instead return the closest one, or the one with most resources.
-                        return Ok(BuildCosts::single(building.id(), cost));
-                    }
-                }
-            }
-
-            Err(BuildError::NotEnoughResources)
-        } else {
-            Err(BuildError::UnknownError)
-        }
+        self.buildings.can_pay_cost(player_id, something)
     }
 
     pub fn build_station(

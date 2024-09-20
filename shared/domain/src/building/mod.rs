@@ -1,6 +1,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use std::collections::HashMap;
+use std::ops::AddAssign;
 
 use serde::{Deserialize, Serialize};
 
@@ -21,6 +22,7 @@ pub trait WithRelativeTileCoverage {
     fn relative_tiles_used(&self) -> TileCoverage;
 }
 
+#[derive(PartialEq, Clone, Debug)]
 pub struct BuildCosts {
     pub costs: HashMap<IndustryBuildingId, CargoMap>,
 }
@@ -38,6 +40,17 @@ impl BuildCosts {
         let mut costs = HashMap::new();
         costs.insert(industry_building_id, cargo_map);
         Self { costs }
+    }
+}
+
+impl AddAssign for BuildCosts {
+    fn add_assign(&mut self, rhs: Self) {
+        for (industry_building_id, cargo_map) in rhs.costs {
+            self.costs
+                .entry(industry_building_id)
+                .and_modify(|existing| *existing += &cargo_map)
+                .or_insert(cargo_map);
+        }
     }
 }
 
