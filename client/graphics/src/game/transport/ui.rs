@@ -1,14 +1,14 @@
 use std::collections::HashSet;
 
 use bevy::input::ButtonInput;
-use bevy::prelude::{info, EventWriter, MouseButton, Res, ResMut, Resource};
+use bevy::prelude::{EventWriter, MouseButton, Res, ResMut, Resource, info};
 use bevy_egui::EguiContexts;
+use shared_domain::TransportId;
 use shared_domain::cargo_map::WithCargo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::transport::movement_orders::{
     LoadAction, MovementOrder, MovementOrderAction, MovementOrderLocation, UnloadAction,
 };
-use shared_domain::TransportId;
 
 use crate::cameras::CameraControlEvent;
 use crate::communication::domain::ClientMessageEvent;

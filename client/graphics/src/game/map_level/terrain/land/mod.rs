@@ -3,8 +3,8 @@ use bevy::color::palettes::css::GRAY;
 use bevy::core::Name;
 use bevy::pbr::ExtendedMaterial;
 use bevy::prelude::{
-    default, App, Color, Commands, EventReader, FixedUpdate, MaterialMeshBundle, Mesh, Plugin, Res,
-    ResMut, StandardMaterial, Transform,
+    App, Color, Commands, EventReader, FixedUpdate, MaterialMeshBundle, Mesh, Plugin, Res, ResMut,
+    StandardMaterial, Transform, default,
 };
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
@@ -16,7 +16,7 @@ use shared_util::grid_xz::GridXZ;
 
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::map_level::terrain::land::advanced_land_material::{
-    create_advanced_land_material, AdvancedLandMaterialPlugin, LandExtension,
+    AdvancedLandMaterialPlugin, LandExtension, create_advanced_land_material,
 };
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::tiled_mesh_from_height_map_data;
 
@@ -147,7 +147,7 @@ pub(crate) fn create_land(
 mod tests {
     use bevy::prelude::Vec3;
     use shared_domain::map_level::map_level::Height;
-    use shared_domain::map_level::terrain::{Terrain, DEFAULT_Y_COEF};
+    use shared_domain::map_level::terrain::{DEFAULT_Y_COEF, Terrain};
 
     use super::*;
 

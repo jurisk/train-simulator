@@ -6,7 +6,7 @@ use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::transport::track_length::TrackLength;
 use shared_domain::transport::track_pathfinding::find_route_to_tile_tracks;
-use shared_domain::transport::track_planner::{plan_tracks, DEFAULT_ALREADY_EXISTS_COEF};
+use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
 use shared_domain::transport::track_type::TrackType;
 use shared_domain::{MapId, PlayerId};
 use shared_util::direction_xz::DirectionXZ;

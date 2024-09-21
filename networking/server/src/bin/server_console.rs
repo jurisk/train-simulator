@@ -3,18 +3,18 @@ use std::net::{IpAddr, Ipv4Addr};
 use std::sync::{Arc, Mutex};
 use std::{io, net::SocketAddr};
 
+use axum::Router;
 use axum::body::Body;
 use axum::extract::State;
 use axum::http::{StatusCode, Uri};
 use axum::response::{IntoResponse, Redirect};
-use axum::routing::{get, get_service, MethodRouter};
-use axum::Router;
+use axum::routing::{MethodRouter, get, get_service};
+use bevy::MinimalPlugins;
 use bevy::app::App;
 use bevy::log::LogPlugin;
 use bevy::prelude::{info, trace};
-use bevy::MinimalPlugins;
-use networking_server::metrics::PrometheusMetrics;
 use networking_server::MultiplayerSimpleNetServerPlugin;
+use networking_server::metrics::PrometheusMetrics;
 use networking_shared::PORT;
 use tower_http::services::ServeDir;
 

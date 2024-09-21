@@ -1,5 +1,5 @@
 use bevy::prelude::{
-    default, error, App, EventReader, EventWriter, FixedUpdate, NextState, Plugin, ResMut,
+    App, EventReader, EventWriter, FixedUpdate, NextState, Plugin, ResMut, default, error,
 };
 use bevy_simplenet::{
     AuthRequest, Client, ClientConfig, ClientEventFrom, ClientFactory, ClientReport,
@@ -7,7 +7,7 @@ use bevy_simplenet::{
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::states::ClientState;
 use enfync::builtin::Handle;
-use log::{info, log, trace, warn, Level};
+use log::{Level, info, log, trace, warn};
 use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::server_response::{GameResponse, ServerResponse};
 use url::Url;

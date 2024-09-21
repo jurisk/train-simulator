@@ -5,8 +5,8 @@ use bevy::color::palettes::basic::LIME;
 use bevy::color::palettes::css::{PINK, PURPLE, TOMATO};
 use bevy::input::ButtonInput;
 use bevy::prelude::{
-    in_state, info, DetectChanges, Gizmos, IntoSystemConfigs, MouseButton, Plugin, Query, Res,
-    ResMut, Resource, TypePath, Update, Vec3,
+    DetectChanges, Gizmos, IntoSystemConfigs, MouseButton, Plugin, Query, Res, ResMut, Resource,
+    TypePath, Update, Vec3, in_state, info,
 };
 use bevy_mod_raycast::deferred::RaycastSource;
 use bevy_mod_raycast::prelude::{DeferredRaycastingPlugin, RaycastPluginState};

@@ -1,17 +1,17 @@
 use bevy::prelude::AppExtStates;
 use bevy::prelude::{
-    debug, App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time,
+    App, EventReader, EventWriter, FixedUpdate, Res, ResMut, Resource, Time, debug,
 };
 use clap::Parser;
+use client_graphics::ClientGraphicsPlugin;
 use client_graphics::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use client_graphics::game::GameLaunchParams;
 use client_graphics::states::ClientState;
-use client_graphics::ClientGraphicsPlugin;
 use game_logic::server_state::ServerState;
+use shared_domain::ClientId;
 use shared_domain::client_command::ClientCommandWithClientId;
 use shared_domain::game_time::GameTime;
 use shared_domain::metrics::NoopMetrics;
-use shared_domain::ClientId;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]

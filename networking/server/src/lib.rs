@@ -7,20 +7,20 @@ use std::sync::{Arc, Mutex};
 
 use axum::Router;
 use bevy::prelude::{
-    default, App, Event, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res,
-    ResMut, Resource, Time,
+    App, Event, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut,
+    Resource, Time, default,
 };
 use bevy_simplenet::{
     AcceptorConfig, Authenticator, RateLimitConfig, Server, ServerConfig, ServerEventFrom,
     ServerFactory, ServerReport,
 };
 use game_logic::server_state::ServerState;
-use log::{debug, error, info, log, Level};
+use log::{Level, debug, error, info, log};
 use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
+use shared_domain::ClientId;
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
 use shared_domain::game_time::GameTime;
 use shared_domain::server_response::{GameResponse, ServerResponse, ServerResponseWithClientIds};
-use shared_domain::ClientId;
 use web_time::Duration;
 
 use crate::metrics::PrometheusMetrics;

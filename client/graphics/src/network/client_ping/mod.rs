@@ -2,7 +2,7 @@
 
 use bevy::app::{App, FixedUpdate};
 use bevy::prelude::{
-    info, EventReader, EventWriter, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time, Timer,
+    EventReader, EventWriter, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time, Timer, info,
 };
 use bevy::time::TimerMode;
 use shared_domain::client_command::{ClientCommand, NetworkCommand};

@@ -2,16 +2,16 @@ use bevy::asset::Assets;
 use bevy::core::Name;
 use bevy::math::Vec3;
 use bevy::pbr::{PbrBundle, StandardMaterial};
-use bevy::prelude::{default, BuildChildren, Color, Commands, Entity, ResMut, Transform};
+use bevy::prelude::{BuildChildren, Color, Commands, Entity, ResMut, Transform, default};
+use shared_domain::TransportId;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::server_response::Colour;
 use shared_domain::transport::transport_location::TransportLocation;
 use shared_domain::transport::transport_type::TrainComponentType;
-use shared_domain::TransportId;
 
+use crate::game::transport::TransportIndexComponent;
 use crate::game::transport::assets::TransportAssets;
 use crate::game::transport::train_layout::calculate_train_component_head_tails_and_final_tail_position;
-use crate::game::transport::TransportIndexComponent;
 
 fn transform_from_head_and_tail(head: Vec3, tail: Vec3) -> Transform {
     let direction = (head - tail).normalize(); // Recalculating with new tail

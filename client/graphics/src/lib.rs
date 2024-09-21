@@ -1,8 +1,8 @@
+use bevy::DefaultPlugins;
 use bevy::asset::AssetPlugin;
-use bevy::prelude::{info, App, AssetMode, Plugin, PluginGroup};
+use bevy::prelude::{App, AssetMode, Plugin, PluginGroup, info};
 use bevy::utils::default;
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution};
-use bevy::DefaultPlugins;
 use bevy_egui::EguiContexts;
 use web_time::Duration;
 

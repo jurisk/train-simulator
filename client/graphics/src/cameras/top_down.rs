@@ -4,7 +4,7 @@ use bevy::app::App;
 use bevy::core::Name;
 use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::math::Vec3;
-use bevy::prelude::{default, Camera, Camera3dBundle, Commands, Plugin, Startup, Transform};
+use bevy::prelude::{Camera, Camera3dBundle, Commands, Plugin, Startup, Transform, default};
 use bevy::render::view::ColorGrading;
 
 use crate::cameras::{CameraComponent, CameraId};

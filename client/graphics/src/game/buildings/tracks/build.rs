@@ -3,8 +3,8 @@ use bevy::prelude::{EventWriter, MouseButton, Res, ResMut};
 use shared_domain::client_command::{ClientCommand, GameCommand};
 
 use crate::communication::domain::ClientMessageEvent;
-use crate::game::buildings::tracks::preview::TrackPreviewResource;
 use crate::game::GameStateResource;
+use crate::game::buildings::tracks::preview::TrackPreviewResource;
 use crate::hud::domain::{SelectedMode, TracksBuildingType};
 use crate::selection::{SelectedEdges, SelectedTiles};
 

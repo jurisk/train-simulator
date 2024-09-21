@@ -1,6 +1,6 @@
 use bevy::prelude::ResMut;
 use bevy_egui::EguiContexts;
-use egui::{menu, Ui};
+use egui::{Ui, menu};
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_type::{StationOrientation, StationType};
 use shared_domain::resource_type::ResourceType;

@@ -4,9 +4,9 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::building::WithRelativeTileCoverage;
 use crate::building::building_info::WithCostToBuild;
 use crate::building::industry_type::IndustryType::*;
-use crate::building::WithRelativeTileCoverage;
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::map_level::zoning::ZoningType;
@@ -181,10 +181,9 @@ impl IndustryType {
             PowerPlant => ResourceTransform::make(vec![(Coal, X1)], vec![]),
             CoalToOilPlant => ResourceTransform::make(vec![(Coal, X1)], vec![(Oil, X1)]),
             ExplosivesPlant => {
-                ResourceTransform::make(
-                    vec![(Nitrates, X1), (Sulfur, X1), (Cellulose, X1)],
-                    vec![(Explosives, X1)],
-                )
+                ResourceTransform::make(vec![(Nitrates, X1), (Sulfur, X1), (Cellulose, X1)], vec![
+                    (Explosives, X1),
+                ])
             },
             FoodProcessingPlant => {
                 ResourceTransform::make(vec![(FarmProducts, X1)], vec![(Food, X1)])

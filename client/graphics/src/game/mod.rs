@@ -9,9 +9,9 @@ use bevy::log::{error, warn};
 use bevy::math::Vec3;
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{
-    default, in_state, info, trace, Bundle, Commands, EventReader, EventWriter, FixedUpdate,
-    IntoSystemConfigs, Mesh, NextState, OnEnter, Plugin, Res, ResMut, Resource, Time, Transform,
-    Update,
+    Bundle, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Mesh, NextState,
+    OnEnter, Plugin, Res, ResMut, Resource, Time, Transform, Update, default, in_state, info,
+    trace,
 };
 use shared_domain::building::building_info::WithTileCoverage;
 use shared_domain::client_command::{

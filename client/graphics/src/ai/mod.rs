@@ -1,13 +1,13 @@
 use bevy::log::info;
 use bevy::prelude::{
-    in_state, App, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut, Resource,
-    Time, Timer, TimerMode,
+    App, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time, Timer,
+    TimerMode, in_state,
 };
-use game_ai::{ai_commands, ArtificialIntelligenceState};
+use game_ai::{ArtificialIntelligenceState, ai_commands};
+use shared_domain::PlayerId;
 use shared_domain::client_command::ClientCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::NoopMetrics;
-use shared_domain::PlayerId;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};

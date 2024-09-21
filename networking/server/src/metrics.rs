@@ -1,5 +1,5 @@
 use bevy::prelude::Resource;
-use metrics::{metadata_var, Histogram, Key, Level, Recorder};
+use metrics::{Histogram, Key, Level, Recorder, metadata_var};
 use metrics_exporter_prometheus::{PrometheusBuilder, PrometheusHandle, PrometheusRecorder};
 use shared_domain::metrics::Metrics;
 use shared_domain::transport::track_length::TrackLength;

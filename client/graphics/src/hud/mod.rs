@@ -1,10 +1,10 @@
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{default, in_state, IntoSystemConfigs};
+use bevy::prelude::{IntoSystemConfigs, default, in_state};
 use bevy_egui::EguiPlugin;
 use egui::text::LayoutJob;
 use egui::{Color32, TextFormat};
-use shared_domain::server_response::PlayerInfo;
 use shared_domain::PlayerId;
+use shared_domain::server_response::PlayerInfo;
 
 use crate::hud::domain::SelectedMode;
 use crate::hud::labels::draw_labels;

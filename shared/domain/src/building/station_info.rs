@@ -4,13 +4,13 @@ use serde::{Deserialize, Serialize};
 use shared_util::coords_xz::CoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
 
+use crate::building::WithRelativeTileCoverage;
 use crate::building::building_info::{
     BuildingDynamicInfo, BuildingInfo, BuildingStaticInfo, WithBuildingDynamicInfo,
     WithBuildingDynamicInfoMut, WithCostToBuild, WithOwner, WithTileCoverage,
 };
 use crate::building::industry_type::IndustryType;
 use crate::building::station_type::StationType;
-use crate::building::WithRelativeTileCoverage;
 use crate::cargo_map::{CargoMap, WithCargo};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;

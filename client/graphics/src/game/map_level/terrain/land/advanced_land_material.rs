@@ -4,7 +4,7 @@ use bevy::pbr::{
     ExtendedMaterial, MaterialExtension, MaterialExtensionKey, MaterialExtensionPipeline,
     MaterialPlugin, StandardMaterial,
 };
-use bevy::prelude::{default, AssetServer, Handle, Image, Mesh, Plugin, Reflect, Res};
+use bevy::prelude::{AssetServer, Handle, Image, Mesh, Plugin, Reflect, Res, default};
 use bevy::render::mesh::MeshVertexBufferLayoutRef;
 use bevy::render::render_resource::{
     AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,

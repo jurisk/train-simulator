@@ -5,7 +5,7 @@ use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::NoopMetrics;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
-use shared_domain::transport::track_planner::{plan_tracks, DEFAULT_ALREADY_EXISTS_COEF};
+use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
 
 use crate::game::PlayerIdResource;
 

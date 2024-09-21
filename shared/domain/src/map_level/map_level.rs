@@ -6,10 +6,10 @@ use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use shared_util::bool_ops::BoolResultOps;
 
+use crate::building::BuildError;
 use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
-use crate::building::BuildError;
 use crate::map_level::terrain::Terrain;
 use crate::map_level::zoning::{Zoning, ZoningFlattened};
 use crate::tile_coords_xz::TileCoordsXZ;

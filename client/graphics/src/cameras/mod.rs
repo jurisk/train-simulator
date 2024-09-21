@@ -1,7 +1,7 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{
-    info, App, Camera, Commands, Component, Entity, Event, KeyCode, Plugin, PostStartup, Query,
-    Res, Update,
+    App, Camera, Commands, Component, Entity, Event, KeyCode, Plugin, PostStartup, Query, Res,
+    Update, info,
 };
 use bevy_mod_raycast::deferred::RaycastSource;
 use shared_domain::tile_coords_xz::TileCoordsXZ;

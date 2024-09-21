@@ -19,10 +19,10 @@ use crate::game::buildings::building::build_building_when_mouse_released;
 use crate::game::buildings::demolishing::demolish_when_mouse_released;
 use crate::game::buildings::tracks::build::build_tracks_when_mouse_released;
 use crate::game::buildings::tracks::preview::{
-    draw_track_preview, select_track_start, update_track_preview, TrackPreviewResource,
+    TrackPreviewResource, draw_track_preview, select_track_start, update_track_preview,
 };
 use crate::game::buildings::tracks::spawn::{create_rails, create_track, remove_track_entities};
-use crate::game::{create_object_entity, player_colour, GameStateResource};
+use crate::game::{GameStateResource, create_object_entity, player_colour};
 use crate::states::ClientState;
 
 pub mod assets;

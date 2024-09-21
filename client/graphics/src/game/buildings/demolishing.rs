@@ -1,8 +1,8 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, MouseButton, Res};
 use bevy_egui::EguiContexts;
-use shared_domain::client_command::{ClientCommand, DemolishSelector, GameCommand};
 use shared_domain::TrackId;
+use shared_domain::client_command::{ClientCommand, DemolishSelector, GameCommand};
 use shared_util::bool_ops::BoolOptionOps;
 
 use crate::communication::domain::ClientMessageEvent;

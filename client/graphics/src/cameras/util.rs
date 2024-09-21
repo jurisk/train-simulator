@@ -1,7 +1,7 @@
-use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::input::ButtonInput;
+use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::math::{Dir3, Vec3};
-use bevy::prelude::{info, trace, warn, EventReader, KeyCode, Mat3, Mut, Res, Transform};
+use bevy::prelude::{EventReader, KeyCode, Mat3, Mut, Res, Transform, info, trace, warn};
 use bevy_egui::EguiContexts;
 
 use crate::on_ui;

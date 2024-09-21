@@ -4,8 +4,8 @@ use bevy::core::Name;
 use bevy::math::EulerRot;
 use bevy::pbr::{DirectionalLight, DirectionalLightBundle};
 use bevy::prelude::{
-    default, in_state, App, Commands, IntoSystemConfigs, OnEnter, Plugin, Quat, Query, Res, Time,
-    Transform, Update, Vec3, With,
+    App, Commands, IntoSystemConfigs, OnEnter, Plugin, Quat, Query, Res, Time, Transform, Update,
+    Vec3, With, default, in_state,
 };
 
 use crate::constants::UP;

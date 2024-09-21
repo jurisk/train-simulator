@@ -1,7 +1,7 @@
 use bevy::app::{App, Update};
 use bevy::color::palettes::css::{BLUE, GREEN, RED};
 use bevy::math::Vec3;
-use bevy::prelude::{in_state, Gizmos, IntoSystemConfigs, Plugin};
+use bevy::prelude::{Gizmos, IntoSystemConfigs, Plugin, in_state};
 
 use crate::states::ClientState;
 

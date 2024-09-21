@@ -2,11 +2,11 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::PlayerId;
 use crate::building::industry_type::IndustryType;
 use crate::cargo_map::{CargoMap, WithCargo, WithCargoMut};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
-use crate::PlayerId;
 
 pub trait BuildingInfo: WithOwner + WithTileCoverage {}
 

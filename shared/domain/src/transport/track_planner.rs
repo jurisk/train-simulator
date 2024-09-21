@@ -1,9 +1,10 @@
 use itertools::Itertools;
-use log::{info, log, trace, warn, Level};
+use log::{Level, info, log, trace, warn};
 use pathfinding::prelude::dijkstra;
 use shared_util::bool_ops::BoolOptionOps;
 use web_time::{Duration, Instant};
 
+use crate::PlayerId;
 use crate::building::building_state::CanBuildResponse;
 use crate::building::track_info::TrackInfo;
 use crate::directional_edge::DirectionalEdge;
@@ -11,7 +12,6 @@ use crate::game_state::GameState;
 use crate::metrics::Metrics;
 use crate::transport::track_length::TrackLength;
 use crate::transport::track_type::TrackType;
-use crate::PlayerId;
 
 pub const DEFAULT_ALREADY_EXISTS_COEF: f32 = 0.8;
 
@@ -138,13 +138,13 @@ mod tests {
     use shared_util::direction_xz::DirectionXZ;
 
     use super::*;
+    use crate::MapId;
     use crate::map_level::map_level::{Height, MapLevel, TerrainType};
     use crate::map_level::terrain::Terrain;
     use crate::map_level::zoning::Zoning;
     use crate::metrics::NoopMetrics;
     use crate::tile_coords_xz::TileCoordsXZ;
     use crate::water::Water;
-    use crate::MapId;
 
     #[test]
     fn test_plan_single_tile_ew() {

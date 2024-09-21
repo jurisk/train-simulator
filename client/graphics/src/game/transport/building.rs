@@ -1,5 +1,5 @@
 use bevy::input::ButtonInput;
-use bevy::prelude::{info, EventWriter, MouseButton, Res};
+use bevy::prelude::{EventWriter, MouseButton, Res, info};
 use bevy_egui::EguiContexts;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::edge_xz::EdgeXZ;

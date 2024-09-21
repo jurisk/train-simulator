@@ -3,13 +3,13 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::building::WithRelativeTileCoverage;
 use crate::building::building_info::{
     BuildingDynamicInfo, BuildingInfo, BuildingStaticInfo, WithBuildingDynamicInfo,
     WithBuildingDynamicInfoMut, WithCostToBuild, WithOwner, WithTileCoverage,
 };
 use crate::building::industry_type::IndustryType;
 use crate::building::station_type::StationType;
-use crate::building::WithRelativeTileCoverage;
 use crate::cargo_map::{CargoMap, WithCargo, WithCargoMut};
 use crate::game_time::GameTimeDiff;
 use crate::map_level::zoning::ZoningType;

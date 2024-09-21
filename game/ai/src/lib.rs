@@ -12,7 +12,7 @@ use shared_domain::metrics::Metrics;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::tile_track::TileTrack;
-use shared_domain::transport::track_planner::{plan_tracks, DEFAULT_ALREADY_EXISTS_COEF};
+use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
 use shared_domain::{IndustryBuildingId, PlayerId, StationId, TransportId};

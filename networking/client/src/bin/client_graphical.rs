@@ -1,9 +1,9 @@
 use bevy::prelude::App;
 use bevy::prelude::AppExtStates;
 use clap::Parser;
+use client_graphics::ClientGraphicsPlugin;
 use client_graphics::game::GameLaunchParams;
 use client_graphics::states::ClientState;
-use client_graphics::ClientGraphicsPlugin;
 use fastrand as _;
 use networking_client::MultiplayerSimpleNetClientPlugin;
 

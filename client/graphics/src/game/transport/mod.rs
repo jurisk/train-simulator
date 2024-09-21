@@ -8,16 +8,16 @@ use bevy::app::App;
 use bevy::asset::Assets;
 use bevy::pbr::StandardMaterial;
 use bevy::prelude::{
-    in_state, warn, Children, Commands, Component, Entity, EventReader, FixedUpdate,
-    IntoSystemConfigs, Plugin, Query, Res, ResMut, SpatialBundle, Transform, Update,
+    Children, Commands, Component, Entity, EventReader, FixedUpdate, IntoSystemConfigs, Plugin,
+    Query, Res, ResMut, SpatialBundle, Transform, Update, in_state, warn,
 };
+use shared_domain::TransportId;
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::server_response::{GameResponse, ServerResponse};
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
-use shared_domain::TransportId;
 
 use crate::assets::GameAssets;
 use crate::communication::domain::ServerMessageEvent;
@@ -25,9 +25,9 @@ use crate::game::transport::assets::TransportAssets;
 use crate::game::transport::building::build_transport_when_mouse_released;
 use crate::game::transport::train::{calculate_train_component_transforms, create_train};
 use crate::game::transport::ui::{
-    select_station_to_add_to_movement_orders, show_transport_details, TransportsToShow,
+    TransportsToShow, select_station_to_add_to_movement_orders, show_transport_details,
 };
-use crate::game::{player_colour, GameStateResource};
+use crate::game::{GameStateResource, player_colour};
 use crate::states::ClientState;
 
 #[derive(Component)]

@@ -4,9 +4,9 @@ use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
 use shared_util::direction_xz::DirectionXZ;
 
+use crate::building::WithRelativeTileCoverage;
 use crate::building::building_info::WithCostToBuild;
 use crate::building::industry_type::IndustryType;
-use crate::building::WithRelativeTileCoverage;
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
 use crate::tile_coords_xz::TileCoordsXZ;

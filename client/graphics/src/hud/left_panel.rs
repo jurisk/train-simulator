@@ -1,12 +1,12 @@
-use bevy::prelude::{info, EventWriter, Res, ResMut};
+use bevy::prelude::{EventWriter, Res, ResMut, info};
 use bevy_egui::EguiContexts;
 use egui::Ui;
+use shared_domain::PlayerId;
 use shared_domain::building::building_info::WithOwner;
 use shared_domain::building::building_state::BuildingState;
 use shared_domain::cargo_map::WithCargo;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::transport::transport_info::TransportInfo;
-use shared_domain::PlayerId;
 
 use crate::cameras::CameraControlEvent;
 use crate::game::transport::ui::TransportsToShow;

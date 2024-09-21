@@ -5,9 +5,9 @@ use std::ops::AddAssign;
 
 use serde::{Deserialize, Serialize};
 
+use crate::IndustryBuildingId;
 use crate::cargo_map::CargoMap;
 use crate::tile_coverage::TileCoverage;
-use crate::IndustryBuildingId;
 
 pub mod building_info;
 pub mod building_state;

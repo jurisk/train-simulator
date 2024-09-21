@@ -1,5 +1,5 @@
 use bevy::prelude::{
-    in_state, warn, App, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res,
+    App, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res, in_state, warn,
 };
 use shared_domain::client_command::{ClientCommand, LobbyCommand};
 use shared_domain::server_response::{GameInfo, LobbyResponse, ServerResponse};

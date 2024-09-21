@@ -1,4 +1,4 @@
-use game_ai::{ai_commands, ArtificialIntelligenceState};
+use game_ai::{ArtificialIntelligenceState, ai_commands};
 use game_logic::games_service::GamesService;
 use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};

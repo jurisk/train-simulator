@@ -6,11 +6,11 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use web_time::Duration;
 
+use crate::building::BuildError;
 use crate::building::building_info::BuildingDynamicInfo;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
-use crate::building::BuildError;
 use crate::client_command::DemolishSelector;
 use crate::game_state::GameState;
 use crate::game_time::GameTime;

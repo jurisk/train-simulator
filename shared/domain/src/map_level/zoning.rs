@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use shared_util::bool_ops::BoolResultOps;
 use shared_util::grid_xz::GridXZ;
 
+use crate::ZoningId;
 use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
@@ -18,7 +19,6 @@ use crate::resource_type::ResourceType::{
 };
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
-use crate::ZoningId;
 
 #[derive(Serialize, Deserialize, Hash, Copy, Clone, Eq, PartialEq)]
 pub enum ZoningType {
