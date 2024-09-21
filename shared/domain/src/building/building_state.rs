@@ -27,7 +27,7 @@ use crate::{IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackId, Trac
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum CanBuildResponse {
-    Ok(BuildCosts), // Add `price` here later?
+    Ok,
     AlreadyExists,
     Invalid(BuildError),
 }
@@ -297,12 +297,29 @@ impl BuildingState {
         } else if has_same_track {
             CanBuildResponse::AlreadyExists
         } else {
-            let track_info = TrackInfo::new(requesting_player_id, tile, track_type);
-            match self.can_pay_cost(requesting_player_id, &track_info) {
-                Ok(costs) => CanBuildResponse::Ok(costs),
-                Err(err) => CanBuildResponse::Invalid(err),
+            // We aren't checking here if we can pay it - as this gets called often from track planning
+            CanBuildResponse::Ok
+        }
+    }
+
+    pub(crate) fn can_pay_costs(
+        &self,
+        player_id: PlayerId,
+        costs: &BuildCosts,
+    ) -> Result<(), BuildError> {
+        for (industry_building_id, cargo_map) in &costs.costs {
+            if let Some(industry_building) = self.industry_buildings.get(industry_building_id) {
+                if industry_building.owner_id() != player_id {
+                    return Err(BuildError::InvalidOwner);
+                }
+                if !industry_building.cargo().is_superset_of(cargo_map) {
+                    return Err(BuildError::NotEnoughResources);
+                }
+            } else {
+                return Err(BuildError::UnknownError);
             }
         }
+        Ok(())
     }
 
     pub(crate) fn can_pay_cost<T: WithCostToBuild + WithTileCoverage>(

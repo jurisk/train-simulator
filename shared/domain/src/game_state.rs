@@ -259,18 +259,22 @@ impl GameState {
     }
 
     pub fn can_build_tracks(
-        &mut self,
+        &self,
         requesting_player_id: PlayerId,
         track_infos: &[TrackInfo],
     ) -> Result<(Vec<TrackInfo>, BuildCosts), BuildError> {
-        // TODO HIGH: Check you have resources to build - and you have to aggregate the costs of all tracks!
         let mut results = vec![];
         let mut costs = BuildCosts::none();
         for track_info in track_infos {
             match self.can_build_track(requesting_player_id, track_info) {
-                CanBuildResponse::Ok(cost) => {
+                CanBuildResponse::Ok => {
                     results.push(track_info.clone());
-                    costs += cost;
+                    match self.can_pay_cost(requesting_player_id, track_info) {
+                        Ok(cost) => {
+                            costs += cost;
+                        },
+                        Err(err) => return Err(err),
+                    }
                 },
                 CanBuildResponse::AlreadyExists => {},
                 CanBuildResponse::Invalid(error) => {
@@ -278,6 +282,8 @@ impl GameState {
                 },
             }
         }
+
+        self.can_pay_costs(requesting_player_id, &costs)?;
         Ok((results, costs))
     }
 
@@ -346,6 +352,10 @@ impl GameState {
         something: &T,
     ) -> Result<BuildCosts, BuildError> {
         self.buildings.can_pay_cost(player_id, something)
+    }
+
+    fn can_pay_costs(&self, player_id: PlayerId, costs: &BuildCosts) -> Result<(), BuildError> {
+        self.buildings.can_pay_costs(player_id, costs)
     }
 
     pub fn build_station(

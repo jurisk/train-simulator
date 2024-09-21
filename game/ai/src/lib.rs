@@ -50,17 +50,24 @@ fn try_building_industry_buildings(
             let candidates: Vec<_> = free
                 .iter()
                 .filter(|zoning| Some(zoning.zoning_type()) == industry_type.required_zoning())
+                .map(|zoning| {
+                    IndustryBuildingInfo::new(
+                        player_id,
+                        IndustryBuildingId::random(),
+                        zoning.reference_tile(),
+                        industry_type,
+                    )
+                })
+                .filter(|info| {
+                    game_state
+                        .can_build_industry_building(player_id, info)
+                        .is_ok()
+                })
                 .collect();
-            // TODO HIGH: Check which ones we can pay for in terms of building cost
+
             // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place.
-            if let Some(chosen) = candidates.first() {
-                let info = IndustryBuildingInfo::new(
-                    player_id,
-                    IndustryBuildingId::random(),
-                    chosen.reference_tile(),
-                    industry_type,
-                );
-                return Some(vec![GameCommand::BuildIndustryBuilding(info)]);
+            if let Some(info) = candidates.first() {
+                return Some(vec![GameCommand::BuildIndustryBuilding(info.clone())]);
             } else {
                 debug!("No free zoning for {:?}", industry_type);
             }
@@ -172,9 +179,12 @@ fn try_building_tracks(
                 DEFAULT_ALREADY_EXISTS_COEF,
                 metrics,
             ) {
-                ai_state.track_connections_built.insert(edge_set);
-                if !route.is_empty() {
+                if route.is_empty() {
                     // If it's empty, it means it's already built
+                    continue;
+                }
+                if game_state.can_build_tracks(player_id, &route).is_ok() {
+                    ai_state.track_connections_built.insert(edge_set);
                     return Some(vec![GameCommand::BuildTracks(route)]);
                 }
             } else {
