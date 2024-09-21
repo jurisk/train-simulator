@@ -52,7 +52,7 @@ fn ai_until_final_goods_built() {
             ResourceType::Ammunition,
             ResourceType::Weapons,
             ResourceType::Food,
-            ResourceType::Concrete,
+            // We are now skipping Concrete as we are granting it in the initial ConstructionYard
         ]
         .iter()
         .any(|resource| cargo.get(*resource) > CargoAmount::ZERO)

@@ -1,6 +1,7 @@
 use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::map_level::MapLevel;
+use shared_domain::map_level::zoning::ZoningType;
 use shared_domain::metrics::NoopMetrics;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::tile_track::TileTrack;
@@ -19,6 +20,20 @@ fn test_plan_tracks() {
         MapId("usa_east".to_string()),
         MapLevel::load(include_str!("../../../assets/map_levels/usa_east.json")),
     );
+
+    // We spawn construction yards in all free spots because this test is about testing track
+    // planning, not availability of resources
+    let industrials = game_state
+        .all_free_zonings()
+        .iter()
+        .filter(|zoning| zoning.zoning_type() == ZoningType::Industrial)
+        .map(|zoning| zoning.reference_tile())
+        .collect::<Vec<_>>();
+    for industrial_tile in industrials {
+        game_state
+            .building_state_mut()
+            .gift_initial_construction_yard(player_id, industrial_tile);
+    }
 
     let from_tile = TileCoordsXZ::new(1, 190);
     let to_tile = TileCoordsXZ::new(255, 0);

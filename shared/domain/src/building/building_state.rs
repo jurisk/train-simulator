@@ -10,7 +10,8 @@ use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::building::building_info::{
-    BuildingDynamicInfo, BuildingInfo, WithCostToBuild, WithOwner, WithTileCoverage,
+    BuildingDynamicInfo, BuildingInfo, WithBuildingDynamicInfoMut, WithCostToBuild, WithOwner,
+    WithTileCoverage,
 };
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::industry_type::IndustryType;
@@ -18,7 +19,8 @@ use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::track_state::{MaybeTracksOnTile, TrackState};
 use crate::building::{BuildCosts, BuildError};
-use crate::cargo_map::{CargoOps, WithCargo};
+use crate::cargo_amount::CargoAmount;
+use crate::cargo_map::{CargoOps, WithCargo, WithCargoMut};
 use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
@@ -70,6 +72,29 @@ impl BuildingState {
             station_track_types_at:  GridXZ::filled_with(size_x, size_z, TrackTypeSet::new()),
             closest_station_link:    HashMap::new(),
         }
+    }
+
+    #[expect(clippy::unwrap_used, clippy::missing_panics_doc)]
+    pub fn gift_initial_construction_yard(&mut self, player_id: PlayerId, tile: TileCoordsXZ) {
+        let construction_yard_id = IndustryBuildingId::random();
+        let construction_yard = IndustryBuildingInfo::new(
+            player_id,
+            construction_yard_id,
+            tile,
+            IndustryType::ConstructionYard,
+        );
+        let () = self
+            .build_industry_building(player_id, &construction_yard, BuildCosts::none())
+            .unwrap();
+        let construction_yard = self
+            .find_industry_building_mut(construction_yard_id)
+            .unwrap();
+        let mut dynamic_info = construction_yard.dynamic_info_mut();
+        let cargo = dynamic_info.cargo_mut();
+        // TODO HIGH: Lower these to only cover initial supply chains for Concrete, Steel, Timber
+        cargo.add(ResourceType::Concrete, CargoAmount::new(240.0));
+        cargo.add(ResourceType::Steel, CargoAmount::new(240.0));
+        cargo.add(ResourceType::Timber, CargoAmount::new(240.0));
     }
 
     // TODO: Optimize this as it is called often

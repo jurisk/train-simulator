@@ -180,6 +180,7 @@ fn try_building_tracks(
                 metrics,
             ) {
                 if route.is_empty() {
+                    ai_state.track_connections_built.insert(edge_set);
                     // If it's empty, it means it's already built
                     continue;
                 }
