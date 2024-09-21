@@ -3,7 +3,6 @@ use bevy::asset::AssetPlugin;
 use bevy::prelude::{App, AssetMode, Plugin, PluginGroup, info};
 use bevy::utils::default;
 use bevy::window::{PresentMode, Window, WindowPlugin, WindowResolution};
-use bevy_egui::EguiContexts;
 use web_time::Duration;
 
 use crate::assets::GameAssetsPlugin;
@@ -91,15 +90,4 @@ impl Plugin for ClientGraphicsPlugin {
         info!("Asset path prefix: {}", asset_path_prefix);
         info!("Current dir: {:?}", std::env::current_dir());
     }
-}
-
-// This needs to be called from `PostUpdate` as otherwise Egui areas are not calculated yet, and thus it won't work reliably
-fn on_ui(egui_contexts: &mut EguiContexts) -> bool {
-    // TODO HIGH: Labels are Egui areas, so this means that actually building buildings is sometimes difficult, as you have to click on the center tile, but outside of a label!
-    // TODO: CentralPanel is transparent so we don't want to consider it as `on_ui`, but I think it gets considered as such anyway
-    let ctx = egui_contexts.ctx_mut();
-    ctx.is_pointer_over_area()
-        || ctx.is_using_pointer()
-        || ctx.wants_pointer_input()
-        || ctx.wants_keyboard_input()
 }

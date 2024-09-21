@@ -7,6 +7,7 @@ use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::transport_type::TransportType;
 
 use crate::ai::ArtificialIntelligenceTimer;
+use crate::hud::PointerOverHud;
 use crate::hud::domain::{DemolishType, SelectedMode, TracksBuildingType};
 
 const MIN_X: f32 = 200.0;
@@ -16,10 +17,12 @@ pub(crate) fn show_top_panel(
     mut contexts: EguiContexts,
     mut selected_mode: ResMut<SelectedMode>,
     mut ai_timer: ResMut<ArtificialIntelligenceTimer>,
+    mut pointer_over_hud: ResMut<PointerOverHud>,
 ) {
     // Later: We need to better depict the current building mode in the main menu, in case it's a sub-menu item that is selected
 
     egui::TopBottomPanel::top("hud_top_panel").show(contexts.ctx_mut(), |ui| {
+        pointer_over_hud.apply(ui);
         set_font_size(ui, 32.0);
 
         // The way we pass `ResMut<SelectedMode>` is on purpose, so that change detection works correctly.

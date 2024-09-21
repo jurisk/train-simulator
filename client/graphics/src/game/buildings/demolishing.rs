@@ -1,14 +1,13 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, MouseButton, Res};
-use bevy_egui::EguiContexts;
 use shared_domain::TrackId;
 use shared_domain::client_command::{ClientCommand, DemolishSelector, GameCommand};
 use shared_util::bool_ops::BoolOptionOps;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::GameStateResource;
+use crate::hud::PointerOverHud;
 use crate::hud::domain::{DemolishType, SelectedMode};
-use crate::on_ui;
 use crate::selection::HoveredTile;
 
 pub(crate) fn demolish_when_mouse_released(
@@ -16,7 +15,7 @@ pub(crate) fn demolish_when_mouse_released(
     selected_mode_resource: Res<SelectedMode>,
     game_state_resource: Res<GameStateResource>,
     hovered_tile: Res<HoveredTile>,
-    egui_contexts: EguiContexts,
+    pointer_over_hud: Res<PointerOverHud>,
     mut client_messages: EventWriter<ClientMessageEvent>,
 ) {
     if let Some(demolish_command) = demolish_command(
@@ -24,7 +23,7 @@ pub(crate) fn demolish_when_mouse_released(
         selected_mode_resource,
         game_state_resource,
         hovered_tile,
-        egui_contexts,
+        pointer_over_hud,
     ) {
         client_messages.send(demolish_command);
     }
@@ -35,9 +34,9 @@ fn demolish_command(
     selected_mode_resource: Res<SelectedMode>,
     game_state_resource: Res<GameStateResource>,
     hovered_tile: Res<HoveredTile>,
-    mut egui_contexts: EguiContexts,
+    pointer_over_hud: Res<PointerOverHud>,
 ) -> Option<ClientMessageEvent> {
-    on_ui(&mut egui_contexts).then_none()?;
+    pointer_over_hud.get().then_none()?;
     mouse_buttons
         .just_released(MouseButton::Left)
         .then_some_unit()?;
@@ -60,18 +59,15 @@ fn demolish_command(
 
     let command = match demolish_type {
         DemolishType::Industry => {
-            // TODO HIGH: Test that it works
             let industry_building = building_state.industry_building_at(hovered_tile)?;
             GameCommand::Demolish(DemolishSelector::Industry(industry_building.id()))
         },
         DemolishType::Station => {
-            // TODO HIGH: Test that it works
             let station = building_state.station_at(hovered_tile)?;
             GameCommand::Demolish(DemolishSelector::Station(station.id()))
         },
         DemolishType::Tracks => {
             // TODO: We should let the user to drag the mouse to select which tracks to demolish
-            // TODO HIGH: Supposedly this doesn't even work any more - make it work nice!
             let tracks = building_state.tracks_at(hovered_tile);
             let track_types = tracks.track_types();
             let track_ids = track_types

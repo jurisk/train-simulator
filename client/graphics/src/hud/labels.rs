@@ -16,7 +16,7 @@ use crate::game::transport::ui::TransportsToShow;
 use crate::game::{GameStateResource, PlayerIdResource, center_vec3};
 use crate::hud::helpers::primary_menu;
 
-// TODO HIGH: This looks ugly and often breaks. Consider using https://docs.rs/egui/latest/egui/struct.Painter.html instead? Or https://bevyengine.org/examples/2d-rendering/text2d/ or https://github.com/kulkalkul/bevy_mod_billboard?
+// TODO HIGH: This looks ugly and breaks layout. And the mouse cursor changes, but it should not. Consider using https://docs.rs/egui/latest/egui/struct.Painter.html instead? Or https://bevyengine.org/examples/2d-rendering/text2d/ or https://github.com/kulkalkul/bevy_mod_billboard?
 fn with_tile_coverage_label(
     label: String,
     with_tile_coverage: &dyn WithTileCoverage,

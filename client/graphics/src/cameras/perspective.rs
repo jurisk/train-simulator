@@ -9,12 +9,12 @@ use bevy::prelude::{
     PostUpdate, Query, Res, Startup, Time, Transform, default, in_state,
 };
 use bevy::render::view::ColorGrading;
-use bevy_egui::EguiContexts;
 
 use crate::cameras::util::{movement_and_rotation, zoom_value};
 use crate::cameras::{CameraComponent, CameraControlEvent, CameraId};
 use crate::constants::UP;
 use crate::game::map_level::terrain::land::tiled_mesh_from_height_map_data::Tiles;
+use crate::hud::PointerOverHud;
 use crate::states::ClientState;
 
 pub(crate) struct PerspectiveCameraPlugin;
@@ -95,14 +95,14 @@ fn move_camera(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut mouse_wheel: EventReader<MouseWheel>,
     mut query: Query<(&mut Transform, &CameraComponent, &Camera)>,
-    mut egui_contexts: EguiContexts,
+    pointer_over_hud: Res<PointerOverHud>,
 ) {
     for (mut transform, camera_component, camera) in &mut query {
         if camera_component.id == CameraId::Perspective && camera.is_active {
             movement_and_rotation(time.delta_seconds(), &keyboard_input, &mut transform);
 
             // TODO: Consider doing zooming using the FOV, as per https://bevy-cheatbook.github.io/graphics/camera.html
-            let zoom_value = zoom_value(&keyboard_input, &mut mouse_wheel, &mut egui_contexts);
+            let zoom_value = zoom_value(&keyboard_input, &mut mouse_wheel, &pointer_over_hud);
             if zoom_value != 0.0 {
                 const CAMERA_ZOOM_SPEED: f32 = 80.0;
                 let forward = transform.forward();

@@ -2,9 +2,8 @@ use bevy::input::ButtonInput;
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::math::{Dir3, Vec3};
 use bevy::prelude::{EventReader, KeyCode, Mat3, Mut, Res, Transform, info, trace, warn};
-use bevy_egui::EguiContexts;
 
-use crate::on_ui;
+use crate::hud::PointerOverHud;
 
 fn zx_movement(keyboard_input: &Res<ButtonInput<KeyCode>>, transform: &Transform) -> Vec3 {
     let zx_direction = zx_direction(keyboard_input);
@@ -42,11 +41,10 @@ fn zx_direction(keyboard_input: &Res<ButtonInput<KeyCode>>) -> Vec3 {
     direction
 }
 
-// TODO HIGH: Mouse zooming doesn't seem to work!?
 pub(crate) fn zoom_value(
     keyboard_input: &Res<ButtonInput<KeyCode>>,
     mouse_wheel: &mut EventReader<MouseWheel>,
-    egui_contexts: &mut EguiContexts,
+    pointer_over_hud: &Res<PointerOverHud>,
 ) -> f32 {
     let mut result: f32 = 0.0;
 
@@ -61,7 +59,7 @@ pub(crate) fn zoom_value(
 
     for ev in mouse_wheel.read() {
         info!("Mouse zoom: {ev:?} {result}"); // TODO: This results in very weird and choppy scrolling sometimes, needs to be rethought.
-        if on_ui(egui_contexts) {
+        if pointer_over_hud.get() {
             trace!("Ignoring as we are over Egui area.");
         } else {
             match ev.unit {

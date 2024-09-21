@@ -1,11 +1,10 @@
 use bevy::prelude::{ButtonInput, EventWriter, MouseButton, Res};
-use bevy_egui::EguiContexts;
 use shared_domain::client_command::ClientCommand;
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
+use crate::hud::PointerOverHud;
 use crate::hud::domain::SelectedMode;
-use crate::on_ui;
 use crate::selection::HoveredTile;
 
 pub(crate) fn build_building_when_mouse_released(
@@ -15,9 +14,9 @@ pub(crate) fn build_building_when_mouse_released(
     mut client_messages: EventWriter<ClientMessageEvent>,
     player_id_resource: Res<PlayerIdResource>,
     hovered_tile: Res<HoveredTile>,
-    mut egui_contexts: EguiContexts,
+    pointer_over_hud: Res<PointerOverHud>,
 ) {
-    if on_ui(&mut egui_contexts) {
+    if pointer_over_hud.get() {
         return;
     }
 

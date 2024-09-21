@@ -1,8 +1,10 @@
+#![expect(clippy::module_name_repetitions)]
+
 use bevy::app::{App, Plugin, Update};
-use bevy::prelude::{IntoSystemConfigs, default, in_state};
+use bevy::prelude::{IntoSystemConfigs, ResMut, Resource, default, in_state};
 use bevy_egui::EguiPlugin;
 use egui::text::LayoutJob;
-use egui::{Color32, TextFormat};
+use egui::{Color32, TextFormat, Ui};
 use shared_domain::PlayerId;
 use shared_domain::server_response::PlayerInfo;
 
@@ -17,6 +19,32 @@ pub mod labels;
 pub mod left_panel;
 pub mod top_panel;
 
+#[derive(Resource, Default)]
+pub struct PointerOverHud {
+    previous: bool,
+    current:  bool,
+}
+
+impl PointerOverHud {
+    pub fn next_frame(&mut self) {
+        self.previous = self.current;
+        self.current = false;
+    }
+
+    #[must_use]
+    pub fn get(&self) -> bool {
+        // This opens doors to some race conditions, but I hope it will be OK
+        self.previous
+    }
+
+    fn apply(&mut self, ui: &Ui) {
+        // Related discussion https://github.com/emilk/egui/discussions/4996
+        if ui.rect_contains_pointer(ui.max_rect()) {
+            self.current = true;
+        }
+    }
+}
+
 pub(crate) struct HudPlugin;
 
 impl Plugin for HudPlugin {
@@ -25,10 +53,17 @@ impl Plugin for HudPlugin {
             app.add_plugins(EguiPlugin);
         }
         app.insert_resource(SelectedMode::Info);
+        app.insert_resource(PointerOverHud::default());
 
         app.add_systems(
             Update,
-            bottom_panel::show_bottom_panel.run_if(in_state(ClientState::Playing)),
+            reset_pointer_over_hud.run_if(in_state(ClientState::Playing)),
+        );
+        app.add_systems(
+            Update,
+            bottom_panel::show_bottom_panel
+                .after(reset_pointer_over_hud)
+                .run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(
             Update,
@@ -49,6 +84,10 @@ impl Plugin for HudPlugin {
                 .run_if(in_state(ClientState::Playing)),
         );
     }
+}
+
+pub fn reset_pointer_over_hud(mut pointer_over_hud: ResMut<PointerOverHud>) {
+    pointer_over_hud.next_frame();
 }
 
 #[expect(clippy::similar_names)]

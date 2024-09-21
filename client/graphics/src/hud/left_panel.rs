@@ -11,7 +11,7 @@ use shared_domain::transport::transport_info::TransportInfo;
 use crate::cameras::CameraControlEvent;
 use crate::game::transport::ui::TransportsToShow;
 use crate::game::{GameStateResource, PlayerIdResource};
-use crate::hud::player_layout_job;
+use crate::hud::{PointerOverHud, player_layout_job};
 
 pub(crate) fn show_left_panel(
     mut contexts: EguiContexts,
@@ -19,6 +19,7 @@ pub(crate) fn show_left_panel(
     mut transport_to_show: ResMut<TransportsToShow>,
     player_id_resource: Option<Res<PlayerIdResource>>,
     mut camera_control_events: EventWriter<CameraControlEvent>,
+    mut pointer_over_hud: ResMut<PointerOverHud>,
 ) {
     if let Some(player_id_resource) = player_id_resource {
         let PlayerIdResource(player_id) = player_id_resource.as_ref();
@@ -26,6 +27,8 @@ pub(crate) fn show_left_panel(
             let GameStateResource(game_state) = game_state_resource.as_ref();
 
             egui::SidePanel::left("hud_left_panel").show(contexts.ctx_mut(), |ui| {
+                pointer_over_hud.apply(ui);
+
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     players_info_panel(ui, *player_id, game_state.players());
                     buildings_info_panel(

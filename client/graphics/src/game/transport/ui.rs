@@ -14,8 +14,7 @@ use crate::cameras::CameraControlEvent;
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::{SelectType, SelectedMode};
-use crate::hud::player_layout_job;
-use crate::on_ui;
+use crate::hud::{PointerOverHud, player_layout_job};
 use crate::selection::HoveredTile;
 
 #[derive(Resource, Default)]
@@ -46,7 +45,7 @@ impl TransportsToShow {
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn select_station_to_add_to_movement_orders(
-    mut egui_contexts: EguiContexts,
+    pointer_over_hud: Res<PointerOverHud>,
     selected_mode: Res<SelectedMode>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     hovered_tile: Res<HoveredTile>,
@@ -55,7 +54,7 @@ pub(crate) fn select_station_to_add_to_movement_orders(
 ) {
     // Later: When do we switch away from station appending mode?
 
-    if on_ui(&mut egui_contexts) {
+    if pointer_over_hud.get() {
         return;
     }
 

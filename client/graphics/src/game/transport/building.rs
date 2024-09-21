@@ -1,6 +1,5 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, MouseButton, Res, info};
-use bevy_egui::EguiContexts;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
@@ -12,8 +11,8 @@ use shared_domain::{PlayerId, TransportId};
 
 use crate::communication::domain::ClientMessageEvent;
 use crate::game::{GameStateResource, PlayerIdResource};
+use crate::hud::PointerOverHud;
 use crate::hud::domain::SelectedMode;
-use crate::on_ui;
 use crate::selection::{HoveredEdge, HoveredTile};
 
 fn build_transport_command(
@@ -58,11 +57,11 @@ pub(crate) fn build_transport_when_mouse_released(
     game_state_resource: Res<GameStateResource>,
     player_id_resource: Res<PlayerIdResource>,
     mouse_buttons: Res<ButtonInput<MouseButton>>,
-    mut egui_contexts: EguiContexts,
+    pointer_over_hud: Res<PointerOverHud>,
     selected_mode_resource: Res<SelectedMode>,
     mut client_messages: EventWriter<ClientMessageEvent>,
 ) {
-    if on_ui(&mut egui_contexts) {
+    if pointer_over_hud.get() {
         return;
     }
 
