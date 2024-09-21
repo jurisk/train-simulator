@@ -60,15 +60,18 @@ fn demolish_command(
 
     let command = match demolish_type {
         DemolishType::Industry => {
+            // TODO HIGH: Test that it works
             let industry_building = building_state.industry_building_at(hovered_tile)?;
             GameCommand::Demolish(DemolishSelector::Industry(industry_building.id()))
         },
         DemolishType::Station => {
+            // TODO HIGH: Test that it works
             let station = building_state.station_at(hovered_tile)?;
             GameCommand::Demolish(DemolishSelector::Station(station.id()))
         },
         DemolishType::Tracks => {
             // TODO: We should let the user to drag the mouse to select which tracks to demolish
+            // TODO HIGH: Supposedly this doesn't even work any more - make it work nice!
             let tracks = building_state.tracks_at(hovered_tile);
             let track_types = tracks.track_types();
             let track_ids = track_types

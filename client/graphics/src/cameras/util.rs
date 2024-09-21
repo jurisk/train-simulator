@@ -42,6 +42,7 @@ fn zx_direction(keyboard_input: &Res<ButtonInput<KeyCode>>) -> Vec3 {
     direction
 }
 
+// TODO HIGH: Mouse zooming doesn't seem to work!?
 pub(crate) fn zoom_value(
     keyboard_input: &Res<ButtonInput<KeyCode>>,
     mouse_wheel: &mut EventReader<MouseWheel>,
@@ -106,6 +107,7 @@ fn flatten_in_y_plane(direction: Dir3) -> Vec3 {
 
 // The speed of the camera movement is dependent on the height of the camera, to avoid
 // scrolling too quickly when we are very zoomed in.
+// TODO HIGH: When zoomed in it moves too fast, when zoomed out it moves too slow
 fn camera_movement_speed(transform: &Transform) -> f32 {
     // Later: This could be improved as it still doesn't feel right.
     const CAMERA_MOVEMENT_SPEED: f32 = 4_000.0;
