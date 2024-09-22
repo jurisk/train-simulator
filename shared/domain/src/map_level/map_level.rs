@@ -191,7 +191,7 @@ impl MapLevel {
 
     #[must_use]
     #[expect(clippy::missing_panics_doc)]
-    pub fn load(json: &str) -> Self {
+    pub fn load_json(json: &str) -> Self {
         let map_level = serde_json::from_str::<MapLevel>(json)
             .unwrap_or_else(|err| panic!("Failed to deserialise {json}: {err}"));
         assert_eq!(map_level.is_valid(), Ok(()));

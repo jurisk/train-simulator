@@ -98,6 +98,8 @@ fn draw_zoning_buttons(
                 zoning_info.reference_tile(),
                 industry_type,
             );
+
+            // TODO: This is quite slow to do on every update - we should cache it, or only run this menu code if the menu button is clicked.
             if game_state
                 .can_build_industry_building(player_id, &hypothetical_building)
                 .is_ok()

@@ -101,6 +101,14 @@ impl<K, V> GridXZ<K, V> {
             _marker: PhantomData,
         }
     }
+
+    pub fn values_into_iter(self) -> impl Iterator<Item = V> {
+        self.data.into_iter().flat_map(IntoIterator::into_iter)
+    }
+
+    pub fn values_iter(&self) -> impl Iterator<Item = &V> {
+        self.data.iter().flat_map(|row| row.iter())
+    }
 }
 
 impl<K, V> GridXZ<K, V>

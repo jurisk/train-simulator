@@ -1,4 +1,4 @@
-use bevy::prelude::ResMut;
+use bevy::prelude::{AppExit, EventWriter, ResMut};
 use bevy_egui::EguiContexts;
 use egui::{Ui, menu};
 use shared_domain::building::industry_type::IndustryType;
@@ -18,6 +18,7 @@ pub(crate) fn show_top_panel(
     mut selected_mode: ResMut<SelectedMode>,
     mut ai_timer: ResMut<ArtificialIntelligenceTimer>,
     mut pointer_over_hud: ResMut<PointerOverHud>,
+    mut exit: EventWriter<AppExit>,
 ) {
     // Later: We need to better depict the current building mode in the main menu, in case it's a sub-menu item that is selected
 
@@ -36,6 +37,7 @@ pub(crate) fn show_top_panel(
             trains_menu(&mut selected_mode, ui);
             demolish_menu(&mut selected_mode, ui);
             ai_menu(&mut ai_timer, ui);
+            actions_menu(&mut exit, ui);
         });
     });
 }
@@ -239,6 +241,18 @@ fn ai_menu(ai_timer: &mut ResMut<ArtificialIntelligenceTimer>, ui: &mut Ui) {
                 ai_timer.as_mut().enable(seconds);
                 ui.close_menu();
             }
+        }
+    });
+}
+
+fn actions_menu(exit: &mut EventWriter<AppExit>, ui: &mut Ui) {
+    menu::menu_button(ui, "Actions", |ui| {
+        set_font_size(ui, 24.0);
+        if ui
+            .add(egui::Button::new("❎ Exit").min_size(egui::vec2(MIN_X, MIN_Y)))
+            .clicked()
+        {
+            exit.send(AppExit::Success);
         }
     });
 }

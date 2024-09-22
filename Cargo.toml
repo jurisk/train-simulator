@@ -4,6 +4,7 @@ members = [
     "client/single-player",
     "game/ai",
     "game/integration-tests",
+    "game/level-generator",
     "game/logic",
     "networking/client",
     "networking/server",
@@ -55,6 +56,9 @@ metrics = "0.23"
 metrics-exporter-prometheus = {  version = "0.15", default-features = false, features = [] }
 
 web-time = "1.1"
+
+# Using version from Git until they release the new version: https://github.com/georust/geotiff/issues/7
+geotiff = { git = "https://github.com/georust/geotiff", branch = "main" }
 
 # Should only be imported by the `networking-*` code
 # These versions should match bevy_simplenet's (and dependencies such as `enfync` and `ezsockets`) versions.

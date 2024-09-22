@@ -26,7 +26,6 @@ impl GamesService {
     #[must_use]
     #[expect(clippy::new_without_default, clippy::match_same_arms)]
     pub fn new() -> Self {
-        // Later: Eventually, eliminate the Sample map level
         const EUROPE_LEVEL_JSON: &str = include_str!("../../../assets/map_levels/europe.json");
         // TODO: Have a full USA map and use that
         const USA_LEVEL_JSON: &str = include_str!("../../../assets/map_levels/usa_east.json");
@@ -39,7 +38,7 @@ impl GamesService {
                 "usa_east" => USA_LEVEL_JSON,
                 _ => USA_LEVEL_JSON,
             };
-            let map_level = MapLevel::load(level_json);
+            let map_level = MapLevel::load_json(level_json);
             let game_prototype = GameState::new_from_level(map_id.clone(), map_level);
 
             game_prototypes.insert(map_id, game_prototype.clone());

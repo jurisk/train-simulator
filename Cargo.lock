@@ -2589,6 +2589,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "game-level-generator"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "geotiff",
+ "log",
+ "shared-domain",
+ "shared-util",
+]
+
+[[package]]
 name = "game-logic"
 version = "0.1.0"
 dependencies = [
@@ -2609,6 +2620,15 @@ checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
 dependencies = [
  "typenum",
  "version_check",
+]
+
+[[package]]
+name = "geotiff"
+version = "0.0.2"
+source = "git+https://github.com/georust/geotiff?branch=main#6dcad4bf6ce89162220717bd71bce86c4428e57b"
+dependencies = [
+ "num-traits",
+ "tiff",
 ]
 
 [[package]]
