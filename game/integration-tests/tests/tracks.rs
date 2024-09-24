@@ -1,6 +1,6 @@
 use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
-use shared_domain::map_level::map_level::MapLevel;
+use shared_domain::map_level::map_level::{MapLevel, USA_LEVEL_BINCODE};
 use shared_domain::map_level::zoning::ZoningType;
 use shared_domain::metrics::NoopMetrics;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
@@ -18,7 +18,7 @@ fn test_plan_tracks() {
 
     let mut game_state = GameState::new_from_level(
         MapId("usa_east".to_string()),
-        MapLevel::load_json(include_str!("../../../assets/map_levels/usa_east.json")),
+        MapLevel::load_bincode(USA_LEVEL_BINCODE).unwrap(),
     );
 
     // We spawn construction yards in all free spots because this test is about testing track

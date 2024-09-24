@@ -14,6 +14,14 @@ pub enum TileCoverage {
 }
 
 impl TileCoverage {
+    #[must_use]
+    pub fn rectangular_odd(diff: TileDistance) -> Self {
+        TileCoverage::Rectangular {
+            north_west_inclusive: TileCoordsXZ::new(-diff, -diff),
+            south_east_inclusive: TileCoordsXZ::new(diff, diff),
+        }
+    }
+
     // Later:   Implement `Iterator` and `IntoIterator` properly - see https://dev.to/wrongbyte/implementing-iterator-and-intoiterator-in-rust-3nio.
     #[must_use]
     pub fn to_set(&self) -> HashSet<TileCoordsXZ> {
@@ -70,6 +78,18 @@ impl TileCoverage {
                 }
             },
         }
+    }
+
+    #[must_use]
+    pub fn intersects(&self, other: &Self) -> bool {
+        for a in self.to_set() {
+            for b in other.to_set() {
+                if a == b {
+                    return true;
+                }
+            }
+        }
+        false
     }
 
     // TODO HIGH: This gets called often enough that you should optimise it

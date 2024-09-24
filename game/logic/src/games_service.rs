@@ -6,7 +6,7 @@ use log::warn;
 use shared_domain::client_command::{GameCommand, LobbyCommand};
 use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTime;
-use shared_domain::map_level::map_level::MapLevel;
+use shared_domain::map_level::map_level::{EUROPE_LEVEL_BINCODE, MapLevel, USA_LEVEL_BINCODE};
 use shared_domain::metrics::Metrics;
 use shared_domain::server_response::{
     AddressEnvelope, GameError, GameResponse, LobbyResponse, ServerError, ServerResponse,
@@ -24,21 +24,22 @@ pub struct GamesService {
 
 impl GamesService {
     #[must_use]
-    #[expect(clippy::new_without_default, clippy::match_same_arms)]
+    #[expect(
+        clippy::new_without_default,
+        clippy::match_same_arms,
+        clippy::missing_panics_doc
+    )]
     pub fn new() -> Self {
-        const EUROPE_LEVEL_JSON: &str = include_str!("../../../assets/map_levels/europe.json");
-        // TODO: Have a full USA map and use that
-        const USA_LEVEL_JSON: &str = include_str!("../../../assets/map_levels/usa_east.json");
-
         let mut game_prototypes = HashMap::new();
         for map_id in MapId::all() {
             let MapId(map_name) = &map_id;
-            let level_json = match map_name.as_str() {
-                "europe" => EUROPE_LEVEL_JSON,
-                "usa_east" => USA_LEVEL_JSON,
-                _ => USA_LEVEL_JSON,
+            let level_bincode = match map_name.as_str() {
+                "europe" => EUROPE_LEVEL_BINCODE,
+                "usa_east" => USA_LEVEL_BINCODE,
+                _ => USA_LEVEL_BINCODE,
             };
-            let map_level = MapLevel::load_json(level_json);
+            let map_level = MapLevel::load_bincode(level_bincode)
+                .unwrap_or_else(|err| panic!("Failed to load map level {map_id:?}: {err}"));
             let game_prototype = GameState::new_from_level(map_id.clone(), map_level);
 
             game_prototypes.insert(map_id, game_prototype.clone());

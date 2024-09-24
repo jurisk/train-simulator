@@ -12,11 +12,17 @@ use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::map_level::terrain::Terrain;
 use crate::map_level::zoning::{Zoning, ZoningFlattened};
-use crate::tile_coords_xz::TileCoordsXZ;
+use crate::tile_coords_xz::{TileCoordsXZ, TileDistance};
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type::TrackType;
 use crate::vertex_coords_xz::VertexCoordsXZ;
 use crate::water::Water;
+
+pub const EUROPE_LEVEL_BINCODE: &[u8] =
+    include_bytes!("../../../../assets/map_levels/europe.bincode");
+// TODO: Have a full USA map and use that
+pub const USA_LEVEL_BINCODE: &[u8] =
+    include_bytes!("../../../../assets/map_levels/usa_east.bincode");
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum TerrainType {
@@ -189,13 +195,13 @@ impl MapLevel {
         }
     }
 
-    #[must_use]
-    #[expect(clippy::missing_panics_doc)]
-    pub fn load_json(json: &str) -> Self {
-        let map_level = serde_json::from_str::<MapLevel>(json)
-            .unwrap_or_else(|err| panic!("Failed to deserialise {json}: {err}"));
-        assert_eq!(map_level.is_valid(), Ok(()));
-        map_level
+    #[expect(clippy::missing_errors_doc)]
+    pub fn load_bincode(bincode: &[u8]) -> Result<Self, Box<dyn std::error::Error>> {
+        let map_level: MapLevel = bincode::deserialize(bincode)?;
+        match map_level.is_valid() {
+            Ok(()) => Ok(map_level),
+            Err(err) => Err(err.into()),
+        }
     }
 
     // Could eventually move to some `Validated` instead
@@ -218,6 +224,11 @@ impl MapLevel {
     #[must_use]
     pub fn zoning(&self) -> &Zoning {
         &self.zoning
+    }
+
+    #[must_use]
+    pub fn zoning_mut(&mut self) -> &mut Zoning {
+        &mut self.zoning
     }
 
     #[must_use]
@@ -271,7 +282,8 @@ impl MapLevel {
         Ok(())
     }
 
-    fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> Result<(), BuildError> {
+    #[expect(clippy::missing_errors_doc)]
+    pub fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> Result<(), BuildError> {
         let vertex_coords: Vec<_> = tile_coverage
             .to_set()
             .into_iter()
@@ -293,6 +305,18 @@ impl MapLevel {
         (equal_heights && !any_tile_out_of_bounds && !any_vertex_under_water)
             .then_ok_unit(|| BuildError::InvalidTerrain)
     }
+
+    #[must_use]
+    #[expect(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
+    pub fn all_tile_coords(&self) -> Vec<TileCoordsXZ> {
+        let mut result = vec![];
+        for x in 0 .. self.terrain().tile_count_x() {
+            for z in 0 .. self.terrain().tile_count_z() {
+                result.push(TileCoordsXZ::new(x as TileDistance, z as TileDistance));
+            }
+        }
+        result
+    }
 }
 
 #[cfg(test)]
@@ -301,15 +325,9 @@ mod tests {
 
     #[test]
     fn test_map_levels_can_be_deserialised() {
-        let levels = [
-            include_str!("../../../../assets/map_levels/usa_east.json"),
-            include_str!("../../../../assets/map_levels/europe.json"),
-        ];
-        for level_json in levels {
-            let level = serde_json::from_str::<MapLevel>(level_json).unwrap_or_else(|err| {
-                panic!("Failed to deserialise:\n\n{level_json}\n\nError: {err}")
-            });
-            assert_eq!(level.is_valid(), Ok(()));
+        let levels = [USA_LEVEL_BINCODE, EUROPE_LEVEL_BINCODE];
+        for level_bincode in levels {
+            assert!(MapLevel::load_bincode(level_bincode).is_ok());
         }
     }
 }

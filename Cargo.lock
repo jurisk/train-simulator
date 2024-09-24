@@ -4639,12 +4639,12 @@ name = "shared-domain"
 version = "0.1.0"
 dependencies = [
  "bevy_math",
+ "bincode",
  "fastrand",
  "itertools",
  "log",
  "pathfinding",
  "serde",
- "serde_json",
  "shared-util",
  "uuid",
  "web-time",

@@ -63,6 +63,15 @@ pub struct ZoningInfo {
 
 impl ZoningInfo {
     #[must_use]
+    pub fn new(id: ZoningId, zoning_type: ZoningType, reference_tile: TileCoordsXZ) -> Self {
+        Self {
+            id,
+            zoning_type,
+            reference_tile,
+        }
+    }
+
+    #[must_use]
     pub fn id(&self) -> ZoningId {
         self.id
     }
@@ -124,7 +133,7 @@ impl Zoning {
         }
     }
 
-    fn add_zoning(&mut self, zoning_info: ZoningInfo) {
+    pub fn add_zoning(&mut self, zoning_info: ZoningInfo) {
         let coverage = zoning_info.covers_tiles();
         let id = zoning_info.id;
         self.infos.insert(id, zoning_info);
@@ -194,10 +203,7 @@ impl Zoning {
 
 impl WithRelativeTileCoverage for ZoningType {
     fn relative_tiles_used(&self) -> TileCoverage {
-        TileCoverage::Rectangular {
-            north_west_inclusive: TileCoordsXZ::new(-1, -1),
-            south_east_inclusive: TileCoordsXZ::new(1, 1),
-        }
+        TileCoverage::rectangular_odd(1)
     }
 }
 
