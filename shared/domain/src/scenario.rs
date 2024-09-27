@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::ScenarioId;
 use crate::map_level::map_level::MapLevel;
+use crate::server_response::PlayerInfo;
 
 pub const EUROPE_SCENARIO_BINCODE: &[u8] =
     include_bytes!("../../../assets/scenarios/europe.bincode");
@@ -11,8 +12,9 @@ pub const USA_SCENARIO_BINCODE: &[u8] =
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Scenario {
-    pub scenario_id: ScenarioId,
-    pub map_level:   MapLevel,
+    pub scenario_id:  ScenarioId,
+    pub player_infos: Vec<PlayerInfo>,
+    pub map_level:    MapLevel,
 }
 
 impl Scenario {

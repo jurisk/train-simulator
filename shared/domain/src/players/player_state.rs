@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::server_response::{Colour, PlayerInfo};
-use crate::{PlayerId, PlayerName};
+use crate::PlayerId;
+use crate::server_response::PlayerInfo;
 
 // TODO: The players are actually 'Nation'-s or 'Polity'-s, and the players just control them.
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -13,20 +13,13 @@ pub struct PlayerState {
 
 impl PlayerState {
     #[must_use]
-    pub fn two_players() -> Self {
+    pub fn from_infos(infos: Vec<PlayerInfo>) -> Self {
         let mut result = Self {
             infos: HashMap::new(),
         };
-        result.insert(PlayerInfo {
-            id:     PlayerId::random(),
-            name:   PlayerName("Union".to_string()),
-            colour: Colour::rgb(153, 51, 255),
-        });
-        result.insert(PlayerInfo {
-            id:     PlayerId::random(),
-            name:   PlayerName("Alliance".to_string()),
-            colour: Colour::rgb(255, 51, 51),
-        });
+        for info in infos {
+            result.insert(info);
+        }
         result
     }
 

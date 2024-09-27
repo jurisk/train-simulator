@@ -1,6 +1,6 @@
 #![expect(clippy::module_name_repetitions)]
 
-use shared_domain::server_response::Colour;
+use shared_domain::server_response::{Colour, PlayerInfo};
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::{PlayerId, PlayerName};
 
@@ -24,6 +24,15 @@ impl PlayerProfile {
             player_name,
             player_colour,
             initial_construction_yard,
+        }
+    }
+
+    #[must_use]
+    pub fn to_player_info(&self) -> PlayerInfo {
+        PlayerInfo {
+            id:     self.player_id,
+            name:   self.player_name.clone(),
+            colour: self.player_colour,
         }
     }
 }

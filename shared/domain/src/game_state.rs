@@ -109,7 +109,7 @@ impl GameState {
         let size_x = terrain.tile_count_x();
         let size_z = terrain.tile_count_z();
 
-        let players = PlayerState::two_players();
+        let players = PlayerState::from_infos(scenario.player_infos.clone());
 
         let mut result = Self {
             game_id,
@@ -122,7 +122,7 @@ impl GameState {
             time_steps: 0,
         };
 
-        // TODO: Actually, this should be part of the game level already
+        // TODO HIGH: Actually, this should be part of the game level already
         for player_id in result.players.ids() {
             let industrials = result
                 .all_free_zonings()
