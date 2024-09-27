@@ -22,7 +22,7 @@ fn convert_profile(profile: &Profile) -> Result<(), Box<dyn std::error::Error>> 
         water,
         Zoning::new(profile.output_tiles_x, profile.output_tiles_z),
     );
-    zonings::augment(&mut map_level);
+    zonings::augment(&mut map_level, profile);
     let serialized = bincode::serialize(&map_level)?;
     info!("Serialized map level to {} bytes", serialized.len());
     let output_path = format!("assets/map_levels/{}.bincode", profile.name);

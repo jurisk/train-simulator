@@ -1,15 +1,18 @@
-use shared_domain::ZoningId;
+use itertools::Itertools;
 use shared_domain::building::WithRelativeTileCoverage;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::map_level::zoning::{ZoningInfo, ZoningType};
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
+use shared_domain::{PlayerId, ZoningId};
 use shared_util::random::choose;
+
+use crate::profile::{PlayerProfile, Profile};
 
 fn default_zoning_counts(zoning_type: ZoningType) -> usize {
     match zoning_type {
-        ZoningType::Industrial => 24,
-        ZoningType::Source(_) => 2,
+        ZoningType::Industrial => 12,
+        ZoningType::Source(_) => 1,
     }
 }
 
@@ -32,21 +35,39 @@ fn add_zoning(map_level: &mut MapLevel, zoning_type: ZoningType, tile: TileCoord
     map_level.zoning_mut().add_zoning(zoning);
 }
 
-#[expect(clippy::missing_panics_doc, clippy::expect_used)]
-pub fn augment(map_level: &mut MapLevel) {
-    // TODO HIGH: Actually consider areas for each player to avoid one player having all the resources of a particular type
+#[expect(clippy::unwrap_used)]
+fn closest_player(tile: TileCoordsXZ, players: &[PlayerProfile]) -> PlayerId {
+    players
+        .iter()
+        .min_by_key(|player| player.initial_construction_yard.manhattan_distance(tile))
+        .unwrap()
+        .player_id
+}
 
-    let mut options = options(map_level);
-    for zoning in ZoningType::all() {
-        let count = default_zoning_counts(zoning);
-        for _ in 0 .. count {
-            let chosen = *choose(&options).expect("Options should not be empty");
-            let a = zoning.relative_tiles_used().offset_by(chosen);
-            options.retain(|tile| {
-                let b = TileCoverage::rectangular_odd(1).offset_by(*tile);
-                !a.intersects(&b)
-            });
-            add_zoning(map_level, zoning, chosen);
+#[expect(clippy::missing_panics_doc, clippy::expect_used)]
+pub fn augment(map_level: &mut MapLevel, profile: &Profile) {
+    // TODO HIGH: Actually consider areas for each player to avoid one player having all the resources of a particular type
+    // TODO HIGH: define position of each initial construction yard for each player, then you can just partition the zoning options according to closest one
+
+    let mut options = options(map_level)
+        .into_iter()
+        .map(|tile| (closest_player(tile, &profile.players), tile))
+        .into_group_map();
+    for player in &profile.players {
+        let options = options
+            .get_mut(&player.player_id)
+            .expect("Player should have options");
+        for zoning in ZoningType::all() {
+            let count = default_zoning_counts(zoning);
+            for _ in 0 .. count {
+                let chosen = *choose(options).expect("Options should not be empty");
+                let a = zoning.relative_tiles_used().offset_by(chosen);
+                options.retain(|tile| {
+                    let b = TileCoverage::rectangular_odd(1).offset_by(*tile);
+                    !a.intersects(&b)
+                });
+                add_zoning(map_level, zoning, chosen);
+            }
         }
     }
 }

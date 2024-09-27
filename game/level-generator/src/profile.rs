@@ -1,3 +1,33 @@
+#![expect(clippy::module_name_repetitions)]
+
+use shared_domain::server_response::Colour;
+use shared_domain::tile_coords_xz::TileCoordsXZ;
+use shared_domain::{PlayerId, PlayerName};
+
+pub struct PlayerProfile {
+    pub player_id:                 PlayerId,
+    pub player_name:               PlayerName,
+    pub player_colour:             Colour,
+    pub initial_construction_yard: TileCoordsXZ,
+}
+
+impl PlayerProfile {
+    #[must_use]
+    pub fn new(
+        player_id: PlayerId,
+        player_name: PlayerName,
+        player_colour: Colour,
+        initial_construction_yard: TileCoordsXZ,
+    ) -> Self {
+        Self {
+            player_id,
+            player_name,
+            player_colour,
+            initial_construction_yard,
+        }
+    }
+}
+
 pub struct Profile {
     pub name: String,
     pub height_map_tiff: String,
@@ -6,6 +36,7 @@ pub struct Profile {
     pub y_coef: f32,
     pub mountain_compression_coefficient: f32,
     pub mountain_threshold: f32,
+    pub players: Vec<PlayerProfile>,
 }
 
 impl Profile {
@@ -21,6 +52,20 @@ impl Profile {
                 y_coef: 0.5,
                 mountain_compression_coefficient: 500.0,
                 mountain_threshold: 2000.0,
+                players: vec![
+                    PlayerProfile::new(
+                        PlayerId::random(),
+                        PlayerName::new("West".to_string()),
+                        Colour::rgb(153, 51, 255),
+                        TileCoordsXZ::new(60, 150),
+                    ),
+                    PlayerProfile::new(
+                        PlayerId::random(),
+                        PlayerName::new("East".to_string()),
+                        Colour::rgb(255, 51, 51),
+                        TileCoordsXZ::new(220, 85),
+                    ),
+                ],
             },
             Profile {
                 name: "usa_east".to_string(),
@@ -31,6 +76,20 @@ impl Profile {
                 y_coef: 0.5,
                 mountain_compression_coefficient: 400.0,
                 mountain_threshold: 1200.0,
+                players: vec![
+                    PlayerProfile::new(
+                        PlayerId::random(),
+                        PlayerName::new("Union".to_string()),
+                        Colour::rgb(153, 51, 255),
+                        TileCoordsXZ::new(20, 20),
+                    ),
+                    PlayerProfile::new(
+                        PlayerId::random(),
+                        PlayerName::new("Alliance".to_string()),
+                        Colour::rgb(255, 51, 51),
+                        TileCoordsXZ::new(150, 135),
+                    ),
+                ],
             },
         ]
     }

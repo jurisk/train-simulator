@@ -101,6 +101,7 @@ impl From<GameStateFlattened> for GameState {
 }
 
 impl GameState {
+    // TODO HIGH: Move to `new from scenario` where scenario is really largely a serialised `GameState`
     #[must_use]
     pub fn new_from_level(map_id: MapId, map_level: MapLevel) -> Self {
         let game_id = GameId::random();
