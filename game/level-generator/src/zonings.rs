@@ -46,9 +46,6 @@ fn closest_player(tile: TileCoordsXZ, players: &[PlayerProfile]) -> PlayerId {
 
 #[expect(clippy::missing_panics_doc, clippy::expect_used)]
 pub fn augment(map_level: &mut MapLevel, profile: &Profile) {
-    // TODO HIGH: Actually consider areas for each player to avoid one player having all the resources of a particular type
-    // TODO HIGH: define position of each initial construction yard for each player, then you can just partition the zoning options according to closest one
-
     let mut options = options(map_level)
         .into_iter()
         .map(|tile| (closest_player(tile, &profile.players), tile))

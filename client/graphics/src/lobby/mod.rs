@@ -39,12 +39,12 @@ fn select_game_to_join(
         .game_id
         .filter(|game_id| games.iter().any(|game_info| game_info.game_id == *game_id));
 
-    let game_matching_map_id = match &game_launch_params.map_id {
+    let game_matching_scenario_id = match &game_launch_params.scenario_id {
         None => games.first().map(|game_info| game_info.game_id),
-        Some(map_id) => {
+        Some(scenario_id) => {
             games
                 .iter()
-                .find(|game_info| game_info.map_id == *map_id)
+                .find(|game_info| game_info.scenario_id == *scenario_id)
                 .map(|game_info| game_info.game_id)
         },
     };
@@ -60,7 +60,7 @@ fn select_game_to_join(
 
     game_matching_game_id
         .or(game_with_user)
-        .or(game_matching_map_id)
+        .or(game_matching_scenario_id)
 }
 
 #[expect(clippy::needless_pass_by_value)]
@@ -79,7 +79,9 @@ fn handle_available_games(
 
             let command = match selected {
                 None => {
-                    LobbyCommand::CreateGame(game_launch_params.map_id.clone().unwrap_or_default())
+                    LobbyCommand::CreateGame(
+                        game_launch_params.scenario_id.clone().unwrap_or_default(),
+                    )
                 },
                 Some(game_id) => LobbyCommand::JoinExistingGame(game_id),
             };

@@ -16,25 +16,26 @@ use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::{ZoningInfo, ZoningType};
 use crate::metrics::Metrics;
 use crate::players::player_state::PlayerState;
+use crate::scenario::Scenario;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::track_type::TrackType;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::transport::transport_state::TransportState;
-use crate::{GameId, IndustryBuildingId, MapId, PlayerId, StationId, TrackId, TransportId};
+use crate::{GameId, IndustryBuildingId, PlayerId, ScenarioId, StationId, TrackId, TransportId};
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
 //          So the API gets quite busy because of this. There may be better ways, such as splitting the validation-oriented methods into a server-only trait.
 #[derive(Debug, PartialEq, Clone)]
 pub struct GameState {
-    game_id:    GameId,
-    map_id:     MapId,
-    map_level:  MapLevel,
-    buildings:  BuildingState,
-    transports: TransportState,
-    players:    PlayerState,
-    time:       GameTime,
-    time_steps: u64,
+    pub game_id:     GameId,
+    pub scenario_id: ScenarioId,
+    map_level:       MapLevel,
+    buildings:       BuildingState,
+    transports:      TransportState,
+    players:         PlayerState,
+    time:            GameTime,
+    time_steps:      u64,
 }
 
 impl Serialize for GameState {
@@ -60,27 +61,27 @@ impl<'de> Deserialize<'de> for GameState {
 
 #[derive(Serialize, Deserialize, Clone)]
 struct GameStateFlattened {
-    game_id:    GameId,
-    map_id:     MapId,
-    map_level:  MapLevelFlattened,
-    buildings:  BuildingState,
-    transports: TransportState,
-    players:    PlayerState,
-    time:       GameTime,
-    time_steps: u64,
+    game_id:     GameId,
+    scenario_id: ScenarioId,
+    map_level:   MapLevelFlattened,
+    buildings:   BuildingState,
+    transports:  TransportState,
+    players:     PlayerState,
+    time:        GameTime,
+    time_steps:  u64,
 }
 
 impl From<GameState> for GameStateFlattened {
     fn from(value: GameState) -> Self {
         Self {
-            game_id:    value.game_id,
-            map_id:     value.map_id,
-            map_level:  value.map_level.into(),
-            buildings:  value.buildings.clone(),
-            transports: value.transports.clone(),
-            players:    value.players.clone(),
-            time:       value.time,
-            time_steps: value.time_steps,
+            game_id:     value.game_id,
+            scenario_id: value.scenario_id.clone(),
+            map_level:   value.map_level.into(),
+            buildings:   value.buildings.clone(),
+            transports:  value.transports.clone(),
+            players:     value.players.clone(),
+            time:        value.time,
+            time_steps:  value.time_steps,
         }
     }
 }
@@ -88,24 +89,23 @@ impl From<GameState> for GameStateFlattened {
 impl From<GameStateFlattened> for GameState {
     fn from(value: GameStateFlattened) -> Self {
         Self {
-            game_id:    value.game_id,
-            map_id:     value.map_id,
-            map_level:  value.map_level.into(),
-            buildings:  value.buildings,
-            transports: value.transports.clone(),
-            players:    value.players.clone(),
-            time:       value.time,
-            time_steps: value.time_steps,
+            game_id:     value.game_id,
+            scenario_id: value.scenario_id,
+            map_level:   value.map_level.into(),
+            buildings:   value.buildings,
+            transports:  value.transports.clone(),
+            players:     value.players.clone(),
+            time:        value.time,
+            time_steps:  value.time_steps,
         }
     }
 }
 
 impl GameState {
-    // TODO HIGH: Move to `new from scenario` where scenario is really largely a serialised `GameState`
     #[must_use]
-    pub fn new_from_level(map_id: MapId, map_level: MapLevel) -> Self {
+    pub fn from_scenario(scenario: Scenario) -> Self {
         let game_id = GameId::random();
-        let terrain = map_level.terrain();
+        let terrain = scenario.map_level.terrain();
         let size_x = terrain.tile_count_x();
         let size_z = terrain.tile_count_z();
 
@@ -113,8 +113,8 @@ impl GameState {
 
         let mut result = Self {
             game_id,
-            map_id,
-            map_level,
+            scenario_id: scenario.scenario_id,
+            map_level: scenario.map_level,
             buildings: BuildingState::new(size_x, size_z),
             transports: TransportState::empty(),
             players,
@@ -146,21 +146,6 @@ impl GameState {
         self.time
     }
 
-    #[must_use]
-    pub fn from_prototype(prototype: &GameState) -> Self {
-        let game_id = GameId::random();
-        Self {
-            game_id,
-            map_id: prototype.map_id.clone(),
-            map_level: prototype.map_level.clone(),
-            buildings: prototype.buildings.clone(),
-            transports: prototype.transports.clone(),
-            players: prototype.players.clone(),
-            time: prototype.time,
-            time_steps: prototype.time_steps,
-        }
-    }
-
     pub fn advance_time_diff(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
         self.advance_time_diff_internal(diff, metrics);
         self.time = self.time + diff;
@@ -186,8 +171,8 @@ impl GameState {
     }
 
     #[must_use]
-    pub fn map_id(&self) -> MapId {
-        self.map_id.clone()
+    pub fn scenario_id(&self) -> ScenarioId {
+        self.scenario_id.clone()
     }
 
     #[must_use]

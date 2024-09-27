@@ -16,7 +16,7 @@ use crate::game_state::GameState;
 use crate::game_time::GameTime;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::{
-    ClientId, GameId, IndustryBuildingId, MapId, PlayerId, PlayerName, StationId, TrackId,
+    ClientId, GameId, IndustryBuildingId, PlayerId, PlayerName, ScenarioId, StationId, TrackId,
     TransportId, UserId, UserName,
 };
 
@@ -36,7 +36,7 @@ pub enum AuthenticationError {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct GameInfo {
-    pub map_id:       MapId,
+    pub scenario_id:  ScenarioId,
     pub game_id:      GameId,
     pub players:      Vec<PlayerInfo>,
     pub user_players: Vec<(UserId, PlayerId)>,
@@ -223,7 +223,7 @@ pub enum ServerError {
     LeaveFailedNotInGame,
     GameNotFound,
     NotAuthorized,
-    MapNotFound(MapId),
+    ScenarioNotFound(ScenarioId),
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]

@@ -9,6 +9,7 @@ use shared_domain::client_command::{DemolishSelector, GameCommand};
 use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTime;
 use shared_domain::metrics::Metrics;
+use shared_domain::scenario::Scenario;
 use shared_domain::server_response::{
     AddressEnvelope, GameError, GameInfo, GameResponse, UserInfo,
 };
@@ -37,9 +38,9 @@ const SYNC_EVERY_N_TIMESTEPS: u64 = 100;
 
 impl GameService {
     #[must_use]
-    pub fn from_prototype(prototype: &GameState) -> Self {
+    pub fn from_prototype(scenario: &Scenario) -> Self {
         Self {
-            state:        GameState::from_prototype(prototype),
+            state:        GameState::from_scenario(scenario.clone()),
             user_players: BiMap::new(),
         }
     }
@@ -239,7 +240,7 @@ impl GameService {
     #[must_use]
     pub fn create_game_info(&self) -> GameInfo {
         GameInfo {
-            map_id:       self.state.map_id(),
+            scenario_id:  self.state.scenario_id(),
             game_id:      self.state.game_id(),
             players:      self.state.players().infos_cloned(),
             user_players: self.user_players_vec(),

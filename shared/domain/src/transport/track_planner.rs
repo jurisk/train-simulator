@@ -138,13 +138,14 @@ mod tests {
     use shared_util::direction_xz::DirectionXZ;
 
     use super::*;
-    use crate::MapId;
     use crate::map_level::map_level::{Height, MapLevel, TerrainType};
     use crate::map_level::terrain::Terrain;
     use crate::map_level::zoning::Zoning;
     use crate::metrics::NoopMetrics;
+    use crate::scenario::Scenario;
     use crate::tile_coords_xz::TileCoordsXZ;
     use crate::water::Water;
+    use crate::{MapId, ScenarioId};
 
     #[test]
     fn test_plan_single_tile_ew() {
@@ -155,8 +156,17 @@ mod tests {
         let terrain = Terrain::flat(size_x, size_z, Height::from_u8(1), TerrainType::Grass);
         let water = Water::new(Height::from_u8(0), Height::from_u8(1));
         let zoning = Zoning::new(size_x, size_z);
-        let map_level = MapLevel::new(terrain, water.expect("valid water"), zoning);
-        let game_state = GameState::new_from_level(MapId("test".to_string()), map_level);
+        let map_level = MapLevel::new(
+            MapId("test".to_string()),
+            terrain,
+            water.expect("valid water"),
+            zoning,
+        );
+        let scenario = Scenario {
+            scenario_id: ScenarioId("test".to_string()),
+            map_level,
+        };
+        let game_state = GameState::from_scenario(scenario);
         let head = DirectionalEdge::new(tile, DirectionXZ::West);
         let tail = DirectionalEdge::new(tile + DirectionXZ::East, DirectionXZ::West);
         let (results, length) = plan_tracks(

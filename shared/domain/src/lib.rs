@@ -22,6 +22,7 @@ pub mod map_level;
 pub mod metrics;
 pub mod players;
 pub mod resource_type;
+pub mod scenario;
 pub mod server_response;
 pub mod tile_coords_xz;
 pub mod tile_coverage;
@@ -150,32 +151,34 @@ newtype_uuid!(TransportId, "T");
 newtype_uuid!(ZoningId, "Z");
 
 #[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord, Debug)]
-pub struct MapId(pub String);
-
-impl Default for MapId {
+pub struct ScenarioId(pub String);
+impl Default for ScenarioId {
     #[expect(clippy::unwrap_used)]
     fn default() -> Self {
-        MapId::all().first().unwrap().clone()
+        ScenarioId::all().first().unwrap().clone()
     }
 }
 
-impl MapId {
-    #[must_use]
-    pub fn all() -> Vec<MapId> {
-        vec![MapId("usa_east".to_string()), MapId("europe".to_string())]
-    }
-}
-
-impl FromStr for MapId {
+impl FromStr for ScenarioId {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        MapId::all()
+        ScenarioId::all()
             .into_iter()
-            .find(|MapId(map_id)| map_id == s)
+            .find(|ScenarioId(scenario_id)| scenario_id == s)
             .ok_or(())
     }
 }
+
+impl ScenarioId {
+    #[must_use]
+    pub fn all() -> Vec<Self> {
+        vec![Self("usa_east".to_string()), Self("europe".to_string())]
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord, Debug)]
+pub struct MapId(pub String);
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct TrackId {

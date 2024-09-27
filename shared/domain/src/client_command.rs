@@ -11,7 +11,9 @@ use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
-use crate::{ClientId, GameId, IndustryBuildingId, MapId, StationId, TrackId, TransportId, UserId};
+use crate::{
+    ClientId, GameId, IndustryBuildingId, ScenarioId, StationId, TrackId, TransportId, UserId,
+};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct AccessToken(String);
@@ -32,7 +34,7 @@ pub enum AuthenticationCommand {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum LobbyCommand {
     ListGames,
-    CreateGame(MapId),
+    CreateGame(ScenarioId),
     JoinExistingGame(GameId),
     LeaveGame(GameId),
 }

@@ -26,7 +26,7 @@ use shared_domain::server_response::{
     AuthenticationResponse, Colour, GameResponse, ServerResponse,
 };
 use shared_domain::tile_coverage::TileCoverage;
-use shared_domain::{GameId, MapId, PlayerId, UserId};
+use shared_domain::{GameId, PlayerId, ScenarioId, UserId};
 use shared_util::tap::TapErr;
 
 use crate::ai::ArtificialIntelligencePlugin;
@@ -54,19 +54,19 @@ pub struct GameLaunchParams {
     pub user_id:      UserId,
     pub access_token: AccessToken,
     pub game_id:      Option<GameId>,
-    pub map_id:       Option<MapId>,
+    pub scenario_id:  Option<ScenarioId>,
 }
 
 impl GameLaunchParams {
     #[must_use]
-    pub fn new(user_id: &str, access_token: &str, map_id: &str, game_id: &str) -> Self {
+    pub fn new(user_id: &str, access_token: &str, scenario_id: &str, game_id: &str) -> Self {
         let user_id = UserId::from_str(user_id).unwrap_or_else(|err| {
             warn!("Invalid user ID {user_id:?}: {err}");
             UserId::random()
         });
         let access_token = AccessToken::new(access_token.to_string());
-        let map_id = MapId::from_str(map_id)
-            .tap_err(|err| warn!("Invalid map ID {map_id:?}: {err:?}"))
+        let scenario_id = ScenarioId::from_str(scenario_id)
+            .tap_err(|err| warn!("Invalid scenario ID {scenario_id:?}: {err:?}"))
             .ok();
         let game_id = GameId::from_str(game_id)
             .tap_err(|err| warn!("Invalid game ID {game_id:?}: {err:?}"))
@@ -76,7 +76,7 @@ impl GameLaunchParams {
             user_id,
             access_token,
             game_id,
-            map_id,
+            scenario_id,
         }
     }
 }

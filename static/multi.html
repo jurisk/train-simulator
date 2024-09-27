@@ -18,11 +18,11 @@
         const wsUrl = `${wsProtocol}//${currentUrl.host}/ws`;
         const searchParams = new URL(currentUrl).searchParams;
         const playerId = searchParams.get('playerId') || '';
-        const mapId = searchParams.get('mapId')  || '';
+        const scenarioId = searchParams.get('scenarioId')  || '';
         const gameId = searchParams.get('gameId')  || '';
 
-        console.log(`Starting client with WebSocket URL: ${wsUrl}, playerId: ${playerId}, mapId: ${mapId}, gameId: ${gameId}`);
-        start(wsUrl, playerId, mapId, gameId);
+        console.log(`Starting client with WebSocket URL: ${wsUrl}, playerId: ${playerId}, scenarioId: ${scenarioId}, gameId: ${gameId}`);
+        start(wsUrl, playerId, scenarioId, gameId);
     </script>
     <div>
         ESDF to move

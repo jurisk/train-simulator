@@ -6,6 +6,7 @@ use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use shared_util::bool_ops::BoolResultOps;
 
+use crate::MapId;
 use crate::building::BuildError;
 use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
@@ -17,12 +18,6 @@ use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type::TrackType;
 use crate::vertex_coords_xz::VertexCoordsXZ;
 use crate::water::Water;
-
-pub const EUROPE_LEVEL_BINCODE: &[u8] =
-    include_bytes!("../../../../assets/map_levels/europe.bincode");
-// TODO: Have a full USA map and use that
-pub const USA_LEVEL_BINCODE: &[u8] =
-    include_bytes!("../../../../assets/map_levels/usa_east.bincode");
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum TerrainType {
@@ -135,6 +130,7 @@ impl Add for Height {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct MapLevel {
+    map_id:  MapId,
     terrain: Terrain,
     water:   Water,
     zoning:  Zoning,
@@ -164,6 +160,7 @@ impl<'de> Deserialize<'de> for MapLevel {
 impl From<MapLevel> for MapLevelFlattened {
     fn from(value: MapLevel) -> Self {
         MapLevelFlattened {
+            map_id:  value.map_id,
             terrain: value.terrain,
             water:   value.water,
             zoning:  value.zoning.into(),
@@ -174,12 +171,13 @@ impl From<MapLevel> for MapLevelFlattened {
 impl From<MapLevelFlattened> for MapLevel {
     fn from(value: MapLevelFlattened) -> Self {
         let zoning = value.zoning.into();
-        MapLevel::new(value.terrain, value.water, zoning)
+        MapLevel::new(value.map_id, value.terrain, value.water, zoning)
     }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct MapLevelFlattened {
+    map_id:  MapId,
     terrain: Terrain,
     water:   Water,
     zoning:  ZoningFlattened,
@@ -187,25 +185,17 @@ pub(crate) struct MapLevelFlattened {
 
 impl MapLevel {
     #[must_use]
-    pub fn new(terrain: Terrain, water: Water, zoning: Zoning) -> Self {
+    pub fn new(map_id: MapId, terrain: Terrain, water: Water, zoning: Zoning) -> Self {
         Self {
+            map_id,
             terrain,
             water,
             zoning,
         }
     }
 
-    #[expect(clippy::missing_errors_doc)]
-    pub fn load_bincode(bincode: &[u8]) -> Result<Self, Box<dyn std::error::Error>> {
-        let map_level: MapLevel = bincode::deserialize(bincode)?;
-        match map_level.is_valid() {
-            Ok(()) => Ok(map_level),
-            Err(err) => Err(err.into()),
-        }
-    }
-
     // Could eventually move to some `Validated` instead
-    fn is_valid(&self) -> Result<(), String> {
+    pub(crate) fn is_valid(&self) -> Result<(), String> {
         self.terrain.is_valid()?;
         self.water.is_valid()?;
         Ok(())
@@ -316,18 +306,5 @@ impl MapLevel {
             }
         }
         result
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_map_levels_can_be_deserialised() {
-        let levels = [USA_LEVEL_BINCODE, EUROPE_LEVEL_BINCODE];
-        for level_bincode in levels {
-            assert!(MapLevel::load_bincode(level_bincode).is_ok());
-        }
     }
 }

@@ -7,7 +7,7 @@ use shared_domain::game_time::{GameTime, GameTimeDiff};
 use shared_domain::metrics::NoopMetrics;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::server_response::{GameResponse, ServerResponse, UserInfo};
-use shared_domain::{MapId, UserId, UserName};
+use shared_domain::{ScenarioId, UserId, UserName};
 
 #[test]
 fn ai_until_final_goods_built() {
@@ -20,7 +20,7 @@ fn ai_until_final_goods_built() {
 
     let mut games_service = GamesService::new();
     let response = games_service
-        .create_and_join_game(&user_info, MapId::all().first().unwrap())
+        .create_and_join_game(&user_info, ScenarioId::all().first().unwrap())
         .unwrap();
 
     let response = response.first().unwrap();

@@ -4,22 +4,21 @@ use std::collections::HashMap;
 
 use log::warn;
 use shared_domain::client_command::{GameCommand, LobbyCommand};
-use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTime;
-use shared_domain::map_level::map_level::{EUROPE_LEVEL_BINCODE, MapLevel, USA_LEVEL_BINCODE};
 use shared_domain::metrics::Metrics;
+use shared_domain::scenario::{EUROPE_SCENARIO_BINCODE, Scenario, USA_SCENARIO_BINCODE};
 use shared_domain::server_response::{
     AddressEnvelope, GameError, GameResponse, LobbyResponse, ServerError, ServerResponse,
     ServerResponseWithAddress, UserInfo,
 };
-use shared_domain::{GameId, MapId, PlayerId, UserId};
+use shared_domain::{GameId, PlayerId, ScenarioId, UserId};
 
 use crate::game_service::{GameResponseWithAddress, GameService};
 
 // This is also, in a way, `Lobby`. Should we rename it? Split into two somehow? Not sure yet...
 pub struct GamesService {
-    game_map:        HashMap<GameId, GameService>,
-    game_prototypes: HashMap<MapId, GameState>,
+    game_map:       HashMap<GameId, GameService>,
+    game_scenarios: HashMap<ScenarioId, Scenario>,
 }
 
 impl GamesService {
@@ -30,24 +29,25 @@ impl GamesService {
         clippy::missing_panics_doc
     )]
     pub fn new() -> Self {
-        let mut game_prototypes = HashMap::new();
-        for map_id in MapId::all() {
-            let MapId(map_name) = &map_id;
-            let level_bincode = match map_name.as_str() {
-                "europe" => EUROPE_LEVEL_BINCODE,
-                "usa_east" => USA_LEVEL_BINCODE,
-                _ => USA_LEVEL_BINCODE,
+        let mut game_scenarios = HashMap::new();
+        for scenario_id in ScenarioId::all() {
+            let ScenarioId(scenario_name) = &scenario_id;
+            let scenario_bincode = match scenario_name.as_str() {
+                "europe" => EUROPE_SCENARIO_BINCODE,
+                "usa_east" => USA_SCENARIO_BINCODE,
+                _ => USA_SCENARIO_BINCODE,
             };
-            let map_level = MapLevel::load_bincode(level_bincode)
-                .unwrap_or_else(|err| panic!("Failed to load map level {map_id:?}: {err}"));
-            let game_prototype = GameState::new_from_level(map_id.clone(), map_level);
+            let scenario = Scenario::load_bincode(scenario_bincode)
+                .unwrap_or_else(|err| panic!("Failed to load scenario {scenario_id:?}: {err}"));
 
-            game_prototypes.insert(map_id, game_prototype.clone());
+            assert_eq!(scenario.scenario_id, scenario_id);
+
+            game_scenarios.insert(scenario_id, scenario);
         }
 
         Self {
             game_map: HashMap::new(),
-            game_prototypes,
+            game_scenarios,
         }
     }
 
@@ -100,16 +100,16 @@ impl GamesService {
     pub fn create_and_join_game(
         &mut self,
         requesting_user_info: &UserInfo,
-        map_id: &MapId,
+        scenario_id: &ScenarioId,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         // Later: Don't allow starting a game if is already a part of another game?
-        let prototype = self.game_prototypes.get(map_id).ok_or_else(|| {
-            Box::new(ServerResponse::Error(ServerError::MapNotFound(
-                map_id.clone(),
+        let scenario = self.game_scenarios.get(scenario_id).ok_or_else(|| {
+            Box::new(ServerResponse::Error(ServerError::ScenarioNotFound(
+                scenario_id.clone(),
             )))
         })?;
 
-        let mut game_service = GameService::from_prototype(prototype);
+        let mut game_service = GameService::from_prototype(scenario);
         let game_id = game_service.game_id();
 
         // Later: Allow picking a particular `player_id` to be chosen
@@ -201,7 +201,9 @@ impl GamesService {
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match lobby_command {
             LobbyCommand::ListGames => self.create_game_infos(user_info.id),
-            LobbyCommand::CreateGame(map_id) => self.create_and_join_game(user_info, map_id),
+            LobbyCommand::CreateGame(scenario_id) => {
+                self.create_and_join_game(user_info, scenario_id)
+            },
             LobbyCommand::JoinExistingGame(game_id) => {
                 let game_service = self.lookup_game_service_mut(*game_id)?;
                 Self::convert_game_response_to_server_response(
