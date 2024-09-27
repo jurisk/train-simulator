@@ -47,6 +47,7 @@ fn try_building_industry_buildings(
             .building_state()
             .find_industry_building_by_owner_and_type(player_id, industry_type);
         if existing.is_empty() {
+            // TODO HIGH: Build in closest place to the construction yard
             let candidates: Vec<_> = free
                 .iter()
                 .filter(|zoning| Some(zoning.zoning_type()) == industry_type.required_zoning())
@@ -65,7 +66,7 @@ fn try_building_industry_buildings(
                 })
                 .collect();
 
-            // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place.
+            // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place - closest to the industries for its inputs/outputs.
             if let Some(info) = candidates.first() {
                 return Some(vec![GameCommand::BuildIndustryBuilding(info.clone())]);
             } else {

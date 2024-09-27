@@ -13,10 +13,10 @@ use crate::building::track_info::TrackInfo;
 use crate::building::{BuildCosts, BuildError};
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
-use crate::map_level::zoning::{ZoningInfo, ZoningType};
+use crate::map_level::zoning::ZoningInfo;
 use crate::metrics::Metrics;
 use crate::players::player_state::PlayerState;
-use crate::scenario::Scenario;
+use crate::scenario::{PlayerProfile, Scenario};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::track_type::TrackType;
@@ -109,7 +109,12 @@ impl GameState {
         let size_x = terrain.tile_count_x();
         let size_z = terrain.tile_count_z();
 
-        let players = PlayerState::from_infos(scenario.player_infos.clone());
+        let player_infos = scenario
+            .players
+            .iter()
+            .map(PlayerProfile::to_player_info)
+            .collect();
+        let players = PlayerState::from_infos(player_infos);
 
         let mut result = Self {
             game_id,
@@ -122,20 +127,10 @@ impl GameState {
             time_steps: 0,
         };
 
-        // TODO HIGH: Actually, this should be part of the game level already
-        for player_id in result.players.ids() {
-            let industrials = result
-                .all_free_zonings()
-                .into_iter()
-                .filter(|zoning| zoning.zoning_type() == ZoningType::Industrial)
-                .map(ZoningInfo::reference_tile)
-                .collect::<Vec<_>>();
-
-            if let Some(industrial_tile) = industrials.first() {
-                result
-                    .building_state_mut()
-                    .gift_initial_construction_yard(player_id, *industrial_tile);
-            }
+        for player in scenario.players {
+            result
+                .building_state_mut()
+                .gift_initial_construction_yard(player.player_id, player.initial_construction_yard);
         }
 
         result

@@ -2,12 +2,13 @@ use itertools::Itertools;
 use shared_domain::building::WithRelativeTileCoverage;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::map_level::zoning::{ZoningInfo, ZoningType};
+use shared_domain::scenario::PlayerProfile;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::{PlayerId, ZoningId};
 use shared_util::random::choose;
 
-use crate::profile::{PlayerProfile, Profile};
+use crate::profile::Profile;
 
 fn default_zoning_counts(zoning_type: ZoningType) -> usize {
     match zoning_type {
@@ -60,6 +61,7 @@ pub fn augment(map_level: &mut MapLevel, profile: &Profile) {
                 let chosen = *choose(options).expect("Options should not be empty");
                 let a = zoning.relative_tiles_used().offset_by(chosen);
                 options.retain(|tile| {
+                    // TODO HIGH: Need 5x5 coverage, not 3x3, as otherwise there is not enough spacing between the industries
                     let b = TileCoverage::rectangular_odd(1).offset_by(*tile);
                     !a.intersects(&b)
                 });

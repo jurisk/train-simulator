@@ -1,41 +1,7 @@
-#![expect(clippy::module_name_repetitions)]
-
-use shared_domain::server_response::{Colour, PlayerInfo};
+use shared_domain::scenario::PlayerProfile;
+use shared_domain::server_response::Colour;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::{PlayerId, PlayerName};
-
-pub struct PlayerProfile {
-    pub player_id:                 PlayerId,
-    pub player_name:               PlayerName,
-    pub player_colour:             Colour,
-    pub initial_construction_yard: TileCoordsXZ,
-}
-
-impl PlayerProfile {
-    #[must_use]
-    pub fn new(
-        player_id: PlayerId,
-        player_name: PlayerName,
-        player_colour: Colour,
-        initial_construction_yard: TileCoordsXZ,
-    ) -> Self {
-        Self {
-            player_id,
-            player_name,
-            player_colour,
-            initial_construction_yard,
-        }
-    }
-
-    #[must_use]
-    pub fn to_player_info(&self) -> PlayerInfo {
-        PlayerInfo {
-            id:     self.player_id,
-            name:   self.player_name.clone(),
-            colour: self.player_colour,
-        }
-    }
-}
 
 pub struct Profile {
     pub name: String,

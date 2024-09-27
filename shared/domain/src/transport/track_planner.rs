@@ -164,7 +164,7 @@ mod tests {
         );
         let scenario = Scenario {
             scenario_id: ScenarioId("test".to_string()),
-            player_infos: vec![],
+            players: vec![],
             map_level,
         };
         let game_state = GameState::from_scenario(scenario);

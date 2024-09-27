@@ -2,7 +2,7 @@ use std::fs;
 use std::fs::File;
 
 use game_level_generator::height_map;
-use game_level_generator::profile::{PlayerProfile, Profile};
+use game_level_generator::profile::Profile;
 use game_level_generator::source::GeoTiffSource;
 use game_level_generator::zonings;
 use geotiff::GeoTiff;
@@ -27,14 +27,10 @@ fn convert_profile(profile: &Profile) -> Result<(), Box<dyn std::error::Error>> 
     );
     zonings::augment(&mut map_level, profile);
     let scenario_id = ScenarioId(profile.name.clone());
-    let player_infos = profile
-        .players
-        .iter()
-        .map(PlayerProfile::to_player_info)
-        .collect();
+    let players = profile.players.clone();
     let scenario = Scenario {
         scenario_id,
-        player_infos,
+        players,
         map_level,
     };
     let serialized = bincode::serialize(&scenario)?;
