@@ -20,12 +20,17 @@ pub struct Scenario {
 
 impl Scenario {
     #[expect(clippy::missing_errors_doc)]
-    pub fn load_bincode(bincode: &[u8]) -> Result<Self, Box<dyn std::error::Error>> {
-        let scenario: Self = bincode::deserialize(bincode)?;
+    pub fn load_from_bytes(data: &[u8]) -> Result<Self, Box<dyn std::error::Error>> {
+        let scenario: Self = bincode::deserialize(data)?;
         match scenario.is_valid() {
             Ok(()) => Ok(scenario),
             Err(err) => Err(err.into()),
         }
+    }
+
+    #[expect(clippy::missing_errors_doc)]
+    pub fn save_to_bytes(&self) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+        bincode::serialize(self).map_err(Into::into)
     }
 
     #[expect(clippy::missing_errors_doc)]
@@ -43,7 +48,7 @@ mod tests {
     fn test_scenarios_can_be_deserialised() {
         let scenarios = [USA_SCENARIO_BINCODE, EUROPE_SCENARIO_BINCODE];
         for scenario in scenarios {
-            assert!(Scenario::load_bincode(scenario).is_ok());
+            assert!(Scenario::load_from_bytes(scenario).is_ok());
         }
     }
 }

@@ -33,7 +33,7 @@ fn convert_profile(profile: &Profile) -> Result<(), Box<dyn std::error::Error>> 
         players,
         map_level,
     };
-    let serialized = bincode::serialize(&scenario)?;
+    let serialized = scenario.save_to_bytes()?;
     info!("Serialized map level to {} bytes", serialized.len());
     let output_path = format!("assets/scenarios/{}.bincode", profile.name);
     fs::write(&output_path, serialized)?;

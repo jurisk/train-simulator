@@ -76,6 +76,8 @@ impl BuildingState {
 
     #[expect(clippy::unwrap_used, clippy::missing_panics_doc)]
     pub fn gift_initial_construction_yard(&mut self, player_id: PlayerId, tile: TileCoordsXZ) {
+        // Later: We could have the initial cargo a parameter and have it in the scenario. Or not.
+        // Later: Having this public is wrong, but we use it from somewhat unrelated tests.
         let construction_yard_id = IndustryBuildingId::random();
         let construction_yard = IndustryBuildingInfo::new(
             player_id,

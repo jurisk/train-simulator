@@ -37,7 +37,7 @@ impl GamesService {
                 "usa_east" => USA_SCENARIO_BINCODE,
                 _ => USA_SCENARIO_BINCODE,
             };
-            let scenario = Scenario::load_bincode(scenario_bincode)
+            let scenario = Scenario::load_from_bytes(scenario_bincode)
                 .unwrap_or_else(|err| panic!("Failed to load scenario {scenario_id:?}: {err}"));
 
             assert_eq!(scenario.scenario_id, scenario_id);

@@ -17,7 +17,7 @@ fn test_plan_tracks() {
     let player_id = PlayerId::random();
 
     let mut game_state =
-        GameState::from_scenario(Scenario::load_bincode(USA_SCENARIO_BINCODE).unwrap());
+        GameState::from_scenario(Scenario::load_from_bytes(USA_SCENARIO_BINCODE).unwrap());
 
     // We spawn construction yards in all free spots because this test is about testing track
     // planning, not availability of resources
