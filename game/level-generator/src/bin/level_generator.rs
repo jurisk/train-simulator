@@ -12,9 +12,13 @@ use shared_domain::map_level::zoning::Zoning;
 use shared_domain::scenario::Scenario;
 use shared_domain::{MapId, ScenarioId};
 
-fn convert_profile(profile: &Profile) -> Result<(), Box<dyn std::error::Error>> {
+fn generate_scenario(
+    profile: &Profile,
+    relative_path: &str,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     info!("Converting profile {}", profile.name);
-    let file = File::open(&profile.height_map_tiff)?;
+    let path = format!("{relative_path}{}", profile.height_map_tiff);
+    let file = File::open(&path).map_err(|e| format!("Failed to open {path}: {e}"))?;
     let tiff = GeoTiff::read(file)?;
     info!("GeoTIFF {tiff:?}");
     let source = GeoTiffSource::new(tiff);
@@ -35,15 +39,38 @@ fn convert_profile(profile: &Profile) -> Result<(), Box<dyn std::error::Error>> 
     };
     let serialized = scenario.save_to_bytes()?;
     info!("Serialized map level to {} bytes", serialized.len());
-    let output_path = format!("assets/scenarios/{}.bincode", profile.name);
+    Ok(serialized)
+}
+
+fn process_and_save(profile: &Profile) -> Result<(), Box<dyn std::error::Error>> {
+    let serialized = generate_scenario(profile, "")?;
+    let output_path = format!("assets/scenarios/{}.bincode.gz", profile.name);
     fs::write(&output_path, serialized)?;
     Ok(())
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     for profile in Profile::all() {
-        convert_profile(&profile)?;
+        process_and_save(&profile)?;
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scenarios_can_be_generated() {
+        for profile in Profile::all() {
+            let result = generate_scenario(&profile, "../../");
+            match result {
+                Ok(_) => {},
+                Err(e) => {
+                    panic!("Failed to generate scenario for {}: {e}", profile.name);
+                },
+            }
+        }
+    }
 }

@@ -11,6 +11,7 @@ shared-util = { path = "../util" }
 
 # Note - not allowed to have a `bevy` (except `bevy_math`) or any networking dependencies!
 bincode.workspace = true
+flate2.workspace = true
 fastrand.workspace = true
 bevy_math.workspace = true
 log.workspace = true

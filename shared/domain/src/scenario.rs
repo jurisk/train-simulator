@@ -1,3 +1,8 @@
+use std::io::{Read, Write};
+
+use flate2::Compression;
+use flate2::read::GzDecoder;
+use flate2::write::GzEncoder;
 use serde::{Deserialize, Serialize};
 
 use crate::map_level::map_level::MapLevel;
@@ -6,10 +11,10 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::{PlayerId, PlayerName, ScenarioId};
 
 pub const EUROPE_SCENARIO_BINCODE: &[u8] =
-    include_bytes!("../../../assets/scenarios/europe.bincode");
+    include_bytes!("../../../assets/scenarios/europe.bincode.gz");
 // TODO: Have a full USA map and use that
 pub const USA_SCENARIO_BINCODE: &[u8] =
-    include_bytes!("../../../assets/scenarios/usa_east.bincode");
+    include_bytes!("../../../assets/scenarios/usa_east.bincode.gz");
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Scenario {
@@ -21,16 +26,25 @@ pub struct Scenario {
 impl Scenario {
     #[expect(clippy::missing_errors_doc)]
     pub fn load_from_bytes(data: &[u8]) -> Result<Self, Box<dyn std::error::Error>> {
-        let scenario: Self = bincode::deserialize(data)?;
-        match scenario.is_valid() {
-            Ok(()) => Ok(scenario),
-            Err(err) => Err(err.into()),
-        }
+        let mut decoder = GzDecoder::new(data);
+        let mut decompressed_data = Vec::new();
+        decoder.read_to_end(&mut decompressed_data)?;
+
+        let scenario: Self = bincode::deserialize(&decompressed_data)?;
+        scenario.is_valid()?;
+
+        Ok(scenario)
     }
 
     #[expect(clippy::missing_errors_doc)]
     pub fn save_to_bytes(&self) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-        bincode::serialize(self).map_err(Into::into)
+        let serialized_data = bincode::serialize(self)?;
+
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
+        encoder.write_all(&serialized_data)?;
+        let compressed_data = encoder.finish()?;
+
+        Ok(compressed_data)
     }
 
     #[expect(clippy::missing_errors_doc)]

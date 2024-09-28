@@ -1,2 +1,2 @@
 bin/housekeeping.ps1
-cargo nextest run
+cargo nextest run --no-fail-fast
