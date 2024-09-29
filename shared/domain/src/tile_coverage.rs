@@ -15,10 +15,49 @@ pub enum TileCoverage {
 
 impl TileCoverage {
     #[must_use]
-    pub fn rectangular_odd(diff: TileDistance) -> Self {
+    pub fn single_at_zero() -> Self {
+        TileCoverage::Single(TileCoordsXZ::ZERO)
+    }
+
+    #[must_use]
+    #[expect(clippy::missing_panics_doc)]
+    pub fn rectangular_odd(
+        center: TileCoordsXZ,
+        size_x: TileDistance,
+        size_z: TileDistance,
+    ) -> Self {
+        assert_eq!(size_x % 2, 1, "size_x must be odd");
+        assert_eq!(size_z % 2, 1, "size_z must be odd");
         TileCoverage::Rectangular {
-            north_west_inclusive: TileCoordsXZ::new(-diff, -diff),
-            south_east_inclusive: TileCoordsXZ::new(diff, diff),
+            north_west_inclusive: TileCoordsXZ::new(center.x - size_x / 2, center.z - size_z / 2),
+            south_east_inclusive: TileCoordsXZ::new(center.x + size_x / 2, center.z + size_z / 2),
+        }
+    }
+
+    #[must_use]
+    pub fn extend(&self, diff: TileDistance) -> Self {
+        match self {
+            TileCoverage::Single(tile) => {
+                TileCoverage::Rectangular {
+                    north_west_inclusive: TileCoordsXZ::new(tile.x - diff, tile.z - diff),
+                    south_east_inclusive: TileCoordsXZ::new(tile.x + diff, tile.z + diff),
+                }
+            },
+            TileCoverage::Rectangular {
+                north_west_inclusive,
+                south_east_inclusive,
+            } => {
+                TileCoverage::Rectangular {
+                    north_west_inclusive: TileCoordsXZ::new(
+                        north_west_inclusive.x - diff,
+                        north_west_inclusive.z - diff,
+                    ),
+                    south_east_inclusive: TileCoordsXZ::new(
+                        south_east_inclusive.x + diff,
+                        south_east_inclusive.z + diff,
+                    ),
+                }
+            },
         }
     }
 

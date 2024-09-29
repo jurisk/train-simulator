@@ -13,7 +13,7 @@ use crate::map_level::zoning::ZoningType;
 use crate::map_level::zoning::ZoningType::{Industrial, Source};
 use crate::resource_type::ResourceType;
 use crate::resource_type::ResourceType::*;
-use crate::tile_coords_xz::TileDistance;
+use crate::tile_coords_xz::{TileCoordsXZ, TileDistance};
 use crate::tile_coverage::TileCoverage;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
@@ -219,7 +219,7 @@ impl IndustryType {
 impl WithRelativeTileCoverage for IndustryType {
     #[must_use]
     fn relative_tiles_used(&self) -> TileCoverage {
-        TileCoverage::rectangular_odd(1)
+        TileCoverage::rectangular_odd(TileCoordsXZ::ZERO, 3, 3)
     }
 }
 

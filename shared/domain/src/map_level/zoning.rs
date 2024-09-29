@@ -203,7 +203,7 @@ impl Zoning {
 
 impl WithRelativeTileCoverage for ZoningType {
     fn relative_tiles_used(&self) -> TileCoverage {
-        TileCoverage::rectangular_odd(1)
+        TileCoverage::rectangular_odd(TileCoordsXZ::ZERO, 3, 3)
     }
 }
 

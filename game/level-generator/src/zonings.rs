@@ -21,7 +21,8 @@ fn options(map_level: &MapLevel) -> Vec<TileCoordsXZ> {
     let mut result = vec![];
 
     for tile in map_level.all_tile_coords() {
-        let coverage = TileCoverage::rectangular_odd(1).offset_by(tile);
+        // TODO: This is wrong as it means we may be placing zoning in 3x3 spot which has no opportunity to have a station placed near it.
+        let coverage = TileCoverage::rectangular_odd(tile, 3, 3);
         if map_level.can_build_for_coverage(&coverage).is_ok() {
             result.push(tile);
         }
@@ -59,10 +60,10 @@ pub fn augment(map_level: &mut MapLevel, profile: &Profile) {
             let count = default_zoning_counts(zoning);
             for _ in 0 .. count {
                 let chosen = *choose(options).expect("Options should not be empty");
-                let a = zoning.relative_tiles_used().offset_by(chosen);
+                // We use 5x5 coverage here on purpose to space out the stations
+                let a = zoning.relative_tiles_used().extend(1).offset_by(chosen);
                 options.retain(|tile| {
-                    // TODO HIGH: Need 5x5 coverage, not 3x3, as otherwise there is not enough spacing between the industries
-                    let b = TileCoverage::rectangular_odd(1).offset_by(*tile);
+                    let b = TileCoverage::rectangular_odd(*tile, 5, 5);
                     !a.intersects(&b)
                 });
                 add_zoning(map_level, zoning, chosen);
