@@ -276,6 +276,7 @@ impl BuildingState {
         requesting_player_id: PlayerId,
         building_info: &T,
     ) -> Result<(), BuildError> {
+        // TODO HIGH: Here and elsewhere - for single player AI that controls multiple players, allow building on behalf of other players?
         (building_info.owner_id() == requesting_player_id)
             .then_ok_unit(|| BuildError::InvalidOwner)?;
         self.can_build_for_coverage(&building_info.covers_tiles())?;

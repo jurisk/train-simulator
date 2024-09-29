@@ -1,26 +1,31 @@
-use bevy::prelude::{AppExit, EventWriter, ResMut};
+use bevy::prelude::{AppExit, EventWriter, Res, ResMut};
 use bevy_egui::EguiContexts;
 use egui::{Ui, menu};
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_type::{StationOrientation, StationType};
+use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::transport_type::TransportType;
 
-use crate::ai::ArtificialIntelligenceTimer;
+use crate::ai::ArtificialIntelligenceTimers;
+use crate::game::GameStateResource;
 use crate::hud::PointerOverHud;
 use crate::hud::domain::{DemolishType, SelectedMode, TracksBuildingType};
 
 const MIN_X: f32 = 200.0;
 const MIN_Y: f32 = 40.0;
 
+#[expect(clippy::needless_pass_by_value)]
 pub(crate) fn show_top_panel(
     mut contexts: EguiContexts,
+    game_state: Res<GameStateResource>,
     mut selected_mode: ResMut<SelectedMode>,
-    mut ai_timer: ResMut<ArtificialIntelligenceTimer>,
+    mut ai_timers: ResMut<ArtificialIntelligenceTimers>,
     mut pointer_over_hud: ResMut<PointerOverHud>,
     mut exit: EventWriter<AppExit>,
 ) {
     // Later: We need to better depict the current building mode in the main menu, in case it's a sub-menu item that is selected
+    let GameStateResource(game_state) = game_state.as_ref();
 
     egui::TopBottomPanel::top("hud_top_panel").show(contexts.ctx_mut(), |ui| {
         pointer_over_hud.apply(ui);
@@ -36,7 +41,7 @@ pub(crate) fn show_top_panel(
             military_menu(&mut selected_mode, ui);
             trains_menu(&mut selected_mode, ui);
             demolish_menu(&mut selected_mode, ui);
-            ai_menu(&mut ai_timer, ui);
+            ai_menu(&mut ai_timers, game_state, ui);
             actions_menu(&mut exit, ui);
         });
     });
@@ -216,30 +221,45 @@ fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
-fn ai_menu(ai_timer: &mut ResMut<ArtificialIntelligenceTimer>, ui: &mut Ui) {
+fn ai_menu(
+    ai_timers: &mut ResMut<ArtificialIntelligenceTimers>,
+    game_state: &GameState,
+    ui: &mut Ui,
+) {
     // Later: Could disable the currently selected AI mode, but that does not matter much
     menu::menu_button(ui, "🖥 AI", |ui| {
         set_font_size(ui, 24.0);
 
-        if ui
-            .add(egui::Button::new("❎ Disable").min_size(egui::vec2(MIN_X, MIN_Y)))
-            .clicked()
-        {
-            ai_timer.as_mut().disable();
-            ui.close_menu();
-        }
+        for player in game_state.players().infos() {
+            let player_id = player.id;
+            let player_name = format!("{}", player.name);
 
-        for (name, seconds) in [
-            ("☑ Enable 100 milliseconds", 0.1),
-            ("☑ Enable 1 second", 1.0),
-            ("☑ Enable 10 seconds", 10.0),
-        ] {
             if ui
-                .add(egui::Button::new(name).min_size(egui::vec2(MIN_X, MIN_Y)))
+                .add(
+                    egui::Button::new(format!("❎ Disable for {player_name}"))
+                        .min_size(egui::vec2(MIN_X, MIN_Y)),
+                )
                 .clicked()
             {
-                ai_timer.as_mut().enable(seconds);
+                ai_timers.as_mut().disable(player_id);
                 ui.close_menu();
+            }
+
+            for (name, seconds) in [
+                ("☑ Enable 100 milliseconds", 0.1),
+                ("☑ Enable 1 second", 1.0),
+                ("☑ Enable 10 seconds", 10.0),
+            ] {
+                if ui
+                    .add(
+                        egui::Button::new(format!("{name} for {player_name}"))
+                            .min_size(egui::vec2(MIN_X, MIN_Y)),
+                    )
+                    .clicked()
+                {
+                    ai_timers.as_mut().enable(player_id, seconds);
+                    ui.close_menu();
+                }
             }
         }
     });

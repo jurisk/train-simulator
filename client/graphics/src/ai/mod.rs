@@ -3,6 +3,7 @@ use bevy::prelude::{
     App, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time, Timer,
     TimerMode, in_state,
 };
+use bevy::utils::HashMap;
 use game_ai::{ArtificialIntelligenceState, ai_commands};
 use shared_domain::PlayerId;
 use shared_domain::client_command::ClientCommand;
@@ -10,28 +11,33 @@ use shared_domain::game_state::GameState;
 use shared_domain::metrics::NoopMetrics;
 
 use crate::communication::domain::ClientMessageEvent;
-use crate::game::{GameStateResource, PlayerIdResource};
+use crate::game::GameStateResource;
 use crate::states::ClientState;
 
 #[derive(Resource)]
-pub struct ArtificialIntelligenceTimer {
-    timer: Option<Timer>,
+pub struct ArtificialIntelligenceTimers {
+    timers: HashMap<PlayerId, Timer>,
 }
 
-impl ArtificialIntelligenceTimer {
+impl ArtificialIntelligenceTimers {
     #[must_use]
-    pub fn disabled() -> Self {
-        Self { timer: None }
+    pub fn empty() -> Self {
+        Self {
+            timers: HashMap::new(),
+        }
     }
 
-    pub fn disable(&mut self) {
-        info!("Disabling AI timer");
-        self.timer = None;
+    pub fn disable(&mut self, player_id: PlayerId) {
+        info!("Disabling AI timer for player {player_id}");
+        self.timers.remove(&player_id);
     }
 
-    pub fn enable(&mut self, seconds: f32) {
-        info!("Enabling AI timer: {seconds} seconds");
-        self.timer = Some(Timer::from_seconds(seconds, TimerMode::Repeating));
+    pub fn enable(&mut self, player_id: PlayerId, seconds: f32) {
+        info!("Enabling AI timer for player {player_id}: {seconds} seconds");
+        self.timers.insert(
+            player_id,
+            Timer::from_seconds(seconds, TimerMode::Repeating),
+        );
     }
 }
 
@@ -42,7 +48,7 @@ pub struct ArtificialIntelligencePlugin;
 
 impl Plugin for ArtificialIntelligencePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ArtificialIntelligenceTimer::disabled());
+        app.insert_resource(ArtificialIntelligenceTimers::empty());
         app.add_systems(
             FixedUpdate,
             update_timer.run_if(in_state(ClientState::Playing)),
@@ -56,27 +62,24 @@ impl Plugin for ArtificialIntelligencePlugin {
 }
 
 #[expect(clippy::needless_pass_by_value)]
-fn update_timer(time: Res<Time>, mut timer: ResMut<ArtificialIntelligenceTimer>) {
-    if let Some(timer) = timer.timer.as_mut() {
+fn update_timer(time: Res<Time>, mut timers: ResMut<ArtificialIntelligenceTimers>) {
+    for timer in timers.timers.values_mut() {
         timer.tick(time.delta());
     }
 }
 
 #[expect(clippy::needless_pass_by_value)]
 fn act_upon_timer(
-    timer: Res<ArtificialIntelligenceTimer>,
+    timers: Res<ArtificialIntelligenceTimers>,
     mut client_messages: EventWriter<ClientMessageEvent>,
-    player_id_resource: Res<PlayerIdResource>,
     game_state_resource: Res<GameStateResource>,
     mut ai_state_resource: ResMut<ArtificialIntelligenceStateResource>,
 ) {
     let ArtificialIntelligenceStateResource(ai_state) = &mut *ai_state_resource;
-    if let Some(ref timer) = timer.timer {
+    for (player_id, timer) in &timers.timers {
         if timer.just_finished() {
-            let PlayerIdResource(player_id) = *player_id_resource;
             let GameStateResource(game_state) = game_state_resource.as_ref();
-
-            ai_step(player_id, game_state, &mut client_messages, ai_state);
+            ai_step(*player_id, game_state, &mut client_messages, ai_state);
         }
     }
 }
