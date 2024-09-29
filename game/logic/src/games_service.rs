@@ -123,6 +123,15 @@ impl GamesService {
         Self::convert_game_response_to_server_response(game_id, Ok(results))
     }
 
+    pub fn join_game(
+        &mut self,
+        user_info: &UserInfo,
+        game_id: GameId,
+    ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
+        let game_service = self.lookup_game_service_mut(game_id)?;
+        Self::convert_game_response_to_server_response(game_id, game_service.join_game(user_info))
+    }
+
     fn convert_game_response_to_server_response(
         game_id: GameId,
         input: Result<Vec<GameResponseWithAddress>, GameError>,
@@ -204,13 +213,7 @@ impl GamesService {
             LobbyCommand::CreateGame(scenario_id) => {
                 self.create_and_join_game(user_info, scenario_id)
             },
-            LobbyCommand::JoinExistingGame(game_id) => {
-                let game_service = self.lookup_game_service_mut(*game_id)?;
-                Self::convert_game_response_to_server_response(
-                    *game_id,
-                    game_service.join_game(user_info),
-                )
-            },
+            LobbyCommand::JoinExistingGame(game_id) => self.join_game(user_info, *game_id),
             LobbyCommand::LeaveGame(game_id) => {
                 // Later: Not sure how this should even work if the player has buildings and transport owned in the game?
                 let game_service = self.lookup_game_service_mut(*game_id)?;

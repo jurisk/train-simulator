@@ -31,6 +31,23 @@ fn create_and_join(games_service: &mut GamesService, user_id: UserId) -> (GameId
     (game_id, player_id)
 }
 
+fn join_game(games_service: &mut GamesService, game_id: GameId, user_id: UserId) -> PlayerId {
+    let user_info = UserInfo {
+        id:   user_id,
+        name: UserName::new(format!("AI {user_id}")),
+    };
+
+    let join_response = games_service.join_game(&user_info, game_id).unwrap();
+
+    let response = join_response.first().unwrap();
+    let ServerResponse::Game(_game_id, GameResponse::GameJoined(player_id, _)) = response.response
+    else {
+        panic!("Expected response, got {response:?}",);
+    };
+
+    player_id
+}
+
 fn get_snapshot(games_service: &mut GamesService, game_id: GameId, user_id: UserId) -> GameState {
     let mut response = games_service
         .process_command(game_id, user_id, &GameCommand::RequestGameStateSnapshot)
@@ -93,19 +110,24 @@ fn run_ai_commands(
 
 #[test]
 fn ai_until_final_goods_built() {
-    let user_id_1 = UserId::random();
-    let mut artificial_intelligence_state = ArtificialIntelligenceState::default();
-
     let mut games_service = GamesService::new();
 
+    let user_id_1 = UserId::random();
     let (game_id, player_id_1) = create_and_join(&mut games_service, user_id_1);
+    let mut artificial_intelligence_state_1 = ArtificialIntelligenceState::default();
+
+    let user_id_2 = UserId::random();
+    let player_id_2 = join_game(&mut games_service, game_id, user_id_2);
+    let mut artificial_intelligence_state_2 = ArtificialIntelligenceState::default();
 
     let mut time = GameTime::new();
 
     loop {
         let game_state = get_snapshot(&mut games_service, game_id, user_id_1);
 
-        if player_has_enough_cargo(&game_state, player_id_1) {
+        if player_has_enough_cargo(&game_state, player_id_1)
+            || player_has_enough_cargo(&game_state, player_id_2)
+        {
             break;
         }
 
@@ -113,9 +135,21 @@ fn ai_until_final_goods_built() {
             &mut games_service,
             player_id_1,
             &game_state,
-            &mut artificial_intelligence_state,
+            &mut artificial_intelligence_state_1,
             game_id,
             user_id_1,
+        );
+
+        // Refreshing game state to avoid clashing commands
+        let game_state = get_snapshot(&mut games_service, game_id, user_id_2);
+
+        run_ai_commands(
+            &mut games_service,
+            player_id_2,
+            &game_state,
+            &mut artificial_intelligence_state_2,
+            game_id,
+            user_id_2,
         );
 
         time = time + GameTimeDiff::from_seconds(0.1);
