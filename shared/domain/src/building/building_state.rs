@@ -86,7 +86,7 @@ impl BuildingState {
             IndustryType::ConstructionYard,
         );
         let () = self
-            .build_industry_building(player_id, &construction_yard, BuildCosts::none())
+            .build_industry_building(&construction_yard, BuildCosts::none())
             .unwrap();
         let construction_yard = self
             .find_industry_building_mut(construction_yard_id)
@@ -271,14 +271,7 @@ impl BuildingState {
             .collect()
     }
 
-    pub fn can_build_building<T: BuildingInfo>(
-        &self,
-        requesting_player_id: PlayerId,
-        building_info: &T,
-    ) -> Result<(), BuildError> {
-        // TODO HIGH: Here and elsewhere - for single player AI that controls multiple players, allow building on behalf of other players?
-        (building_info.owner_id() == requesting_player_id)
-            .then_ok_unit(|| BuildError::InvalidOwner)?;
+    pub fn can_build_building<T: BuildingInfo>(&self, building_info: &T) -> Result<(), BuildError> {
         self.can_build_for_coverage(&building_info.covers_tiles())?;
         Ok(())
     }
@@ -338,7 +331,8 @@ impl BuildingState {
         for (industry_building_id, cargo_map) in &costs.costs {
             if let Some(industry_building) = self.industry_buildings.get(industry_building_id) {
                 if industry_building.owner_id() != player_id {
-                    return Err(BuildError::InvalidOwner);
+                    // That's unexpected - why would the costs include other player's buildings?
+                    return Err(BuildError::UnknownError);
                 }
                 if !industry_building.cargo().is_superset_of(cargo_map) {
                     return Err(BuildError::NotEnoughResources);
@@ -395,11 +389,10 @@ impl BuildingState {
 
     pub(crate) fn build_industry_building(
         &mut self,
-        requesting_player_id: PlayerId,
         industry_building_info: &IndustryBuildingInfo,
         costs: BuildCosts,
     ) -> Result<(), BuildError> {
-        self.can_build_building(requesting_player_id, industry_building_info)?;
+        self.can_build_building(industry_building_info)?;
         self.pay_costs(costs);
         self.append_industry_building(industry_building_info.clone());
         Ok(())
@@ -418,11 +411,10 @@ impl BuildingState {
 
     pub(crate) fn build_station(
         &mut self,
-        requesting_player_id: PlayerId,
         station_info: &StationInfo,
         costs: BuildCosts,
     ) -> Result<(), BuildError> {
-        self.can_build_building(requesting_player_id, station_info)?;
+        self.can_build_building(station_info)?;
         self.pay_costs(costs);
         self.append_station(station_info.clone());
         Ok(())
@@ -637,7 +629,7 @@ mod tests {
             TileCoordsXZ::new(0, 0),
             StationType::EW_1_4,
         );
-        let result = building_state.can_build_building(owner_id, &station_info);
+        let result = building_state.can_build_building(&station_info);
         assert_eq!(result, Err(BuildError::InvalidOverlap));
     }
 }

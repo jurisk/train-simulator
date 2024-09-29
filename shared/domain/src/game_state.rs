@@ -4,8 +4,11 @@ use std::collections::HashMap;
 
 use log::{info, trace};
 use serde::{Deserialize, Serialize, Serializer};
+use shared_util::bool_ops::BoolResultOps;
 
-use crate::building::building_info::{BuildingDynamicInfo, WithCostToBuild, WithTileCoverage};
+use crate::building::building_info::{
+    BuildingDynamicInfo, WithCostToBuild, WithOwner, WithTileCoverage,
+};
 use crate::building::building_state::{BuildingState, CanBuildResponse};
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::station_info::StationInfo;
@@ -278,9 +281,9 @@ impl GameState {
         requesting_player_id: PlayerId,
         building: &IndustryBuildingInfo,
     ) -> Result<BuildCosts, BuildError> {
+        self.valid_owner(requesting_player_id, building.owner_id())?;
         self.map_level.can_build_industry_building(building)?;
-        self.buildings
-            .can_build_building(requesting_player_id, building)?;
+        self.buildings.can_build_building(building)?;
 
         self.can_pay_cost(requesting_player_id, building)
     }
@@ -291,8 +294,7 @@ impl GameState {
         building: &IndustryBuildingInfo,
     ) -> Result<(), BuildError> {
         let costs = self.can_build_industry_building(requesting_player_id, building)?;
-        self.buildings
-            .build_industry_building(requesting_player_id, building, costs)
+        self.buildings.build_industry_building(building, costs)
     }
 
     #[expect(clippy::missing_errors_doc)]
@@ -301,9 +303,9 @@ impl GameState {
         requesting_player_id: PlayerId,
         station: &StationInfo,
     ) -> Result<BuildCosts, BuildError> {
+        self.valid_owner(requesting_player_id, station.owner_id())?;
         self.map_level.can_build_station(station)?;
-        self.buildings
-            .can_build_building(requesting_player_id, station)?;
+        self.buildings.can_build_building(station)?;
         self.can_pay_cost(requesting_player_id, station)
     }
 
@@ -325,8 +327,7 @@ impl GameState {
         station: &StationInfo,
     ) -> Result<(), BuildError> {
         let costs = self.can_build_station(requesting_player_id, station)?;
-        self.buildings
-            .build_station(requesting_player_id, station, costs)
+        self.buildings.build_station(station, costs)
     }
 
     pub fn remove_tracks(
@@ -415,5 +416,14 @@ impl GameState {
                     .is_none()
             })
             .collect()
+    }
+
+    fn valid_owner(
+        &self,
+        requesting_player_id: PlayerId,
+        owner_id: PlayerId,
+    ) -> Result<(), BuildError> {
+        // TODO HIGH: Here and elsewhere - for single player AI that controls multiple players, allow building on behalf of other players?
+        (owner_id == requesting_player_id).then_ok_unit(|| BuildError::InvalidOwner)
     }
 }
