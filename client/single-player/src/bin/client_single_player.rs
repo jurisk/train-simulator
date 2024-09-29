@@ -59,7 +59,7 @@ fn run(game_launch_params: GameLaunchParams) {
     let mut app = App::new();
     let client_id = ClientId::random();
     app.insert_resource(ClientIdResource(client_id));
-    app.insert_resource(ServerStateResource(ServerState::new()));
+    app.insert_resource(ServerStateResource(ServerState::new(true)));
     app.add_plugins(ClientGraphicsPlugin { game_launch_params });
     app.insert_state(ClientState::LoggingIn);
     app.add_systems(FixedUpdate, process_messages_locally);

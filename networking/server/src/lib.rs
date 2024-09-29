@@ -37,7 +37,7 @@ pub struct MultiplayerSimpleNetServerPlugin {
 
 impl Plugin for MultiplayerSimpleNetServerPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ServerStateResource(ServerState::new()));
+        app.insert_resource(ServerStateResource(ServerState::new(false)));
         app.add_systems(FixedUpdate, read_on_server);
         // Fair warning - there are interesting race conditions that can happen in `bevy_simplenet`:
         // - Messages will be silently dropped if there are unconsumed connection reports for that client.

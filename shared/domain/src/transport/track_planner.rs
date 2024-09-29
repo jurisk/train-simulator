@@ -167,7 +167,7 @@ mod tests {
             players: vec![],
             map_level,
         };
-        let game_state = GameState::from_scenario(scenario);
+        let game_state = GameState::from_scenario(scenario, false);
         let head = DirectionalEdge::new(tile, DirectionXZ::West);
         let tail = DirectionalEdge::new(tile + DirectionXZ::East, DirectionXZ::West);
         let (results, length) = plan_tracks(

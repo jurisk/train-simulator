@@ -58,8 +58,6 @@ impl Debug for DemolishSelector {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub enum GameCommand {
-    // These queries are separate due to some race conditions on the client, where the map level
-    // was not available yet, so received buildings / transports got ignored.
     BuildIndustryBuilding(IndustryBuildingInfo),
     BuildStation(StationInfo),
     BuildTracks(Vec<TrackInfo>),

@@ -110,7 +110,7 @@ fn run_ai_commands(
 
 #[test]
 fn ai_until_final_goods_built() {
-    let mut games_service = GamesService::new();
+    let mut games_service = GamesService::new(false);
 
     let user_id_1 = UserId::random();
     let (game_id, player_id_1) = create_and_join(&mut games_service, user_id_1);

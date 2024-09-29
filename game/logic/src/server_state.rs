@@ -25,11 +25,10 @@ pub struct ServerState {
 
 impl ServerState {
     #[must_use]
-    #[expect(clippy::new_without_default)]
-    pub fn new() -> Self {
+    pub fn new(ignore_requesting_player_id: bool) -> Self {
         Self {
             authentication_service: AuthenticationService::new(),
-            games_service:          GamesService::new(),
+            games_service:          GamesService::new(ignore_requesting_player_id),
         }
     }
 

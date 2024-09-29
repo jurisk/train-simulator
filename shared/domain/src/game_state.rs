@@ -31,14 +31,15 @@ use crate::{GameId, IndustryBuildingId, PlayerId, ScenarioId, StationId, TrackId
 //          So the API gets quite busy because of this. There may be better ways, such as splitting the validation-oriented methods into a server-only trait.
 #[derive(Debug, PartialEq, Clone)]
 pub struct GameState {
-    pub game_id:     GameId,
+    pub game_id: GameId,
     pub scenario_id: ScenarioId,
-    map_level:       MapLevel,
-    buildings:       BuildingState,
-    transports:      TransportState,
-    players:         PlayerState,
-    time:            GameTime,
-    time_steps:      u64,
+    map_level: MapLevel,
+    buildings: BuildingState,
+    transports: TransportState,
+    players: PlayerState,
+    time: GameTime,
+    time_steps: u64,
+    ignore_requesting_player_id: bool,
 }
 
 impl Serialize for GameState {
@@ -92,21 +93,22 @@ impl From<GameState> for GameStateFlattened {
 impl From<GameStateFlattened> for GameState {
     fn from(value: GameStateFlattened) -> Self {
         Self {
-            game_id:     value.game_id,
+            game_id: value.game_id,
             scenario_id: value.scenario_id,
-            map_level:   value.map_level.into(),
-            buildings:   value.buildings,
-            transports:  value.transports.clone(),
-            players:     value.players.clone(),
-            time:        value.time,
-            time_steps:  value.time_steps,
+            map_level: value.map_level.into(),
+            buildings: value.buildings,
+            transports: value.transports.clone(),
+            players: value.players.clone(),
+            time: value.time,
+            time_steps: value.time_steps,
+            ignore_requesting_player_id: false,
         }
     }
 }
 
 impl GameState {
     #[must_use]
-    pub fn from_scenario(scenario: Scenario) -> Self {
+    pub fn from_scenario(scenario: Scenario, ignore_requesting_player_id: bool) -> Self {
         let game_id = GameId::random();
         let terrain = scenario.map_level.terrain();
         let size_x = terrain.tile_count_x();
@@ -128,6 +130,7 @@ impl GameState {
             players,
             time: GameTime::new(),
             time_steps: 0,
+            ignore_requesting_player_id,
         };
 
         for player in scenario.players {
@@ -423,7 +426,11 @@ impl GameState {
         requesting_player_id: PlayerId,
         owner_id: PlayerId,
     ) -> Result<(), BuildError> {
-        // TODO HIGH: Here and elsewhere - for single player AI that controls multiple players, allow building on behalf of other players?
-        (owner_id == requesting_player_id).then_ok_unit(|| BuildError::InvalidOwner)
+        // Hack used to let single-player AI build on behalf of all players... Didn't think of a more elegant way.
+        if self.ignore_requesting_player_id {
+            Ok(())
+        } else {
+            (owner_id == requesting_player_id).then_ok_unit(|| BuildError::InvalidOwner)
+        }
     }
 }

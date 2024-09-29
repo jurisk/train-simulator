@@ -38,9 +38,9 @@ const SYNC_EVERY_N_TIMESTEPS: u64 = 100;
 
 impl GameService {
     #[must_use]
-    pub fn from_prototype(scenario: &Scenario) -> Self {
+    pub fn from_prototype(scenario: &Scenario, ignore_requesting_player_id: bool) -> Self {
         Self {
-            state:        GameState::from_scenario(scenario.clone()),
+            state:        GameState::from_scenario(scenario.clone(), ignore_requesting_player_id),
             user_players: BiMap::new(),
         }
     }

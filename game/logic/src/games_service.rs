@@ -17,18 +17,15 @@ use crate::game_service::{GameResponseWithAddress, GameService};
 
 // This is also, in a way, `Lobby`. Should we rename it? Split into two somehow? Not sure yet...
 pub struct GamesService {
-    game_map:       HashMap<GameId, GameService>,
-    game_scenarios: HashMap<ScenarioId, Scenario>,
+    game_map:                    HashMap<GameId, GameService>,
+    game_scenarios:              HashMap<ScenarioId, Scenario>,
+    ignore_requesting_player_id: bool,
 }
 
 impl GamesService {
     #[must_use]
-    #[expect(
-        clippy::new_without_default,
-        clippy::match_same_arms,
-        clippy::missing_panics_doc
-    )]
-    pub fn new() -> Self {
+    #[expect(clippy::match_same_arms, clippy::missing_panics_doc)]
+    pub fn new(ignore_requesting_player_id: bool) -> Self {
         let mut game_scenarios = HashMap::new();
         for scenario_id in ScenarioId::all() {
             let ScenarioId(scenario_name) = &scenario_id;
@@ -48,6 +45,7 @@ impl GamesService {
         Self {
             game_map: HashMap::new(),
             game_scenarios,
+            ignore_requesting_player_id,
         }
     }
 
@@ -109,7 +107,8 @@ impl GamesService {
             )))
         })?;
 
-        let mut game_service = GameService::from_prototype(scenario);
+        let mut game_service =
+            GameService::from_prototype(scenario, self.ignore_requesting_player_id);
         let game_id = game_service.game_id();
 
         // Later: Allow picking a particular `player_id` to be chosen
