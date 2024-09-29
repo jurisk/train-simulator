@@ -125,6 +125,7 @@ fn ai_until_final_goods_built() {
     loop {
         let game_state = get_snapshot(&mut games_service, game_id, user_id_1);
 
+        // Later: Optimise so you can do `&&` instead of `||` here
         if player_has_enough_cargo(&game_state, player_id_1)
             || player_has_enough_cargo(&game_state, player_id_2)
         {

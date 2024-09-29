@@ -284,7 +284,7 @@ impl BuildingState {
     // TODO: Needs test coverage
     pub(crate) fn can_build_track(
         &self,
-        requesting_player_id: PlayerId,
+        owner_id: PlayerId,
         tile: TileCoordsXZ,
         track_type: TrackType,
     ) -> CanBuildResponse {
@@ -305,7 +305,7 @@ impl BuildingState {
         let overlapping_other_players_tracks = overlapping_tracks
             .owner_id()
             .into_iter()
-            .any(|player_id| player_id != requesting_player_id);
+            .any(|player_id| player_id != owner_id);
 
         let has_same_track = {
             let has_same_track_from_tracks = overlapping_tracks.track_types().contains(track_type);

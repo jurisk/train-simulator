@@ -163,18 +163,22 @@ impl GameService {
         requesting_player_id: PlayerId,
         transport_info: &TransportInfo,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
-        if requesting_player_id == transport_info.owner_id() {
-            // TODO: Check if the track / road / etc. is free and owned by the purchaser
-            // TODO: Subtract money
-            // TODO: But do it all within the `GameState`
-
-            self.state.upsert_transport(transport_info.clone());
-            Ok(vec![GameResponseWithAddress::new(
-                AddressEnvelope::ToAllPlayersInGame(self.game_id()),
-                GameResponse::TransportsAdded(vec![transport_info.clone()]),
-            )])
-        } else {
-            Err(GameError::CannotPurchase(transport_info.transport_id()))
+        match self
+            .state
+            .purchase_transport(requesting_player_id, transport_info)
+        {
+            Ok(()) => {
+                Ok(vec![GameResponseWithAddress::new(
+                    AddressEnvelope::ToAllPlayersInGame(self.game_id()),
+                    GameResponse::TransportsAdded(vec![transport_info.clone()]),
+                )])
+            },
+            Err(error) => {
+                Err(GameError::CannotPurchase(
+                    transport_info.transport_id(),
+                    error,
+                ))
+            },
         }
     }
 

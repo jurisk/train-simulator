@@ -1,6 +1,6 @@
 #![allow(clippy::missing_errors_doc, clippy::result_unit_err)]
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use log::{info, trace};
 use serde::{Deserialize, Serialize, Serializer};
@@ -224,6 +224,23 @@ impl GameState {
         Ok(filtered)
     }
 
+    pub fn purchase_transport(
+        &mut self,
+        requesting_player_id: PlayerId,
+        transport_info: &TransportInfo,
+    ) -> Result<(), BuildError> {
+        // TODO: Check if the track / road / etc. is free and owned by the purchaser
+        // TODO: Check if the transport is on a station
+        // TODO HIGH: Subtract money
+
+        self.valid_owner(requesting_player_id, transport_info.owner_id())?;
+
+        self.upsert_transport(transport_info.clone());
+
+        Ok(())
+    }
+
+    #[expect(clippy::missing_panics_doc, clippy::unwrap_used)]
     pub fn can_build_tracks(
         &self,
         requesting_player_id: PlayerId,
@@ -231,11 +248,14 @@ impl GameState {
     ) -> Result<(Vec<TrackInfo>, BuildCosts), BuildError> {
         let mut results = vec![];
         let mut costs = BuildCosts::none();
+        let mut player_ids = HashSet::new();
         for track_info in track_infos {
             match self.can_build_track(requesting_player_id, track_info) {
                 CanBuildResponse::Ok => {
+                    let player_id = track_info.owner_id();
+                    player_ids.insert(player_id);
                     results.push(track_info.clone());
-                    match self.can_pay_cost(requesting_player_id, track_info) {
+                    match self.can_pay_cost(player_id, track_info) {
                         Ok(cost) => {
                             costs += cost;
                         },
@@ -249,31 +269,33 @@ impl GameState {
             }
         }
 
+        (player_ids.len() == 1).then_ok_unit(|| BuildError::InvalidOwner)?;
+        let player_id = player_ids.iter().next().unwrap();
+
         info!("Aggregated track costs: {:?}", costs);
-        self.can_pay_costs(requesting_player_id, &costs)?;
+        self.can_pay_costs(*player_id, &costs)?;
         Ok((results, costs))
     }
 
     pub(crate) fn can_build_track(
         &self,
-        player_id: PlayerId,
+        requesting_player_id: PlayerId,
         track: &TrackInfo,
     ) -> CanBuildResponse {
-        if track.owner_id() == player_id {
-            self.can_build_track_internal(player_id, track.tile, track.track_type)
-        } else {
-            CanBuildResponse::Invalid(BuildError::InvalidOwner)
+        match self.valid_owner(requesting_player_id, track.owner_id()) {
+            Ok(()) => self.can_build_track_internal(track.owner_id(), track.tile, track.track_type),
+            Err(err) => CanBuildResponse::Invalid(err),
         }
     }
 
     pub(crate) fn can_build_track_internal(
         &self,
-        player_id: PlayerId,
+        owner_id: PlayerId,
         tile: TileCoordsXZ,
         track_type: TrackType,
     ) -> CanBuildResponse {
         match self.map_level.can_build_track(tile, track_type) {
-            Ok(()) => self.buildings.can_build_track(player_id, tile, track_type),
+            Ok(()) => self.buildings.can_build_track(owner_id, tile, track_type),
             Err(err) => CanBuildResponse::Invalid(err),
         }
     }
@@ -288,7 +310,7 @@ impl GameState {
         self.map_level.can_build_industry_building(building)?;
         self.buildings.can_build_building(building)?;
 
-        self.can_pay_cost(requesting_player_id, building)
+        self.can_pay_cost(building.owner_id(), building)
     }
 
     pub fn build_industry_building(
@@ -309,7 +331,7 @@ impl GameState {
         self.valid_owner(requesting_player_id, station.owner_id())?;
         self.map_level.can_build_station(station)?;
         self.buildings.can_build_building(station)?;
-        self.can_pay_cost(requesting_player_id, station)
+        self.can_pay_cost(station.owner_id(), station)
     }
 
     fn can_pay_cost<T: WithCostToBuild + WithTileCoverage>(
