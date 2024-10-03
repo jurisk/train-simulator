@@ -46,7 +46,10 @@ fn build_transport_command(
         location,
         movement_orders,
     );
-    let result = ClientCommand::Game(game_id, GameCommand::PurchaseTransport(transport_info));
+    let result = ClientCommand::Game(
+        game_id,
+        GameCommand::PurchaseTransport(building.id(), transport_info),
+    );
     Ok(result)
 }
 

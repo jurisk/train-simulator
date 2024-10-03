@@ -1,6 +1,6 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
 
-use log::debug;
+use log::{debug, info};
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
@@ -47,7 +47,7 @@ fn try_building_industry_buildings(
             .building_state()
             .find_industry_building_by_owner_and_type(player_id, industry_type);
         if existing.is_empty() {
-            // TODO HIGH: Build in closest place to the construction yard
+            // TODO: Build in closest place to the related resources - producers & consumers
             let candidates: Vec<_> = free
                 .iter()
                 .filter(|zoning| Some(zoning.zoning_type()) == industry_type.required_zoning())
@@ -65,6 +65,8 @@ fn try_building_industry_buildings(
                         .is_ok()
                 })
                 .collect();
+
+            info!("Candidates for {industry_type:?}: {:?}", candidates.len());
 
             // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place - closest to the industries for its inputs/outputs.
             if let Some(info) = candidates.first() {
@@ -223,19 +225,20 @@ fn purchase_transport_command(
     let mut movement_orders = MovementOrders::one(MovementOrder::stop_at_station(from_station));
     movement_orders.push(MovementOrder::stop_at_station(to_station));
 
-    let from_station = game_state.building_state().find_station(from_station)?;
-    let tile_tracks = from_station.station_exit_tile_tracks();
+    let from_station_info = game_state.building_state().find_station(from_station)?;
+    let tile_tracks = from_station_info.station_exit_tile_tracks();
     let tile_track = tile_tracks.first()?;
     let transport_location =
-        from_station.transport_location_at_station(tile_track.tile, tile_track.pointing_in)?;
+        from_station_info.transport_location_at_station(tile_track.tile, tile_track.pointing_in)?;
 
-    let command = GameCommand::PurchaseTransport(TransportInfo::new(
+    let transport_info = TransportInfo::new(
         TransportId::random(),
         player_id,
         TransportType::cargo_train(resource_type),
         transport_location,
         movement_orders,
-    ));
+    );
+    let command = GameCommand::PurchaseTransport(from_station, transport_info);
 
     Some(command)
 }

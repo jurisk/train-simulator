@@ -15,7 +15,7 @@ use shared_domain::server_response::{
 };
 use shared_domain::transport::movement_orders::MovementOrders;
 use shared_domain::transport::transport_info::TransportInfo;
-use shared_domain::{GameId, PlayerId, TransportId, UserId};
+use shared_domain::{GameId, PlayerId, StationId, TransportId, UserId};
 
 #[derive(Clone)]
 pub(crate) struct GameResponseWithAddress {
@@ -67,8 +67,8 @@ impl GameService {
         game_command: &GameCommand,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         match game_command {
-            GameCommand::PurchaseTransport(transport_info) => {
-                self.process_purchase_transport(requesting_player_id, transport_info)
+            GameCommand::PurchaseTransport(station_id, transport_info) => {
+                self.process_purchase_transport(requesting_player_id, *station_id, transport_info)
             },
             GameCommand::BuildIndustryBuilding(industry_building) => {
                 self.process_build_industry_building(requesting_player_id, industry_building)
@@ -161,11 +161,12 @@ impl GameService {
     fn process_purchase_transport(
         &mut self,
         requesting_player_id: PlayerId,
+        station_id: StationId,
         transport_info: &TransportInfo,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         match self
             .state
-            .purchase_transport(requesting_player_id, transport_info)
+            .purchase_transport(requesting_player_id, station_id, transport_info)
         {
             Ok(()) => {
                 Ok(vec![GameResponseWithAddress::new(

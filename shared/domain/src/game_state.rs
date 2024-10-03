@@ -11,14 +11,17 @@ use crate::building::building_info::{
 };
 use crate::building::building_state::{BuildingState, CanBuildResponse};
 use crate::building::industry_building_info::IndustryBuildingInfo;
+use crate::building::industry_type::IndustryType;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::{BuildCosts, BuildError};
+use crate::cargo_map::CargoMap;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::ZoningInfo;
 use crate::metrics::Metrics;
 use crate::players::player_state::PlayerState;
+use crate::resource_type::ResourceType;
 use crate::scenario::{PlayerProfile, Scenario};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::movement_orders::MovementOrders;
@@ -227,14 +230,27 @@ impl GameState {
     pub fn purchase_transport(
         &mut self,
         requesting_player_id: PlayerId,
+        station_id: StationId,
         transport_info: &TransportInfo,
     ) -> Result<(), BuildError> {
         // TODO: Check if the track / road / etc. is free and owned by the purchaser
         // TODO: Check if the transport is on a station
-        // TODO HIGH: Subtract money
 
         self.valid_owner(requesting_player_id, transport_info.owner_id())?;
 
+        let cargo_map = CargoMap::single(ResourceType::Steel, 1.0);
+        let station = self
+            .building_state()
+            .find_station(station_id)
+            .ok_or(BuildError::UnknownError)?;
+        let costs = self.building_state().can_pay_known_cost(
+            transport_info.owner_id(),
+            station,
+            IndustryType::ConstructionYard,
+            cargo_map,
+        )?;
+
+        self.buildings.pay_costs(costs);
         self.upsert_transport(transport_info.clone());
 
         Ok(())

@@ -61,7 +61,7 @@ pub enum GameCommand {
     BuildIndustryBuilding(IndustryBuildingInfo),
     BuildStation(StationInfo),
     BuildTracks(Vec<TrackInfo>),
-    PurchaseTransport(TransportInfo),
+    PurchaseTransport(StationId, TransportInfo),
     UpdateTransportMovementOrders(TransportId, MovementOrders),
     Demolish(DemolishSelector),
 
@@ -81,8 +81,8 @@ impl Debug for GameCommand {
             GameCommand::BuildTracks(tracks) => {
                 write!(f, "BuildTracks({} tracks)", tracks.len())
             },
-            GameCommand::PurchaseTransport(transport) => {
-                write!(f, "PurchaseTransport({transport:?})")
+            GameCommand::PurchaseTransport(station_id, transport) => {
+                write!(f, "PurchaseTransport({station_id:?}, {transport:?})")
             },
             GameCommand::UpdateTransportMovementOrders(transport_id, _) => {
                 write!(f, "UpdateTransportMovementOrders({transport_id:?})",)

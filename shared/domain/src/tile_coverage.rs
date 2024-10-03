@@ -131,7 +131,7 @@ impl TileCoverage {
         false
     }
 
-    // TODO HIGH: This gets called often enough that you should optimise it
+    // TODO: This gets called often enough that you should optimise it
     #[must_use]
     pub fn manhattan_distance_between_closest_tiles(
         a: &TileCoverage,

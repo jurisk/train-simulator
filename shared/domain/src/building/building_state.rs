@@ -20,7 +20,7 @@ use crate::building::track_info::TrackInfo;
 use crate::building::track_state::{MaybeTracksOnTile, TrackState};
 use crate::building::{BuildCosts, BuildError};
 use crate::cargo_amount::CargoAmount;
-use crate::cargo_map::{CargoOps, WithCargo, WithCargoMut};
+use crate::cargo_map::{CargoMap, CargoOps, WithCargo, WithCargoMut};
 use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
@@ -344,15 +344,17 @@ impl BuildingState {
         Ok(())
     }
 
-    pub(crate) fn can_pay_cost<T: WithCostToBuild + WithTileCoverage>(
+    pub(crate) fn can_pay_known_cost<T: WithTileCoverage>(
         &self,
         player_id: PlayerId,
         something: &T,
+        providing_industry_type: IndustryType,
+        cost: CargoMap,
     ) -> Result<BuildCosts, BuildError> {
-        let (industry_type, cost) = something.cost_to_build();
         let coverage = something.covers_tiles();
-        if let Some(supply_range) = industry_type.supply_range_in_tiles() {
-            for building in self.find_industry_building_by_owner_and_type(player_id, industry_type)
+        if let Some(supply_range) = providing_industry_type.supply_range_in_tiles() {
+            for building in
+                self.find_industry_building_by_owner_and_type(player_id, providing_industry_type)
             {
                 let distance = TileCoverage::manhattan_distance_between_closest_tiles(
                     &coverage,
@@ -374,6 +376,16 @@ impl BuildingState {
         } else {
             Err(BuildError::UnknownError)
         }
+    }
+
+    pub(crate) fn can_pay_cost<T: WithCostToBuild + WithTileCoverage>(
+        &self,
+        player_id: PlayerId,
+        something: &T,
+    ) -> Result<BuildCosts, BuildError> {
+        let (providing_industry_type, cost) = something.cost_to_build();
+
+        self.can_pay_known_cost(player_id, something, providing_industry_type, cost)
     }
 
     pub(crate) fn can_build_for_coverage(
@@ -398,7 +410,7 @@ impl BuildingState {
         Ok(())
     }
 
-    fn pay_costs(&mut self, costs: BuildCosts) {
+    pub(crate) fn pay_costs(&mut self, costs: BuildCosts) {
         for (industry_building_id, cargo_map) in costs.costs {
             if let Some(industry_building) = self.industry_buildings.get_mut(&industry_building_id)
             {
