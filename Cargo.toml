@@ -17,7 +17,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 authors = ["jurisk <jurisk@users.noreply.github.com>"]
-license = "UNLICENSED"
+license = "LicenceRef-JurisKrikis-Proprietary"
 edition = "2021"
 rust-version = "1.81.0"
 

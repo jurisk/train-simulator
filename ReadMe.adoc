@@ -85,6 +85,8 @@ cargo update
 cargo update --dry-run
 cargo udeps --all-targets
 cargo audit
+cargo license
+cargo deny check
 
 cargo install cargo-cache
 cargo cache --autoclean

@@ -56,6 +56,9 @@ jobs:
       - name: Run clippy
         run: cargo clippy -- -W clippy::pedantic -W clippy::style -W clippy::unwrap_used -W clippy::expect_used -W clippy::allow_attributes
 
+      - name: Get height maps
+        run: wget https://storage.googleapis.com/ts-height-maps/europe/europe_etopo_2022.tiff -O misc/assets-original/height-maps/europe/europe_etopo_2022.tiff
+
       - name: Run tests
         run: cargo test --verbose
 
