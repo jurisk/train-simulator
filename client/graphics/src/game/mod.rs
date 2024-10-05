@@ -33,11 +33,13 @@ use crate::ai::ArtificialIntelligencePlugin;
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::buildings::BuildingsPlugin;
 use crate::game::map_level::MapLevelPlugin;
+use crate::game::military::MilitaryPlugin;
 use crate::game::transport::TransportPlugin;
 use crate::states::ClientState;
 
 pub mod buildings;
 pub mod map_level;
+pub mod military;
 pub mod transport;
 
 #[derive(Resource)]
@@ -85,6 +87,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut bevy::app::App) {
         app.insert_resource(self.game_launch_params.clone());
         app.add_plugins(BuildingsPlugin);
+        app.add_plugins(MilitaryPlugin);
         app.add_plugins(TransportPlugin);
         app.add_plugins(MapLevelPlugin);
         app.add_plugins(ArtificialIntelligencePlugin);

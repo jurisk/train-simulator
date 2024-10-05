@@ -2,6 +2,7 @@ use bevy::prelude::{AppExit, EventWriter, Res, ResMut};
 use bevy_egui::EguiContexts;
 use egui::{Ui, menu};
 use shared_domain::building::industry_type::IndustryType;
+use shared_domain::building::military_unit_type::MilitaryUnitType;
 use shared_domain::building::station_type::{StationOrientation, StationType};
 use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
@@ -157,20 +158,24 @@ fn industry_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
-// TODO HIGH: Fixed artillery, movable artillery, troops, trenches? Need to think carefully about the model and what's needed and what's not.
 fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     menu::menu_button(ui, "⚔ Military", |ui| {
         set_font_size(ui, 24.0);
-        if ui
-            .add(
-                egui::Button::new("⚔ Fixed Artillery")
-                    .selected(matches!(*selected_mode.as_ref(), SelectedMode::Military))
-                    .min_size(egui::vec2(MIN_X, MIN_Y)),
-            )
-            .clicked()
-        {
-            *selected_mode.as_mut() = SelectedMode::Military;
-            ui.close_menu();
+
+        for military_unit_type in MilitaryUnitType::all() {
+            if ui
+                .add(
+                    egui::Button::new(format!("⚔ {military_unit_type:?}"))
+                        .selected(
+                            *selected_mode.as_ref() == SelectedMode::Military(military_unit_type),
+                        )
+                        .min_size(egui::vec2(MIN_X, MIN_Y)),
+                )
+                .clicked()
+            {
+                *selected_mode.as_mut() = SelectedMode::Military(military_unit_type);
+                ui.close_menu();
+            }
         }
     });
 }

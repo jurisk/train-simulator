@@ -147,6 +147,7 @@ newtype_uuid!(PlayerId, "P");
 newtype_uuid!(GameId, "G");
 newtype_uuid!(StationId, "S");
 newtype_uuid!(IndustryBuildingId, "IB");
+newtype_uuid!(MilitaryUnitId, "MU");
 newtype_uuid!(TransportId, "T");
 newtype_uuid!(ZoningId, "Z");
 

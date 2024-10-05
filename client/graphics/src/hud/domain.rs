@@ -2,6 +2,7 @@ use bevy::prelude::Resource;
 use shared_domain::building::building_info::WithTileCoverage;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
+use shared_domain::building::military_unit_type::MilitaryUnitType;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::station_type::StationType;
 use shared_domain::client_command::GameCommand;
@@ -37,7 +38,7 @@ pub enum SelectedMode {
     Tracks(TracksBuildingType),
     Stations(StationType),
     Industry(IndustryType),
-    Military,
+    Military(MilitaryUnitType),
     Transport(TransportType),
     Demolish(DemolishType),
     // Later: This feels like a hack, this is very much not like the others
