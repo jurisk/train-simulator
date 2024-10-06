@@ -44,7 +44,7 @@ impl WithCostToBuild for MilitaryBuildingType {
             MilitaryBuildingType::FixedArtillery => {
                 (
                     IndustryType::MilitaryBase,
-                    CargoMap::single(ResourceType::Steel, 1.0f32),
+                    CargoMap::single(ResourceType::ArtilleryWeapons, 1.0f32),
                 )
             },
         }

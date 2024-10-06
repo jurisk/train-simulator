@@ -3,8 +3,9 @@ use std::fmt::Debug;
 use serde::{Deserialize, Serialize};
 
 use crate::resource_type::ResourceType::{
-    Ammunition, Cellulose, Cement, Clay, Coal, Concrete, Explosives, FarmProducts, Food, Fuel,
-    Iron, Limestone, Nitrates, Oil, SandAndGravel, Steel, Sulfur, Timber, Weapons, Wood,
+    Ammunition, ArtilleryWeapons, Cellulose, Cement, Clay, Coal, Concrete, Explosives,
+    FarmProducts, Food, Fuel, Iron, Limestone, Nitrates, Oil, SandAndGravel, Steel, Sulfur, Timber,
+    Wood,
 };
 
 /// In a way, it is also a "cargo type"
@@ -31,7 +32,7 @@ pub enum ResourceType {
     Fuel,
     Steel,
     Timber,
-    Weapons,
+    ArtilleryWeapons,
 }
 
 impl ResourceType {
@@ -59,7 +60,7 @@ impl ResourceType {
             Fuel,
             Steel,
             Timber,
-            Weapons,
+            ArtilleryWeapons,
         ]
     }
 }

@@ -197,11 +197,15 @@ impl IndustryType {
             OilRefinery => ResourceTransform::make(vec![(Oil, X1)], vec![(Fuel, X1)]),
             ConcretePlant => ResourceTransform::make(vec![(Cement, X1)], vec![(Concrete, X1)]),
             TrainFactory => ResourceTransform::make(vec![(Steel, X1)], vec![]),
-            WeaponsFactory => ResourceTransform::make(vec![(Steel, X1)], vec![(Weapons, X1)]),
+            WeaponsFactory => {
+                ResourceTransform::make(vec![(Steel, X1)], vec![(ArtilleryWeapons, X1)])
+            },
             AmmunitionFactory => {
                 ResourceTransform::make(vec![(Steel, X1), (Explosives, X1)], vec![(Ammunition, X1)])
             },
-            MilitaryBase => ResourceTransform::warehouse(&[Ammunition, Food, Fuel, Weapons]),
+            MilitaryBase => {
+                ResourceTransform::warehouse(&[Ammunition, Food, Fuel, ArtilleryWeapons])
+            },
             ConstructionYard => ResourceTransform::warehouse(&[Concrete, Steel, Timber]),
             IronMine | CoalMine | OilWell | NitrateMine | SulfurMine | Farm | Forestry
             | ClayPit | LimestoneMine | SandAndGravelQuarry => {

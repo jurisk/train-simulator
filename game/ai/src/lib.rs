@@ -29,6 +29,7 @@ pub fn ai_commands(
     ai_state: &mut ArtificialIntelligenceState,
     metrics: &impl Metrics,
 ) -> Option<Vec<GameCommand>> {
+    // TODO HIGH: Try to build military buildings if you have enough resources
     try_building_transports(player_id, game_state)
         .or_else(|| try_building_tracks(ai_state, player_id, game_state, metrics))
         .or_else(|| try_building_stations(player_id, game_state))
