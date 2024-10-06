@@ -1,8 +1,9 @@
 #![allow(clippy::unnecessary_wraps, clippy::missing_errors_doc)]
 
 use bimap::BiMap;
-use shared_domain::building::building_info::WithBuildingDynamicInfo;
+use shared_domain::building::building_info::{WithBuildingDynamicInfo, WithOwner};
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
+use shared_domain::building::military_building_info::MilitaryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::client_command::{DemolishSelector, GameCommand};
@@ -76,6 +77,9 @@ impl GameService {
             GameCommand::BuildStation(station) => {
                 self.process_build_station(requesting_player_id, station)
             },
+            GameCommand::BuildMilitaryBuilding(military_building) => {
+                self.process_build_military_building(requesting_player_id, military_building)
+            },
             GameCommand::BuildTracks(track_infos) => {
                 self.process_build_tracks(requesting_player_id, track_infos)
             },
@@ -135,6 +139,22 @@ impl GameService {
                 )]
             })
             .map_err(|error| GameError::CannotBuildStation(station.id(), error))
+    }
+
+    fn process_build_military_building(
+        &mut self,
+        requesting_player_id: PlayerId,
+        military_building: &MilitaryBuildingInfo,
+    ) -> Result<Vec<GameResponseWithAddress>, GameError> {
+        self.state
+            .build_military_building(requesting_player_id, military_building)
+            .map(|()| {
+                vec![GameResponseWithAddress::new(
+                    AddressEnvelope::ToAllPlayersInGame(self.game_id()),
+                    GameResponse::MilitaryBuildingAdded(military_building.clone()),
+                )]
+            })
+            .map_err(|error| GameError::CannotBuildMilitaryBuilding(military_building.id(), error))
     }
 
     fn process_build_tracks(
@@ -203,6 +223,11 @@ impl GameService {
                 self.state
                     .remove_station(requesting_player_id, *station_id)
                     .map(|()| GameResponse::StationRemoved(*station_id))
+            },
+            DemolishSelector::MilitaryBuilding(military_building_id) => {
+                self.state
+                    .remove_military_building(requesting_player_id, *military_building_id)
+                    .map(|()| GameResponse::MilitaryBuildingRemoved(*military_building_id))
             },
         }
         .map(|success| {

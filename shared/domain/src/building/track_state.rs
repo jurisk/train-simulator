@@ -2,6 +2,7 @@ use log::warn;
 use serde::{Deserialize, Serialize};
 use shared_util::grid_xz::GridXZ;
 
+use crate::building::building_info::WithOwner;
 use crate::building::track_info::TrackInfo;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::track_type::TrackType;

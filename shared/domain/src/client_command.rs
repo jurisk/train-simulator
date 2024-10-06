@@ -7,12 +7,14 @@ use uuid::Uuid;
 use web_time::Duration;
 
 use crate::building::industry_building_info::IndustryBuildingInfo;
+use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
 use crate::{
-    ClientId, GameId, IndustryBuildingId, ScenarioId, StationId, TrackId, TransportId, UserId,
+    ClientId, GameId, IndustryBuildingId, MilitaryBuildingId, ScenarioId, StationId, TrackId,
+    TransportId, UserId,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -44,6 +46,7 @@ pub enum DemolishSelector {
     Tracks(Vec<TrackId>),
     Industry(IndustryBuildingId),
     Station(StationId),
+    MilitaryBuilding(MilitaryBuildingId),
 }
 
 impl Debug for DemolishSelector {
@@ -52,6 +55,9 @@ impl Debug for DemolishSelector {
             DemolishSelector::Tracks(track_ids) => write!(f, "Track({track_ids:?})"),
             DemolishSelector::Industry(industry_id) => write!(f, "Industry({industry_id:?})"),
             DemolishSelector::Station(station_id) => write!(f, "Station({station_id:?})"),
+            DemolishSelector::MilitaryBuilding(military_building_id) => {
+                write!(f, "MilitaryBuilding({military_building_id:?})")
+            },
         }
     }
 }
@@ -61,6 +67,7 @@ pub enum GameCommand {
     BuildIndustryBuilding(IndustryBuildingInfo),
     BuildStation(StationInfo),
     BuildTracks(Vec<TrackInfo>),
+    BuildMilitaryBuilding(MilitaryBuildingInfo),
     PurchaseTransport(StationId, TransportInfo),
     UpdateTransportMovementOrders(TransportId, MovementOrders),
     Demolish(DemolishSelector),
@@ -83,6 +90,9 @@ impl Debug for GameCommand {
             },
             GameCommand::PurchaseTransport(station_id, transport) => {
                 write!(f, "PurchaseTransport({station_id:?}, {transport:?})")
+            },
+            GameCommand::BuildMilitaryBuilding(unit) => {
+                write!(f, "BuildMilitaryBuilding({})", unit.id())
             },
             GameCommand::UpdateTransportMovementOrders(transport_id, _) => {
                 write!(f, "UpdateTransportMovementOrders({transport_id:?})",)

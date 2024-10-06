@@ -9,6 +9,7 @@ use web_time::Duration;
 use crate::building::BuildError;
 use crate::building::building_info::BuildingDynamicInfo;
 use crate::building::industry_building_info::IndustryBuildingInfo;
+use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::client_command::DemolishSelector;
@@ -16,8 +17,8 @@ use crate::game_state::GameState;
 use crate::game_time::GameTime;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::{
-    ClientId, GameId, IndustryBuildingId, PlayerId, PlayerName, ScenarioId, StationId, TrackId,
-    TransportId, UserId, UserName,
+    ClientId, GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, PlayerName, ScenarioId,
+    StationId, TrackId, TransportId, UserId, UserName,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -93,6 +94,8 @@ pub enum GameResponse {
     PlayersUpdated(Vec<(UserId, PlayerId)>),
     IndustryBuildingAdded(IndustryBuildingInfo),
     IndustryBuildingRemoved(IndustryBuildingId),
+    MilitaryBuildingAdded(MilitaryBuildingInfo),
+    MilitaryBuildingRemoved(MilitaryBuildingId),
     StationAdded(StationInfo),
     StationRemoved(StationId),
     TracksAdded(Vec<TrackInfo>),
@@ -115,6 +118,7 @@ pub enum GameError {
     GameNotFound,
     CannotBuildStation(StationId, BuildError),
     CannotBuildIndustryBuilding(IndustryBuildingId, BuildError),
+    CannotBuildMilitaryBuilding(MilitaryBuildingId, BuildError),
     CannotBuildTracks(Vec<TrackId>, BuildError),
     CannotPurchase(TransportId, BuildError),
     CannotDemolish(DemolishSelector),
@@ -132,6 +136,12 @@ impl Debug for GameError {
                 write!(
                     f,
                     "CannotBuildIndustryBuilding({industry_building_id:?}: {error:?})"
+                )
+            },
+            GameError::CannotBuildMilitaryBuilding(military_building_id, error) => {
+                write!(
+                    f,
+                    "CannotBuildMilitaryBuilding({military_building_id:?}: {error:?})"
                 )
             },
             GameError::CannotBuildTracks(track_ids, error) => {
@@ -170,8 +180,17 @@ impl Debug for GameResponse {
             GameResponse::IndustryBuildingAdded(building) => {
                 write!(f, "IndustryBuildingAdded({})", building.id())
             },
+            GameResponse::IndustryBuildingRemoved(industry_building_id) => {
+                write!(f, "IndustryBuildingRemoved({industry_building_id:?})")
+            },
             GameResponse::StationAdded(station) => {
                 write!(f, "StationAdded({})", station.id())
+            },
+            GameResponse::MilitaryBuildingAdded(building) => {
+                write!(f, "MilitaryBuildingAdded({})", building.id())
+            },
+            GameResponse::MilitaryBuildingRemoved(building_id) => {
+                write!(f, "MilitaryBuildingRemoved({building_id})")
             },
             GameResponse::TracksAdded(tracks) => {
                 write!(f, "TracksAdded({} tracks)", tracks.len())
@@ -203,9 +222,6 @@ impl Debug for GameResponse {
             GameResponse::GameLeft => write!(f, "GameLeft"),
             GameResponse::Error(error) => {
                 write!(f, "Error({error:?})")
-            },
-            GameResponse::IndustryBuildingRemoved(industry_building_id) => {
-                write!(f, "IndustryBuildingRemoved({industry_building_id:?})")
             },
             GameResponse::StationRemoved(station_id) => {
                 write!(f, "StationRemoved({station_id:?})")

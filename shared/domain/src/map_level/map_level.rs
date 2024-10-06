@@ -10,6 +10,7 @@ use crate::MapId;
 use crate::building::BuildError;
 use crate::building::building_info::WithTileCoverage;
 use crate::building::industry_building_info::IndustryBuildingInfo;
+use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::map_level::terrain::Terrain;
 use crate::map_level::zoning::{Zoning, ZoningFlattened};
@@ -263,6 +264,14 @@ impl MapLevel {
         self.zoning
             .can_build_industry_building(industry_building_info)?;
         self.can_build_for_coverage(&industry_building_info.covers_tiles())?;
+        Ok(())
+    }
+
+    pub(crate) fn can_build_military_building(
+        &self,
+        military_building_info: &MilitaryBuildingInfo,
+    ) -> Result<(), BuildError> {
+        self.can_build_for_coverage(&military_building_info.covers_tiles())?;
         Ok(())
     }
 

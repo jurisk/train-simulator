@@ -31,12 +31,14 @@ use shared_util::tap::TapErr;
 
 use crate::ai::ArtificialIntelligencePlugin;
 use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
+use crate::game::building::build_something_when_mouse_released;
 use crate::game::buildings::BuildingsPlugin;
 use crate::game::map_level::MapLevelPlugin;
 use crate::game::military::MilitaryPlugin;
 use crate::game::transport::TransportPlugin;
 use crate::states::ClientState;
 
+pub mod building;
 pub mod buildings;
 pub mod map_level;
 pub mod military;
@@ -92,6 +94,10 @@ impl Plugin for GamePlugin {
         app.add_plugins(MapLevelPlugin);
         app.add_plugins(ArtificialIntelligencePlugin);
         app.add_systems(OnEnter(ClientState::LoggingIn), initiate_login);
+        app.add_systems(
+            Update,
+            build_something_when_mouse_released.run_if(in_state(ClientState::Playing)),
+        );
         app.add_systems(
             FixedUpdate,
             handle_players_updated.run_if(in_state(ClientState::Playing)),
@@ -185,7 +191,9 @@ fn handle_game_joining_and_game_state_snapshot(
                 },
                 GameResponse::PlayersUpdated(_) => {},
                 GameResponse::IndustryBuildingAdded(_) => {},
+                GameResponse::MilitaryBuildingAdded(_) => {},
                 GameResponse::IndustryBuildingRemoved(_) => {},
+                GameResponse::MilitaryBuildingRemoved(_) => {},
                 GameResponse::StationAdded(_) => {},
                 GameResponse::StationRemoved(_) => {},
                 GameResponse::TracksAdded(_) => {},

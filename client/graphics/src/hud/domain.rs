@@ -2,7 +2,8 @@ use bevy::prelude::Resource;
 use shared_domain::building::building_info::WithTileCoverage;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
-use shared_domain::building::military_unit_type::MilitaryUnitType;
+use shared_domain::building::military_building_info::MilitaryBuildingInfo;
+use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::station_type::StationType;
 use shared_domain::client_command::GameCommand;
@@ -11,13 +12,14 @@ use shared_domain::game_state::GameState;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::transport::transport_type::TransportType;
-use shared_domain::{IndustryBuildingId, PlayerId, StationId, TransportId};
+use shared_domain::{IndustryBuildingId, MilitaryBuildingId, PlayerId, StationId, TransportId};
 
 #[derive(Resource, Eq, PartialEq, Debug, Clone, Copy)]
 pub enum DemolishType {
     Industry,
     Station,
     Tracks,
+    MilitaryBuilding,
 }
 
 #[derive(Resource, Eq, PartialEq, Debug, Clone, Copy)]
@@ -38,7 +40,7 @@ pub enum SelectedMode {
     Tracks(TracksBuildingType),
     Stations(StationType),
     Industry(IndustryType),
-    Military(MilitaryUnitType),
+    MilitaryBuilding(MilitaryBuildingType),
     Transport(TransportType),
     Demolish(DemolishType),
     // Later: This feels like a hack, this is very much not like the others
@@ -68,7 +70,8 @@ impl SelectedMode {
     }
 
     #[must_use]
-    pub fn build_building_command(
+    #[expect(clippy::match_same_arms)]
+    pub fn build_something_command(
         &self,
         player_id: PlayerId,
         tile: TileCoordsXZ,
@@ -92,7 +95,21 @@ impl SelectedMode {
                     ),
                 ))
             },
-            _ => None,
+            SelectedMode::Info => None,
+            SelectedMode::Tracks(_) => None,
+            SelectedMode::MilitaryBuilding(military_building_type) => {
+                Some(GameCommand::BuildMilitaryBuilding(
+                    MilitaryBuildingInfo::new(
+                        MilitaryBuildingId::random(),
+                        player_id,
+                        *military_building_type,
+                        tile,
+                    ),
+                ))
+            },
+            SelectedMode::Transport(_) => None,
+            SelectedMode::Demolish(_) => None,
+            SelectedMode::Select(_) => None,
         }
     }
 
@@ -103,7 +120,7 @@ impl SelectedMode {
         player_id: PlayerId,
         game_state: &GameState,
     ) -> Option<(TileCoverage, bool)> {
-        match self.build_building_command(player_id, reference_tile) {
+        match self.build_something_command(player_id, reference_tile) {
             Some(GameCommand::BuildStation(station_info)) => {
                 Some((
                     station_info.covers_tiles(),

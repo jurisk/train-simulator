@@ -137,11 +137,6 @@ impl StationInfo {
     }
 
     #[must_use]
-    pub fn covers_tiles(&self) -> TileCoverage {
-        self.relative_tiles_used().offset_by(self.reference_tile())
-    }
-
-    #[must_use]
     pub fn station_shippable_cargo(&self) -> CargoMap {
         self.dynamic_info().cargo().clone()
     }

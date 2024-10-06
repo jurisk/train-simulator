@@ -4,6 +4,7 @@ use bevy::core::Name;
 use bevy::math::{Quat, Vec3};
 use bevy::pbr::{PbrBundle, StandardMaterial};
 use bevy::prelude::{Commands, Entity, Query, ResMut, Transform, default};
+use shared_domain::building::building_info::WithOwner;
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::players::player_state::PlayerState;

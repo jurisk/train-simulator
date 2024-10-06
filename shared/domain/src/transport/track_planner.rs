@@ -138,6 +138,7 @@ mod tests {
     use shared_util::direction_xz::DirectionXZ;
 
     use super::*;
+    use crate::building::building_info::WithOwner;
     use crate::map_level::map_level::{Height, MapLevel, TerrainType};
     use crate::map_level::terrain::Terrain;
     use crate::map_level::zoning::Zoning;

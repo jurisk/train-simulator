@@ -7,15 +7,15 @@ use bevy::prelude::{
 use bevy::state::condition::in_state;
 use shared_domain::building::building_info::WithOwner;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
+use shared_domain::building::military_building_info::MilitaryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::server_response::{Colour, GameResponse, ServerResponse};
-use shared_domain::{IndustryBuildingId, StationId, TrackId};
+use shared_domain::{IndustryBuildingId, MilitaryBuildingId, StationId, TrackId};
 
 use crate::assets::GameAssets;
 use crate::communication::domain::ServerMessageEvent;
-use crate::game::buildings::building::build_building_when_mouse_released;
 use crate::game::buildings::demolishing::demolish_when_mouse_released;
 use crate::game::buildings::tracks::build::build_tracks_when_mouse_released;
 use crate::game::buildings::tracks::preview::{
@@ -26,7 +26,6 @@ use crate::game::{GameStateResource, create_object_entity, player_colour};
 use crate::states::ClientState;
 
 pub mod assets;
-pub mod building;
 mod demolishing;
 pub mod tracks;
 
@@ -35,6 +34,9 @@ struct StationIdComponent(StationId);
 
 #[derive(Component)]
 struct IndustryBuildingIdComponent(IndustryBuildingId);
+
+#[derive(Component)]
+struct MilitaryBuildingIdComponent(MilitaryBuildingId);
 
 #[derive(Component)]
 pub(crate) struct TrackIdComponent(TrackId);
@@ -56,10 +58,6 @@ impl Plugin for BuildingsPlugin {
         app.add_systems(
             Update,
             update_track_preview.run_if(in_state(ClientState::Playing)),
-        );
-        app.add_systems(
-            Update,
-            build_building_when_mouse_released.run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(
             Update,
@@ -137,6 +135,7 @@ fn handle_buildings_or_tracks_changed(
     mut game_state_resource: ResMut<GameStateResource>,
     track_query: Query<(Entity, &TrackIdComponent)>,
     industry_building_query: Query<(Entity, &IndustryBuildingIdComponent)>,
+    military_building_query: Query<(Entity, &MilitaryBuildingIdComponent)>,
     station_query: Query<(Entity, &StationIdComponent)>,
 ) {
     let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
@@ -153,6 +152,20 @@ fn handle_buildings_or_tracks_changed(
                         .append_industry_building(building_info.clone());
 
                     create_industry_building(
+                        building_info,
+                        &mut commands,
+                        &mut materials,
+                        game_assets.as_ref(),
+                        &map_level,
+                        game_state.players(),
+                    );
+                },
+                GameResponse::MilitaryBuildingAdded(building_info) => {
+                    game_state
+                        .building_state_mut()
+                        .append_military_building(building_info.clone());
+
+                    create_military_building(
                         building_info,
                         &mut commands,
                         &mut materials,
@@ -202,6 +215,17 @@ fn handle_buildings_or_tracks_changed(
                         &industry_building_query,
                     );
                 },
+                GameResponse::MilitaryBuildingRemoved(military_building_id) => {
+                    game_state
+                        .building_state_mut()
+                        .remove_military_building(*military_building_id);
+
+                    remove_military_building_entities(
+                        *military_building_id,
+                        &mut commands,
+                        &military_building_query,
+                    );
+                },
                 GameResponse::StationRemoved(station_id) => {
                     game_state.building_state_mut().remove_station(*station_id);
                     remove_station_entities(*station_id, &mut commands, &station_query);
@@ -247,6 +271,31 @@ fn create_industry_building(
     );
 }
 
+fn create_military_building(
+    building_info: &MilitaryBuildingInfo,
+    commands: &mut Commands,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    game_assets: &GameAssets,
+    map_level: &MapLevel,
+    players: &PlayerState,
+) {
+    let colour = player_colour(players, building_info.owner_id());
+    let military_building_type = building_info.military_building_type();
+    let mesh = game_assets
+        .building_assets
+        .military_building_mesh_for(military_building_type);
+    create_object_entity(
+        building_info,
+        format!("{military_building_type:?}"),
+        colour,
+        mesh,
+        materials,
+        commands,
+        map_level,
+        MilitaryBuildingIdComponent(building_info.id()),
+    );
+}
+
 fn remove_industry_building_entities(
     industry_building_id: IndustryBuildingId,
     commands: &mut Commands,
@@ -255,6 +304,19 @@ fn remove_industry_building_entities(
     for (entity, industry_building_id_component) in query {
         let IndustryBuildingIdComponent(this_industry_building_id) = industry_building_id_component;
         if *this_industry_building_id == industry_building_id {
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
+fn remove_military_building_entities(
+    military_building_id: MilitaryBuildingId,
+    commands: &mut Commands,
+    query: &Query<(Entity, &MilitaryBuildingIdComponent)>,
+) {
+    for (entity, military_building_id_component) in query {
+        let MilitaryBuildingIdComponent(this_military_building_id) = military_building_id_component;
+        if *this_military_building_id == military_building_id {
             commands.entity(entity).despawn();
         }
     }

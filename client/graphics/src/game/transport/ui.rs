@@ -4,6 +4,7 @@ use bevy::input::ButtonInput;
 use bevy::prelude::{EventWriter, MouseButton, Res, ResMut, Resource, info};
 use bevy_egui::EguiContexts;
 use shared_domain::TransportId;
+use shared_domain::building::building_info::WithOwner;
 use shared_domain::cargo_map::WithCargo;
 use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::transport::movement_orders::{

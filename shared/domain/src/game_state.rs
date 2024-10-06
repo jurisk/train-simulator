@@ -12,6 +12,7 @@ use crate::building::building_info::{
 use crate::building::building_state::{BuildingState, CanBuildResponse};
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::industry_type::IndustryType;
+use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::{BuildCosts, BuildError};
@@ -28,7 +29,10 @@ use crate::transport::movement_orders::MovementOrders;
 use crate::transport::track_type::TrackType;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::transport::transport_state::TransportState;
-use crate::{GameId, IndustryBuildingId, PlayerId, ScenarioId, StationId, TrackId, TransportId};
+use crate::{
+    GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, ScenarioId, StationId, TrackId,
+    TransportId,
+};
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
 //          So the API gets quite busy because of this. There may be better ways, such as splitting the validation-oriented methods into a server-only trait.
@@ -324,7 +328,20 @@ impl GameState {
     ) -> Result<BuildCosts, BuildError> {
         self.valid_owner(requesting_player_id, building.owner_id())?;
         self.map_level.can_build_industry_building(building)?;
-        self.buildings.can_build_building(building)?;
+        self.buildings.can_build_with_coverage(building)?;
+
+        self.can_pay_cost(building.owner_id(), building)
+    }
+
+    #[expect(clippy::missing_errors_doc)]
+    pub fn can_build_military_building(
+        &self,
+        requesting_player_id: PlayerId,
+        building: &MilitaryBuildingInfo,
+    ) -> Result<BuildCosts, BuildError> {
+        self.valid_owner(requesting_player_id, building.owner_id())?;
+        self.map_level.can_build_military_building(building)?;
+        self.buildings.can_build_with_coverage(building)?;
 
         self.can_pay_cost(building.owner_id(), building)
     }
@@ -338,6 +355,15 @@ impl GameState {
         self.buildings.build_industry_building(building, costs)
     }
 
+    pub fn build_military_building(
+        &mut self,
+        requesting_player_id: PlayerId,
+        building: &MilitaryBuildingInfo,
+    ) -> Result<(), BuildError> {
+        let costs = self.can_build_military_building(requesting_player_id, building)?;
+        self.buildings.build_military_building(building, costs)
+    }
+
     #[expect(clippy::missing_errors_doc)]
     pub fn can_build_station(
         &self,
@@ -346,7 +372,7 @@ impl GameState {
     ) -> Result<BuildCosts, BuildError> {
         self.valid_owner(requesting_player_id, station.owner_id())?;
         self.map_level.can_build_station(station)?;
-        self.buildings.can_build_building(station)?;
+        self.buildings.can_build_with_coverage(station)?;
         self.can_pay_cost(station.owner_id(), station)
     }
 
@@ -397,6 +423,15 @@ impl GameState {
     ) -> Result<(), ()> {
         self.buildings
             .attempt_to_remove_station(requesting_player_id, station_id)
+    }
+
+    pub fn remove_military_building(
+        &mut self,
+        requesting_player_id: PlayerId,
+        military_building_id: MilitaryBuildingId,
+    ) -> Result<(), ()> {
+        self.buildings
+            .attempt_to_remove_military_building(requesting_player_id, military_building_id)
     }
 
     #[must_use]

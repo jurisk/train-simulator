@@ -174,12 +174,12 @@ impl Zoning {
                 == required)
                 .then_ok_unit(|| BuildError::InvalidZoning)
         } else {
-            (industry_building_info
+            industry_building_info
                 .covers_tiles()
                 .to_set()
                 .iter()
-                .all(|tile| self.free_at_tile(*tile)))
-            .then_ok_unit(|| BuildError::InvalidOverlap)
+                .all(|tile| self.free_at_tile(*tile))
+                .then_ok_unit(|| BuildError::InvalidOverlap)
         }
     }
 

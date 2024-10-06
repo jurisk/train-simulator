@@ -2,6 +2,7 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::building::building_info::WithOwner;
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
@@ -134,11 +135,6 @@ impl TransportInfo {
     }
 
     #[must_use]
-    pub fn owner_id(&self) -> PlayerId {
-        self.static_info.owner_id
-    }
-
-    #[must_use]
     pub fn transport_id(&self) -> TransportId {
         self.static_info.transport_id
     }
@@ -164,5 +160,11 @@ impl TransportInfo {
 
     pub fn remove_cargo(&mut self, cargo: &CargoMap) {
         self.dynamic_info.cargo_loaded -= cargo;
+    }
+}
+
+impl WithOwner for TransportInfo {
+    fn owner_id(&self) -> PlayerId {
+        self.static_info.owner_id
     }
 }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::building::building_info::{WithCostToBuild, WithTileCoverage};
+use crate::building::building_info::{WithCostToBuild, WithOwner, WithTileCoverage};
 use crate::building::industry_type::IndustryType;
 use crate::cargo_map::CargoMap;
 use crate::edge_xz::EdgeXZ;
@@ -42,17 +42,18 @@ impl TrackInfo {
     }
 
     #[must_use]
-    pub fn owner_id(&self) -> PlayerId {
-        self.owner_id
-    }
-
-    #[must_use]
     pub fn edges_clockwise(&self) -> [EdgeXZ; 2] {
         let (a, b) = self.track_type.connections_clockwise();
         [
             EdgeXZ::from_tile_and_direction(self.tile, a),
             EdgeXZ::from_tile_and_direction(self.tile, b),
         ]
+    }
+}
+
+impl WithOwner for TrackInfo {
+    fn owner_id(&self) -> PlayerId {
+        self.owner_id
     }
 }
 

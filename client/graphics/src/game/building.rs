@@ -7,7 +7,8 @@ use crate::hud::PointerOverHud;
 use crate::hud::domain::SelectedMode;
 use crate::selection::HoveredTile;
 
-pub(crate) fn build_building_when_mouse_released(
+#[expect(clippy::needless_pass_by_value)]
+pub(crate) fn build_something_when_mouse_released(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
     selected_mode_resource: Res<SelectedMode>,
     game_state_resource: Res<GameStateResource>,
@@ -24,16 +25,14 @@ pub(crate) fn build_building_when_mouse_released(
         let selected_mode = selected_mode_resource.as_ref();
         let HoveredTile(hovered_tile) = hovered_tile.as_ref();
         if let Some(hovered_tile) = hovered_tile {
-            // Later: Check we can build this?
-
             let GameStateResource(game_state) = game_state_resource.as_ref();
             let PlayerIdResource(player_id) = *player_id_resource;
 
             let game_id = game_state.game_id();
 
-            let command = selected_mode.build_building_command(player_id, *hovered_tile);
+            let command = selected_mode.build_something_command(player_id, *hovered_tile);
 
-            // Later: Check we can build this? And that check is different for stations, as they can be built on top of fully straight tracks with no branching.
+            // Later: Check we can build this "something"? And do it invoking the real 'GameState'.
 
             if let Some(command) = command {
                 client_messages.send(ClientMessageEvent::new(ClientCommand::Game(

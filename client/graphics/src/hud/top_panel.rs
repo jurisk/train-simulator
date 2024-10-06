@@ -2,7 +2,7 @@ use bevy::prelude::{AppExit, EventWriter, Res, ResMut};
 use bevy_egui::EguiContexts;
 use egui::{Ui, menu};
 use shared_domain::building::industry_type::IndustryType;
-use shared_domain::building::military_unit_type::MilitaryUnitType;
+use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::building::station_type::{StationOrientation, StationType};
 use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
@@ -162,18 +162,19 @@ fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     menu::menu_button(ui, "⚔ Military", |ui| {
         set_font_size(ui, 24.0);
 
-        for military_unit_type in MilitaryUnitType::all() {
+        for military_building_type in MilitaryBuildingType::all() {
             if ui
                 .add(
-                    egui::Button::new(format!("⚔ {military_unit_type:?}"))
+                    egui::Button::new(format!("⚔ {military_building_type:?}"))
                         .selected(
-                            *selected_mode.as_ref() == SelectedMode::Military(military_unit_type),
+                            *selected_mode.as_ref()
+                                == SelectedMode::MilitaryBuilding(military_building_type),
                         )
                         .min_size(egui::vec2(MIN_X, MIN_Y)),
                 )
                 .clicked()
             {
-                *selected_mode.as_mut() = SelectedMode::Military(military_unit_type);
+                *selected_mode.as_mut() = SelectedMode::MilitaryBuilding(military_building_type);
                 ui.close_menu();
             }
         }
@@ -210,6 +211,10 @@ fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
             ("🚉 Stations", SelectedMode::Demolish(DemolishType::Station)),
             ("⚒ Industry", SelectedMode::Demolish(DemolishType::Industry)),
             ("🚆 Tracks", SelectedMode::Demolish(DemolishType::Tracks)),
+            (
+                "⚔ Military Building",
+                SelectedMode::Demolish(DemolishType::MilitaryBuilding),
+            ),
         ] {
             if ui
                 .add(

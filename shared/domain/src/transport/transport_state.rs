@@ -2,6 +2,7 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::building::building_info::WithOwner;
 use crate::building::building_state::BuildingState;
 use crate::game_time::GameTimeDiff;
 use crate::metrics::Metrics;

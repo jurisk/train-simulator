@@ -12,6 +12,7 @@ use bevy::prelude::{
     Query, Res, ResMut, SpatialBundle, Transform, Update, in_state, warn,
 };
 use shared_domain::TransportId;
+use shared_domain::building::building_info::WithOwner;
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::players::player_state::PlayerState;

@@ -8,12 +8,15 @@ use crate::cargo_map::{CargoMap, WithCargo, WithCargoMut};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 
+// TODO HIGH: A lot of similarities between military, industry and stations... Think about how to unify.
+
 pub trait BuildingInfo: WithOwner + WithTileCoverage {}
 
 pub trait WithOwner {
     fn owner_id(&self) -> PlayerId;
 }
 
+// Later: Everything that has a reference tile and `WithRelativeTileCoverage` should have a single such implementation
 pub trait WithTileCoverage {
     fn covers_tiles(&self) -> TileCoverage;
 }

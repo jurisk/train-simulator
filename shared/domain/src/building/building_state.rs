@@ -15,6 +15,7 @@ use crate::building::building_info::{
 };
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::industry_type::IndustryType;
+use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::track_state::{MaybeTracksOnTile, TrackState};
@@ -25,7 +26,9 @@ use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type_set::TrackTypeSet;
-use crate::{IndustryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackId, TrackType};
+use crate::{
+    IndustryBuildingId, MilitaryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackId, TrackType,
+};
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum CanBuildResponse {
@@ -34,6 +37,7 @@ pub enum CanBuildResponse {
     Invalid(BuildError),
 }
 
+// TODO HIGH: You have too many grids... I think you should merge the various grids that show what buildings / tracks are at that tile
 // Later: There is a dual nature here to both be the "validator" (check if something can be built) and the "state" (store what has been built).
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
@@ -41,6 +45,8 @@ pub struct BuildingState {
     tracks:                  TrackState,
     industry_buildings:      HashMap<IndustryBuildingId, IndustryBuildingInfo>,
     tile_industry_buildings: GridXZ<TileCoordsXZ, Option<IndustryBuildingId>>,
+    military_buildings:      HashMap<MilitaryBuildingId, MilitaryBuildingInfo>,
+    tile_military_buildings: GridXZ<TileCoordsXZ, Option<MilitaryBuildingId>>,
     stations:                HashMap<StationId, StationInfo>,
     tile_stations:           GridXZ<TileCoordsXZ, Option<StationId>>,
     station_track_types_at:  GridXZ<TileCoordsXZ, TrackTypeSet>,
@@ -67,6 +73,8 @@ impl BuildingState {
             tracks:                  TrackState::new(size_x, size_z),
             industry_buildings:      HashMap::new(),
             tile_industry_buildings: GridXZ::filled_with(size_x, size_z, None),
+            military_buildings:      HashMap::new(),
+            tile_military_buildings: GridXZ::filled_with(size_x, size_z, None),
             stations:                HashMap::new(),
             tile_stations:           GridXZ::filled_with(size_x, size_z, None),
             station_track_types_at:  GridXZ::filled_with(size_x, size_z, TrackTypeSet::new()),
@@ -126,17 +134,19 @@ impl BuildingState {
     fn building_at(&self, tile: TileCoordsXZ) -> Option<&dyn BuildingInfo> {
         let station = self.station_at(tile);
         let industry_building = self.industry_building_at(tile);
-        match (station, industry_building) {
-            (Some(station), None) => Some(station),
-            (None, Some(industry_building)) => Some(industry_building),
-            (Some(station), Some(industry_building)) => {
+        let military_building = self.military_building_at(tile);
+        match (station, industry_building, military_building) {
+            (Some(station), None, None) => Some(station),
+            (None, Some(industry_building), None) => Some(industry_building),
+            (None, None, Some(military_building)) => Some(military_building),
+            (None, None, None) => None,
+            _ => {
                 warn!(
-                    "Found both a station and an industry building at tile {:?}: {:?} {:?}",
-                    tile, station, industry_building
+                    "Found invalid building state at {:?}: {:?} {:?} {:?}",
+                    tile, station, industry_building, military_building
                 );
                 None
             },
-            (None, None) => None,
         }
     }
 
@@ -157,6 +167,14 @@ impl BuildingState {
     pub fn industry_building_at(&self, tile: TileCoordsXZ) -> Option<&IndustryBuildingInfo> {
         match self.tile_industry_buildings.get(tile) {
             Some(Some(industry_building_id)) => self.industry_buildings.get(industry_building_id),
+            _ => None,
+        }
+    }
+
+    #[must_use]
+    pub fn military_building_at(&self, tile: TileCoordsXZ) -> Option<&MilitaryBuildingInfo> {
+        match self.tile_military_buildings.get(tile) {
+            Some(Some(military_building_id)) => self.military_buildings.get(military_building_id),
             _ => None,
         }
     }
@@ -210,6 +228,14 @@ impl BuildingState {
         self.industry_buildings
             .insert(industry_building.id(), industry_building);
         self.recalculate_cargo_forwarding_links();
+    }
+
+    pub fn append_military_building(&mut self, military_building: MilitaryBuildingInfo) {
+        for tile in military_building.covers_tiles().to_set() {
+            self.tile_military_buildings[tile] = Some(military_building.id());
+        }
+        self.military_buildings
+            .insert(military_building.id(), military_building);
     }
 
     pub fn append_station(&mut self, station: StationInfo) {
@@ -271,7 +297,10 @@ impl BuildingState {
             .collect()
     }
 
-    pub fn can_build_building<T: BuildingInfo>(&self, building_info: &T) -> Result<(), BuildError> {
+    pub fn can_build_with_coverage<T: WithTileCoverage>(
+        &self,
+        building_info: &T,
+    ) -> Result<(), BuildError> {
         self.can_build_for_coverage(&building_info.covers_tiles())?;
         Ok(())
     }
@@ -404,9 +433,20 @@ impl BuildingState {
         industry_building_info: &IndustryBuildingInfo,
         costs: BuildCosts,
     ) -> Result<(), BuildError> {
-        self.can_build_building(industry_building_info)?;
+        self.can_build_with_coverage(industry_building_info)?;
         self.pay_costs(costs);
         self.append_industry_building(industry_building_info.clone());
+        Ok(())
+    }
+
+    pub(crate) fn build_military_building(
+        &mut self,
+        military_building_info: &MilitaryBuildingInfo,
+        costs: BuildCosts,
+    ) -> Result<(), BuildError> {
+        self.can_build_with_coverage(military_building_info)?;
+        self.pay_costs(costs);
+        self.append_military_building(military_building_info.clone());
         Ok(())
     }
 
@@ -426,7 +466,7 @@ impl BuildingState {
         station_info: &StationInfo,
         costs: BuildCosts,
     ) -> Result<(), BuildError> {
-        self.can_build_building(station_info)?;
+        self.can_build_with_coverage(station_info)?;
         self.pay_costs(costs);
         self.append_station(station_info.clone());
         Ok(())
@@ -561,6 +601,14 @@ impl BuildingState {
         self.recalculate_cargo_forwarding_links();
     }
 
+    pub fn remove_military_building(&mut self, military_building_id: MilitaryBuildingId) {
+        if let Some(removed) = self.military_buildings.remove(&military_building_id) {
+            for tile in removed.covers_tiles().to_set() {
+                self.tile_military_buildings[tile] = None;
+            }
+        }
+    }
+
     pub fn remove_station(&mut self, station_id: StationId) {
         if let Some(removed) = self.stations.remove(&station_id) {
             for tile in removed.covers_tiles().to_set() {
@@ -594,6 +642,24 @@ impl BuildingState {
 
         if industry_building.owner_id() == requesting_player_id {
             self.remove_industry_building(industry_building_id);
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+
+    pub fn attempt_to_remove_military_building(
+        &mut self,
+        requesting_player_id: PlayerId,
+        military_building_id: MilitaryBuildingId,
+    ) -> Result<(), ()> {
+        let military_building = self
+            .military_buildings
+            .get(&military_building_id)
+            .ok_or(())?;
+
+        if military_building.owner_id() == requesting_player_id {
+            self.remove_military_building(military_building_id);
             Ok(())
         } else {
             Err(())
@@ -641,7 +707,7 @@ mod tests {
             TileCoordsXZ::new(0, 0),
             StationType::EW_1_4,
         );
-        let result = building_state.can_build_building(&station_info);
+        let result = building_state.can_build_with_coverage(&station_info);
         assert_eq!(result, Err(BuildError::InvalidOverlap));
     }
 }
