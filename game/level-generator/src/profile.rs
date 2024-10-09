@@ -68,4 +68,13 @@ impl Profile {
             },
         ]
     }
+
+    #[must_use]
+    pub(crate) fn players_construction_yard_at(&self, player_id: PlayerId) -> TileCoordsXZ {
+        self.players
+            .iter()
+            .find(|player| player.player_id == player_id)
+            .unwrap_or_else(|| panic!("Player {player_id} should exist"))
+            .initial_construction_yard
+    }
 }

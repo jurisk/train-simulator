@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use shared_domain::building::WithRelativeTileCoverage;
+use shared_domain::building::industry_type::IndustryType;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::map_level::zoning::{ZoningInfo, ZoningType};
 use shared_domain::scenario::PlayerProfile;
@@ -12,7 +13,7 @@ use crate::profile::Profile;
 
 fn default_zoning_counts(zoning_type: ZoningType) -> usize {
     match zoning_type {
-        ZoningType::Industrial => 12,
+        ZoningType::Industrial => 16,
         ZoningType::Source(_) => 1,
     }
 }
@@ -46,11 +47,19 @@ fn closest_player(tile: TileCoordsXZ, players: &[PlayerProfile]) -> PlayerId {
         .player_id
 }
 
-#[expect(clippy::missing_panics_doc, clippy::expect_used)]
+#[expect(clippy::missing_panics_doc, clippy::expect_used, clippy::unwrap_used)]
 pub fn augment(map_level: &mut MapLevel, profile: &Profile) {
     let mut options = options(map_level)
         .into_iter()
         .map(|tile| (closest_player(tile, &profile.players), tile))
+        .filter(|(player_id, tile)| {
+            // Later: If we teach AI to build extension construction yards, this is no longer needed
+            let construction_yard_tile = profile.players_construction_yard_at(*player_id);
+            let distance = construction_yard_tile.manhattan_distance(*tile);
+            let construction_yard = IndustryType::ConstructionYard;
+            let threshold = construction_yard.supply_range_in_tiles().unwrap();
+            distance <= threshold
+        })
         .into_group_map();
     for player in &profile.players {
         let options = options

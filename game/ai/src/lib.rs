@@ -99,6 +99,7 @@ fn try_building_stations(player_id: PlayerId, game_state: &GameState) -> Option<
             })
             .collect::<Vec<_>>();
 
+        // TODO: Currently can build station so that it cannot actually be connected - one end of it is pointing into the sea, for example.
         // Later: Don't choose randomly, but the "best" (not sure what that means yet) location
         match choose(&options) {
             None => {
