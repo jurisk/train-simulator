@@ -102,7 +102,7 @@ impl BuildingState {
         let mut dynamic_info = construction_yard.dynamic_info_mut();
         let cargo = dynamic_info.cargo_mut();
         // TODO HIGH: Lower these to only cover initial supply chains for Concrete, Steel, Timber
-        cargo.add(ResourceType::Concrete, CargoAmount::new(240.0));
+        cargo.add(ResourceType::Concrete, CargoAmount::new(480.0));
         cargo.add(ResourceType::Steel, CargoAmount::new(480.0));
         cargo.add(ResourceType::Timber, CargoAmount::new(240.0));
     }

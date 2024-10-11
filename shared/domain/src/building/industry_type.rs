@@ -77,7 +77,6 @@ impl Debug for IndustryType {
 
 const X0: f32 = 0.0;
 const X1: f32 = 1.0;
-const X2: f32 = 2.0;
 
 impl IndustryType {
     #[must_use]
@@ -176,7 +175,8 @@ impl IndustryType {
         match self {
             SteelMill => {
                 // https://marketrealist.com/2015/01/coke-fit-steelmaking-process/
-                ResourceTransform::make(vec![(Iron, X2), (Coal, X1)], vec![(Steel, X1)])
+                // Later: In theory, it is 2 iron to 1 coal, but we simplified it for now to avoid so much legwork for the player.
+                ResourceTransform::make(vec![(Iron, X1), (Coal, X1)], vec![(Steel, X1)])
             },
             PowerPlant => ResourceTransform::make(vec![(Coal, X1)], vec![]),
             CoalToOilPlant => ResourceTransform::make(vec![(Coal, X1)], vec![(Oil, X1)]),
@@ -245,7 +245,7 @@ pub struct ResourceTransform {
 }
 
 impl ResourceTransform {
-    const CARGO_PER_SECOND: f32 = 0.1f32;
+    const CARGO_PER_SECOND: f32 = 0.2f32;
 
     #[must_use]
     pub fn make(inputs: Vec<(ResourceType, f32)>, outputs: Vec<(ResourceType, f32)>) -> Self {
@@ -358,6 +358,6 @@ mod tests {
         cargo.add(ResourceType::Coal, CargoAmount::new(0.025));
         cargo.add(ResourceType::Iron, CargoAmount::new(4.0));
         let utilisation = transform.calculate_utilisation_percentage(&cargo, 0.5);
-        assert_eq!(utilisation, 0.5f32);
+        assert_eq!(utilisation, 0.25f32);
     }
 }

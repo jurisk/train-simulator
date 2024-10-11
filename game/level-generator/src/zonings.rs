@@ -3,6 +3,7 @@ use shared_domain::building::WithRelativeTileCoverage;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::map_level::zoning::{ZoningInfo, ZoningType};
+use shared_domain::resource_type::ResourceType;
 use shared_domain::scenario::PlayerProfile;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
@@ -13,7 +14,8 @@ use crate::profile::Profile;
 
 fn default_zoning_counts(zoning_type: ZoningType) -> usize {
     match zoning_type {
-        ZoningType::Industrial => 16,
+        ZoningType::Industrial => 36,
+        ZoningType::Source(ResourceType::Iron | ResourceType::Coal) => 4,
         ZoningType::Source(_) => 1,
     }
 }

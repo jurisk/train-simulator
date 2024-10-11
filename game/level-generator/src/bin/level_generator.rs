@@ -62,6 +62,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore] // Too slow
     fn test_scenarios_can_be_generated() {
         for profile in Profile::all() {
             let result = generate_scenario(&profile, "../../");

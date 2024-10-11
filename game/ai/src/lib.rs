@@ -36,6 +36,14 @@ pub fn ai_commands(
         .or_else(|| try_building_industry_buildings(player_id, game_state))
 }
 
+fn required_buildings(industry_type: IndustryType) -> usize {
+    // Has to match zonings from level generator and the overall "supply chain" tree
+    match industry_type {
+        IndustryType::IronMine | IndustryType::CoalMine | IndustryType::SteelMill => 4,
+        _ => 1,
+    }
+}
+
 #[expect(clippy::redundant_else)]
 fn try_building_industry_buildings(
     player_id: PlayerId,
@@ -47,7 +55,8 @@ fn try_building_industry_buildings(
         let existing = game_state
             .building_state()
             .find_industry_building_by_owner_and_type(player_id, industry_type);
-        if existing.is_empty() {
+        let expected = required_buildings(industry_type);
+        if existing.len() < expected {
             // TODO: Build in closest place to the related resources - producers & consumers
             let candidates: Vec<_> = free
                 .iter()
@@ -114,6 +123,7 @@ fn try_building_stations(player_id: PlayerId, game_state: &GameState) -> Option<
     None
 }
 
+// TODO HIGH: There are too many links here, as we have multiple copies of iron, steel & coal and we do all-to-all links, don't we?
 fn logistics_links(
     player_id: PlayerId,
     game_state: &GameState,
