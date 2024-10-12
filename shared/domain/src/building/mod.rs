@@ -15,6 +15,7 @@ pub mod industry_building_info;
 pub mod industry_type;
 pub mod military_building_info;
 pub mod military_building_type;
+pub mod resource_transform;
 pub mod station_info;
 pub mod station_type;
 pub mod track_info;

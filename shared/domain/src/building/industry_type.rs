@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::building::WithRelativeTileCoverage;
 use crate::building::building_info::WithCostToBuild;
 use crate::building::industry_type::IndustryType::*;
-use crate::cargo_amount::CargoAmount;
+use crate::building::resource_transform::{ResourceTransform, ResourceTransformItem};
 use crate::cargo_map::CargoMap;
 use crate::map_level::zoning::ZoningType;
 use crate::map_level::zoning::ZoningType::{Industrial, Source};
@@ -75,7 +75,6 @@ impl Debug for IndustryType {
     }
 }
 
-const X0: f32 = 0.0;
 const X1: f32 = 1.0;
 
 impl IndustryType {
@@ -204,9 +203,9 @@ impl IndustryType {
                 ResourceTransform::make(vec![(Steel, X1), (Explosives, X1)], vec![(Ammunition, X1)])
             },
             MilitaryBase => {
-                ResourceTransform::warehouse(&[Ammunition, Food, Fuel, ArtilleryWeapons])
+                ResourceTransform::make_warehouse(&[Ammunition, Food, Fuel, ArtilleryWeapons])
             },
-            ConstructionYard => ResourceTransform::warehouse(&[Concrete, Steel, Timber]),
+            ConstructionYard => ResourceTransform::make_warehouse(&[Concrete, Steel, Timber]),
             IronMine | CoalMine | OilWell | NitrateMine | SulfurMine | Farm | Forestry
             | ClayPit | LimestoneMine | SandAndGravelQuarry => {
                 match self.required_zoning() {
@@ -224,77 +223,6 @@ impl WithRelativeTileCoverage for IndustryType {
     #[must_use]
     fn relative_tiles_used(&self) -> TileCoverage {
         TileCoverage::rectangular_odd(TileCoordsXZ::ZERO, 3, 3)
-    }
-}
-
-pub struct ResourceTransformItem {
-    pub resource: ResourceType,
-    pub amount:   CargoAmount,
-}
-
-impl ResourceTransformItem {
-    #[must_use]
-    pub fn new(resource: ResourceType, amount: CargoAmount) -> Self {
-        Self { resource, amount }
-    }
-}
-
-pub struct ResourceTransform {
-    pub inputs:  Vec<ResourceTransformItem>,
-    pub outputs: Vec<ResourceTransformItem>,
-}
-
-impl ResourceTransform {
-    const CARGO_PER_SECOND: f32 = 0.2f32;
-
-    #[must_use]
-    pub fn make(inputs: Vec<(ResourceType, f32)>, outputs: Vec<(ResourceType, f32)>) -> Self {
-        ResourceTransform::new(
-            inputs
-                .into_iter()
-                .map(|(resource, coef)| {
-                    ResourceTransformItem::new(
-                        resource,
-                        CargoAmount::new(Self::CARGO_PER_SECOND * coef),
-                    )
-                })
-                .collect(),
-            outputs
-                .into_iter()
-                .map(|(resource, coef)| {
-                    ResourceTransformItem::new(
-                        resource,
-                        CargoAmount::new(Self::CARGO_PER_SECOND * coef),
-                    )
-                })
-                .collect(),
-        )
-    }
-
-    #[must_use]
-    pub fn warehouse(inputs: &[ResourceType]) -> Self {
-        let inputs = inputs.iter().map(|resource| (*resource, X0)).collect();
-        ResourceTransform::make(inputs, vec![])
-    }
-
-    // Later: How do we handle when the stock is too full, and we should stop producing due to that?
-    #[must_use]
-    pub fn calculate_utilisation_percentage(&self, cargo: &CargoMap, seconds: f32) -> f32 {
-        let mut utilisation = 1f32;
-        for item in &self.inputs {
-            let available = cargo.get(item.resource);
-            let required = item.amount * seconds;
-            let ratio = available / required;
-            utilisation = utilisation.min(ratio);
-        }
-        utilisation
-    }
-}
-
-impl ResourceTransform {
-    #[must_use]
-    pub fn new(inputs: Vec<ResourceTransformItem>, outputs: Vec<ResourceTransformItem>) -> Self {
-        Self { inputs, outputs }
     }
 }
 
