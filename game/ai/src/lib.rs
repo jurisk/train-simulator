@@ -142,7 +142,25 @@ fn try_building_stations(player_id: PlayerId, game_state: &GameState) -> Option<
     None
 }
 
-// TODO HIGH: There are too many links here, as we have multiple copies of iron, steel & coal and we do all-to-all links, don't we?
+fn logistics_link_types() -> Vec<(IndustryType, ResourceType, IndustryType)> {
+    let mut results = vec![];
+    for from in IndustryType::all() {
+        for to in IndustryType::all() {
+            if from != to {
+                for resource_type in ResourceType::all() {
+                    if from.output_resource_types().contains(&resource_type)
+                        && to.input_resource_types().contains(&resource_type)
+                    {
+                        results.push((from, resource_type, to));
+                    }
+                }
+            }
+        }
+    }
+    results
+}
+
+// TODO HIGH: There are too many links here, as we have multiple copies of iron, steel & coal and we do all-to-all links, don't we? Use `logistics_link_types` to remove the duplication.
 fn logistics_links(
     player_id: PlayerId,
     game_state: &GameState,
@@ -296,4 +314,18 @@ fn try_building_transports(
     }
 
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_logistics_link_types() {
+        let links = logistics_link_types();
+        for link in &links {
+            println!("{link:?}");
+        }
+        assert_eq!(links.len(), 25);
+    }
 }
