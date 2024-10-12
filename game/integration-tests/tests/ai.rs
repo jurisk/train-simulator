@@ -103,7 +103,12 @@ fn run_ai_commands(
     if let Some(commands) = commands {
         for command in commands {
             let responses = games_service.process_command(game_id, user_id, &command);
-            assert!(responses.is_ok());
+            match responses {
+                Ok(_) => {},
+                Err(err) => {
+                    panic!("Failed to process command: {command:?}: {err:?}",);
+                },
+            }
         }
     }
 }

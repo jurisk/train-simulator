@@ -182,11 +182,11 @@ mod tests {
         .unwrap();
 
         assert_eq!(results.len(), 1);
-        assert_eq!(length, TrackType::EastWest.length());
+        assert_eq!(length, TrackType::WestEast.length());
 
         let track = &results[0];
         assert_eq!(track.owner_id(), player_id);
         assert_eq!(track.tile, tile);
-        assert_eq!(track.track_type, TrackType::EastWest);
+        assert_eq!(track.track_type, TrackType::WestEast);
     }
 }

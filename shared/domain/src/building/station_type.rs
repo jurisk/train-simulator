@@ -26,14 +26,14 @@ impl PlatformIndex {
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum StationOrientation {
     NorthToSouth,
-    EastToWest,
+    WestToEast,
 }
 
 impl Debug for StationOrientation {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             StationOrientation::NorthToSouth => write!(f, "NS"),
-            StationOrientation::EastToWest => write!(f, "EW"),
+            StationOrientation::WestToEast => write!(f, "WE"),
         }
     }
 }
@@ -56,20 +56,20 @@ impl Debug for StationType {
 }
 
 impl StationType {
-    pub const EW_1_4: StationType = StationType {
-        orientation:     StationOrientation::EastToWest,
+    pub const NS_1_4: StationType = StationType {
+        orientation:     StationOrientation::NorthToSouth,
         platforms:       1,
         length_in_tiles: 4,
     };
-    pub const NS_1_4: StationType = StationType {
-        orientation:     StationOrientation::NorthToSouth,
+    pub const WE_1_4: StationType = StationType {
+        orientation:     StationOrientation::WestToEast,
         platforms:       1,
         length_in_tiles: 4,
     };
 
     #[must_use]
     pub const fn all() -> [Self; 2] {
-        [Self::NS_1_4, Self::EW_1_4]
+        [Self::NS_1_4, Self::WE_1_4]
     }
 
     /// These are the last `TileTrack`-s in a station, so if a train is parked `about_to_exit` on
@@ -96,16 +96,16 @@ impl StationType {
                     results.push((platform_index, a));
                     results.push((platform_index, b));
                 },
-                StationOrientation::EastToWest => {
+                StationOrientation::WestToEast => {
                     let a = TileTrack {
                         tile:        reference_tile + TileCoordsXZ::from_usizes(0, platform),
-                        track_type:  TrackType::EastWest,
+                        track_type:  TrackType::WestEast,
                         pointing_in: DirectionXZ::West,
                     };
                     let b = TileTrack {
                         tile:        reference_tile
                             + TileCoordsXZ::from_usizes(self.length_in_tiles - 1, platform),
-                        track_type:  TrackType::EastWest,
+                        track_type:  TrackType::WestEast,
                         pointing_in: DirectionXZ::East,
                     };
                     results.push((platform_index, a));
@@ -120,7 +120,7 @@ impl StationType {
     pub fn track_type(self) -> TrackType {
         match self.orientation {
             StationOrientation::NorthToSouth => TrackType::NorthSouth,
-            StationOrientation::EastToWest => TrackType::EastWest,
+            StationOrientation::WestToEast => TrackType::WestEast,
         }
     }
 
@@ -147,7 +147,7 @@ impl WithRelativeTileCoverage for StationType {
                     ),
                 }
             },
-            StationOrientation::EastToWest => {
+            StationOrientation::WestToEast => {
                 TileCoverage::Rectangular {
                     north_west_inclusive: TileCoordsXZ::from_usizes(0, 0),
                     south_east_inclusive: TileCoordsXZ::from_usizes(

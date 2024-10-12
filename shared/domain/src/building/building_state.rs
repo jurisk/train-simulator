@@ -705,7 +705,7 @@ mod tests {
             owner_id,
             StationId::random(),
             TileCoordsXZ::new(0, 0),
-            StationType::EW_1_4,
+            StationType::WE_1_4,
         );
         let result = building_state.can_build_with_coverage(&station_info);
         assert_eq!(result, Err(BuildError::InvalidOverlap));

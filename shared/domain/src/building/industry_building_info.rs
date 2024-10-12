@@ -103,8 +103,8 @@ impl IndustryBuildingInfo {
         }
 
         for x in -4 ..= 1 {
-            results.push((TileCoordsXZ::new(x, -2), StationType::EW_1_4));
-            results.push((TileCoordsXZ::new(x, 2), StationType::EW_1_4));
+            results.push((TileCoordsXZ::new(x, -2), StationType::WE_1_4));
+            results.push((TileCoordsXZ::new(x, 2), StationType::WE_1_4));
         }
 
         results

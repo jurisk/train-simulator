@@ -91,7 +91,7 @@ fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
         for station_type in StationType::all() {
             let symbol = match station_type.orientation {
                 StationOrientation::NorthToSouth => "⬍ NS",
-                StationOrientation::EastToWest => "⬌ EW",
+                StationOrientation::WestToEast => "⬌ EW",
             };
             if ui
                 .add(

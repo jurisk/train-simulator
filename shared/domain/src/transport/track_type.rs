@@ -20,7 +20,7 @@ pub enum TrackType {
     NorthEast,
     NorthSouth,
     NorthWest,
-    EastWest,
+    WestEast,
     SouthEast,
     SouthWest,
 }
@@ -31,7 +31,7 @@ impl Debug for TrackType {
             TrackType::NorthEast => write!(f, "NE"),
             TrackType::NorthSouth => write!(f, "NS"),
             TrackType::NorthWest => write!(f, "NW"),
-            TrackType::EastWest => write!(f, "EW"),
+            TrackType::WestEast => write!(f, "WE"),
             TrackType::SouthEast => write!(f, "SE"),
             TrackType::SouthWest => write!(f, "SW"),
         }
@@ -45,7 +45,7 @@ impl TrackType {
     pub const fn all() -> [TrackType; 6] {
         [
             TrackType::NorthSouth,
-            TrackType::EastWest,
+            TrackType::WestEast,
             TrackType::NorthEast,
             TrackType::NorthWest,
             TrackType::SouthEast,
@@ -59,8 +59,8 @@ impl TrackType {
         match (into, out) {
             (DirectionXZ::North, DirectionXZ::South) => Some(TrackType::NorthSouth),
             (DirectionXZ::South, DirectionXZ::North) => Some(TrackType::NorthSouth),
-            (DirectionXZ::East, DirectionXZ::West) => Some(TrackType::EastWest),
-            (DirectionXZ::West, DirectionXZ::East) => Some(TrackType::EastWest),
+            (DirectionXZ::East, DirectionXZ::West) => Some(TrackType::WestEast),
+            (DirectionXZ::West, DirectionXZ::East) => Some(TrackType::WestEast),
             (DirectionXZ::North, DirectionXZ::East) => Some(TrackType::NorthEast),
             (DirectionXZ::East, DirectionXZ::North) => Some(TrackType::NorthEast),
             (DirectionXZ::North, DirectionXZ::West) => Some(TrackType::NorthWest),
@@ -86,8 +86,8 @@ impl TrackType {
             (TrackType::NorthSouth, DirectionXZ::South) => Some(DirectionXZ::North),
             (TrackType::NorthWest, DirectionXZ::North) => Some(DirectionXZ::West),
             (TrackType::NorthWest, DirectionXZ::West) => Some(DirectionXZ::North),
-            (TrackType::EastWest, DirectionXZ::East) => Some(DirectionXZ::West),
-            (TrackType::EastWest, DirectionXZ::West) => Some(DirectionXZ::East),
+            (TrackType::WestEast, DirectionXZ::East) => Some(DirectionXZ::West),
+            (TrackType::WestEast, DirectionXZ::West) => Some(DirectionXZ::East),
             (TrackType::SouthEast, DirectionXZ::South) => Some(DirectionXZ::East),
             (TrackType::SouthEast, DirectionXZ::East) => Some(DirectionXZ::South),
             (TrackType::SouthWest, DirectionXZ::South) => Some(DirectionXZ::West),
@@ -122,7 +122,7 @@ impl TrackType {
             },
             DirectionXZ::East => {
                 [
-                    TrackType::EastWest,
+                    TrackType::WestEast,
                     TrackType::NorthEast,
                     TrackType::SouthEast,
                 ]
@@ -136,7 +136,7 @@ impl TrackType {
             },
             DirectionXZ::West => {
                 [
-                    TrackType::EastWest,
+                    TrackType::WestEast,
                     TrackType::NorthWest,
                     TrackType::SouthWest,
                 ]
@@ -150,7 +150,7 @@ impl TrackType {
             TrackType::NorthEast => (DirectionXZ::North, DirectionXZ::East),
             TrackType::NorthSouth => (DirectionXZ::North, DirectionXZ::South),
             TrackType::NorthWest => (DirectionXZ::West, DirectionXZ::North),
-            TrackType::EastWest => (DirectionXZ::East, DirectionXZ::West),
+            TrackType::WestEast => (DirectionXZ::East, DirectionXZ::West),
             TrackType::SouthEast => (DirectionXZ::East, DirectionXZ::South),
             TrackType::SouthWest => (DirectionXZ::South, DirectionXZ::West),
         }
@@ -159,7 +159,7 @@ impl TrackType {
     #[must_use]
     pub const fn length(self) -> TrackLength {
         let result = match self {
-            TrackType::NorthSouth | TrackType::EastWest => 1.0,
+            TrackType::NorthSouth | TrackType::WestEast => 1.0,
             TrackType::NorthEast
             | TrackType::NorthWest
             | TrackType::SouthEast

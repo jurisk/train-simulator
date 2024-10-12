@@ -48,7 +48,7 @@ impl BuildingAssets {
                         station_type.length_in_tiles as f32,
                     )
                 },
-                StationOrientation::EastToWest => {
+                StationOrientation::WestToEast => {
                     (
                         station_type.length_in_tiles as f32,
                         station_type.platforms as f32,
