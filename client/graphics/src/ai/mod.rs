@@ -4,7 +4,7 @@ use bevy::prelude::{
     TimerMode, in_state,
 };
 use bevy::utils::HashMap;
-use game_ai::{ArtificialIntelligenceState, ai_commands};
+use game_ai::ArtificialIntelligenceState;
 use shared_domain::PlayerId;
 use shared_domain::client_command::ClientCommand;
 use shared_domain::game_state::GameState;
@@ -90,7 +90,7 @@ fn ai_step(
     client_messages: &mut EventWriter<ClientMessageEvent>,
     ai_state: &mut ArtificialIntelligenceState,
 ) {
-    let commands = ai_commands(player_id, game_state, ai_state, &NoopMetrics::default());
+    let commands = ai_state.ai_commands(player_id, game_state, &NoopMetrics::default());
 
     if let Some(commands) = commands {
         for command in commands {

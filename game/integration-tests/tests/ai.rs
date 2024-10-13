@@ -1,6 +1,6 @@
 #![expect(clippy::unwrap_used)]
 
-use game_ai::{ArtificialIntelligenceState, ai_commands};
+use game_ai::ArtificialIntelligenceState;
 use game_logic::games_service::GamesService;
 use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};
@@ -94,12 +94,8 @@ fn run_ai_commands(
     game_id: GameId,
     user_id: UserId,
 ) {
-    let commands = ai_commands(
-        player_id,
-        game_state,
-        artificial_intelligence_state,
-        &NoopMetrics::default(),
-    );
+    let commands =
+        artificial_intelligence_state.ai_commands(player_id, game_state, &NoopMetrics::default());
     if let Some(commands) = commands {
         for command in commands {
             let responses = games_service.process_command(game_id, user_id, &command);
