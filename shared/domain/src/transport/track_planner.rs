@@ -58,7 +58,7 @@ pub fn plan_tracks(
     targets: &[DirectionalEdge],
     game_state: &GameState,
     already_exists_coef: f32,
-    metrics: &impl Metrics,
+    metrics: &dyn Metrics,
 ) -> Option<(Vec<TrackInfo>, TrackLength)> {
     targets.is_empty().then_none()?;
 

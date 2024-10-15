@@ -1,6 +1,7 @@
 #![expect(clippy::unwrap_used)]
 
 use game_ai::ArtificialIntelligenceState;
+use game_ai::sep2025::Sep2025ArtificialIntelligenceState;
 use game_logic::games_service::GamesService;
 use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};
@@ -90,7 +91,7 @@ fn run_ai_commands(
     games_service: &mut GamesService,
     player_id: PlayerId,
     game_state: &GameState,
-    artificial_intelligence_state: &mut ArtificialIntelligenceState,
+    artificial_intelligence_state: &mut dyn ArtificialIntelligenceState,
     game_id: GameId,
     user_id: UserId,
 ) {
@@ -110,16 +111,26 @@ fn run_ai_commands(
 }
 
 #[test]
-fn ai_until_final_goods_built() {
+fn ai_until_final_goods_built_sep2025() {
+    let mut artificial_intelligence_state_1 = Sep2025ArtificialIntelligenceState::default();
+    let mut artificial_intelligence_state_2 = Sep2025ArtificialIntelligenceState::default();
+    ai_until_final_goods_built(
+        &mut artificial_intelligence_state_1,
+        &mut artificial_intelligence_state_2,
+    );
+}
+
+fn ai_until_final_goods_built(
+    artificial_intelligence_state_1: &mut dyn ArtificialIntelligenceState,
+    artificial_intelligence_state_2: &mut dyn ArtificialIntelligenceState,
+) {
     let mut games_service = GamesService::new(false);
 
     let user_id_1 = UserId::random();
     let (game_id, player_id_1) = create_and_join(&mut games_service, user_id_1);
-    let mut artificial_intelligence_state_1 = ArtificialIntelligenceState::default();
 
     let user_id_2 = UserId::random();
     let player_id_2 = join_game(&mut games_service, game_id, user_id_2);
-    let mut artificial_intelligence_state_2 = ArtificialIntelligenceState::default();
 
     let mut time = GameTime::new();
 
@@ -138,7 +149,7 @@ fn ai_until_final_goods_built() {
             &mut games_service,
             player_id_1,
             &game_state,
-            &mut artificial_intelligence_state_1,
+            artificial_intelligence_state_1,
             game_id,
             user_id_1,
         );
@@ -150,7 +161,7 @@ fn ai_until_final_goods_built() {
             &mut games_service,
             player_id_2,
             &game_state,
-            &mut artificial_intelligence_state_2,
+            artificial_intelligence_state_2,
             game_id,
             user_id_2,
         );
