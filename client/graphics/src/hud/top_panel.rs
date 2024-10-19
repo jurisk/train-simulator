@@ -8,7 +8,7 @@ use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::transport_type::TransportType;
 
-use crate::ai::ArtificialIntelligenceTimers;
+use crate::ai::ArtificialIntelligenceResource;
 use crate::game::GameStateResource;
 use crate::hud::PointerOverHud;
 use crate::hud::domain::{DemolishType, SelectedMode, TracksBuildingType};
@@ -21,7 +21,7 @@ pub(crate) fn show_top_panel(
     mut contexts: EguiContexts,
     game_state: Res<GameStateResource>,
     mut selected_mode: ResMut<SelectedMode>,
-    mut ai_timers: ResMut<ArtificialIntelligenceTimers>,
+    mut ai_resource: ResMut<ArtificialIntelligenceResource>,
     mut pointer_over_hud: ResMut<PointerOverHud>,
     mut exit: EventWriter<AppExit>,
 ) {
@@ -42,7 +42,7 @@ pub(crate) fn show_top_panel(
             military_menu(&mut selected_mode, ui);
             trains_menu(&mut selected_mode, ui);
             demolish_menu(&mut selected_mode, ui);
-            ai_menu(&mut ai_timers, game_state, ui);
+            ai_menu(&mut ai_resource, game_state, ui);
             actions_menu(&mut exit, ui);
         });
     });
@@ -232,7 +232,7 @@ fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 }
 
 fn ai_menu(
-    ai_timers: &mut ResMut<ArtificialIntelligenceTimers>,
+    ai_resource: &mut ResMut<ArtificialIntelligenceResource>,
     game_state: &GameState,
     ui: &mut Ui,
 ) {
@@ -251,7 +251,7 @@ fn ai_menu(
                 )
                 .clicked()
             {
-                ai_timers.as_mut().disable(player_id);
+                ai_resource.as_mut().disable(player_id);
                 ui.close_menu();
             }
 
@@ -267,7 +267,7 @@ fn ai_menu(
                     )
                     .clicked()
                 {
-                    ai_timers.as_mut().enable(player_id, seconds);
+                    ai_resource.as_mut().enable(player_id, seconds, game_state);
                     ui.close_menu();
                 }
             }

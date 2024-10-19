@@ -19,7 +19,7 @@ version = "0.1.0"
 authors = ["jurisk <jurisk@users.noreply.github.com>"]
 license = "LicenceRef-JurisKrikis-Proprietary"
 edition = "2021"
-rust-version = "1.81.0"
+rust-version = "1.82.0"
 
 [workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }

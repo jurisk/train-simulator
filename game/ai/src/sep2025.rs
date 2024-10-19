@@ -28,6 +28,13 @@ pub struct Sep2025ArtificialIntelligenceState {
     track_connections_built: HashSet<SetOfTwo<TileTrack>>,
 }
 
+impl Sep2025ArtificialIntelligenceState {
+    #[must_use]
+    pub fn new(_game_state: &GameState) -> Self {
+        Self::default()
+    }
+}
+
 impl ArtificialIntelligenceState for Sep2025ArtificialIntelligenceState {
     fn ai_commands(
         &mut self,

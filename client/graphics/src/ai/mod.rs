@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::log::info;
 use bevy::prelude::{
     App, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time, Timer,
@@ -15,40 +17,30 @@ use crate::communication::domain::ClientMessageEvent;
 use crate::game::GameStateResource;
 use crate::states::ClientState;
 
-#[derive(Resource)]
-pub struct ArtificialIntelligenceTimers {
-    timers: HashMap<PlayerId, Timer>,
+#[derive(Resource, Default)]
+pub struct ArtificialIntelligenceResource {
+    map: HashMap<PlayerId, (Timer, Box<dyn ArtificialIntelligenceState>)>,
 }
 
-impl ArtificialIntelligenceTimers {
-    #[must_use]
-    pub fn empty() -> Self {
-        Self {
-            timers: HashMap::new(),
+impl ArtificialIntelligenceResource {
+    pub fn disable(&mut self, player_id: PlayerId) {
+        info!("Disabling AI timer for player {player_id}");
+        if let Some((timer, _)) = self.map.get_mut(&player_id) {
+            timer.set_duration(Duration::MAX);
         }
     }
 
-    pub fn disable(&mut self, player_id: PlayerId) {
-        info!("Disabling AI timer for player {player_id}");
-        self.timers.remove(&player_id);
-    }
-
-    pub fn enable(&mut self, player_id: PlayerId, seconds: f32) {
+    pub fn enable(&mut self, player_id: PlayerId, seconds: f32, game_state: &GameState) {
+        // Insert a new AI state if it doesn't exist
         info!("Enabling AI timer for player {player_id}: {seconds} seconds");
-        self.timers.insert(
-            player_id,
-            Timer::from_seconds(seconds, TimerMode::Repeating),
-        );
-    }
-}
-
-#[derive(Resource)]
-pub struct ArtificialIntelligenceStateResource(Box<dyn ArtificialIntelligenceState + Send + Sync>);
-
-impl ArtificialIntelligenceStateResource {
-    #[must_use]
-    pub fn new(state: Box<dyn ArtificialIntelligenceState + Send + Sync>) -> Self {
-        Self(state)
+        let duration = Duration::from_secs_f32(seconds);
+        if let Some((timer, _)) = self.map.get_mut(&player_id) {
+            timer.set_duration(duration);
+        } else {
+            let timer = Timer::new(duration, TimerMode::Repeating);
+            let state = Box::new(Sep2025ArtificialIntelligenceState::new(game_state));
+            self.map.insert(player_id, (timer, state));
+        }
     }
 }
 
@@ -56,7 +48,7 @@ pub struct ArtificialIntelligencePlugin;
 
 impl Plugin for ArtificialIntelligencePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ArtificialIntelligenceTimers::empty());
+        app.insert_resource(ArtificialIntelligenceResource::default());
         app.add_systems(
             FixedUpdate,
             update_timer.run_if(in_state(ClientState::Playing)),
@@ -65,36 +57,29 @@ impl Plugin for ArtificialIntelligencePlugin {
             FixedUpdate,
             act_upon_timer.run_if(in_state(ClientState::Playing)),
         );
-        app.insert_resource(ArtificialIntelligenceStateResource::new(Box::new(
-            Sep2025ArtificialIntelligenceState::default(),
-        )));
+        // app.insert_resource(ArtificialIntelligenceStateResource::new(Box::new(
+        //     Sep2025ArtificialIntelligenceState::default(),
+        // )));
     }
 }
 
 #[expect(clippy::needless_pass_by_value)]
-fn update_timer(time: Res<Time>, mut timers: ResMut<ArtificialIntelligenceTimers>) {
-    for timer in timers.timers.values_mut() {
+fn update_timer(time: Res<Time>, mut timers: ResMut<ArtificialIntelligenceResource>) {
+    for (timer, _) in timers.map.values_mut() {
         timer.tick(time.delta());
     }
 }
 
 #[expect(clippy::needless_pass_by_value)]
 fn act_upon_timer(
-    timers: Res<ArtificialIntelligenceTimers>,
+    mut artificial_intelligence_resource: ResMut<ArtificialIntelligenceResource>,
     mut client_messages: EventWriter<ClientMessageEvent>,
     game_state_resource: Res<GameStateResource>,
-    mut ai_state_resource: ResMut<ArtificialIntelligenceStateResource>,
 ) {
-    let ArtificialIntelligenceStateResource(ai_state) = &mut *ai_state_resource;
-    for (player_id, timer) in &timers.timers {
+    for (player_id, (timer, ref mut state)) in &mut artificial_intelligence_resource.map {
         if timer.just_finished() {
             let GameStateResource(game_state) = game_state_resource.as_ref();
-            ai_step(
-                *player_id,
-                game_state,
-                &mut client_messages,
-                ai_state.as_mut(),
-            );
+            ai_step(*player_id, game_state, &mut client_messages, state.as_mut());
         }
     }
 }
