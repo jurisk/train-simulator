@@ -23,30 +23,32 @@ use shared_util::random::choose;
 use crate::{ArtificialIntelligenceState, SetOfTwo};
 
 #[expect(clippy::module_name_repetitions)]
-#[derive(Default)]
 pub struct Sep2025ArtificialIntelligenceState {
+    player_id:               PlayerId,
     track_connections_built: HashSet<SetOfTwo<TileTrack>>,
 }
 
 impl Sep2025ArtificialIntelligenceState {
     #[must_use]
-    pub fn new(_game_state: &GameState) -> Self {
-        Self::default()
+    pub fn new(player_id: PlayerId, _game_state: &GameState) -> Self {
+        Self {
+            player_id,
+            track_connections_built: HashSet::new(),
+        }
     }
 }
 
 impl ArtificialIntelligenceState for Sep2025ArtificialIntelligenceState {
     fn ai_commands(
         &mut self,
-        player_id: PlayerId,
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> Option<Vec<GameCommand>> {
         // TODO HIGH: Try to build military buildings if you have enough resources
-        self.try_building_transports(player_id, game_state)
-            .or_else(|| self.try_building_tracks(player_id, game_state, metrics))
-            .or_else(|| self.try_building_stations(player_id, game_state))
-            .or_else(|| self.try_building_industry_buildings(player_id, game_state))
+        self.try_building_transports(self.player_id, game_state)
+            .or_else(|| self.try_building_tracks(self.player_id, game_state, metrics))
+            .or_else(|| self.try_building_stations(self.player_id, game_state))
+            .or_else(|| self.try_building_industry_buildings(self.player_id, game_state))
     }
 }
 

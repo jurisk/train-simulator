@@ -38,7 +38,9 @@ impl ArtificialIntelligenceResource {
             timer.set_duration(duration);
         } else {
             let timer = Timer::new(duration, TimerMode::Repeating);
-            let state = Box::new(Sep2025ArtificialIntelligenceState::new(game_state));
+            // TODO HIGH: Make switchable between different AI implementations
+            let ai_state = Sep2025ArtificialIntelligenceState::new(player_id, game_state);
+            let state = Box::new(ai_state);
             self.map.insert(player_id, (timer, state));
         }
     }
@@ -76,21 +78,20 @@ fn act_upon_timer(
     mut client_messages: EventWriter<ClientMessageEvent>,
     game_state_resource: Res<GameStateResource>,
 ) {
-    for (player_id, (timer, ref mut state)) in &mut artificial_intelligence_resource.map {
+    for (_player_id, (timer, ref mut state)) in &mut artificial_intelligence_resource.map {
         if timer.just_finished() {
             let GameStateResource(game_state) = game_state_resource.as_ref();
-            ai_step(*player_id, game_state, &mut client_messages, state.as_mut());
+            ai_step(game_state, &mut client_messages, state.as_mut());
         }
     }
 }
 
 fn ai_step(
-    player_id: PlayerId,
     game_state: &GameState,
     client_messages: &mut EventWriter<ClientMessageEvent>,
     ai_state: &mut dyn ArtificialIntelligenceState,
 ) {
-    let commands = ai_state.ai_commands(player_id, game_state, &NoopMetrics::default());
+    let commands = ai_state.ai_commands(game_state, &NoopMetrics::default());
 
     if let Some(commands) = commands {
         for command in commands {

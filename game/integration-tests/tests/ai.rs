@@ -1,6 +1,7 @@
 #![expect(clippy::unwrap_used)]
 
 use game_ai::ArtificialIntelligenceState;
+use game_ai::oct2025::Oct2025ArtificialIntelligenceState;
 use game_ai::sep2025::Sep2025ArtificialIntelligenceState;
 use game_logic::games_service::GamesService;
 use shared_domain::cargo_amount::CargoAmount;
@@ -89,14 +90,12 @@ fn player_has_enough_cargo(game_state: &GameState, player_id: PlayerId) -> bool 
 
 fn run_ai_commands(
     games_service: &mut GamesService,
-    player_id: PlayerId,
     game_state: &GameState,
     artificial_intelligence_state: &mut dyn ArtificialIntelligenceState,
     game_id: GameId,
     user_id: UserId,
 ) {
-    let commands =
-        artificial_intelligence_state.ai_commands(player_id, game_state, &NoopMetrics::default());
+    let commands = artificial_intelligence_state.ai_commands(game_state, &NoopMetrics::default());
     if let Some(commands) = commands {
         for command in commands {
             let responses = games_service.process_command(game_id, user_id, &command);
@@ -112,18 +111,27 @@ fn run_ai_commands(
 
 #[test]
 fn ai_until_final_goods_built_sep2025() {
-    let mut artificial_intelligence_state_1 = Sep2025ArtificialIntelligenceState::default();
-    let mut artificial_intelligence_state_2 = Sep2025ArtificialIntelligenceState::default();
-    ai_until_final_goods_built(
-        &mut artificial_intelligence_state_1,
-        &mut artificial_intelligence_state_2,
-    );
+    ai_until_final_goods_built(|player_id: PlayerId, game_state: &GameState| {
+        Box::new(Sep2025ArtificialIntelligenceState::new(
+            player_id, game_state,
+        ))
+    });
 }
 
-fn ai_until_final_goods_built(
-    artificial_intelligence_state_1: &mut dyn ArtificialIntelligenceState,
-    artificial_intelligence_state_2: &mut dyn ArtificialIntelligenceState,
-) {
+#[test]
+fn ai_until_final_goods_built_oct2025() {
+    ai_until_final_goods_built(|player_id: PlayerId, game_state: &GameState| {
+        Box::new(Oct2025ArtificialIntelligenceState::new(
+            player_id, game_state,
+        ))
+    });
+}
+
+const MAX_STEPS: usize = 1_000;
+fn ai_until_final_goods_built<F>(factory: F)
+where
+    F: Fn(PlayerId, &GameState) -> Box<dyn ArtificialIntelligenceState>,
+{
     let mut games_service = GamesService::new(false);
 
     let user_id_1 = UserId::random();
@@ -134,7 +142,15 @@ fn ai_until_final_goods_built(
 
     let mut time = GameTime::new();
 
-    loop {
+    let game_state_1 = get_snapshot(&mut games_service, game_id, user_id_1);
+    let mut artificial_intelligence_state_1 = factory(player_id_1, &game_state_1);
+
+    let game_state_2 = get_snapshot(&mut games_service, game_id, user_id_2);
+    let mut artificial_intelligence_state_2 = factory(player_id_2, &game_state_2);
+
+    let mut steps = 0;
+
+    while steps < MAX_STEPS {
         let game_state = get_snapshot(&mut games_service, game_id, user_id_1);
 
         // Later: Optimise so you can do `&&` instead of `||` here
@@ -142,14 +158,14 @@ fn ai_until_final_goods_built(
         if player_has_enough_cargo(&game_state, player_id_1)
             || player_has_enough_cargo(&game_state, player_id_2)
         {
-            break;
+            println!("AI finished in {steps} steps");
+            return;
         }
 
         run_ai_commands(
             &mut games_service,
-            player_id_1,
             &game_state,
-            artificial_intelligence_state_1,
+            artificial_intelligence_state_1.as_mut(),
             game_id,
             user_id_1,
         );
@@ -159,14 +175,17 @@ fn ai_until_final_goods_built(
 
         run_ai_commands(
             &mut games_service,
-            player_id_2,
             &game_state,
-            artificial_intelligence_state_2,
+            artificial_intelligence_state_2.as_mut(),
             game_id,
             user_id_2,
         );
 
         time = time + GameTimeDiff::from_seconds(0.1);
         games_service.advance_times(time, &NoopMetrics::default());
+
+        steps += 1;
     }
+
+    panic!("AI did not finish in {MAX_STEPS} steps");
 }
