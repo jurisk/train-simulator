@@ -8,6 +8,7 @@ use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
+use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::{IndustryBuildingId, PlayerId};
 
 use crate::ArtificialIntelligenceState;
@@ -54,10 +55,11 @@ impl Oct2025ArtificialIntelligenceState {
         &self,
         game_state: &GameState,
         industry_type: IndustryType,
+        reference_tile: TileCoordsXZ,
     ) -> Option<IndustryBuildingInfo> {
         let free = game_state.all_free_zonings();
 
-        let candidates: Vec<_> = free
+        let found = free
             .iter()
             .filter(|zoning| Some(zoning.zoning_type()) == industry_type.required_zoning())
             .map(|zoning| {
@@ -73,10 +75,10 @@ impl Oct2025ArtificialIntelligenceState {
                     .can_build_industry_building(self.player_id, info)
                     .is_ok()
             })
-            .collect();
+            .min_by_key(|info| info.reference_tile().manhattan_distance(reference_tile));
 
         // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place - closest to the industries for its inputs/outputs, or even just closest to ConstructionYard.
-        if let Some(info) = candidates.first() {
+        if let Some(info) = found {
             Some(info.clone())
         } else {
             debug!("No free zoning for {:?}", industry_type);
@@ -88,13 +90,16 @@ impl Oct2025ArtificialIntelligenceState {
         &self,
         game_state: &GameState,
         industries: &[IndustryType],
-        known: HashMap<IndustryType, IndustryBuildingId>,
+        known: &HashMap<IndustryType, IndustryBuildingId>,
+        reference_tile: TileCoordsXZ,
     ) -> Vec<GameCommand> {
         let mut results = vec![];
         let mut known = known.clone();
         for industry in industries {
             if !known.contains_key(industry) {
-                if let Some(building) = self.select_industry_building(game_state, *industry) {
+                if let Some(building) =
+                    self.select_industry_building(game_state, *industry, reference_tile)
+                {
                     known.insert(*industry, building.id());
                     results.push(GameCommand::BuildIndustryBuilding(building));
                 }
@@ -112,6 +117,13 @@ impl Oct2025ArtificialIntelligenceState {
     fn commands_for_goal(&self, game_state: &GameState, goal: Goal) -> Vec<GameCommand> {
         match goal {
             Goal::SteelToConstructionYard(construction_yard_id) => {
+                let reference_tile = game_state
+                    .building_state()
+                    .find_industry_building(construction_yard_id)
+                    .expect(&format!(
+                        "Expected to find construction yard {construction_yard_id}"
+                    ))
+                    .reference_tile();
                 self.build_fully_connected_supply_chain(
                     game_state,
                     &[
@@ -120,7 +132,8 @@ impl Oct2025ArtificialIntelligenceState {
                         IndustryType::SteelMill,
                         IndustryType::ConstructionYard,
                     ],
-                    HashMap::from([(IndustryType::ConstructionYard, construction_yard_id)]),
+                    &HashMap::from([(IndustryType::ConstructionYard, construction_yard_id)]),
+                    reference_tile,
                 )
             },
             Goal::TimberToConstructionYard(_construction_yard_id) => {
@@ -137,7 +150,7 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
     fn ai_commands(
         &mut self,
         game_state: &GameState,
-        metrics: &dyn Metrics,
+        _metrics: &dyn Metrics,
     ) -> Option<Vec<GameCommand>> {
         let next_goal = self.pending_goals.first().copied();
         match next_goal {
