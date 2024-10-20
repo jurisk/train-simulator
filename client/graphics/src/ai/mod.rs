@@ -7,7 +7,7 @@ use bevy::prelude::{
 };
 use bevy::utils::HashMap;
 use game_ai::ArtificialIntelligenceState;
-use game_ai::sep2025::Sep2025ArtificialIntelligenceState;
+use game_ai::oct2025::Oct2025ArtificialIntelligenceState;
 use shared_domain::PlayerId;
 use shared_domain::client_command::ClientCommand;
 use shared_domain::game_state::GameState;
@@ -39,7 +39,7 @@ impl ArtificialIntelligenceResource {
         } else {
             let timer = Timer::new(duration, TimerMode::Repeating);
             // TODO HIGH: Make switchable between different AI implementations
-            let ai_state = Sep2025ArtificialIntelligenceState::new(player_id, game_state);
+            let ai_state = Oct2025ArtificialIntelligenceState::new(player_id, game_state);
             let state = Box::new(ai_state);
             self.map.insert(player_id, (timer, state));
         }

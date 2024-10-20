@@ -1,5 +1,9 @@
 #![expect(clippy::module_name_repetitions)]
 
+use std::collections::HashMap;
+
+use log::debug;
+use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
@@ -46,8 +50,86 @@ impl Oct2025ArtificialIntelligenceState {
 }
 
 impl Oct2025ArtificialIntelligenceState {
-    fn commands_for_goal(&mut self, goal: Goal) -> Vec<GameCommand> {
-        vec![]
+    fn select_industry_building(
+        &self,
+        game_state: &GameState,
+        industry_type: IndustryType,
+    ) -> Option<IndustryBuildingInfo> {
+        let free = game_state.all_free_zonings();
+
+        let candidates: Vec<_> = free
+            .iter()
+            .filter(|zoning| Some(zoning.zoning_type()) == industry_type.required_zoning())
+            .map(|zoning| {
+                IndustryBuildingInfo::new(
+                    self.player_id,
+                    IndustryBuildingId::random(),
+                    zoning.reference_tile(),
+                    industry_type,
+                )
+            })
+            .filter(|info| {
+                game_state
+                    .can_build_industry_building(self.player_id, info)
+                    .is_ok()
+            })
+            .collect();
+
+        // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place - closest to the industries for its inputs/outputs, or even just closest to ConstructionYard.
+        if let Some(info) = candidates.first() {
+            Some(info.clone())
+        } else {
+            debug!("No free zoning for {:?}", industry_type);
+            None
+        }
+    }
+
+    fn build_fully_connected_supply_chain(
+        &self,
+        game_state: &GameState,
+        industries: &[IndustryType],
+        known: HashMap<IndustryType, IndustryBuildingId>,
+    ) -> Vec<GameCommand> {
+        let mut results = vec![];
+        let mut known = known.clone();
+        for industry in industries {
+            if !known.contains_key(industry) {
+                if let Some(building) = self.select_industry_building(game_state, *industry) {
+                    known.insert(*industry, building.id());
+                    results.push(GameCommand::BuildIndustryBuilding(building));
+                }
+            }
+        }
+
+        // TODO HIGH: Ensure all stations are built
+        // TODO HIGH: Ensure all tracks are built
+        // TODO HIGH: Ensure all trains are built
+        // TODO HIGH: Return what we have built to ensure that these are now "locked" for that goal and not reused for other goals... the nuance here is that LumberMill produces Cellulose and Timber... and only Timber gets used in Timber flow...
+
+        results
+    }
+
+    fn commands_for_goal(&self, game_state: &GameState, goal: Goal) -> Vec<GameCommand> {
+        match goal {
+            Goal::SteelToConstructionYard(construction_yard_id) => {
+                self.build_fully_connected_supply_chain(
+                    game_state,
+                    &[
+                        IndustryType::IronMine,
+                        IndustryType::CoalMine,
+                        IndustryType::SteelMill,
+                        IndustryType::ConstructionYard,
+                    ],
+                    HashMap::from([(IndustryType::ConstructionYard, construction_yard_id)]),
+                )
+            },
+            Goal::TimberToConstructionYard(_construction_yard_id) => {
+                vec![] // TODO HIGH
+            },
+            Goal::ConcreteToConstructionYard(_construction_yard_id) => {
+                vec![] // TODO HIGH
+            },
+        }
     }
 }
 
@@ -63,7 +145,7 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
             Some(goal) => {
                 // TODO: This assumes that the goal is always achieved, that all commands succeed. That's wrong.
                 self.pending_goals.remove(0);
-                Some(self.commands_for_goal(goal))
+                Some(self.commands_for_goal(game_state, goal))
             },
         }
     }
