@@ -34,6 +34,7 @@ pub enum IndustryType {
     ExplosivesPlant,
     FoodProcessingPlant,
     LumberMill,
+    CellulosePlant,
     CementPlant,
     OilRefinery,
     ConcretePlant,
@@ -63,6 +64,7 @@ impl Debug for IndustryType {
             ExplosivesPlant => write!(f, "ExplosivesPlant"),
             FoodProcessingPlant => write!(f, "FoodProcessingPlant"),
             LumberMill => write!(f, "LumberMill"),
+            CellulosePlant => write!(f, "CellulosePlant"),
             CementPlant => write!(f, "CementPlant"),
             OilRefinery => write!(f, "OilRefinery"),
             ConcretePlant => write!(f, "ConcretePlant"),
@@ -127,6 +129,7 @@ impl IndustryType {
             ExplosivesPlant => Some(Industrial),
             FoodProcessingPlant => Some(Industrial),
             LumberMill => Some(Industrial),
+            CellulosePlant => Some(Industrial),
             CementPlant => Some(Industrial),
             OilRefinery => Some(Industrial),
             ConcretePlant => Some(Industrial),
@@ -147,6 +150,16 @@ impl IndustryType {
             .iter()
             .map(|item| item.resource)
             .collect()
+    }
+
+    #[must_use]
+    pub fn produces(self, resource: ResourceType) -> bool {
+        self.output_resource_types().contains(&resource)
+    }
+
+    #[must_use]
+    pub fn consumes(self, resource: ResourceType) -> bool {
+        self.input_resource_types().contains(&resource)
     }
 
     #[must_use]
@@ -187,9 +200,8 @@ impl IndustryType {
             FoodProcessingPlant => {
                 ResourceTransform::make(vec![(FarmProducts, X1)], vec![(Food, X1)])
             },
-            LumberMill => {
-                ResourceTransform::make(vec![(Wood, X1)], vec![(Cellulose, X1), (Timber, X1)])
-            },
+            LumberMill => ResourceTransform::make(vec![(Wood, X1)], vec![(Timber, X1)]),
+            CellulosePlant => ResourceTransform::make(vec![(Wood, X1)], vec![(Cellulose, X1)]),
             CementPlant => {
                 ResourceTransform::make(vec![(Clay, X1), (Limestone, X1)], vec![(Cement, X1)])
             },

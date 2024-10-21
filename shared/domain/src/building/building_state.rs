@@ -284,6 +284,16 @@ impl BuildingState {
     }
 
     #[must_use]
+    pub fn find_linked_station(
+        &self,
+        industry_building_id: IndustryBuildingId,
+    ) -> Option<&StationInfo> {
+        self.closest_station_link
+            .get(&industry_building_id)
+            .and_then(|station_id| self.stations.get(station_id))
+    }
+
+    #[must_use]
     pub fn find_players_industry_buildings_without_linked_stations(
         &self,
         player_id: PlayerId,

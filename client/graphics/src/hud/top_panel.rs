@@ -136,6 +136,7 @@ fn industry_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
                 IndustryType::ExplosivesPlant => "💣",
                 IndustryType::FoodProcessingPlant => "🍖",
                 IndustryType::LumberMill => "🪵",
+                IndustryType::CellulosePlant => "🪵",
                 IndustryType::CementPlant => "🪵",
                 IndustryType::OilRefinery => "🛢",
                 IndustryType::ConcretePlant => "🪵",

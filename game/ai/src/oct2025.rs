@@ -8,9 +8,12 @@ use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::station_type::{StationOrientation, StationType};
 use shared_domain::client_command::GameCommand;
+use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
+use shared_domain::resource_type::ResourceType;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
+use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
 use shared_domain::{IndustryBuildingId, PlayerId, StationId};
 use shared_util::direction_xz::DirectionXZ;
 use shared_util::random::choose;
@@ -131,40 +134,116 @@ impl Oct2025ArtificialIntelligenceState {
             .clone()
     }
 
+    fn resource_links(
+        industries: &[IndustryType],
+    ) -> Vec<(IndustryType, ResourceType, IndustryType)> {
+        let mut results = vec![];
+        for a in industries {
+            for b in industries {
+                for c in ResourceType::all() {
+                    if a.produces(c) && b.consumes(c) {
+                        results.push((*a, c, *b));
+                    }
+                }
+            }
+        }
+        results
+    }
+
     fn build_fully_connected_supply_chain(
         &self,
         game_state: &GameState,
         industries: &[IndustryType],
         known: &HashMap<IndustryType, IndustryBuildingId>,
         reference_tile: TileCoordsXZ,
+        metrics: &dyn Metrics,
     ) -> Vec<GameCommand> {
         let mut results = vec![];
         let mut known = known.clone();
         let mut stations = HashMap::new();
         for industry in industries {
-            if !known.contains_key(industry) {
-                if let Some(building) =
-                    self.select_industry_building(game_state, *industry, reference_tile)
-                {
-                    known.insert(*industry, building.id());
-                    let station = self.select_station_building(game_state, &building);
-                    stations.insert(building.id(), station.clone());
+            let existing = known.get(industry);
+            match existing {
+                None => {
+                    if let Some(building) =
+                        self.select_industry_building(game_state, *industry, reference_tile)
+                    {
+                        known.insert(*industry, building.id());
+                        let station = self.select_station_building(game_state, &building);
+                        stations.insert(building.id(), station.clone());
 
-                    results.push(GameCommand::BuildIndustryBuilding(building));
-                    results.push(GameCommand::BuildStation(station));
-                }
+                        results.push(GameCommand::BuildIndustryBuilding(building));
+                        results.push(GameCommand::BuildStation(station));
+                    }
+                },
+                Some(building) => {
+                    let building = game_state
+                        .building_state()
+                        .find_industry_building(*building)
+                        .unwrap();
+                    match game_state
+                        .building_state()
+                        .find_linked_station(building.id())
+                    {
+                        None => {
+                            let station = self.select_station_building(game_state, building);
+                            stations.insert(building.id(), station.clone());
+                            results.push(GameCommand::BuildStation(station));
+                        },
+                        Some(station) => {
+                            stations.insert(building.id(), station.clone());
+                        },
+                    }
+                },
             }
         }
 
-        // TODO HIGH: What about the station for ConstructionYard !?
-        // TODO HIGH: Ensure all tracks are built
-        // TODO HIGH: Ensure all trains are built
-        // TODO HIGH: Return what we have built to ensure that these are now "locked" for that goal and not reused for other goals... the nuance here is that LumberMill produces Cellulose and Timber... and only Timber gets used in Timber flow...
+        for (from_industry, resource, to_industry) in Self::resource_links(industries) {
+            let from_station = stations.get(&known[&from_industry]).unwrap();
+            let to_station = stations.get(&known[&to_industry]).unwrap();
+            let mut pairs = vec![];
+            for track_a in from_station.station_exit_tile_tracks() {
+                for track_b in to_station.station_exit_tile_tracks() {
+                    pairs.push((track_a, track_b));
+                    pairs.push((track_b, track_a));
+                }
+            }
+
+            for (source, target) in pairs {
+                if let Some((route, _length)) = plan_tracks(
+                    self.player_id,
+                    DirectionalEdge::exit_from(source),
+                    &[DirectionalEdge::entrance_to(target)],
+                    game_state,
+                    DEFAULT_ALREADY_EXISTS_COEF,
+                    metrics,
+                ) {
+                    if route.is_empty() {
+                        // If it's empty, it means it's already built
+                        continue;
+                    }
+                    if game_state.can_build_tracks(self.player_id, &route).is_ok() {
+                        results.push(GameCommand::BuildTracks(route));
+                    }
+                } else {
+                    debug!("No route found for {:?} -> {:?}", source, target);
+                }
+            }
+            // TODO HIGH: Ensure all tracks are built
+            // TODO HIGH: Ensure all trains are built
+        }
+
+        // TODO HIGH: Return what we have built to ensure that these are now "locked" for that goal and not reused for other goals...
 
         results
     }
 
-    fn commands_for_goal(&self, game_state: &GameState, goal: Goal) -> Vec<GameCommand> {
+    fn commands_for_goal(
+        &self,
+        game_state: &GameState,
+        goal: Goal,
+        metrics: &dyn Metrics,
+    ) -> Vec<GameCommand> {
         match goal {
             Goal::SteelToConstructionYard(construction_yard_id) => {
                 let reference_tile = game_state
@@ -184,6 +263,7 @@ impl Oct2025ArtificialIntelligenceState {
                     ],
                     &HashMap::from([(IndustryType::ConstructionYard, construction_yard_id)]),
                     reference_tile,
+                    metrics,
                 )
             },
             Goal::TimberToConstructionYard(_construction_yard_id) => {
@@ -200,7 +280,7 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
     fn ai_commands(
         &mut self,
         game_state: &GameState,
-        _metrics: &dyn Metrics,
+        metrics: &dyn Metrics,
     ) -> Option<Vec<GameCommand>> {
         let next_goal = self.pending_goals.first().copied();
         match next_goal {
@@ -208,7 +288,7 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
             Some(goal) => {
                 // TODO: This assumes that the goal is always achieved, that all commands succeed. That's wrong.
                 self.pending_goals.remove(0);
-                Some(self.commands_for_goal(game_state, goal))
+                Some(self.commands_for_goal(game_state, goal, metrics))
             },
         }
     }

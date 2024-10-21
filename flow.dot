@@ -36,6 +36,7 @@ digraph G {
     WeaponsFactory [label = "Weapons Factory"];
     TrainFactory [label = "Train Factory"];
     LumberMill [label = "Lumber Mill"];
+    CellulosePlant [label = "Cellulose Plant"];
     AmmunitionFactory [label = "Ammunition Factory"];
     OilRefinery [label = "Oil Refinery"];
     CementPlant [label = "Cement Plant"];
@@ -139,11 +140,12 @@ digraph G {
     Forest -> Forestry;
     Forestry -> Wood;
     Wood -> LumberMill;
-    LumberMill -> Cellulose;
-    Cellulose -> NitrationPlant;
     LumberMill -> Timber;
     Timber -> Construction;
 
+    Wood -> CellulosePlant;
+    CellulosePlant -> Cellulose;
+    Cellulose -> NitrationPlant;
     NitrateDeposit -> NitrateMine;
     NitricAcidPlant -> NitricAcid;
     NitricAcid -> NitrationPlant;
