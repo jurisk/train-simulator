@@ -20,11 +20,29 @@ use shared_util::random::choose;
 
 use crate::ArtificialIntelligenceState;
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 enum Goal {
-    SteelToConstructionYard(IndustryBuildingId),
-    TimberToConstructionYard(IndustryBuildingId),
-    ConcreteToConstructionYard(IndustryBuildingId),
+    BuildSupplyChain {
+        resource_type: ResourceType,
+        target_type:   IndustryType,
+        resolved:      HashMap<IndustryType, (IndustryBuildingId, TileCoordsXZ)>,
+    },
+}
+
+impl Goal {
+    #[must_use]
+    pub fn build_supply_chain(
+        resource_type: ResourceType,
+        target_type: IndustryType,
+        target_location: TileCoordsXZ,
+        target_id: IndustryBuildingId,
+    ) -> Self {
+        Self::BuildSupplyChain {
+            resource_type,
+            target_type,
+            resolved: HashMap::from([(target_type, (target_id, target_location))]),
+        }
+    }
 }
 
 pub struct Oct2025ArtificialIntelligenceState {
@@ -45,54 +63,70 @@ impl Oct2025ArtificialIntelligenceState {
             "Expected exactly one construction yard for player {player_id}"
         );
         let construction_yard = construction_yards[0];
+        let construction_yard_location = construction_yard.reference_tile();
         let construction_yard_id = construction_yard.id();
         Self {
             player_id,
             pending_goals: vec![
-                Goal::SteelToConstructionYard(construction_yard_id),
-                Goal::TimberToConstructionYard(construction_yard_id),
-                Goal::ConcreteToConstructionYard(construction_yard_id),
+                Goal::build_supply_chain(
+                    ResourceType::Steel,
+                    IndustryType::ConstructionYard,
+                    construction_yard_location,
+                    construction_yard_id,
+                ),
+                Goal::build_supply_chain(
+                    ResourceType::Timber,
+                    IndustryType::ConstructionYard,
+                    construction_yard_location,
+                    construction_yard_id,
+                ),
+                Goal::build_supply_chain(
+                    ResourceType::Concrete,
+                    IndustryType::ConstructionYard,
+                    construction_yard_location,
+                    construction_yard_id,
+                ),
             ],
         }
     }
 }
 
-impl Oct2025ArtificialIntelligenceState {
-    fn select_industry_building(
-        &self,
-        game_state: &GameState,
-        industry_type: IndustryType,
-        reference_tile: TileCoordsXZ,
-    ) -> Option<IndustryBuildingInfo> {
-        let free = game_state.all_free_zonings();
+fn select_industry_building(
+    owner_id: PlayerId,
+    game_state: &GameState,
+    industry_type: IndustryType,
+    reference_tile: TileCoordsXZ,
+) -> Option<IndustryBuildingInfo> {
+    let free = game_state.all_free_zonings();
 
-        let found = free
-            .iter()
-            .filter(|zoning| Some(zoning.zoning_type()) == industry_type.required_zoning())
-            .map(|zoning| {
-                IndustryBuildingInfo::new(
-                    self.player_id,
-                    IndustryBuildingId::random(),
-                    zoning.reference_tile(),
-                    industry_type,
-                )
-            })
-            .filter(|info| {
-                game_state
-                    .can_build_industry_building(self.player_id, info)
-                    .is_ok()
-            })
-            .min_by_key(|info| info.reference_tile().manhattan_distance(reference_tile));
+    let found = free
+        .iter()
+        .filter(|zoning| Some(zoning.zoning_type()) == industry_type.required_zoning())
+        .map(|zoning| {
+            IndustryBuildingInfo::new(
+                owner_id,
+                IndustryBuildingId::random(),
+                zoning.reference_tile(),
+                industry_type,
+            )
+        })
+        .filter(|info| {
+            game_state
+                .can_build_industry_building(owner_id, info)
+                .is_ok()
+        })
+        .min_by_key(|info| info.reference_tile().manhattan_distance(reference_tile));
 
-        // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place - closest to the industries for its inputs/outputs, or even just closest to ConstructionYard.
-        if let Some(info) = found {
-            Some(info.clone())
-        } else {
-            debug!("No free zoning for {:?}", industry_type);
-            None
-        }
+    // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place - closest to the industries for its inputs/outputs, or even just closest to ConstructionYard.
+    if let Some(info) = found {
+        Some(info.clone())
+    } else {
+        debug!("No free zoning for {:?}", industry_type);
+        None
     }
+}
 
+impl Oct2025ArtificialIntelligenceState {
     fn select_station_building(
         &self,
         game_state: &GameState,
@@ -153,11 +187,13 @@ impl Oct2025ArtificialIntelligenceState {
     fn build_fully_connected_supply_chain(
         &self,
         game_state: &GameState,
+        target_type: IndustryType,
         industries: &[IndustryType],
-        known: &HashMap<IndustryType, IndustryBuildingId>,
-        reference_tile: TileCoordsXZ,
+        known: &HashMap<IndustryType, (IndustryBuildingId, TileCoordsXZ)>,
         metrics: &dyn Metrics,
     ) -> Vec<GameCommand> {
+        // TODO HIGH: Make more gradual, build one at a time, otherwise we get InvalidOverlap-s
+
         let mut results = vec![];
         let mut known = known.clone();
         let mut stations = HashMap::new();
@@ -165,10 +201,14 @@ impl Oct2025ArtificialIntelligenceState {
             let existing = known.get(industry);
             match existing {
                 None => {
-                    if let Some(building) =
-                        self.select_industry_building(game_state, *industry, reference_tile)
-                    {
-                        known.insert(*industry, building.id());
+                    let (_id, reference_tile) = known.get(&target_type).unwrap();
+                    if let Some(building) = select_industry_building(
+                        self.player_id,
+                        game_state,
+                        *industry,
+                        *reference_tile,
+                    ) {
+                        known.insert(*industry, (building.id(), building.reference_tile()));
                         let station = self.select_station_building(game_state, &building);
                         stations.insert(building.id(), station.clone());
 
@@ -176,7 +216,7 @@ impl Oct2025ArtificialIntelligenceState {
                         results.push(GameCommand::BuildStation(station));
                     }
                 },
-                Some(building) => {
+                Some((building, _location)) => {
                     let building = game_state
                         .building_state()
                         .find_industry_building(*building)
@@ -198,9 +238,11 @@ impl Oct2025ArtificialIntelligenceState {
             }
         }
 
-        for (from_industry, resource, to_industry) in Self::resource_links(industries) {
-            let from_station = stations.get(&known[&from_industry]).unwrap();
-            let to_station = stations.get(&known[&to_industry]).unwrap();
+        for (from_industry, _resource, to_industry) in Self::resource_links(industries) {
+            let (from_industry_id, _) = known.get(&from_industry).unwrap();
+            let from_station = stations.get(from_industry_id).unwrap();
+            let (to_industry_id, _) = known.get(&to_industry).unwrap();
+            let to_station = stations.get(to_industry_id).unwrap();
             let mut pairs = vec![];
             for track_a in from_station.station_exit_tile_tracks() {
                 for track_b in to_station.station_exit_tile_tracks() {
@@ -229,7 +271,7 @@ impl Oct2025ArtificialIntelligenceState {
                     debug!("No route found for {:?} -> {:?}", source, target);
                 }
             }
-            // TODO HIGH: Ensure all tracks are built
+            // TODO HIGH: Ensure all tracks are built - right now we have invalid overlap
             // TODO HIGH: Ensure all trains are built
         }
 
@@ -245,32 +287,46 @@ impl Oct2025ArtificialIntelligenceState {
         metrics: &dyn Metrics,
     ) -> Vec<GameCommand> {
         match goal {
-            Goal::SteelToConstructionYard(construction_yard_id) => {
-                let reference_tile = game_state
-                    .building_state()
-                    .find_industry_building(construction_yard_id)
-                    .expect(&format!(
-                        "Expected to find construction yard {construction_yard_id}"
-                    ))
-                    .reference_tile();
+            Goal::BuildSupplyChain {
+                resource_type,
+                target_type,
+                resolved,
+            } => {
+                let industries = match resource_type {
+                    ResourceType::Steel => {
+                        vec![
+                            IndustryType::IronMine,
+                            IndustryType::CoalMine,
+                            IndustryType::SteelMill,
+                            IndustryType::ConstructionYard,
+                        ]
+                    },
+                    ResourceType::Timber => {
+                        vec![
+                            IndustryType::Forestry,
+                            IndustryType::LumberMill,
+                            IndustryType::ConstructionYard,
+                        ]
+                    },
+                    ResourceType::Concrete => {
+                        vec![
+                            IndustryType::ClayPit,
+                            IndustryType::SandAndGravelQuarry,
+                            IndustryType::LimestoneMine,
+                            IndustryType::CementPlant,
+                            IndustryType::ConcretePlant,
+                            IndustryType::ConstructionYard,
+                        ]
+                    },
+                    _ => panic!("Unsupported resource type"),
+                };
                 self.build_fully_connected_supply_chain(
                     game_state,
-                    &[
-                        IndustryType::IronMine,
-                        IndustryType::CoalMine,
-                        IndustryType::SteelMill,
-                        IndustryType::ConstructionYard,
-                    ],
-                    &HashMap::from([(IndustryType::ConstructionYard, construction_yard_id)]),
-                    reference_tile,
+                    target_type,
+                    &industries,
+                    &resolved,
                     metrics,
                 )
-            },
-            Goal::TimberToConstructionYard(_construction_yard_id) => {
-                vec![] // TODO HIGH
-            },
-            Goal::ConcreteToConstructionYard(_construction_yard_id) => {
-                vec![] // TODO HIGH
             },
         }
     }
@@ -282,7 +338,7 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> Option<Vec<GameCommand>> {
-        let next_goal = self.pending_goals.first().copied();
+        let next_goal = self.pending_goals.first().cloned();
         match next_goal {
             None => None,
             Some(goal) => {
