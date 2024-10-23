@@ -31,9 +31,9 @@ trait Goal {
 
 #[derive(Clone)]
 struct BuildSupplyChain {
-    resource_type: ResourceType,
-    target_type:   IndustryType,
-    resolved:      HashMap<IndustryType, (IndustryBuildingId, TileCoordsXZ)>,
+    resource_type:   ResourceType,
+    target_location: TileCoordsXZ,
+    states:          HashMap<IndustryType, Option<(IndustryBuildingId, TileCoordsXZ)>>,
 }
 
 impl Goal for BuildSupplyChain {
@@ -46,47 +46,21 @@ impl Goal for BuildSupplyChain {
         // TODO HIGH: Make more gradual, build one at a time, otherwise we get InvalidOverlap-s
 
         let mut results = vec![];
-        let mut known = self.resolved.clone();
+        let mut known = self.states.clone();
         let mut stations = HashMap::new();
 
-        let industries = match self.resource_type {
-            ResourceType::Steel => {
-                vec![
-                    IndustryType::IronMine,
-                    IndustryType::CoalMine,
-                    IndustryType::SteelMill,
-                    IndustryType::ConstructionYard,
-                ]
-            },
-            ResourceType::Timber => {
-                vec![
-                    IndustryType::Forestry,
-                    IndustryType::LumberMill,
-                    IndustryType::ConstructionYard,
-                ]
-            },
-            ResourceType::Concrete => {
-                vec![
-                    IndustryType::ClayPit,
-                    IndustryType::SandAndGravelQuarry,
-                    IndustryType::LimestoneMine,
-                    IndustryType::CementPlant,
-                    IndustryType::ConcretePlant,
-                    IndustryType::ConstructionYard,
-                ]
-            },
-            _ => panic!("Unsupported resource type"),
-        };
-
+        let industries = self.states.keys().copied().collect::<Vec<_>>();
         for industry in &industries {
-            let existing = known.get(industry);
+            let existing = known.get(industry).unwrap_or(&None);
             match existing {
                 None => {
-                    let (_id, reference_tile) = known.get(&self.target_type).unwrap();
-                    if let Some(building) =
-                        select_industry_building(player_id, game_state, *industry, *reference_tile)
-                    {
-                        known.insert(*industry, (building.id(), building.reference_tile()));
+                    if let Some(building) = select_industry_building(
+                        player_id,
+                        game_state,
+                        *industry,
+                        self.target_location,
+                    ) {
+                        known.insert(*industry, Some((building.id(), building.reference_tile())));
                         let station = select_station_building(player_id, game_state, &building);
                         stations.insert(building.id(), station.clone());
 
@@ -117,10 +91,10 @@ impl Goal for BuildSupplyChain {
         }
 
         for (from_industry, _resource, to_industry) in resource_links(&industries) {
-            let (from_industry_id, _) = known.get(&from_industry).unwrap();
-            let from_station = stations.get(from_industry_id).unwrap();
-            let (to_industry_id, _) = known.get(&to_industry).unwrap();
-            let to_station = stations.get(to_industry_id).unwrap();
+            let (from_industry_id, _) = known.get(&from_industry).unwrap().unwrap();
+            let from_station = stations.get(&from_industry_id).unwrap();
+            let (to_industry_id, _) = known.get(&to_industry).unwrap().unwrap();
+            let to_station = stations.get(&to_industry_id).unwrap();
             let mut pairs = vec![];
             for track_a in from_station.station_exit_tile_tracks() {
                 for track_b in to_station.station_exit_tile_tracks() {
@@ -167,10 +141,39 @@ impl BuildSupplyChain {
         target_location: TileCoordsXZ,
         target_id: IndustryBuildingId,
     ) -> Self {
+        let states = match resource_type {
+            ResourceType::Steel => {
+                vec![
+                    IndustryType::IronMine,
+                    IndustryType::CoalMine,
+                    IndustryType::SteelMill,
+                ]
+            },
+            ResourceType::Timber => {
+                vec![IndustryType::Forestry, IndustryType::LumberMill]
+            },
+            ResourceType::Concrete => {
+                vec![
+                    IndustryType::ClayPit,
+                    IndustryType::SandAndGravelQuarry,
+                    IndustryType::LimestoneMine,
+                    IndustryType::CementPlant,
+                    IndustryType::ConcretePlant,
+                ]
+            },
+            _ => panic!("Unsupported resource type"),
+        };
+
+        let mut states: HashMap<IndustryType, Option<(IndustryBuildingId, TileCoordsXZ)>> = states
+            .into_iter()
+            .map(|industry| (industry, None))
+            .collect();
+        states.insert(target_type, Some((target_id, target_location)));
+
         Self {
             resource_type,
-            target_type,
-            resolved: HashMap::from([(target_type, (target_id, target_location))]),
+            target_location,
+            states,
         }
     }
 }
