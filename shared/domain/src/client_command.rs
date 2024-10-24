@@ -83,7 +83,7 @@ impl Debug for GameCommand {
                 write!(f, "BuildIndustryBuilding({})", building.id())
             },
             GameCommand::BuildStation(station) => {
-                write!(f, "BuildStation({})", station.id())
+                write!(f, "BuildStation({:?})", station.id())
             },
             GameCommand::BuildTracks(tracks) => {
                 write!(f, "BuildTracks({} tracks)", tracks.len())

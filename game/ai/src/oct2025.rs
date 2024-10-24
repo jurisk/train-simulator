@@ -1,8 +1,8 @@
 #![expect(clippy::module_name_repetitions)]
 
 use std::collections::HashMap;
-
-use log::debug;
+use std::fmt::Debug;
+use log::{debug, info};
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
@@ -22,114 +22,128 @@ use crate::ArtificialIntelligenceState;
 
 trait Goal {
     fn commands(
-        &self,
+        &mut self,
         player_id: PlayerId,
         game_state: &GameState,
         metrics: &dyn Metrics,
-    ) -> Vec<GameCommand>;
+    ) -> Option<Vec<GameCommand>>;
+}
+
+#[derive(Clone, Debug)]
+enum IndustryState {
+    // TODO: Could have more gradual steps, e.g. don't assume that building will succeed and have "BuildingIndustry" and "BuildingStation" states...
+    NothingDone,
+    IndustryBuilt(IndustryBuildingId, TileCoordsXZ),
+    StationBuilt(IndustryBuildingId, TileCoordsXZ, StationId),
+}
+
+impl IndustryState {
+    fn commands(&mut self, industry: IndustryType, player_id: PlayerId, game_state: &GameState, target_location: TileCoordsXZ) -> Option<Vec<GameCommand>> {
+        println!("IndustryState for {industry:?}: {self:?}");
+        match self {
+            IndustryState::NothingDone => {
+                if let Some(building) = select_industry_building(
+                    player_id,
+                    game_state,
+                    industry,
+                    target_location,
+                ) {
+                    *self = IndustryState::IndustryBuilt(building.id(), building.reference_tile());
+                    Some(vec![GameCommand::BuildIndustryBuilding(building)])
+                } else {
+                    info!("Failed to select building for {industry:?}");
+                    None
+                }
+            }
+            IndustryState::IndustryBuilt(industry_building_id, location) => {
+                // TODO HIGH: We are building too many stations!!!
+                // TODO: If `find_linked_station` already returns something, just accept this station as existing, don't build a new one
+                if let Some(building) = game_state
+                    .building_state()
+                    .find_industry_building(*industry_building_id) {
+                    let station = select_station_building(player_id, game_state, &building);
+                    *self = IndustryState::StationBuilt(*industry_building_id, *location, station.id());
+                    Some(vec![GameCommand::BuildStation(station)])
+                } else {
+                    info!("Industry building {industry_building_id:?} not found");
+                    None
+                }
+            }
+            IndustryState::StationBuilt(_industry_building_id, _location, _station_id) => {
+                None
+            }
+        }
+    }
 }
 
 #[derive(Clone)]
 struct BuildSupplyChain {
     resource_type:   ResourceType,
     target_location: TileCoordsXZ,
-    states:          HashMap<IndustryType, Option<(IndustryBuildingId, TileCoordsXZ)>>,
+    states:          HashMap<IndustryType, IndustryState>,
+}
+
+fn temp_build_links(
+    player_id: PlayerId,
+    industries: &[IndustryType],
+    known: &HashMap<IndustryType, Option<(IndustryBuildingId, TileCoordsXZ)>>,
+    stations: &HashMap<IndustryBuildingId, StationInfo>,
+    game_state: &GameState,
+    metrics: &dyn Metrics,
+) {
+    let mut results = vec![];
+    for (from_industry, _resource, to_industry) in resource_links(&industries) {
+        let (from_industry_id, _) = known.get(&from_industry).unwrap().unwrap();
+        let from_station = stations.get(&from_industry_id).unwrap();
+        let (to_industry_id, _) = known.get(&to_industry).unwrap().unwrap();
+        let to_station = stations.get(&to_industry_id).unwrap();
+        let mut pairs = vec![];
+        for track_a in from_station.station_exit_tile_tracks() {
+            for track_b in to_station.station_exit_tile_tracks() {
+                pairs.push((track_a, track_b));
+                pairs.push((track_b, track_a));
+            }
+        }
+
+        for (source, target) in pairs {
+            if let Some((route, _length)) = plan_tracks(
+                player_id,
+                DirectionalEdge::exit_from(source),
+                &[DirectionalEdge::entrance_to(target)],
+                game_state,
+                DEFAULT_ALREADY_EXISTS_COEF,
+                metrics,
+            ) {
+                if route.is_empty() {
+                    // If it's empty, it means it's already built
+                    continue;
+                }
+                if game_state.can_build_tracks(player_id, &route).is_ok() {
+                    results.push(GameCommand::BuildTracks(route));
+                }
+            } else {
+                debug!("No route found for {:?} -> {:?}", source, target);
+            }
+        }
+        // TODO HIGH: Ensure all tracks are built - right now we have invalid overlap
+        // TODO HIGH: Ensure all trains are built
+    }
 }
 
 impl Goal for BuildSupplyChain {
     fn commands(
-        &self,
+        &mut self,
         player_id: PlayerId,
         game_state: &GameState,
         metrics: &dyn Metrics,
-    ) -> Vec<GameCommand> {
-        // TODO HIGH: Make more gradual, build one at a time, otherwise we get InvalidOverlap-s
-
-        let mut results = vec![];
-        let mut known = self.states.clone();
-        let mut stations = HashMap::new();
-
-        let industries = self.states.keys().copied().collect::<Vec<_>>();
-        for industry in &industries {
-            let existing = known.get(industry).unwrap_or(&None);
-            match existing {
-                None => {
-                    if let Some(building) = select_industry_building(
-                        player_id,
-                        game_state,
-                        *industry,
-                        self.target_location,
-                    ) {
-                        known.insert(*industry, Some((building.id(), building.reference_tile())));
-                        let station = select_station_building(player_id, game_state, &building);
-                        stations.insert(building.id(), station.clone());
-
-                        results.push(GameCommand::BuildIndustryBuilding(building));
-                        results.push(GameCommand::BuildStation(station));
-                    }
-                },
-                Some((building, _location)) => {
-                    let building = game_state
-                        .building_state()
-                        .find_industry_building(*building)
-                        .unwrap();
-                    match game_state
-                        .building_state()
-                        .find_linked_station(building.id())
-                    {
-                        None => {
-                            let station = select_station_building(player_id, game_state, building);
-                            stations.insert(building.id(), station.clone());
-                            results.push(GameCommand::BuildStation(station));
-                        },
-                        Some(station) => {
-                            stations.insert(building.id(), station.clone());
-                        },
-                    }
-                },
+    ) -> Option<Vec<GameCommand>> {
+        for (industry, state) in &mut self.states {
+            if let Some(responses) = state.commands(*industry, player_id, game_state, self.target_location) {
+                return Some(responses);
             }
         }
 
-        for (from_industry, _resource, to_industry) in resource_links(&industries) {
-            let (from_industry_id, _) = known.get(&from_industry).unwrap().unwrap();
-            let from_station = stations.get(&from_industry_id).unwrap();
-            let (to_industry_id, _) = known.get(&to_industry).unwrap().unwrap();
-            let to_station = stations.get(&to_industry_id).unwrap();
-            let mut pairs = vec![];
-            for track_a in from_station.station_exit_tile_tracks() {
-                for track_b in to_station.station_exit_tile_tracks() {
-                    pairs.push((track_a, track_b));
-                    pairs.push((track_b, track_a));
-                }
-            }
-
-            for (source, target) in pairs {
-                if let Some((route, _length)) = plan_tracks(
-                    player_id,
-                    DirectionalEdge::exit_from(source),
-                    &[DirectionalEdge::entrance_to(target)],
-                    game_state,
-                    DEFAULT_ALREADY_EXISTS_COEF,
-                    metrics,
-                ) {
-                    if route.is_empty() {
-                        // If it's empty, it means it's already built
-                        continue;
-                    }
-                    if game_state.can_build_tracks(player_id, &route).is_ok() {
-                        results.push(GameCommand::BuildTracks(route));
-                    }
-                } else {
-                    debug!("No route found for {:?} -> {:?}", source, target);
-                }
-            }
-            // TODO HIGH: Ensure all tracks are built - right now we have invalid overlap
-            // TODO HIGH: Ensure all trains are built
-        }
-
-        // TODO HIGH: Return what we have built to ensure that these are now "locked" for that goal and not reused for other goals...
-
-        results
+        None
     }
 }
 
@@ -164,11 +178,14 @@ impl BuildSupplyChain {
             _ => panic!("Unsupported resource type"),
         };
 
-        let mut states: HashMap<IndustryType, Option<(IndustryBuildingId, TileCoordsXZ)>> = states
+        let mut states: HashMap<IndustryType, IndustryState> = states
             .into_iter()
-            .map(|industry| (industry, None))
+            .map(|industry| (industry, IndustryState::NothingDone))
             .collect();
-        states.insert(target_type, Some((target_id, target_location)));
+        states.insert(
+            target_type,
+            IndustryState::IndustryBuilt(target_id, target_location),
+        );
 
         Self {
             resource_type,
@@ -177,6 +194,7 @@ impl BuildSupplyChain {
         }
     }
 }
+
 
 pub struct Oct2025ArtificialIntelligenceState {
     player_id:     PlayerId,
@@ -324,12 +342,13 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> Option<Vec<GameCommand>> {
-        if self.pending_goals.is_empty() {
-            None
-        } else {
-            // TODO: This assumes that the goal is always achieved, that all commands succeed. That's wrong.
-            let goal = self.pending_goals.pop().unwrap();
-            Some(goal.commands(self.player_id, game_state, metrics))
+        for goal in &mut self.pending_goals {
+            if let Some(commands) = goal.commands(self.player_id, game_state, metrics) {
+                return Some(commands);
+            }
         }
+
+        info!("AI has nothing to do");
+        None
     }
 }
