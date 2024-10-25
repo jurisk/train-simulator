@@ -131,7 +131,7 @@ impl BuildingState {
     }
 
     #[must_use]
-    fn building_at(&self, tile: TileCoordsXZ) -> Option<&dyn BuildingInfo> {
+    pub fn building_at(&self, tile: TileCoordsXZ) -> Option<&dyn BuildingInfo> {
         let station = self.station_at(tile);
         let industry_building = self.industry_building_at(tile);
         let military_building = self.military_building_at(tile);

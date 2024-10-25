@@ -7,7 +7,6 @@ use log::{debug, info, trace, warn};
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
-use shared_domain::building::station_type::{StationOrientation, StationType};
 use shared_domain::client_command::GameCommand;
 use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
@@ -20,7 +19,6 @@ use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
 use shared_domain::{IndustryBuildingId, PlayerId, StationId, TransportId};
-use shared_util::direction_xz::DirectionXZ;
 use shared_util::random::choose;
 
 use crate::ArtificialIntelligenceState;
@@ -486,27 +484,18 @@ fn select_station_building(
             StationInfo::new(owner_id, StationId::random(), tile, station_type)
         })
         .filter(|station_info| {
-            // This `extended_station_info` is a hack to avoid a situation where we build a station but its ends are blocked
-            let station_type = station_info.station_type();
-            let extended_type = StationType {
-                orientation:     station_type.orientation,
-                platforms:       station_type.platforms,
-                length_in_tiles: station_type.length_in_tiles + 2,
-            };
-            let tile_diff = match station_type.orientation {
-                StationOrientation::NorthToSouth => DirectionXZ::North,
-                StationOrientation::WestToEast => DirectionXZ::West,
-            };
-            let extended_station_info = StationInfo::new(
-                owner_id,
-                StationId::random(),
-                station_info.reference_tile() + tile_diff,
-                extended_type,
-            );
-
-            game_state
-                .can_build_station(owner_id, &extended_station_info)
-                .is_ok()
+            game_state.can_build_station(owner_id, station_info).is_ok()
+                && station_info
+                    .station_exit_tile_tracks()
+                    .into_iter()
+                    .all(|tile_track| {
+                        let next_tile = tile_track.next_tile_coords();
+                        let not_under_water =
+                            !game_state.map_level().any_vertex_under_water(next_tile);
+                        let free_tile =
+                            game_state.building_state().building_at(next_tile).is_none();
+                        not_under_water && free_tile
+                    })
         })
         .collect::<Vec<_>>();
 

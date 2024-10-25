@@ -228,8 +228,16 @@ impl MapLevel {
     }
 
     #[must_use]
-    pub fn under_water(&self, vertex_coords_xz: VertexCoordsXZ) -> bool {
+    pub fn vertex_under_water(&self, vertex_coords_xz: VertexCoordsXZ) -> bool {
         self.water.under_water(self.height_at(vertex_coords_xz))
+    }
+
+    #[must_use]
+    pub fn any_vertex_under_water(&self, tile_coords_xz: TileCoordsXZ) -> bool {
+        tile_coords_xz
+            .vertex_coords()
+            .iter()
+            .any(|vertex_coords| self.vertex_under_water(*vertex_coords))
     }
 
     #[must_use]
@@ -248,7 +256,7 @@ impl MapLevel {
 
         let any_vertex_under_water = vertex_coords
             .into_iter()
-            .any(|vertex| self.under_water(vertex));
+            .any(|vertex| self.vertex_under_water(vertex));
 
         any_vertex_under_water.then_err_unit(|| BuildError::InvalidTerrain)?;
         self.terrain.can_build_track(tile, track_type)?;
@@ -294,7 +302,9 @@ impl MapLevel {
             .into_iter()
             .any(|tile| !self.tile_in_bounds(tile));
 
-        let any_vertex_under_water = vertex_coords.iter().any(|vertex| self.under_water(*vertex));
+        let any_vertex_under_water = vertex_coords
+            .iter()
+            .any(|vertex| self.vertex_under_water(*vertex));
 
         let equal_heights = vertex_coords
             .into_iter()
