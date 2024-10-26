@@ -206,7 +206,11 @@ impl IndustryType {
                 ResourceTransform::make(vec![(Clay, X1), (Limestone, X1)], vec![(Cement, X1)])
             },
             OilRefinery => ResourceTransform::make(vec![(Oil, X1)], vec![(Fuel, X1)]),
-            ConcretePlant => ResourceTransform::make(vec![(Cement, X1)], vec![(Concrete, X1)]),
+            ConcretePlant => {
+                ResourceTransform::make(vec![(Cement, X1), (SandAndGravel, X1)], vec![(
+                    Concrete, X1,
+                )])
+            },
             TrainFactory => ResourceTransform::make(vec![(Steel, X1)], vec![]),
             WeaponsFactory => {
                 ResourceTransform::make(vec![(Steel, X1)], vec![(ArtilleryWeapons, X1)])
