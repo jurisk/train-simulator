@@ -48,13 +48,13 @@ impl IndustryState {
         industry: IndustryType,
         player_id: PlayerId,
         game_state: &GameState,
-        target_location: TileCoordsXZ,
+        centre_of_gravity: TileCoordsXZ,
     ) -> Option<Vec<GameCommand>> {
         trace!("IndustryState for {industry:?}: {self:?}");
         match self {
             IndustryState::NothingDone => {
                 if let Some(building) =
-                    select_industry_building(player_id, game_state, industry, target_location)
+                    select_industry_building(player_id, game_state, industry, centre_of_gravity)
                 {
                     *self = IndustryState::IndustryBuilt(building.id(), building.reference_tile());
                     Some(vec![GameCommand::BuildIndustryBuilding(building)])
@@ -70,7 +70,7 @@ impl IndustryState {
                 {
                     *self =
                         IndustryState::StationBuilt(*industry_building_id, *location, station.id());
-                    self.commands(industry, player_id, game_state, target_location)
+                    self.commands(industry, player_id, game_state, centre_of_gravity)
                 } else {
                     if let Some(building) = game_state
                         .building_state()
@@ -88,7 +88,7 @@ impl IndustryState {
                             );
                             Some(vec![GameCommand::BuildStation(station)])
                         } else {
-                            // TODO HIGH: What should we do?! This actually happens, especially as we may have built some tracks in the neighbourhood before building all industries and stations.
+                            // TODO: This could happen, as we may have built some tracks in the neighbourhood before building all industries and stations.
                             warn!("Failed to select station for {industry:?} at {location:?}");
                             None
                         }
@@ -263,7 +263,8 @@ fn purchase_transport_command(
 
 #[derive(Clone)]
 struct BuildSupplyChain {
-    target_location:      TileCoordsXZ,
+    target_type:          IndustryType,
+    centre_of_gravity:    Option<TileCoordsXZ>,
     industry_states:      HashMap<IndustryType, IndustryState>,
     resource_link_states: HashMap<(IndustryType, ResourceType, IndustryType), ResourceLinkState>,
 }
@@ -300,12 +301,21 @@ impl Goal for BuildSupplyChain {
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> Option<Vec<GameCommand>> {
-        for (industry, state) in &mut self.industry_states {
-            if let Some(responses) =
-                state.commands(*industry, player_id, game_state, self.target_location)
-            {
-                return Some(responses);
+        if let Some(centre_of_gravity) = self.centre_of_gravity {
+            for (industry, state) in &mut self.industry_states {
+                if let Some(responses) =
+                    state.commands(*industry, player_id, game_state, centre_of_gravity)
+                {
+                    return Some(responses);
+                }
             }
+        } else {
+            // TODO HIGH: Implement
+            panic!(
+                "We don't know yet how to set the centre of gravity for target {:?}",
+                self.target_type
+            );
+            // self.commands(player_id, game_state, metrics);
         }
 
         for ((from_industry, resource, to_industry), state) in &mut self.resource_link_states {
@@ -327,49 +337,88 @@ impl Goal for BuildSupplyChain {
     }
 }
 
+// TODO: You can generate this from the industry definitions
+fn industries_for_resource_and_target(
+    resource_type: ResourceType,
+    target_type: IndustryType,
+) -> Vec<IndustryType> {
+    match (resource_type, target_type) {
+        (ResourceType::Steel, IndustryType::ConstructionYard) => {
+            vec![
+                IndustryType::IronMine,
+                IndustryType::CoalMine,
+                IndustryType::SteelMill,
+                IndustryType::ConstructionYard,
+            ]
+        },
+        (ResourceType::Timber, IndustryType::ConstructionYard) => {
+            vec![
+                IndustryType::Forestry,
+                IndustryType::LumberMill,
+                IndustryType::ConstructionYard,
+            ]
+        },
+        (ResourceType::Concrete, IndustryType::ConstructionYard) => {
+            vec![
+                IndustryType::ClayPit,
+                IndustryType::SandAndGravelQuarry,
+                IndustryType::LimestoneMine,
+                IndustryType::CementPlant,
+                IndustryType::ConcretePlant,
+                IndustryType::ConstructionYard,
+            ]
+        },
+        (ResourceType::ArtilleryWeapons, IndustryType::MilitaryBase) => {
+            vec![
+                IndustryType::CoalMine,
+                IndustryType::IronMine,
+                IndustryType::SteelMill,
+                IndustryType::WeaponsFactory,
+                IndustryType::MilitaryBase,
+            ]
+        },
+        (ResourceType::Food, IndustryType::MilitaryBase) => {
+            vec![
+                IndustryType::Farm,
+                IndustryType::FoodProcessingPlant,
+                IndustryType::MilitaryBase,
+            ]
+        },
+        (ResourceType::Ammunition, IndustryType::MilitaryBase) => {
+            vec![
+                IndustryType::AmmunitionFactory,
+                IndustryType::ExplosivesPlant,
+                IndustryType::NitrateMine,
+                IndustryType::SulfurMine,
+                IndustryType::IronMine,
+                IndustryType::CoalMine,
+                IndustryType::SteelMill,
+                IndustryType::MilitaryBase,
+            ]
+        },
+        _ => {
+            panic!(
+                "Unsupported resource and target combination: {resource_type:?} -> {target_type:?}"
+            )
+        },
+    }
+}
+
 impl BuildSupplyChain {
     #[must_use]
-    pub fn new(
+    pub fn with_center_of_gravity(
         resource_type: ResourceType,
         target_type: IndustryType,
-        target_location: TileCoordsXZ,
-        target_id: IndustryBuildingId,
+        center_of_gravity: TileCoordsXZ,
     ) -> Self {
-        let industries = match resource_type {
-            ResourceType::Steel => {
-                vec![
-                    IndustryType::IronMine,
-                    IndustryType::CoalMine,
-                    IndustryType::SteelMill,
-                ]
-            },
-            ResourceType::Timber => {
-                vec![IndustryType::Forestry, IndustryType::LumberMill]
-            },
-            ResourceType::Concrete => {
-                vec![
-                    IndustryType::ClayPit,
-                    IndustryType::SandAndGravelQuarry,
-                    IndustryType::LimestoneMine,
-                    IndustryType::CementPlant,
-                    IndustryType::ConcretePlant,
-                ]
-            },
-            _ => panic!("Unsupported resource type"),
-        };
+        let industries = industries_for_resource_and_target(resource_type, target_type);
 
-        let mut industry_states: HashMap<IndustryType, IndustryState> = industries
+        let industry_states: HashMap<IndustryType, IndustryState> = industries
             .iter()
             .map(|industry| (*industry, IndustryState::NothingDone))
             .collect();
-        industry_states.insert(
-            target_type,
-            IndustryState::IndustryBuilt(target_id, target_location),
-        );
 
-        let mut all_industries = industries.clone();
-        all_industries.push(target_type);
-        let resource_link_states = resource_links(&all_industries)
+        let resource_link_states = resource_links(&industries)
             .into_iter()
             .map(|(from_industry, resource, to_industry)| {
                 (
@@ -380,10 +429,26 @@ impl BuildSupplyChain {
             .collect();
 
         Self {
-            target_location,
+            target_type,
+            centre_of_gravity: Some(center_of_gravity),
             industry_states,
             resource_link_states,
         }
+    }
+
+    #[must_use]
+    pub fn with_built_target(
+        resource_type: ResourceType,
+        target_type: IndustryType,
+        target_location: TileCoordsXZ,
+        target_id: IndustryBuildingId,
+    ) -> Self {
+        let mut result = Self::with_center_of_gravity(resource_type, target_type, target_location);
+        result.industry_states.insert(
+            target_type,
+            IndustryState::IndustryBuilt(target_id, target_location),
+        );
+        result
     }
 }
 
@@ -408,23 +473,39 @@ impl Oct2025ArtificialIntelligenceState {
         let construction_yard_location = construction_yard.reference_tile();
         let construction_yard_id = construction_yard.id();
         let pending_goals = vec![
-            BuildSupplyChain::new(
+            BuildSupplyChain::with_built_target(
                 ResourceType::Steel,
                 IndustryType::ConstructionYard,
                 construction_yard_location,
                 construction_yard_id,
             ),
-            BuildSupplyChain::new(
+            BuildSupplyChain::with_built_target(
                 ResourceType::Timber,
                 IndustryType::ConstructionYard,
                 construction_yard_location,
                 construction_yard_id,
             ),
-            BuildSupplyChain::new(
+            BuildSupplyChain::with_built_target(
                 ResourceType::Concrete,
                 IndustryType::ConstructionYard,
                 construction_yard_location,
                 construction_yard_id,
+            ),
+            // TODO HIGH: These should be built without a center of gravity, and thus their locations decided dynamically
+            BuildSupplyChain::with_center_of_gravity(
+                ResourceType::ArtilleryWeapons,
+                IndustryType::MilitaryBase,
+                construction_yard_location,
+            ),
+            BuildSupplyChain::with_center_of_gravity(
+                ResourceType::Ammunition,
+                IndustryType::MilitaryBase,
+                construction_yard_location,
+            ),
+            BuildSupplyChain::with_center_of_gravity(
+                ResourceType::Food,
+                IndustryType::MilitaryBase,
+                construction_yard_location,
             ),
         ]
         .into_iter()
