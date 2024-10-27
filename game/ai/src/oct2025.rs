@@ -1,7 +1,6 @@
 #![expect(clippy::module_name_repetitions)]
 
 use std::collections::HashMap;
-use std::fmt::Debug;
 
 use log::{debug, info, trace, warn};
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
@@ -12,7 +11,7 @@ use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
 use shared_domain::resource_type::ResourceType;
-use shared_domain::tile_coords_xz::TileCoordsXZ;
+use shared_domain::tile_coords_xz::{TileCoordsXZ, TileDistance};
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
@@ -48,13 +47,13 @@ impl IndustryState {
         industry: IndustryType,
         player_id: PlayerId,
         game_state: &GameState,
-        centre_of_gravity: TileCoordsXZ,
+        target_location: TileCoordsXZ,
     ) -> Option<Vec<GameCommand>> {
         trace!("IndustryState for {industry:?}: {self:?}");
         match self {
             IndustryState::NothingDone => {
                 if let Some(building) =
-                    select_industry_building(player_id, game_state, industry, centre_of_gravity)
+                    select_industry_building(player_id, game_state, industry, target_location)
                 {
                     *self = IndustryState::IndustryBuilt(building.id(), building.reference_tile());
                     Some(vec![GameCommand::BuildIndustryBuilding(building)])
@@ -70,7 +69,7 @@ impl IndustryState {
                 {
                     *self =
                         IndustryState::StationBuilt(*industry_building_id, *location, station.id());
-                    self.commands(industry, player_id, game_state, centre_of_gravity)
+                    self.commands(industry, player_id, game_state, target_location)
                 } else {
                     if let Some(building) = game_state
                         .building_state()
@@ -263,8 +262,7 @@ fn purchase_transport_command(
 
 #[derive(Clone)]
 struct BuildSupplyChain {
-    target_type:          IndustryType,
-    centre_of_gravity:    Option<TileCoordsXZ>,
+    target_location:      TileCoordsXZ,
     industry_states:      HashMap<IndustryType, IndustryState>,
     resource_link_states: HashMap<(IndustryType, ResourceType, IndustryType), ResourceLinkState>,
 }
@@ -301,21 +299,12 @@ impl Goal for BuildSupplyChain {
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> Option<Vec<GameCommand>> {
-        if let Some(centre_of_gravity) = self.centre_of_gravity {
-            for (industry, state) in &mut self.industry_states {
-                if let Some(responses) =
-                    state.commands(*industry, player_id, game_state, centre_of_gravity)
-                {
-                    return Some(responses);
-                }
+        for (industry, state) in &mut self.industry_states {
+            if let Some(responses) =
+                state.commands(*industry, player_id, game_state, self.target_location)
+            {
+                return Some(responses);
             }
-        } else {
-            // TODO HIGH: Implement
-            panic!(
-                "We don't know yet how to set the centre of gravity for target {:?}",
-                self.target_type
-            );
-            // self.commands(player_id, game_state, metrics);
         }
 
         for ((from_industry, resource, to_industry), state) in &mut self.resource_link_states {
@@ -337,7 +326,7 @@ impl Goal for BuildSupplyChain {
     }
 }
 
-// TODO: You can generate this from the industry definitions
+// TODO HIGH: You can generate this from the industry definitions
 fn industries_for_resource_and_target(
     resource_type: ResourceType,
     target_type: IndustryType,
@@ -396,6 +385,13 @@ fn industries_for_resource_and_target(
                 IndustryType::MilitaryBase,
             ]
         },
+        (ResourceType::Fuel, IndustryType::MilitaryBase) => {
+            vec![
+                IndustryType::OilWell,
+                IndustryType::OilRefinery,
+                IndustryType::MilitaryBase,
+            ]
+        },
         _ => {
             panic!(
                 "Unsupported resource and target combination: {resource_type:?} -> {target_type:?}"
@@ -406,17 +402,23 @@ fn industries_for_resource_and_target(
 
 impl BuildSupplyChain {
     #[must_use]
-    pub fn with_center_of_gravity(
+    pub fn with_built_target(
         resource_type: ResourceType,
         target_type: IndustryType,
-        center_of_gravity: TileCoordsXZ,
+        target_location: TileCoordsXZ,
+        target_id: IndustryBuildingId,
     ) -> Self {
         let industries = industries_for_resource_and_target(resource_type, target_type);
 
-        let industry_states: HashMap<IndustryType, IndustryState> = industries
+        let mut industry_states: HashMap<IndustryType, IndustryState> = industries
             .iter()
             .map(|industry| (*industry, IndustryState::NothingDone))
             .collect();
+
+        industry_states.insert(
+            target_type,
+            IndustryState::IndustryBuilt(target_id, target_location),
+        );
 
         let resource_link_states = resource_links(&industries)
             .into_iter()
@@ -429,27 +431,155 @@ impl BuildSupplyChain {
             .collect();
 
         Self {
-            target_type,
-            centre_of_gravity: Some(center_of_gravity),
+            target_location,
             industry_states,
             resource_link_states,
         }
     }
+}
 
+#[derive(Clone)]
+struct BuildSupplyChains {
+    sub_goals: Vec<BuildSupplyChain>,
+}
+
+impl BuildSupplyChains {
     #[must_use]
-    pub fn with_built_target(
-        resource_type: ResourceType,
+    fn for_known_target(
         target_type: IndustryType,
         target_location: TileCoordsXZ,
         target_id: IndustryBuildingId,
     ) -> Self {
-        let mut result = Self::with_center_of_gravity(resource_type, target_type, target_location);
-        result.industry_states.insert(
-            target_type,
-            IndustryState::IndustryBuilt(target_id, target_location),
-        );
-        result
+        let resources = match target_type {
+            IndustryType::ConstructionYard | IndustryType::MilitaryBase => {
+                target_type.input_resource_types()
+            },
+            _ => panic!("Unsupported target type: {target_type:?}"),
+        };
+
+        let sub_goals = resources
+            .into_iter()
+            .map(|resource| {
+                BuildSupplyChain::with_built_target(
+                    resource,
+                    target_type,
+                    target_location,
+                    target_id,
+                )
+            })
+            .collect();
+
+        Self { sub_goals }
     }
+}
+
+impl Goal for BuildSupplyChains {
+    fn commands(
+        &mut self,
+        player_id: PlayerId,
+        game_state: &GameState,
+        metrics: &dyn Metrics,
+    ) -> Option<Vec<GameCommand>> {
+        for sub_goal in &mut self.sub_goals {
+            if let Some(commands) = sub_goal.commands(player_id, game_state, metrics) {
+                return Some(commands);
+            }
+        }
+
+        None
+    }
+}
+
+#[derive(Clone)]
+struct MilitaryBaseAI {
+    build_supply_chains: BuildSupplyChains,
+}
+
+impl MilitaryBaseAI {
+    fn for_base(location: TileCoordsXZ, base_id: IndustryBuildingId) -> Self {
+        let build_supply_chains =
+            BuildSupplyChains::for_known_target(IndustryType::MilitaryBase, location, base_id);
+        Self {
+            build_supply_chains,
+        }
+    }
+}
+
+impl Goal for MilitaryBaseAI {
+    fn commands(
+        &mut self,
+        player_id: PlayerId,
+        game_state: &GameState,
+        metrics: &dyn Metrics,
+    ) -> Option<Vec<GameCommand>> {
+        self.build_supply_chains
+            .commands(player_id, game_state, metrics)
+    }
+}
+
+#[derive(Clone)]
+struct MilitaryBasesAI {
+    bases: HashMap<IndustryBuildingId, MilitaryBaseAI>,
+}
+
+impl MilitaryBasesAI {
+    #[must_use]
+    fn new() -> Self {
+        Self {
+            bases: HashMap::new(),
+        }
+    }
+}
+
+impl Goal for MilitaryBasesAI {
+    fn commands(
+        &mut self,
+        player_id: PlayerId,
+        game_state: &GameState,
+        metrics: &dyn Metrics,
+    ) -> Option<Vec<GameCommand>> {
+        for base in game_state
+            .building_state()
+            .find_industry_building_by_owner_and_type(player_id, IndustryType::MilitaryBase)
+        {
+            self.bases
+                .entry(base.id())
+                .or_insert_with(|| MilitaryBaseAI::for_base(base.reference_tile(), base.id()));
+        }
+
+        let empty = self.bases.is_empty();
+
+        if empty {
+            // TODO: We could have a race conditions that we keep spamming multiple such commands before the first one gets processed!?
+            select_military_base(player_id, game_state)
+                .map(|base| vec![GameCommand::BuildIndustryBuilding(base)])
+        } else {
+            for base in self.bases.values_mut() {
+                if let Some(commands) = base.commands(player_id, game_state, metrics) {
+                    return Some(commands);
+                }
+            }
+
+            None
+        }
+    }
+}
+
+#[expect(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
+fn select_military_base(
+    player_id: PlayerId,
+    game_state: &GameState,
+) -> Option<IndustryBuildingInfo> {
+    // TODO HIGH: Pick a better location for a military base
+    let mid_x = (game_state.map_level().terrain().tile_count_x() / 2) as TileDistance;
+    let mid_z = (game_state.map_level().terrain().tile_count_z() / 2) as TileDistance;
+
+    select_industry_building(
+        player_id,
+        game_state,
+        IndustryType::MilitaryBase,
+        TileCoordsXZ::new(mid_x, mid_z),
+    )
 }
 
 pub struct Oct2025ArtificialIntelligenceState {
@@ -472,45 +602,15 @@ impl Oct2025ArtificialIntelligenceState {
         let construction_yard = construction_yards[0];
         let construction_yard_location = construction_yard.reference_tile();
         let construction_yard_id = construction_yard.id();
-        let pending_goals = vec![
-            BuildSupplyChain::with_built_target(
-                ResourceType::Steel,
+        let pending_goals: Vec<Box<dyn Goal + Send + Sync>> = vec![
+            Box::new(BuildSupplyChains::for_known_target(
                 IndustryType::ConstructionYard,
                 construction_yard_location,
                 construction_yard_id,
-            ),
-            BuildSupplyChain::with_built_target(
-                ResourceType::Timber,
-                IndustryType::ConstructionYard,
-                construction_yard_location,
-                construction_yard_id,
-            ),
-            BuildSupplyChain::with_built_target(
-                ResourceType::Concrete,
-                IndustryType::ConstructionYard,
-                construction_yard_location,
-                construction_yard_id,
-            ),
-            // TODO HIGH: These should be built without a center of gravity, and thus their locations decided dynamically
-            BuildSupplyChain::with_center_of_gravity(
-                ResourceType::ArtilleryWeapons,
-                IndustryType::MilitaryBase,
-                construction_yard_location,
-            ),
-            BuildSupplyChain::with_center_of_gravity(
-                ResourceType::Ammunition,
-                IndustryType::MilitaryBase,
-                construction_yard_location,
-            ),
-            BuildSupplyChain::with_center_of_gravity(
-                ResourceType::Food,
-                IndustryType::MilitaryBase,
-                construction_yard_location,
-            ),
-        ]
-        .into_iter()
-        .map(|goal| Box::new(goal) as Box<dyn Goal + Send + Sync>)
-        .collect();
+            )) as Box<dyn Goal + Send + Sync>,
+            Box::new(MilitaryBasesAI::new()) as Box<dyn Goal + Send + Sync>,
+        ];
+
         Self {
             player_id,
             pending_goals,
@@ -542,7 +642,10 @@ fn select_industry_building(
                 .can_build_industry_building(owner_id, info)
                 .is_ok()
         })
-        .min_by_key(|info| info.reference_tile().manhattan_distance(reference_tile));
+        .min_by_key(|info| {
+            // TODO HIGH: Actually, build close to related industries in this supply chain
+            info.reference_tile().manhattan_distance(reference_tile)
+        });
 
     // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place - closest to the industries for its inputs/outputs, or even just closest to ConstructionYard.
     if let Some(info) = found {
