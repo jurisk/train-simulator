@@ -44,10 +44,10 @@ bevy_simplenet = { version = "0.13", default-features = false, features = [] }
 # https://crates.io/crates/bevy-inspector-egui/versions
 # Pulls in egui and that has to match with other egui versions used!
 
-bevy-inspector-egui = { version = "0.26", features = ["highlight_changes", "bevy_pbr"] }
+bevy-inspector-egui = { version = "0.27", features = ["highlight_changes", "bevy_pbr"] }
 
-bevy_egui = "0.29"
-egui = "0.28"
+bevy_egui = "0.30"
+egui = "0.29"
 
 bevy_mod_raycast = "0.18"
 
