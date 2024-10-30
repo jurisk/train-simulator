@@ -53,8 +53,8 @@ bevy_mod_raycast = "0.18"
 
 clap = {  version = "4.5.16", features = ["derive"] }
 
-metrics = "0.23"
-metrics-exporter-prometheus = {  version = "0.15", default-features = false, features = [] }
+metrics = "0.24"
+metrics-exporter-prometheus = {  version = "0.16", default-features = false, features = [] }
 
 web-time = "1.1"
 
