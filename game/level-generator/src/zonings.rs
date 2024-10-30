@@ -16,6 +16,7 @@ fn default_zoning_counts(zoning_type: ZoningType) -> usize {
     match zoning_type {
         ZoningType::Industrial => 36,
         ZoningType::Source(ResourceType::Iron | ResourceType::Coal) => 4,
+        ZoningType::Source(ResourceType::Wood) => 2,
         ZoningType::Source(_) => 1,
     }
 }

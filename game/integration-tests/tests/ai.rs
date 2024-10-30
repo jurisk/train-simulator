@@ -78,9 +78,11 @@ fn enough_cargo(cargo: &CargoMap) -> bool {
         ResourceType::Ammunition,
         ResourceType::ArtilleryWeapons,
         ResourceType::Food,
-        // We are now skipping Concrete as we are granting it in the initial ConstructionYard
+        ResourceType::Fuel,
+        // We are skipping, e.g., Concrete as we are granting it in the initial ConstructionYard
     ]
     .iter()
+    // TODO: Switch to `all` eventually
     .any(|resource| cargo.get(*resource) > CargoAmount::ZERO)
 }
 
@@ -88,6 +90,7 @@ fn player_has_enough_cargo(game_state: &GameState, player_id: PlayerId) -> bool 
     enough_cargo(&cargo_in_stations(game_state, player_id))
 }
 
+#[expect(clippy::match_same_arms)]
 fn run_ai_commands(
     games_service: &mut GamesService,
     game_state: &GameState,
@@ -100,7 +103,22 @@ fn run_ai_commands(
         for command in commands {
             let responses = games_service.process_command(game_id, user_id, &command);
             match responses {
-                Ok(_) => {},
+                Ok(responses) => {
+                    for response in responses {
+                        match response.response {
+                            ServerResponse::Network(_) => {},
+                            ServerResponse::Authentication(_) => {},
+                            ServerResponse::Lobby(_) => {},
+                            ServerResponse::Game(_, GameResponse::Error(error)) => {
+                                panic!("Failed to process command: {command:?}: {error:?}");
+                            },
+                            ServerResponse::Game(..) => {},
+                            ServerResponse::Error(error) => {
+                                panic!("Failed to process command: {command:?}: {error:?}");
+                            },
+                        }
+                    }
+                },
                 Err(err) => {
                     panic!("Failed to process command: {command:?}: {err:?}",);
                 },
@@ -127,7 +145,7 @@ fn ai_until_final_goods_built_oct2025() {
     });
 }
 
-const MAX_STEPS: usize = 1_000;
+const MAX_STEPS: usize = 10_000;
 fn ai_until_final_goods_built<F>(factory: F)
 where
     F: Fn(PlayerId, &GameState) -> Box<dyn ArtificialIntelligenceState>,
@@ -187,5 +205,9 @@ where
         steps += 1;
     }
 
-    panic!("AI did not finish in {MAX_STEPS} steps");
+    let end_game_state = get_snapshot(&mut games_service, game_id, user_id_1);
+    let cargo_1 = cargo_in_stations(&end_game_state, player_id_1);
+    let cargo_2 = cargo_in_stations(&end_game_state, player_id_2);
+
+    panic!("AI did not finish in {MAX_STEPS} steps, cargo_1 = {cargo_1:?}, cargo_2 = {cargo_2:?}");
 }

@@ -43,6 +43,17 @@ impl TransportState {
             .collect()
     }
 
+    #[must_use]
+    pub fn find_players_transport(
+        &self,
+        player_id: PlayerId,
+        transport_id: TransportId,
+    ) -> Option<&TransportInfo> {
+        self.transports.iter().find(|transport| {
+            transport.owner_id() == player_id && transport.transport_id() == transport_id
+        })
+    }
+
     pub(crate) fn advance_time_diff(
         &mut self,
         diff: GameTimeDiff,

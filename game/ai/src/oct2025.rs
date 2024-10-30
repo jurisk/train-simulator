@@ -2,7 +2,8 @@
 
 use std::collections::HashMap;
 
-use log::{debug, info, trace, warn};
+use log::{debug, error, info, trace};
+use shared_domain::building::building_info::WithTileCoverage;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::station_info::StationInfo;
@@ -12,6 +13,7 @@ use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::tile_coords_xz::{TileCoordsXZ, TileDistance};
+use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
@@ -58,7 +60,7 @@ impl IndustryState {
                     *self = IndustryState::IndustryBuilt(building.id(), building.reference_tile());
                     Some(vec![GameCommand::BuildIndustryBuilding(building)])
                 } else {
-                    info!("Failed to select building for {industry:?}");
+                    error!("Failed to select building for {industry:?}");
                     None
                 }
             },
@@ -88,7 +90,7 @@ impl IndustryState {
                             Some(vec![GameCommand::BuildStation(station)])
                         } else {
                             // TODO: This could happen, as we may have built some tracks in the neighbourhood before building all industries and stations.
-                            warn!("Failed to select station for {industry:?} at {location:?}");
+                            error!("Failed to select station for {industry:?} at {location:?}");
                             None
                         }
                     } else {
@@ -107,6 +109,7 @@ enum ResourceLinkState {
     Pending,
     TracksPending(Vec<(TileTrack, TileTrack)>),
     TracksBuilt,
+    PurchasingTrain(TransportId),
     TrainPurchased,
 }
 
@@ -130,7 +133,7 @@ fn lookup_station<'a>(
 }
 
 impl ResourceLinkState {
-    #[expect(clippy::collapsible_else_if)]
+    #[expect(clippy::collapsible_else_if, clippy::too_many_lines)]
     #[must_use]
     fn commands(
         &mut self,
@@ -214,7 +217,6 @@ impl ResourceLinkState {
                 }
             },
             ResourceLinkState::TracksBuilt => {
-                *self = ResourceLinkState::TrainPurchased;
                 let from_station = lookup_station_id(from_industry_state)?;
                 let to_station = lookup_station_id(to_industry_state)?;
 
@@ -225,7 +227,28 @@ impl ResourceLinkState {
                     resource,
                     to_station,
                 )?;
+
+                match &command {
+                    GameCommand::PurchaseTransport(_, transport) => {
+                        *self = ResourceLinkState::PurchasingTrain(transport.transport_id());
+                    },
+                    _ => {
+                        error!("Unexpected command for creating transport: {command:?}");
+                    },
+                }
+
                 Some(vec![command])
+            },
+            ResourceLinkState::PurchasingTrain(transport_id) => {
+                if game_state
+                    .transport_state()
+                    .find_players_transport(player_id, *transport_id)
+                    .is_some()
+                {
+                    *self = ResourceLinkState::TrainPurchased;
+                }
+
+                None
             },
             ResourceLinkState::TrainPurchased => None,
         }
@@ -375,6 +398,8 @@ fn industries_for_resource_and_target(
         },
         (ResourceType::Ammunition, IndustryType::MilitaryBase) => {
             vec![
+                IndustryType::Forestry,
+                IndustryType::CellulosePlant,
                 IndustryType::AmmunitionFactory,
                 IndustryType::ExplosivesPlant,
                 IndustryType::NitrateMine,
@@ -656,6 +681,7 @@ fn select_industry_building(
     }
 }
 
+#[expect(clippy::unwrap_used)]
 fn select_station_building(
     owner_id: PlayerId,
     game_state: &GameState,
@@ -668,18 +694,42 @@ fn select_station_building(
             StationInfo::new(owner_id, StationId::random(), tile, station_type)
         })
         .filter(|station_info| {
-            game_state.can_build_station(owner_id, station_info).is_ok()
-                && station_info
-                    .station_exit_tile_tracks()
-                    .into_iter()
-                    .all(|tile_track| {
-                        let next_tile = tile_track.next_tile_coords();
-                        let not_under_water =
-                            !game_state.map_level().any_vertex_under_water(next_tile);
-                        let free_tile =
-                            game_state.building_state().building_at(next_tile).is_none();
-                        not_under_water && free_tile
-                    })
+            let costs = game_state.can_build_station(owner_id, station_info);
+            match costs {
+                Ok(costs) => {
+                    station_info
+                        .station_exit_tile_tracks()
+                        .into_iter()
+                        .all(|tile_track| {
+                            let next_tile = tile_track.next_tile_coords();
+                            let not_under_water =
+                                !game_state.map_level().any_vertex_under_water(next_tile);
+                            let free_tile =
+                                game_state.building_state().building_at(next_tile).is_none();
+                            // TODO HIGH: Should also check that it's a flat tile, as otherwise we often get blocked in
+
+                            // This is to avoid situation where we build the station, but cannot build tracks to connect it
+                            let within_range = costs.costs.keys().all(|providing_building_id| {
+                                let providing_building = game_state
+                                    .building_state()
+                                    .find_industry_building(*providing_building_id)
+                                    .unwrap();
+                                let distance =
+                                    TileCoverage::manhattan_distance_between_closest_tiles(
+                                        &providing_building.covers_tiles(),
+                                        &TileCoverage::Single(next_tile),
+                                    );
+                                let supply_range_in_tiles = providing_building
+                                    .industry_type()
+                                    .supply_range_in_tiles()
+                                    .unwrap();
+                                distance <= supply_range_in_tiles
+                            });
+                            not_under_water && free_tile && within_range
+                        })
+                },
+                Err(_) => false,
+            }
         })
         .collect::<Vec<_>>();
 

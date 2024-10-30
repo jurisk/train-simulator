@@ -81,7 +81,7 @@ const X1: f32 = 1.0;
 
 impl IndustryType {
     #[must_use]
-    pub const fn all() -> [Self; 24] {
+    pub const fn all() -> [Self; 25] {
         [
             CoalMine,
             OilWell,
@@ -107,6 +107,7 @@ impl IndustryType {
             AmmunitionFactory,
             MilitaryBase,
             ConstructionYard,
+            CellulosePlant,
         ]
     }
 
