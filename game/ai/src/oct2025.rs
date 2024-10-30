@@ -701,14 +701,19 @@ fn select_station_building(
                         .station_exit_tile_tracks()
                         .into_iter()
                         .all(|tile_track| {
-                            let next_tile = tile_track.next_tile_coords();
-                            let not_under_water =
-                                !game_state.map_level().any_vertex_under_water(next_tile);
-                            let free_tile =
-                                game_state.building_state().building_at(next_tile).is_none();
-                            // TODO HIGH: Should also check that it's a flat tile, as otherwise we often get blocked in
+                            // This is all somewhat hacky, but we are trying to avoid situation where we build the station, but cannot build tracks to connect it
 
-                            // This is to avoid situation where we build the station, but cannot build tracks to connect it
+                            let next_tile = tile_track.next_tile_coords();
+                            let next_tile_coverage = TileCoverage::Single(next_tile);
+                            let free_tile = game_state
+                                .building_state()
+                                .can_build_for_coverage(&next_tile_coverage)
+                                .is_ok();
+                            let valid_terrain = game_state
+                                .map_level()
+                                .can_build_for_coverage(&next_tile_coverage)
+                                .is_ok();
+
                             let within_range = costs.costs.keys().all(|providing_building_id| {
                                 let providing_building = game_state
                                     .building_state()
@@ -717,7 +722,7 @@ fn select_station_building(
                                 let distance =
                                     TileCoverage::manhattan_distance_between_closest_tiles(
                                         &providing_building.covers_tiles(),
-                                        &TileCoverage::Single(next_tile),
+                                        &next_tile_coverage,
                                     );
                                 let supply_range_in_tiles = providing_building
                                     .industry_type()
@@ -725,7 +730,7 @@ fn select_station_building(
                                     .unwrap();
                                 distance <= supply_range_in_tiles
                             });
-                            not_under_water && free_tile && within_range
+                            valid_terrain && free_tile && within_range
                         })
                 },
                 Err(_) => false,

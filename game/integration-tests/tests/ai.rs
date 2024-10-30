@@ -81,8 +81,8 @@ fn enough_cargo(cargo: &CargoMap) -> bool {
         // We are skipping, e.g., Concrete as we are granting it in the initial ConstructionYard
     ]
     .iter()
-    // TODO: Switch to `all` eventually
-    .any(|resource| cargo.get(*resource) > CargoAmount::ZERO)
+    // TODO: `all` is flaky... use `any` if `all` fails
+    .all(|resource| cargo.get(*resource) > CargoAmount::ZERO)
 }
 
 fn player_has_enough_cargo(game_state: &GameState, player_id: PlayerId) -> bool {
@@ -161,7 +161,6 @@ where
     while steps < MAX_STEPS {
         let game_state = get_snapshot(&mut games_service, game_id, user_id_1);
 
-        // Later: Optimise so you can do `&&` instead of `||` here
         // TODO HIGH: Run until military action happens instead of just until enough cargo
         if player_has_enough_cargo(&game_state, player_id_1)
             || player_has_enough_cargo(&game_state, player_id_2)

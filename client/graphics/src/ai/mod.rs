@@ -38,7 +38,7 @@ impl ArtificialIntelligenceResource {
             timer.set_duration(duration);
         } else {
             let timer = Timer::new(duration, TimerMode::Repeating);
-            // TODO HIGH: Make switchable between different AI implementations
+            // TODO: Make switchable between different AI implementations when you have more than one
             let ai_state = Oct2025ArtificialIntelligenceState::new(player_id, game_state);
             let state = Box::new(ai_state);
             self.map.insert(player_id, (timer, state));

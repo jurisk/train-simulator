@@ -427,10 +427,7 @@ impl BuildingState {
         self.can_pay_known_cost(player_id, something, providing_industry_type, cost)
     }
 
-    pub(crate) fn can_build_for_coverage(
-        &self,
-        tile_coverage: &TileCoverage,
-    ) -> Result<(), BuildError> {
+    pub fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> Result<(), BuildError> {
         let invalid_overlaps = tile_coverage.to_set().into_iter().any(|tile| {
             self.building_at(tile).is_some() || self.tracks_at(tile) != MaybeTracksOnTile::Empty
         });
