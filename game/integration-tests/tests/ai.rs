@@ -2,7 +2,6 @@
 
 use game_ai::ArtificialIntelligenceState;
 use game_ai::oct2025::Oct2025ArtificialIntelligenceState;
-use game_ai::sep2025::Sep2025ArtificialIntelligenceState;
 use game_logic::games_service::GamesService;
 use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};
@@ -125,15 +124,6 @@ fn run_ai_commands(
             }
         }
     }
-}
-
-#[test]
-fn ai_until_final_goods_built_sep2025() {
-    ai_until_final_goods_built(|player_id: PlayerId, game_state: &GameState| {
-        Box::new(Sep2025ArtificialIntelligenceState::new(
-            player_id, game_state,
-        ))
-    });
 }
 
 #[test]
