@@ -234,4 +234,9 @@ impl GamesService {
             },
         }
     }
+
+    // Public as a hack for testing only
+    pub fn get_game_service_mut(&mut self, game_id: GameId) -> Option<&mut GameService> {
+        self.game_map.get_mut(&game_id)
+    }
 }

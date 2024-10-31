@@ -62,14 +62,7 @@ impl ResourceLinkState {
                     ) {
                         if route.is_empty() {
                             // If it's empty, it means it's already built
-                            self.commands(
-                                from_industry_state,
-                                resource,
-                                to_industry_state,
-                                player_id,
-                                game_state,
-                                metrics,
-                            )
+                            GoalResult::RepeatInvocation
                         } else {
                             if game_state.can_build_tracks(player_id, &route).is_ok() {
                                 GoalResult::SendCommands(vec![GameCommand::BuildTracks(route)])

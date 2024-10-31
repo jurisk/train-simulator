@@ -18,8 +18,9 @@ use shared_domain::transport::movement_orders::MovementOrders;
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::{GameId, PlayerId, StationId, TransportId, UserId};
 
+// Public only for tests
 #[derive(Clone)]
-pub(crate) struct GameResponseWithAddress {
+pub struct GameResponseWithAddress {
     pub address:  AddressEnvelope,
     pub response: GameResponse,
 }
@@ -62,7 +63,8 @@ impl GameService {
         self.user_players.get_by_left(&user_id).copied()
     }
 
-    pub(crate) fn process_command(
+    // Public only for tests
+    pub fn process_command(
         &mut self,
         requesting_player_id: PlayerId,
         game_command: &GameCommand,
@@ -263,7 +265,7 @@ impl GameService {
         }
     }
 
-    pub(crate) fn advance_time(&mut self, time: GameTime, metrics: &impl Metrics) {
+    pub fn advance_time(&mut self, time: GameTime, metrics: &impl Metrics) {
         self.state.advance_time(time, metrics);
     }
 
@@ -373,5 +375,11 @@ impl GameService {
                     .collect(),
             ),
         )
+    }
+
+    // Hack used just for tests
+    #[must_use]
+    pub fn game_state(&self) -> &GameState {
+        &self.state
     }
 }

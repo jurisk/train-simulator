@@ -1,4 +1,4 @@
-use log::{debug, trace};
+use log::debug;
 use pathfinding::prelude::dijkstra;
 use web_time::Instant;
 
@@ -11,14 +11,14 @@ use crate::transport::track_length::TrackLength;
 fn successors(
     tile_track: TileTrack,
     building_state: &BuildingState,
-) -> Vec<(TileTrack, TrackLength)> {
+) -> impl Iterator<Item = (TileTrack, TrackLength)> {
     let next_tile_coords = tile_track.next_tile_coords();
     let needed_connection = tile_track.pointing_in.reverse();
 
-    let results = building_state
+    building_state
         .track_types_with_connection(next_tile_coords, needed_connection)
         .into_iter()
-        .map(|track_type| {
+        .map(move |track_type| {
             let pointing_in = track_type.other_end_unsafe(needed_connection);
             let tile_track = TileTrack {
                 tile: next_tile_coords,
@@ -27,10 +27,6 @@ fn successors(
             };
             (tile_track, track_type.length())
         })
-        .collect::<Vec<_>>();
-
-    trace!("current: {tile_track:?}, successors: {results:?}");
-    results
 }
 
 #[must_use]

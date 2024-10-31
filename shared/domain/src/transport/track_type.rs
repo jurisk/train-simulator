@@ -96,12 +96,14 @@ impl TrackType {
         }
     }
 
-    #[expect(clippy::missing_panics_doc)]
     #[must_use]
-    pub fn other_end_unsafe(self, direction: DirectionXZ) -> DirectionXZ {
-        self.other_end(direction).unwrap_or_else(|| {
-            panic!("Invalid track type {self:?} and direction {direction:?} combination")
-        })
+    pub const fn other_end_unsafe(self, direction: DirectionXZ) -> DirectionXZ {
+        match self.other_end(direction) {
+            None => {
+                panic!("Invalid track type");
+            },
+            Some(found) => found,
+        }
     }
 
     #[must_use]

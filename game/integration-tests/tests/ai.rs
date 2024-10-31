@@ -2,10 +2,10 @@
 
 use game_ai::ArtificialIntelligenceState;
 use game_ai::oct2025::Oct2025ArtificialIntelligenceState;
+use game_logic::game_service::GameService;
 use game_logic::games_service::GamesService;
 use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};
-use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::game_time::{GameTime, GameTimeDiff};
 use shared_domain::metrics::NoopMetrics;
@@ -49,21 +49,6 @@ fn join_game(games_service: &mut GamesService, game_id: GameId, user_id: UserId)
     player_id
 }
 
-fn get_snapshot(games_service: &mut GamesService, game_id: GameId, user_id: UserId) -> GameState {
-    let mut response = games_service
-        .process_command(game_id, user_id, &GameCommand::RequestGameStateSnapshot)
-        .unwrap();
-    assert_eq!(response.len(), 1);
-    let game_state = response.remove(0);
-    let ServerResponse::Game(_game_id, GameResponse::GameStateSnapshot(game_state)) =
-        game_state.response
-    else {
-        panic!("Expected GameStateSnapshot, got {:?}", game_state.response);
-    };
-
-    game_state
-}
-
 fn cargo_in_stations(game_state: &GameState, player_id: PlayerId) -> CargoMap {
     let mut cargo = CargoMap::new();
     for station in game_state.building_state().find_players_stations(player_id) {
@@ -89,32 +74,21 @@ fn player_has_enough_cargo(game_state: &GameState, player_id: PlayerId) -> bool 
     enough_cargo(&cargo_in_stations(game_state, player_id))
 }
 
-#[expect(clippy::match_same_arms)]
 fn run_ai_commands(
-    games_service: &mut GamesService,
-    game_state: &GameState,
+    game_service: &mut GameService,
     artificial_intelligence_state: &mut dyn ArtificialIntelligenceState,
-    game_id: GameId,
-    user_id: UserId,
+    player_id: PlayerId,
 ) {
-    let commands = artificial_intelligence_state.ai_commands(game_state, &NoopMetrics::default());
+    let commands = artificial_intelligence_state
+        .ai_commands(game_service.game_state(), &NoopMetrics::default());
     if let Some(commands) = commands {
         for command in commands {
-            let responses = games_service.process_command(game_id, user_id, &command);
+            let responses = game_service.process_command(player_id, &command);
             match responses {
                 Ok(responses) => {
                     for response in responses {
-                        match response.response {
-                            ServerResponse::Network(_) => {},
-                            ServerResponse::Authentication(_) => {},
-                            ServerResponse::Lobby(_) => {},
-                            ServerResponse::Game(_, GameResponse::Error(error)) => {
-                                panic!("Failed to process command: {command:?}: {error:?}");
-                            },
-                            ServerResponse::Game(..) => {},
-                            ServerResponse::Error(error) => {
-                                panic!("Failed to process command: {command:?}: {error:?}");
-                            },
+                        if let GameResponse::Error(error) = response.response {
+                            panic!("Failed to process command: {command:?}: {error:?}");
                         }
                     }
                 },
@@ -136,6 +110,8 @@ fn ai_until_final_goods_built_oct2025() {
 }
 
 const MAX_STEPS: usize = 10_000;
+
+#[expect(clippy::similar_names)]
 fn ai_until_final_goods_built<F>(factory: F)
 where
     F: Fn(PlayerId, &GameState) -> Box<dyn ArtificialIntelligenceState>,
@@ -148,55 +124,48 @@ where
     let user_id_2 = UserId::random();
     let player_id_2 = join_game(&mut games_service, game_id, user_id_2);
 
+    let game_service = games_service.get_game_service_mut(game_id).unwrap();
+
     let mut time = GameTime::new();
 
-    let game_state_1 = get_snapshot(&mut games_service, game_id, user_id_1);
-    let mut artificial_intelligence_state_1 = factory(player_id_1, &game_state_1);
+    let mut artificial_intelligence_state_1 = factory(player_id_1, game_service.game_state());
 
-    let game_state_2 = get_snapshot(&mut games_service, game_id, user_id_2);
-    let mut artificial_intelligence_state_2 = factory(player_id_2, &game_state_2);
+    let mut artificial_intelligence_state_2 = factory(player_id_2, game_service.game_state());
 
     let mut steps = 0;
 
     while steps < MAX_STEPS {
-        let game_state = get_snapshot(&mut games_service, game_id, user_id_1);
+        let game_state = game_service.game_state();
 
         // TODO HIGH: Run until military action happens instead of just until enough cargo
-        if player_has_enough_cargo(&game_state, player_id_1)
-            || player_has_enough_cargo(&game_state, player_id_2)
+        if player_has_enough_cargo(game_state, player_id_1)
+            || player_has_enough_cargo(game_state, player_id_2)
         {
             println!("AI finished in {steps} steps");
             return;
         }
 
         run_ai_commands(
-            &mut games_service,
-            &game_state,
+            game_service,
             artificial_intelligence_state_1.as_mut(),
-            game_id,
-            user_id_1,
+            player_id_1,
         );
 
-        // Refreshing game state to avoid clashing commands
-        let game_state = get_snapshot(&mut games_service, game_id, user_id_2);
-
         run_ai_commands(
-            &mut games_service,
-            &game_state,
+            game_service,
             artificial_intelligence_state_2.as_mut(),
-            game_id,
-            user_id_2,
+            player_id_2,
         );
 
         time = time + GameTimeDiff::from_seconds(0.1);
-        games_service.advance_times(time, &NoopMetrics::default());
+        game_service.advance_time(time, &NoopMetrics::default());
 
         steps += 1;
     }
 
-    let end_game_state = get_snapshot(&mut games_service, game_id, user_id_1);
-    let cargo_1 = cargo_in_stations(&end_game_state, player_id_1);
-    let cargo_2 = cargo_in_stations(&end_game_state, player_id_2);
+    let end_game_state = game_service.game_state();
+    let cargo_1 = cargo_in_stations(end_game_state, player_id_1);
+    let cargo_2 = cargo_in_stations(end_game_state, player_id_2);
 
     panic!("AI did not finish in {MAX_STEPS} steps, cargo_1 = {cargo_1:?}, cargo_2 = {cargo_2:?}");
 }
