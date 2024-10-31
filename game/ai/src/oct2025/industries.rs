@@ -6,6 +6,7 @@ use shared_domain::game_state::GameState;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::{IndustryBuildingId, PlayerId, StationId};
 
+use crate::oct2025::GoalResult;
 use crate::oct2025::stations::select_station_building;
 
 #[derive(Clone, Debug)]
@@ -25,7 +26,7 @@ impl IndustryState {
         player_id: PlayerId,
         game_state: &GameState,
         target_location: TileCoordsXZ,
-    ) -> Option<Vec<GameCommand>> {
+    ) -> GoalResult {
         trace!("IndustryState for {industry:?}: {self:?}");
         match self {
             IndustryState::NothingDone => {
@@ -33,10 +34,10 @@ impl IndustryState {
                     select_industry_building(player_id, game_state, industry, target_location)
                 {
                     *self = IndustryState::IndustryBuilt(building.id(), building.reference_tile());
-                    Some(vec![GameCommand::BuildIndustryBuilding(building)])
+                    GoalResult::SendCommands(vec![GameCommand::BuildIndustryBuilding(building)])
                 } else {
                     error!("Failed to select building for {industry:?}");
-                    None
+                    GoalResult::Done
                 }
             },
             IndustryState::IndustryBuilt(industry_building_id, location) => {
@@ -46,7 +47,7 @@ impl IndustryState {
                 {
                     *self =
                         IndustryState::StationBuilt(*industry_building_id, *location, station.id());
-                    self.commands(industry, player_id, game_state, target_location)
+                    GoalResult::RepeatInvocation
                 } else {
                     if let Some(building) = game_state
                         .building_state()
@@ -62,19 +63,21 @@ impl IndustryState {
                                 *location,
                                 station.id(),
                             );
-                            Some(vec![GameCommand::BuildStation(station)])
+                            GoalResult::SendCommands(vec![GameCommand::BuildStation(station)])
                         } else {
                             // TODO: This could happen, as we may have built some tracks in the neighbourhood before building all industries and stations.
                             error!("Failed to select station for {industry:?} at {location:?}");
-                            None
+                            GoalResult::Done
                         }
                     } else {
                         info!("Industry building {industry_building_id:?} not found");
-                        None
+                        GoalResult::Done
                     }
                 }
             },
-            IndustryState::StationBuilt(_industry_building_id, _location, _station_id) => None,
+            IndustryState::StationBuilt(_industry_building_id, _location, _station_id) => {
+                GoalResult::Done
+            },
         }
     }
 }

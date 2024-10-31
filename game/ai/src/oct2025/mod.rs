@@ -16,13 +16,33 @@ use crate::ArtificialIntelligenceState;
 use crate::oct2025::military::MilitaryBasesAI;
 use crate::oct2025::supply_chains::BuildSupplyChains;
 
+enum GoalResult {
+    SendCommands(Vec<GameCommand>),
+    RepeatInvocation,
+    Done,
+}
+
+fn invoke_to_finished<F>(mut f: F) -> GoalResult
+where
+    F: FnMut() -> GoalResult,
+{
+    loop {
+        let result = f();
+        match result {
+            GoalResult::SendCommands(commands) => return GoalResult::SendCommands(commands),
+            GoalResult::Done => return GoalResult::Done,
+            GoalResult::RepeatInvocation => continue,
+        }
+    }
+}
+
 trait Goal {
     fn commands(
         &mut self,
         player_id: PlayerId,
         game_state: &GameState,
         metrics: &dyn Metrics,
-    ) -> Option<Vec<GameCommand>>;
+    ) -> GoalResult;
 }
 
 impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
@@ -32,7 +52,9 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
         metrics: &dyn Metrics,
     ) -> Option<Vec<GameCommand>> {
         for goal in &mut self.pending_goals {
-            if let Some(commands) = goal.commands(self.player_id, game_state, metrics) {
+            if let GoalResult::SendCommands(commands) =
+                invoke_to_finished(|| goal.commands(self.player_id, game_state, metrics))
+            {
                 return Some(commands);
             }
         }

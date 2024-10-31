@@ -8,9 +8,9 @@ use shared_domain::metrics::Metrics;
 use shared_domain::tile_coords_xz::{TileCoordsXZ, TileDistance};
 use shared_domain::{IndustryBuildingId, PlayerId};
 
-use crate::oct2025::Goal;
 use crate::oct2025::industries::select_industry_building;
 use crate::oct2025::supply_chains::BuildSupplyChains;
+use crate::oct2025::{Goal, GoalResult, invoke_to_finished};
 
 #[derive(Clone)]
 struct MilitaryBaseAI {
@@ -33,7 +33,7 @@ impl Goal for MilitaryBaseAI {
         player_id: PlayerId,
         game_state: &GameState,
         metrics: &dyn Metrics,
-    ) -> Option<Vec<GameCommand>> {
+    ) -> GoalResult {
         self.build_supply_chains
             .commands(player_id, game_state, metrics)
     }
@@ -59,7 +59,7 @@ impl Goal for MilitaryBasesAI {
         player_id: PlayerId,
         game_state: &GameState,
         metrics: &dyn Metrics,
-    ) -> Option<Vec<GameCommand>> {
+    ) -> GoalResult {
         for base in game_state
             .building_state()
             .find_industry_building_by_owner_and_type(player_id, IndustryType::MilitaryBase)
@@ -73,16 +73,22 @@ impl Goal for MilitaryBasesAI {
 
         if empty {
             // TODO: We could have a race conditions that we keep spamming multiple such commands before the first one gets processed!?
-            select_military_base(player_id, game_state)
-                .map(|base| vec![GameCommand::BuildIndustryBuilding(base)])
+            match select_military_base(player_id, game_state) {
+                None => GoalResult::Done,
+                Some(base) => {
+                    GoalResult::SendCommands(vec![GameCommand::BuildIndustryBuilding(base)])
+                },
+            }
         } else {
             for base in self.bases.values_mut() {
-                if let Some(commands) = base.commands(player_id, game_state, metrics) {
-                    return Some(commands);
+                if let GoalResult::SendCommands(commands) =
+                    invoke_to_finished(|| base.commands(player_id, game_state, metrics))
+                {
+                    return GoalResult::SendCommands(commands);
                 }
             }
 
-            None
+            GoalResult::Done
         }
     }
 }

@@ -1,9 +1,10 @@
-use log::trace;
+use log::{error, trace};
 use shared_domain::building::building_info::WithTileCoverage;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
 use shared_domain::game_state::GameState;
 use shared_domain::tile_coverage::TileCoverage;
+use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::{PlayerId, StationId};
 use shared_util::random::choose;
 
@@ -80,10 +81,23 @@ pub(crate) fn lookup_station_id(industry_state: &IndustryState) -> Option<Statio
     }
 }
 
-pub(crate) fn lookup_station<'a>(
+fn lookup_station<'a>(
     industry_state: &'a IndustryState,
     game_state: &'a GameState,
 ) -> Option<&'a StationInfo> {
     let station_id = lookup_station_id(industry_state)?;
     game_state.building_state().find_station(station_id)
+}
+
+pub(crate) fn exit_tile_tracks(
+    industry_state: &IndustryState,
+    game_state: &GameState,
+) -> Vec<TileTrack> {
+    match lookup_station(industry_state, game_state) {
+        None => {
+            error!("No station found for {industry_state:?}");
+            vec![]
+        },
+        Some(station) => station.station_exit_tile_tracks(),
+    }
 }

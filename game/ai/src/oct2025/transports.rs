@@ -6,7 +6,28 @@ use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
 use shared_domain::{PlayerId, StationId, TransportId};
 
-pub(crate) fn purchase_transport_command(
+use crate::oct2025::industries::IndustryState;
+use crate::oct2025::stations::lookup_station_id;
+
+pub(crate) fn purchase_transport(
+    player_id: PlayerId,
+    game_state: &GameState,
+    from_industry_state: &IndustryState,
+    resource_type: ResourceType,
+    to_industry_state: &IndustryState,
+) -> Option<GameCommand> {
+    let from_station = lookup_station_id(from_industry_state)?;
+    let to_station = lookup_station_id(to_industry_state)?;
+    purchase_transport_command(
+        player_id,
+        game_state,
+        from_station,
+        resource_type,
+        to_station,
+    )
+}
+
+fn purchase_transport_command(
     player_id: PlayerId,
     game_state: &GameState,
     from_station: StationId,
