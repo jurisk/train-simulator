@@ -107,7 +107,7 @@ pub(crate) fn select_industry_building(
                 .is_ok()
         })
         .min_by_key(|info| {
-            // TODO HIGH: Actually, build close to related industries in this supply chain
+            // TODO: Actually, build close to related industries in this supply chain
             info.reference_tile().manhattan_distance(reference_tile)
         });
 

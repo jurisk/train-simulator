@@ -37,7 +37,7 @@ pub enum CanBuildResponse {
     Invalid(BuildError),
 }
 
-// TODO HIGH: You have too many grids... I think you should merge the various grids that show what buildings / tracks are at that tile
+// TODO: You have too many grids... I think you should merge the various grids that show what buildings / tracks are at that tile
 // Later: There is a dual nature here to both be the "validator" (check if something can be built) and the "state" (store what has been built).
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
@@ -101,6 +101,7 @@ impl BuildingState {
             .unwrap();
         let mut dynamic_info = construction_yard.dynamic_info_mut();
         let cargo = dynamic_info.cargo_mut();
+
         // TODO HIGH: Lower these to only cover initial supply chains for Concrete, Steel, Timber
         cargo.add(ResourceType::Concrete, CargoAmount::new(480.0));
         cargo.add(ResourceType::Steel, CargoAmount::new(480.0));

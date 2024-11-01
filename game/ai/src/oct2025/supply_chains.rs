@@ -89,7 +89,7 @@ impl Goal for BuildSupplyChain {
     }
 }
 
-// TODO HIGH: You can generate this from the industry definitions
+// TODO: You can generate this from the industry definitions - this is surely needed if you want to have moddable supply chains
 fn industries_for_resource_and_target(
     resource_type: ResourceType,
     target_type: IndustryType,
