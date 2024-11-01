@@ -66,6 +66,7 @@ pub fn plan_tracks(
 
     trace!("Planning tracks at {start:?} from {current:?} to {targets:?}");
 
+    // TODO: Consider optimising either by `dijkstra_all` or Floyd-Warshall
     let path = dijkstra(
         &current,
         |current| successors(*current, player_id, game_state, already_exists_coef),

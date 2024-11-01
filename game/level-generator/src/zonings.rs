@@ -12,13 +12,16 @@ use shared_util::random::choose;
 
 use crate::profile::Profile;
 
+const ZONING_COEF: usize = 2;
 fn default_zoning_counts(zoning_type: ZoningType) -> usize {
-    match zoning_type {
+    // Later: These can actually get generated from supply chain graph
+    let this_coef = match zoning_type {
         ZoningType::Industrial => 36,
         ZoningType::Source(ResourceType::Iron | ResourceType::Coal) => 4,
         ZoningType::Source(ResourceType::Wood) => 2,
         ZoningType::Source(_) => 1,
-    }
+    };
+    ZONING_COEF * this_coef
 }
 
 fn options(map_level: &MapLevel) -> Vec<TileCoordsXZ> {

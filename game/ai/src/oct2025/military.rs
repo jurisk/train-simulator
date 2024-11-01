@@ -98,7 +98,7 @@ fn select_military_base(
     player_id: PlayerId,
     game_state: &GameState,
 ) -> Option<IndustryBuildingInfo> {
-    // TODO HIGH: Pick a better location for a military base, perhaps in the direction of enemy ConstructionYard?
+    // TODO: Pick a better location for a military base, perhaps in the direction of enemy ConstructionYard?
     let mid_x = (game_state.map_level().terrain().tile_count_x() / 2) as TileDistance;
     let mid_z = (game_state.map_level().terrain().tile_count_z() / 2) as TileDistance;
 

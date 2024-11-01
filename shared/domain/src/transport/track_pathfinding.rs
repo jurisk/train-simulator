@@ -75,6 +75,13 @@ pub fn find_route_to_tile_tracks(
         targets, current_tile_track
     );
 
+    // TODO:
+    //  Consider optimising by Floyd-Warshall, which gets continuously updated as the `GameState` changes?
+    //  But likely do this only after signals / collisions, to ensure it doesn't have to be redone.
+    //  Note that you have:
+    //      - Your own Scala version at https://github.com/jurisk/advent-of-code/blob/master/scala2/src/main/scala/jurisk/algorithms/pathfinding/FloydWarshall.scala
+    //      - A Rust version at https://github.com/petgraph/petgraph/blob/master/src/algo/floyd_warshall.rs
+    //      - Hints on updating the graph at https://stackoverflow.com/questions/2537870/how-to-recalculate-all-pairs-shorthest-paths-on-line-if-nodes-are-getting-remove
     let result = dijkstra(
         &current_tile_track,
         |tile_track| successors(*tile_track, building_state),

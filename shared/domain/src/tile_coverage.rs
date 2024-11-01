@@ -121,14 +121,27 @@ impl TileCoverage {
 
     #[must_use]
     pub fn intersects(&self, other: &Self) -> bool {
-        for a in self.to_set() {
-            for b in other.to_set() {
-                if a == b {
-                    return true;
-                }
-            }
+        match (self, other) {
+            (TileCoverage::Single(a), TileCoverage::Single(b)) => a == b,
+            (TileCoverage::Single(a), b @ TileCoverage::Rectangular { .. }) => b.contains(*a),
+            (a @ TileCoverage::Rectangular { .. }, TileCoverage::Single(b)) => a.contains(*b),
+            (
+                TileCoverage::Rectangular {
+                    north_west_inclusive: a_north_west,
+                    south_east_inclusive: a_south_east,
+                },
+                TileCoverage::Rectangular {
+                    north_west_inclusive: b_north_west,
+                    south_east_inclusive: b_south_east,
+                },
+            ) => {
+                let one_left_of_other =
+                    a_north_west.x > b_south_east.x || b_north_west.x > a_south_east.x;
+                let one_above_another =
+                    a_north_west.z > b_south_east.z || b_north_west.z > a_south_east.z;
+                !(one_left_of_other || one_above_another)
+            },
         }
-        false
     }
 
     // TODO: This gets called often enough that you should optimise it
@@ -145,5 +158,18 @@ impl TileCoverage {
             }
         }
         result
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::tile_coords_xz::TileCoordsXZ;
+    use crate::tile_coverage::TileCoverage;
+
+    #[test]
+    fn test_overlaps() {
+        let a = TileCoverage::rectangular_odd(TileCoordsXZ::new(73, 31), 3, 3);
+        let b = TileCoverage::rectangular_odd(TileCoordsXZ::new(74, 32), 3, 3);
+        assert!(a.intersects(&b));
     }
 }

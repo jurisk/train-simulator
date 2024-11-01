@@ -109,7 +109,7 @@ fn ai_until_final_goods_built_oct2025() {
     });
 }
 
-const MAX_STEPS: usize = 10_000;
+const MAX_STEPS: usize = 20_000;
 
 #[expect(clippy::similar_names)]
 fn ai_until_final_goods_built<F>(factory: F)

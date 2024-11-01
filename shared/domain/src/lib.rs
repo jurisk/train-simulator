@@ -141,7 +141,7 @@ impl UserId {
     }
 }
 
-// TODO HIGH: `PlayerId` could actually have `String` underlying or even be `enum`?
+// TODO: `PlayerId` could actually have `String` underlying, or even get renamed to `PolityId` or `FactionId`. It cannot be an enum as we want scenario creators to be able to define custom ones.
 newtype_uuid!(PlayerId, "P");
 
 newtype_uuid!(GameId, "G");

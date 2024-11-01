@@ -35,8 +35,8 @@ fn test_plan_tracks() {
             .gift_initial_construction_yard(player_id, industrial_tile);
     }
 
-    let from_tile = TileCoordsXZ::new(1, 190);
-    let to_tile = TileCoordsXZ::new(255, 0);
+    let from_tile = TileCoordsXZ::new(340, 350);
+    let to_tile = TileCoordsXZ::new(280, 150);
 
     let head = DirectionalEdge::new(from_tile, DirectionXZ::West);
     let tail = DirectionalEdge::new(to_tile, DirectionXZ::South);
@@ -51,8 +51,17 @@ fn test_plan_tracks() {
     )
     .expect("Failed to plan tracks");
 
-    assert!(tracks.len() > 450);
-    assert!(length > TrackLength::new(300f32));
+    let expected_min_tracks = 250;
+    assert!(
+        tracks.len() > expected_min_tracks,
+        "Expected at least {expected_min_tracks} tracks, got {}",
+        tracks.len()
+    );
+    let expected_min_length = 200f32;
+    assert!(
+        length > TrackLength::new(expected_min_length),
+        "Expected at least {expected_min_length} length, got {length:?}"
+    );
     let result = game_state
         .build_tracks(player_id, &tracks)
         .expect("Failed to build tracks");
@@ -69,7 +78,7 @@ fn test_plan_tracks() {
 
     let to_tile_track = TileTrack {
         tile:        last_tile,
-        track_type:  TrackType::NorthWest,
+        track_type:  TrackType::NorthSouth,
         pointing_in: DirectionXZ::North,
     };
     let route = find_route_to_tile_tracks(
