@@ -3,7 +3,7 @@ use log::error;
 use crate::building::industry_type::IndustryType;
 use crate::resource_type::ResourceType;
 
-// TODO HIGH: Support custom supply chains - one WW1 one, and one peaceful "just build industry" one
+// TODO: Support custom supply chains - one WW1 one, and one peaceful "just build industry" one
 #[derive(Debug, PartialEq, Clone)]
 pub struct SupplyChain {}
 

@@ -235,12 +235,12 @@ impl GameState {
         Ok(filtered)
     }
 
-    pub fn purchase_transport(
-        &mut self,
+    pub fn can_purchase_transport(
+        &self,
         requesting_player_id: PlayerId,
         station_id: StationId,
         transport_info: &TransportInfo,
-    ) -> Result<(), BuildError> {
+    ) -> Result<BuildCosts, BuildError> {
         // TODO: Check if the track / road / etc. is free and owned by the purchaser
         // TODO: Check if the transport is on a station
 
@@ -257,6 +257,18 @@ impl GameState {
             source_industry,
             cargo_map,
         )?;
+
+        Ok(costs)
+    }
+
+    pub fn purchase_transport(
+        &mut self,
+        requesting_player_id: PlayerId,
+        station_id: StationId,
+        transport_info: &TransportInfo,
+    ) -> Result<(), BuildError> {
+        let costs =
+            self.can_purchase_transport(requesting_player_id, station_id, transport_info)?;
 
         self.buildings.pay_costs(costs);
         self.upsert_transport(transport_info.clone());

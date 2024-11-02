@@ -8,7 +8,7 @@ use crate::cargo_map::{CargoMap, WithCargo, WithCargoMut};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 
-// TODO HIGH: A lot of similarities between military, industry and stations... Think about how to unify.
+// TODO: A lot of similarities between military, industry and stations... Think about how to unify.
 
 pub trait BuildingInfo: WithOwner + WithTileCoverage {}
 

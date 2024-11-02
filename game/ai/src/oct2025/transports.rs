@@ -1,3 +1,4 @@
+use log::trace;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
@@ -59,8 +60,14 @@ fn purchase_transport_command(
         movement_orders,
     );
 
-    // TODO HIGH: Ask GameState "Can purchase transport?" - as it has a cost too.
-    let command = GameCommand::PurchaseTransport(from_station, transport_info);
-
-    Some(command)
+    match game_state.can_purchase_transport(player_id, from_station, &transport_info) {
+        Ok(_) => {
+            let command = GameCommand::PurchaseTransport(from_station, transport_info);
+            Some(command)
+        },
+        Err(error) => {
+            trace!("Failed to purchase transport for {resource_type:?}: {error:?}");
+            None
+        },
+    }
 }

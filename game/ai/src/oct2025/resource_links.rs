@@ -97,7 +97,7 @@ impl ResourceLinkState {
                 }
             },
             ResourceLinkState::TracksBuilt => {
-                // TODO HIGH: Buy more transports if the tracks are long, or perhaps if a backlog of resources gets formed
+                // TODO: Buy more transports if the tracks are long, or perhaps if a backlog of resources gets formed
                 let command = purchase_transport(
                     player_id,
                     game_state,

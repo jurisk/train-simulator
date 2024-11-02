@@ -60,7 +60,7 @@ impl IndustryState {
                             "Building station {station:?} for {industry:?} at {industry_building_id:?}"
                         );
                         if let Some(station) = station {
-                            // TODO HIGH: Should be more gradual, we cannot declare it already built if we just sent the message
+                            // TODO: Should be more gradual, we cannot declare it already built if we just sent the message
                             *self = IndustryState::StationBuilt(
                                 *industry_building_id,
                                 *location,
