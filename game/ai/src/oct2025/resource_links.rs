@@ -98,6 +98,7 @@ impl ResourceLinkState {
             },
             ResourceLinkState::TracksBuilt => {
                 // TODO: Buy more transports if the tracks are long, or perhaps if a backlog of resources gets formed
+                // TODO HIGH: Ammunition train was missing when testing!
                 if let Some((station, transport)) = purchase_transport(
                     player_id,
                     game_state,

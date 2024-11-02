@@ -66,7 +66,6 @@ fn enough_cargo(cargo: &CargoMap) -> bool {
         // We are skipping, e.g., Concrete as we are granting it in the initial ConstructionYard
     ]
     .iter()
-    // TODO: `all` is flaky... use `any` if `all` fails
     .all(|resource| cargo.get(*resource) > CargoAmount::ZERO)
 }
 

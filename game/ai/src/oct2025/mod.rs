@@ -16,6 +16,7 @@ use crate::ArtificialIntelligenceState;
 use crate::oct2025::military::MilitaryBasesAI;
 use crate::oct2025::supply_chains::BuildSupplyChains;
 
+#[derive(PartialEq)]
 enum GoalResult {
     SendCommands(Vec<GameCommand>),
     RepeatInvocation,

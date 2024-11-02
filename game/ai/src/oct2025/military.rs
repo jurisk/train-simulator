@@ -43,8 +43,15 @@ impl Goal for MilitaryBaseAI {
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> GoalResult {
-        self.build_supply_chains
-            .commands(player_id, game_state, metrics)
+        let supply_chain_result = self
+            .build_supply_chains
+            .commands(player_id, game_state, metrics);
+        if supply_chain_result == GoalResult::Finished {
+            // TODO HIGH: let us build the FixedArtillery
+            GoalResult::Finished
+        } else {
+            supply_chain_result
+        }
     }
 }
 
@@ -69,6 +76,7 @@ impl Goal for MilitaryBasesAI {
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> GoalResult {
+        // Ensure all existing this player's 'MilitaryBase'-s have corresponding AI
         for base in game_state
             .building_state()
             .find_industry_building_by_owner_and_type(player_id, IndustryType::MilitaryBase)
