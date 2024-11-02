@@ -6,9 +6,15 @@ use serde::{Deserialize, Serialize};
 
 use crate::transport::track_type::TrackType;
 
-#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Default)]
+#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq)]
 pub struct TrackTypeSet {
     byte: u8,
+}
+
+impl Default for TrackTypeSet {
+    fn default() -> Self {
+        Self::empty()
+    }
 }
 
 impl Debug for TrackTypeSet {
@@ -29,7 +35,7 @@ const fn mask(track_type: TrackType) -> u8 {
 
 impl TrackTypeSet {
     #[must_use]
-    pub const fn new() -> Self {
+    pub const fn empty() -> Self {
         Self { byte: 0 }
     }
 

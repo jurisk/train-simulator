@@ -175,7 +175,9 @@ impl Zoning {
                 == required)
                 .then_ok_unit(|| BuildError::InvalidZoning)
         } else {
-            warn!("Building {industry_building_info:?} has no required zoning - is this really expected?");
+            warn!(
+                "Building {industry_building_info:?} has no required zoning - is this really expected?"
+            );
             industry_building_info
                 .covers_tiles()
                 .to_set()

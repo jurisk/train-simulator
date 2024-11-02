@@ -31,7 +31,7 @@ impl MaybeTracksOnTile {
     #[must_use]
     pub fn track_types(&self) -> TrackTypeSet {
         match self {
-            Self::Empty => TrackTypeSet::new(),
+            Self::Empty => TrackTypeSet::empty(),
             Self::SingleOwner { track_types, .. } => *track_types,
         }
     }

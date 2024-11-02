@@ -12,6 +12,7 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::tile_track::TileTrack;
 use crate::transport::track_type::TrackType;
+use crate::transport::track_type_set::TrackTypeSet;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct PlatformIndex(usize);
@@ -125,11 +126,11 @@ impl StationType {
     }
 
     #[must_use]
-    pub fn track_types_at(self, relative_tile: TileCoordsXZ) -> Vec<TrackType> {
+    pub fn track_types_at(self, relative_tile: TileCoordsXZ) -> TrackTypeSet {
         if self.relative_tiles_used().contains(relative_tile) {
-            vec![self.track_type()]
+            TrackTypeSet::single(self.track_type())
         } else {
-            vec![]
+            TrackTypeSet::empty()
         }
     }
 }

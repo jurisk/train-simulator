@@ -16,7 +16,7 @@ use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::progress_within_tile::ProgressWithinTile;
 use crate::transport::tile_track::TileTrack;
-use crate::transport::track_type::TrackType;
+use crate::transport::track_type_set::TrackTypeSet;
 use crate::transport::transport_location::TransportLocation;
 use crate::{PlayerId, StationId};
 
@@ -131,7 +131,7 @@ impl StationInfo {
     }
 
     #[must_use]
-    pub(crate) fn station_track_types_at(&self, tile: TileCoordsXZ) -> Vec<TrackType> {
+    pub(crate) fn station_track_types_at(&self, tile: TileCoordsXZ) -> TrackTypeSet {
         self.station_type()
             .track_types_at(tile - self.reference_tile())
     }

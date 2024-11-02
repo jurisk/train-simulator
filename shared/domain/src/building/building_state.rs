@@ -39,22 +39,26 @@ pub enum CanBuildResponse {
     Invalid(BuildError),
 }
 
-// TODO: You have too many grids... I think you should merge the various grids that show what buildings / tracks are at that tile
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+enum TileBuildingStatus {
+    Empty,
+    IndustryBuilding(IndustryBuildingId),
+    MilitaryBuilding(MilitaryBuildingId),
+    Station(StationId, TrackTypeSet),
+}
+
 // Later: There is a dual nature here to both be the "validator" (check if something can be built) and the "state" (store what has been built).
 // Later: Refactor to store also as a `FieldXZ` so that lookup by tile is efficient
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct BuildingState {
-    tracks:                  TrackState,
-    industry_buildings:      HashMap<IndustryBuildingId, IndustryBuildingInfo>,
-    tile_industry_buildings: GridXZ<TileCoordsXZ, Option<IndustryBuildingId>>,
-    military_buildings:      HashMap<MilitaryBuildingId, MilitaryBuildingInfo>,
-    tile_military_buildings: GridXZ<TileCoordsXZ, Option<MilitaryBuildingId>>,
-    stations:                HashMap<StationId, StationInfo>,
-    tile_stations:           GridXZ<TileCoordsXZ, Option<StationId>>,
-    station_track_types_at:  GridXZ<TileCoordsXZ, TrackTypeSet>,
+    tracks:               TrackState,
+    industry_buildings:   HashMap<IndustryBuildingId, IndustryBuildingInfo>,
+    tile_buildings:       GridXZ<TileCoordsXZ, TileBuildingStatus>,
+    military_buildings:   HashMap<MilitaryBuildingId, MilitaryBuildingInfo>,
+    stations:             HashMap<StationId, StationInfo>,
     // Link from each industry building to the closest station
     // Later: Should these be 1:1, N:1 or N:M correspondence between industry & station? Is it a problem if a station can accept & provide the same good and thus does not need trains?
-    closest_station_link:    HashMap<IndustryBuildingId, StationId>,
+    closest_station_link: HashMap<IndustryBuildingId, StationId>,
 }
 
 impl Debug for BuildingState {
@@ -72,15 +76,12 @@ impl BuildingState {
     #[must_use]
     pub fn new(size_x: usize, size_z: usize) -> Self {
         Self {
-            tracks:                  TrackState::new(size_x, size_z),
-            industry_buildings:      HashMap::new(),
-            tile_industry_buildings: GridXZ::filled_with(size_x, size_z, None),
-            military_buildings:      HashMap::new(),
-            tile_military_buildings: GridXZ::filled_with(size_x, size_z, None),
-            stations:                HashMap::new(),
-            tile_stations:           GridXZ::filled_with(size_x, size_z, None),
-            station_track_types_at:  GridXZ::filled_with(size_x, size_z, TrackTypeSet::new()),
-            closest_station_link:    HashMap::new(),
+            tracks:               TrackState::new(size_x, size_z),
+            industry_buildings:   HashMap::new(),
+            tile_buildings:       GridXZ::filled_with(size_x, size_z, TileBuildingStatus::Empty),
+            military_buildings:   HashMap::new(),
+            stations:             HashMap::new(),
+            closest_station_link: HashMap::new(),
         }
     }
 
@@ -146,7 +147,12 @@ impl BuildingState {
     pub fn track_types_at(&self, tile: TileCoordsXZ) -> TrackTypeSet {
         let from_track = self.tracks.track_types_at(tile);
         if from_track.is_empty() {
-            self.station_track_types_at.get_or_default(tile)
+            if let Some(TileBuildingStatus::Station(_, track_types)) = self.tile_buildings.get(tile)
+            {
+                *track_types
+            } else {
+                TrackTypeSet::empty()
+            }
         } else {
             from_track
         }
@@ -179,24 +185,28 @@ impl BuildingState {
 
     #[must_use]
     pub fn station_at(&self, tile: TileCoordsXZ) -> Option<&StationInfo> {
-        match self.tile_stations.get(tile) {
-            Some(Some(station_id)) => self.stations.get(station_id),
+        match self.tile_buildings.get(tile) {
+            Some(TileBuildingStatus::Station(station_id, _)) => self.stations.get(station_id),
             _ => None,
         }
     }
 
     #[must_use]
     pub fn industry_building_at(&self, tile: TileCoordsXZ) -> Option<&IndustryBuildingInfo> {
-        match self.tile_industry_buildings.get(tile) {
-            Some(Some(industry_building_id)) => self.industry_buildings.get(industry_building_id),
+        match self.tile_buildings.get(tile) {
+            Some(TileBuildingStatus::IndustryBuilding(industry_building_id)) => {
+                self.industry_buildings.get(industry_building_id)
+            },
             _ => None,
         }
     }
 
     #[must_use]
     pub fn military_building_at(&self, tile: TileCoordsXZ) -> Option<&MilitaryBuildingInfo> {
-        match self.tile_military_buildings.get(tile) {
-            Some(Some(military_building_id)) => self.military_buildings.get(military_building_id),
+        match self.tile_buildings.get(tile) {
+            Some(TileBuildingStatus::MilitaryBuilding(military_building_id)) => {
+                self.military_buildings.get(military_building_id)
+            },
             _ => None,
         }
     }
@@ -245,7 +255,11 @@ impl BuildingState {
 
     pub fn append_industry_building(&mut self, industry_building: IndustryBuildingInfo) {
         for tile in industry_building.covers_tiles().to_set() {
-            self.tile_industry_buildings[tile] = Some(industry_building.id());
+            if self.tile_buildings[tile] != TileBuildingStatus::Empty {
+                warn!("Tried to build industry building at {tile:?} but it is already occupied",);
+            }
+            self.tile_buildings[tile] =
+                TileBuildingStatus::IndustryBuilding(industry_building.id());
         }
         self.industry_buildings
             .insert(industry_building.id(), industry_building);
@@ -254,7 +268,11 @@ impl BuildingState {
 
     pub fn append_military_building(&mut self, military_building: MilitaryBuildingInfo) {
         for tile in military_building.covers_tiles().to_set() {
-            self.tile_military_buildings[tile] = Some(military_building.id());
+            if self.tile_buildings[tile] != TileBuildingStatus::Empty {
+                warn!("Tried to build military building at {tile:?} but it is already occupied",);
+            }
+            self.tile_buildings[tile] =
+                TileBuildingStatus::MilitaryBuilding(military_building.id());
         }
         self.military_buildings
             .insert(military_building.id(), military_building);
@@ -262,12 +280,11 @@ impl BuildingState {
 
     pub fn append_station(&mut self, station: StationInfo) {
         for tile in station.covers_tiles().to_set() {
-            self.tile_stations[tile] = Some(station.id());
-            for track_type in station.station_track_types_at(tile) {
-                if let Some(found) = self.station_track_types_at.get_mut(tile) {
-                    found.insert(track_type);
-                }
+            if self.tile_buildings[tile] != TileBuildingStatus::Empty {
+                warn!("Tried to build station at {tile:?} but it is already occupied",);
             }
+            self.tile_buildings[tile] =
+                TileBuildingStatus::Station(station.id(), station.station_track_types_at(tile));
         }
         self.stations.insert(station.id(), station);
         self.recalculate_cargo_forwarding_links();
@@ -351,7 +368,7 @@ impl BuildingState {
     ) -> CanBuildResponse {
         let overlapping_station = self.station_at(tile);
         let has_same_track_from_station = if let Some(station) = overlapping_station {
-            station.station_track_types_at(tile).contains(&track_type)
+            station.station_track_types_at(tile).contains(track_type)
         } else {
             false
         };
@@ -624,8 +641,23 @@ impl BuildingState {
     pub fn remove_industry_building(&mut self, industry_building_id: IndustryBuildingId) {
         if let Some(removed) = self.industry_buildings.remove(&industry_building_id) {
             for tile in removed.covers_tiles().to_set() {
-                self.tile_industry_buildings[tile] = None;
+                match &self.tile_buildings[tile] {
+                    TileBuildingStatus::IndustryBuilding(found_id)
+                        if *found_id == industry_building_id =>
+                    {
+                        self.tile_buildings[tile] = TileBuildingStatus::Empty;
+                    },
+                    found => {
+                        warn!(
+                            "Tried to remove industry building {industry_building_id:?} at {tile:?} but found {found:?}",
+                        );
+                    },
+                }
             }
+        } else {
+            warn!(
+                "Tried to remove industry building {industry_building_id:?} but it was not found",
+            );
         }
         self.recalculate_cargo_forwarding_links();
     }
@@ -633,21 +665,45 @@ impl BuildingState {
     pub fn remove_military_building(&mut self, military_building_id: MilitaryBuildingId) {
         if let Some(removed) = self.military_buildings.remove(&military_building_id) {
             for tile in removed.covers_tiles().to_set() {
-                self.tile_military_buildings[tile] = None;
+                match &self.tile_buildings[tile] {
+                    TileBuildingStatus::MilitaryBuilding(found_id)
+                        if *found_id == military_building_id =>
+                    {
+                        self.tile_buildings[tile] = TileBuildingStatus::Empty;
+                    },
+                    found => {
+                        warn!(
+                            "Tried to remove military building {military_building_id:?} at {tile:?} but found {found:?}",
+                        );
+                    },
+                }
             }
+        } else {
+            warn!(
+                "Tried to remove military building {military_building_id:?} but it was not found",
+            );
         }
     }
 
     pub fn remove_station(&mut self, station_id: StationId) {
         if let Some(removed) = self.stations.remove(&station_id) {
             for tile in removed.covers_tiles().to_set() {
-                self.tile_stations[tile] = None;
-                if let Some(found) = self.station_track_types_at.get_mut(tile) {
-                    found.clear();
+                match &self.tile_buildings[tile] {
+                    TileBuildingStatus::Station(found_id, _) if *found_id == station_id => {
+                        self.tile_buildings[tile] = TileBuildingStatus::Empty;
+                    },
+                    found => {
+                        warn!(
+                            "Tried to remove station {station_id:?} at {tile:?} but found {found:?}",
+                        );
+                    },
                 }
             }
+
+            self.recalculate_cargo_forwarding_links();
+        } else {
+            warn!("Tried to remove station {station_id:?} but it was not found",);
         }
-        self.recalculate_cargo_forwarding_links();
     }
 
     pub fn attempt_to_remove_tracks(
