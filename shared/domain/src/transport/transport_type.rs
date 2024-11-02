@@ -2,6 +2,8 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
+use crate::building::building_info::WithCostToBuild;
+use crate::building::industry_type::IndustryType;
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
@@ -117,5 +119,14 @@ impl TransportType {
     #[must_use]
     pub fn max_velocity(&self) -> TransportVelocity {
         TransportVelocity::new(2.0)
+    }
+}
+
+impl WithCostToBuild for TransportType {
+    fn cost_to_build(&self) -> (IndustryType, CargoMap) {
+        (
+            IndustryType::ConstructionYard,
+            CargoMap::single(ResourceType::Steel, 1.0),
+        )
     }
 }

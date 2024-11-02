@@ -178,12 +178,12 @@ Needs to be run as admin on Windows.
 [source,bash]
 ----
 cargo install flamegraph
-cargo flamegraph --bin client_single_player --features bevy/trace,bevy/trace_chrome --root --release
-cargo flamegraph --bin server_console --features bevy/trace,bevy/trace_chrome --root --release
-cargo flamegraph --bin client_graphical --features bevy/trace,bevy/trace_chrome -- ws://127.0.0.1:8080/ws ee6b4aa1-67e0-4d6b-a42c-56320f61390e
-cargo flamegraph --unit-test shared_domain -- transport::track_planner::tests
-cargo flamegraph --package game-integration-tests --test tracks
-cargo flamegraph --package game-integration-tests --test ai
+sudo cargo flamegraph --bin client_single_player --features bevy/trace,bevy/trace_chrome --root --release
+sudo cargo flamegraph --bin server_console --features bevy/trace,bevy/trace_chrome --root --release
+sudo cargo flamegraph --bin client_graphical --features bevy/trace,bevy/trace_chrome -- ws://127.0.0.1:8080/ws ee6b4aa1-67e0-4d6b-a42c-56320f61390e
+sudo cargo flamegraph --unit-test shared_domain -- transport::track_planner::tests
+sudo cargo flamegraph --package game-integration-tests --test tracks
+sudo cargo flamegraph --package game-integration-tests --test ai
 sudo cargo flamegraph --package game-level-generator --bin level_generator
 ----
 

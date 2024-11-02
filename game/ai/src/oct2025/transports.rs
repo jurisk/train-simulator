@@ -58,6 +58,8 @@ fn purchase_transport_command(
         transport_location,
         movement_orders,
     );
+
+    // TODO HIGH: Ask GameState "Can purchase transport?" - as it has a cost too.
     let command = GameCommand::PurchaseTransport(from_station, transport_info);
 
     Some(command)

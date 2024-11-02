@@ -2,7 +2,8 @@ use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
 
-use crate::building::building_info::WithOwner;
+use crate::building::building_info::{WithCostToBuild, WithOwner};
+use crate::building::industry_type::IndustryType;
 use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::CargoMap;
 use crate::resource_type::ResourceType;
@@ -166,5 +167,11 @@ impl TransportInfo {
 impl WithOwner for TransportInfo {
     fn owner_id(&self) -> PlayerId {
         self.static_info.owner_id
+    }
+}
+
+impl WithCostToBuild for TransportInfo {
+    fn cost_to_build(&self) -> (IndustryType, CargoMap) {
+        self.static_info.transport_type.cost_to_build()
     }
 }

@@ -11,18 +11,15 @@ use crate::building::building_info::{
 };
 use crate::building::building_state::{BuildingState, CanBuildResponse};
 use crate::building::industry_building_info::IndustryBuildingInfo;
-use crate::building::industry_type::IndustryType;
 use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::{BuildCosts, BuildError};
-use crate::cargo_map::CargoMap;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::ZoningInfo;
 use crate::metrics::Metrics;
 use crate::players::player_state::PlayerState;
-use crate::resource_type::ResourceType;
 use crate::scenario::{PlayerProfile, Scenario};
 use crate::supply_chain::SupplyChain;
 use crate::tile_coords_xz::TileCoordsXZ;
@@ -249,7 +246,7 @@ impl GameState {
 
         self.valid_owner(requesting_player_id, transport_info.owner_id())?;
 
-        let cargo_map = CargoMap::single(ResourceType::Steel, 1.0);
+        let (source_industry, cargo_map) = transport_info.cost_to_build();
         let station = self
             .building_state()
             .find_station(station_id)
@@ -257,7 +254,7 @@ impl GameState {
         let costs = self.building_state().can_pay_known_cost(
             transport_info.owner_id(),
             station,
-            IndustryType::ConstructionYard,
+            source_industry,
             cargo_map,
         )?;
 

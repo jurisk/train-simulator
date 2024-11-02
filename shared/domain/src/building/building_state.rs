@@ -27,6 +27,7 @@ use crate::resource_type::ResourceType;
 use crate::supply_chain::SupplyChain;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type_set::TrackTypeSet;
+use crate::transport::transport_type::TransportType;
 use crate::{
     IndustryBuildingId, MilitaryBuildingId, PlayerId, StationId, TileCoordsXZ, TrackId, TrackType,
 };
@@ -83,7 +84,7 @@ impl BuildingState {
         }
     }
 
-    #[expect(clippy::unwrap_used, clippy::missing_panics_doc)]
+    #[expect(clippy::unwrap_used, clippy::missing_panics_doc, clippy::similar_names)]
     pub fn gift_initial_construction_yard(
         &mut self,
         player_id: PlayerId,
@@ -121,6 +122,11 @@ impl BuildingState {
             let multiplied = cost * 400.0;
             *cargo += &multiplied;
         }
+
+        let (_, train_cost) = TransportType::cargo_train(ResourceType::Steel).cost_to_build();
+        // TODO: 5.0 is rather arbitrary, we really need the trains for supply chains that produce more trains
+        let trains_cost = train_cost * 5.0;
+        *cargo += &trains_cost;
     }
 
     // TODO: Optimize this as it is called often
