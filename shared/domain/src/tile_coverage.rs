@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
 
-use crate::tile_coords_xz::{TileCoordsXZ, TileDistance};
+use crate::tile_coords_xz::{TileCoordsXZ, TileDistance, closest_tile_distance};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub enum TileCoverage {
@@ -144,20 +144,54 @@ impl TileCoverage {
         }
     }
 
-    // TODO: This gets called often enough that you should optimise it
+    const fn min_x(&self) -> TileDistance {
+        match self {
+            TileCoverage::Single(tile) => tile.x,
+            TileCoverage::Rectangular {
+                north_west_inclusive,
+                south_east_inclusive: _,
+            } => north_west_inclusive.x,
+        }
+    }
+
+    const fn max_x(&self) -> TileDistance {
+        match self {
+            TileCoverage::Single(tile) => tile.x,
+            TileCoverage::Rectangular {
+                north_west_inclusive: _,
+                south_east_inclusive,
+            } => south_east_inclusive.x,
+        }
+    }
+
+    const fn min_z(&self) -> TileDistance {
+        match self {
+            TileCoverage::Single(tile) => tile.z,
+            TileCoverage::Rectangular {
+                north_west_inclusive,
+                south_east_inclusive: _,
+            } => north_west_inclusive.z,
+        }
+    }
+
+    const fn max_z(&self) -> TileDistance {
+        match self {
+            TileCoverage::Single(tile) => tile.z,
+            TileCoverage::Rectangular {
+                north_west_inclusive: _,
+                south_east_inclusive,
+            } => south_east_inclusive.z,
+        }
+    }
+
     #[must_use]
-    pub fn manhattan_distance_between_closest_tiles(
+    pub const fn manhattan_distance_between_closest_tiles(
         a: &TileCoverage,
         b: &TileCoverage,
     ) -> TileDistance {
-        let mut result = i32::MAX;
-        for a in a.to_set() {
-            for b in b.to_set() {
-                let distance = a.manhattan_distance(b);
-                result = result.min(distance);
-            }
-        }
-        result
+        let closest_x = closest_tile_distance(a.min_x(), a.max_x(), b.min_x(), b.max_x());
+        let closest_z = closest_tile_distance(a.min_z(), a.max_z(), b.min_z(), b.max_z());
+        closest_x + closest_z
     }
 }
 

@@ -9,6 +9,22 @@ use crate::vertex_coords_xz::VertexCoordsXZ;
 
 pub type TileDistance = i32;
 
+#[must_use]
+pub const fn closest_tile_distance(
+    min_a: TileDistance,
+    max_a: TileDistance,
+    min_b: TileDistance,
+    max_b: TileDistance,
+) -> TileDistance {
+    if min_a > max_b {
+        min_a - max_b
+    } else if min_b > max_a {
+        min_b - max_a
+    } else {
+        0
+    }
+}
+
 #[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone, Ord, PartialOrd)]
 pub struct TileCoordsXZ {
     pub x: TileDistance,
