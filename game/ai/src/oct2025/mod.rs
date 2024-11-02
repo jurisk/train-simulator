@@ -5,7 +5,7 @@ mod stations;
 mod supply_chains;
 mod transports;
 
-use log::trace;
+use log::{error, trace};
 use shared_domain::PlayerId;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
@@ -19,7 +19,9 @@ use crate::oct2025::supply_chains::BuildSupplyChains;
 enum GoalResult {
     SendCommands(Vec<GameCommand>),
     RepeatInvocation,
-    Done,
+    TryAgainLater,
+    Finished,
+    Error(String),
 }
 
 fn invoke_to_finished<F>(mut f: F) -> GoalResult
@@ -29,9 +31,8 @@ where
     loop {
         let result = f();
         match result {
-            GoalResult::SendCommands(commands) => return GoalResult::SendCommands(commands),
-            GoalResult::Done => return GoalResult::Done,
             GoalResult::RepeatInvocation => continue,
+            other => return other,
         }
     }
 }
@@ -52,10 +53,24 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
         metrics: &dyn Metrics,
     ) -> Option<Vec<GameCommand>> {
         for goal in &mut self.pending_goals {
-            if let GoalResult::SendCommands(commands) =
-                invoke_to_finished(|| goal.commands(self.player_id, game_state, metrics))
-            {
-                return Some(commands);
+            let result = invoke_to_finished(|| goal.commands(self.player_id, game_state, metrics));
+            match result {
+                GoalResult::SendCommands(commands) => {
+                    return Some(commands);
+                },
+                GoalResult::RepeatInvocation => {
+                    error!("Unexpected result from `invoke_to_finished`");
+                },
+                GoalResult::TryAgainLater => {
+                    // This goal did not have enough resources, let us not do anything and keep with it.
+                    return None;
+                },
+                GoalResult::Finished => {
+                    // We move to the next goal
+                },
+                GoalResult::Error(error) => {
+                    error!("Error in AI goal: {error}");
+                },
             }
         }
 

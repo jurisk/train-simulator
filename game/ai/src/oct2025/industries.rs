@@ -1,4 +1,4 @@
-use log::{debug, error, info, trace};
+use log::{debug, error, trace};
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
@@ -36,10 +36,10 @@ impl IndustryState {
                     *self = IndustryState::IndustryBuilt(building.id(), building.reference_tile());
                     GoalResult::SendCommands(vec![GameCommand::BuildIndustryBuilding(building)])
                 } else {
-                    info!(
+                    trace!(
                         "Failed to select building for {industry:?}, this could be normal if we lack resources"
                     );
-                    GoalResult::Done
+                    GoalResult::TryAgainLater
                 }
             },
             IndustryState::IndustryBuilt(industry_building_id, location) => {
@@ -69,23 +69,24 @@ impl IndustryState {
                             GoalResult::SendCommands(vec![GameCommand::BuildStation(station)])
                         } else {
                             // TODO: This could also be abnormal, as we may have built tracks in the neighbourhood before building all industries and stations, which prohibit building the station!
-                            info!(
+                            trace!(
                                 "Failed to select station for {industry:?} at {location:?}, this could be normal if we lack resources"
                             );
-                            GoalResult::Done
+                            GoalResult::TryAgainLater
                         }
                     } else {
-                        error!(
+                        let message = format!(
                             "Industry building {industry_building_id:?} not found at {location:?}"
                         );
+                        error!("{message}");
                         // TODO: This is a hack, but not sure how else to handle these weird situations - possibly race conditions.
                         *self = IndustryState::NothingDone;
-                        GoalResult::RepeatInvocation
+                        GoalResult::Error(message)
                     }
                 }
             },
             IndustryState::StationBuilt(_industry_building_id, _location, _station_id) => {
-                GoalResult::Done
+                GoalResult::Finished
             },
         }
     }

@@ -1,5 +1,4 @@
 use log::trace;
-use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
@@ -17,29 +16,14 @@ pub(crate) fn purchase_transport(
     from_industry_state: &IndustryState,
     resource_type: ResourceType,
     to_industry_state: &IndustryState,
-) -> Option<GameCommand> {
+) -> Option<(StationId, TransportInfo)> {
     let from_station = lookup_station_id(from_industry_state).tap_none(|| {
         log::warn!("Failed to find station for industry {from_industry_state:?}",);
     })?;
     let to_station = lookup_station_id(to_industry_state).tap_none(|| {
         log::warn!("Failed to find station for industry {to_industry_state:?}",);
     })?;
-    purchase_transport_command(
-        player_id,
-        game_state,
-        from_station,
-        resource_type,
-        to_station,
-    )
-}
 
-fn purchase_transport_command(
-    player_id: PlayerId,
-    game_state: &GameState,
-    from_station: StationId,
-    resource_type: ResourceType,
-    to_station: StationId,
-) -> Option<GameCommand> {
     let mut movement_orders = MovementOrders::one(MovementOrder::stop_at_station(from_station));
     movement_orders.push(MovementOrder::stop_at_station(to_station));
 
@@ -62,8 +46,8 @@ fn purchase_transport_command(
 
     match game_state.can_purchase_transport(player_id, from_station, &transport_info) {
         Ok(_) => {
-            let command = GameCommand::PurchaseTransport(from_station, transport_info);
-            Some(command)
+            let result = (from_station, transport_info);
+            Some(result)
         },
         Err(error) => {
             trace!("Failed to purchase transport for {resource_type:?}: {error:?}");

@@ -87,7 +87,7 @@ impl Goal for MilitaryBasesAI {
         if empty {
             // TODO: We could have a race conditions that we keep spamming multiple such commands before the first one gets processed!?
             match select_military_base(player_id, game_state) {
-                None => GoalResult::Done,
+                None => GoalResult::TryAgainLater,
                 Some(base) => {
                     GoalResult::SendCommands(vec![GameCommand::BuildIndustryBuilding(base)])
                 },
@@ -101,7 +101,7 @@ impl Goal for MilitaryBasesAI {
                 }
             }
 
-            GoalResult::Done
+            GoalResult::Finished
         }
     }
 }

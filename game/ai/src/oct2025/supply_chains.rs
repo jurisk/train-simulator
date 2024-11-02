@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use log::error;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
@@ -46,10 +45,9 @@ impl BuildSupplyChain {
                 metrics,
             )
         } else {
-            error!(
+            GoalResult::Error(format!(
                 "Missing industry state for resource link: {from_industry:?} -> {to_industry:?}"
-            );
-            GoalResult::Done
+            ))
         }
     }
 }
@@ -86,7 +84,7 @@ impl Goal for BuildSupplyChain {
             }
         }
 
-        GoalResult::Done
+        GoalResult::Finished
     }
 }
 
@@ -177,6 +175,6 @@ impl Goal for BuildSupplyChains {
             }
         }
 
-        GoalResult::Done
+        GoalResult::Finished
     }
 }

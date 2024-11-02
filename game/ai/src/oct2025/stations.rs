@@ -32,6 +32,8 @@ pub(crate) fn select_station_building(
                         .all(|tile_track| {
                             // This is all somewhat hacky, but we are trying to avoid situation where we build the station, but cannot build tracks to connect it
 
+                            // TODO HIGH: This still doesn't avoid invalid stations which block other stations
+
                             let next_tile = tile_track.next_tile_coords();
                             let next_tile_coverage = TileCoverage::Single(next_tile);
                             let free_tile = game_state

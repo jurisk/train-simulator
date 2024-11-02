@@ -1,4 +1,4 @@
-use log::{debug, error};
+use log::{debug, trace};
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
 use shared_domain::directional_edge::DirectionalEdge;
@@ -63,7 +63,7 @@ impl ResourceLinkState {
                     },
                     None => {
                         // This resource link is not ready yet to be planned
-                        GoalResult::Done
+                        GoalResult::TryAgainLater
                     },
                 }
             },
@@ -98,23 +98,23 @@ impl ResourceLinkState {
             },
             ResourceLinkState::TracksBuilt => {
                 // TODO: Buy more transports if the tracks are long, or perhaps if a backlog of resources gets formed
-                let command = purchase_transport(
+                if let Some((station, transport)) = purchase_transport(
                     player_id,
                     game_state,
                     from_industry_state,
                     resource,
                     to_industry_state,
-                );
-
-                if let Some(ref command @ GameCommand::PurchaseTransport(_, ref transport)) =
-                    command
-                {
+                ) {
                     let transport_id = transport.transport_id();
                     *self = ResourceLinkState::PurchasingTrain(transport_id);
-                    GoalResult::SendCommands(vec![command.clone()])
+
+                    let command = GameCommand::PurchaseTransport(station, transport);
+                    GoalResult::SendCommands(vec![command])
                 } else {
-                    error!("Unexpected command for creating transport: {command:?}");
-                    GoalResult::Done
+                    trace!(
+                        "Failed to purchase transport for {resource:?}, this could be normal if we lack resources"
+                    );
+                    GoalResult::TryAgainLater
                 }
             },
             ResourceLinkState::PurchasingTrain(transport_id) => {
@@ -126,9 +126,9 @@ impl ResourceLinkState {
                     *self = ResourceLinkState::TrainPurchased;
                 }
 
-                GoalResult::Done
+                GoalResult::RepeatInvocation
             },
-            ResourceLinkState::TrainPurchased => GoalResult::Done,
+            ResourceLinkState::TrainPurchased => GoalResult::Finished,
         }
     }
 }
