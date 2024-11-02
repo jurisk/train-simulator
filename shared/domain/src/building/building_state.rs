@@ -468,7 +468,8 @@ impl BuildingState {
 
     pub fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> Result<(), BuildError> {
         let invalid_overlaps = tile_coverage.to_set().into_iter().any(|tile| {
-            self.building_at(tile).is_some() || self.tracks_at(tile) != MaybeTracksOnTile::Empty
+            self.tile_buildings[tile] != TileBuildingStatus::Empty
+                || self.tracks_at(tile) != MaybeTracksOnTile::Empty
         });
 
         invalid_overlaps.then_err_unit(|| BuildError::InvalidOverlap)
