@@ -138,7 +138,7 @@ impl Zoning {
         let coverage = zoning_info.covers_tiles();
         let id = zoning_info.id;
         self.infos.insert(id, zoning_info);
-        for tile in coverage.to_set() {
+        for tile in coverage {
             self.grid[tile] = Some(id);
         }
     }
@@ -180,9 +180,8 @@ impl Zoning {
             );
             industry_building_info
                 .covers_tiles()
-                .to_set()
-                .iter()
-                .all(|tile| self.free_at_tile(*tile))
+                .into_iter()
+                .all(|tile| self.free_at_tile(tile))
                 .then_ok_unit(|| BuildError::InvalidOverlap)
         }
     }
@@ -198,9 +197,8 @@ impl Zoning {
     pub fn can_build_station(&self, station_info: &StationInfo) -> Result<(), BuildError> {
         station_info
             .covers_tiles()
-            .to_set()
-            .iter()
-            .all(|tile| self.free_at_tile(*tile))
+            .into_iter()
+            .all(|tile| self.free_at_tile(tile))
             .then_ok_unit(|| BuildError::InvalidOverlap)
     }
 }

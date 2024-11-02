@@ -116,7 +116,7 @@ impl StationInfo {
     #[must_use]
     pub fn tile_tracks(&self) -> Vec<TileTrack> {
         let mut results = Vec::new();
-        for relative_tile in self.station_type().relative_tiles_used().to_set() {
+        for relative_tile in self.station_type().relative_tiles_used() {
             for track_type in self.station_type().track_types_at(relative_tile) {
                 for pointing_in in track_type.connections() {
                     results.push(TileTrack {

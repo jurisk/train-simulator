@@ -296,13 +296,11 @@ impl MapLevel {
     #[expect(clippy::missing_errors_doc)]
     pub fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> Result<(), BuildError> {
         let vertex_coords: Vec<_> = tile_coverage
-            .to_set()
             .into_iter()
             .flat_map(TileCoordsXZ::vertex_coords)
             .collect();
 
         let any_tile_out_of_bounds = tile_coverage
-            .to_set()
             .into_iter()
             .any(|tile| !self.tile_in_bounds(tile));
 

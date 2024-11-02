@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::tile_coords_xz::{TileCoordsXZ, TileDistance, closest_tile_distance};
 
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
 pub enum TileCoverage {
     Single(TileCoordsXZ),
     Rectangular {
@@ -61,11 +61,11 @@ impl TileCoverage {
         }
     }
 
-    // Later:   Implement `Iterator` and `IntoIterator` properly - see https://dev.to/wrongbyte/implementing-iterator-and-intoiterator-in-rust-3nio.
+    // TODO HIGH:   Implement `Iterator` and `IntoIterator` properly - see https://dev.to/wrongbyte/implementing-iterator-and-intoiterator-in-rust-3nio.
     #[must_use]
-    pub fn to_set(&self) -> HashSet<TileCoordsXZ> {
+    fn to_set(self) -> HashSet<TileCoordsXZ> {
         match self {
-            TileCoverage::Single(tile) => HashSet::from([*tile]),
+            TileCoverage::Single(tile) => HashSet::from([tile]),
             TileCoverage::Rectangular {
                 north_west_inclusive,
                 south_east_inclusive,
@@ -186,6 +186,16 @@ impl TileCoverage {
         let closest_x = closest_tile_distance(a.min_x(), a.max_x(), b.min_x(), b.max_x());
         let closest_z = closest_tile_distance(a.min_z(), a.max_z(), b.min_z(), b.max_z());
         closest_x + closest_z
+    }
+}
+
+// TODO HIGH: Optimise
+impl IntoIterator for TileCoverage {
+    type IntoIter = std::collections::hash_set::IntoIter<Self::Item>;
+    type Item = TileCoordsXZ;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.to_set().into_iter()
     }
 }
 

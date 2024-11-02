@@ -203,7 +203,7 @@ fn highlight_selected_tiles(
                 selected_mode.building_tiles(*hovered_tile, player_id, game_state)
             {
                 let color = if valid { LIME } else { TOMATO };
-                for tile in coverage.to_set() {
+                for tile in coverage {
                     debug_draw_tile(&mut gizmos, tile, tiles, color);
                 }
             }

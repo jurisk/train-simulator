@@ -254,7 +254,7 @@ impl BuildingState {
     }
 
     pub fn append_industry_building(&mut self, industry_building: IndustryBuildingInfo) {
-        for tile in industry_building.covers_tiles().to_set() {
+        for tile in industry_building.covers_tiles() {
             if self.tile_buildings[tile] != TileBuildingStatus::Empty {
                 warn!("Tried to build industry building at {tile:?} but it is already occupied",);
             }
@@ -267,7 +267,7 @@ impl BuildingState {
     }
 
     pub fn append_military_building(&mut self, military_building: MilitaryBuildingInfo) {
-        for tile in military_building.covers_tiles().to_set() {
+        for tile in military_building.covers_tiles() {
             if self.tile_buildings[tile] != TileBuildingStatus::Empty {
                 warn!("Tried to build military building at {tile:?} but it is already occupied",);
             }
@@ -279,7 +279,7 @@ impl BuildingState {
     }
 
     pub fn append_station(&mut self, station: StationInfo) {
-        for tile in station.covers_tiles().to_set() {
+        for tile in station.covers_tiles() {
             if self.tile_buildings[tile] != TileBuildingStatus::Empty {
                 warn!("Tried to build station at {tile:?} but it is already occupied",);
             }
@@ -467,7 +467,7 @@ impl BuildingState {
     }
 
     pub fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> Result<(), BuildError> {
-        let invalid_overlaps = tile_coverage.to_set().into_iter().any(|tile| {
+        let invalid_overlaps = tile_coverage.into_iter().any(|tile| {
             self.tile_buildings[tile] != TileBuildingStatus::Empty
                 || self.tracks_at(tile) != MaybeTracksOnTile::Empty
         });
@@ -641,7 +641,7 @@ impl BuildingState {
 
     pub fn remove_industry_building(&mut self, industry_building_id: IndustryBuildingId) {
         if let Some(removed) = self.industry_buildings.remove(&industry_building_id) {
-            for tile in removed.covers_tiles().to_set() {
+            for tile in removed.covers_tiles() {
                 match &self.tile_buildings[tile] {
                     TileBuildingStatus::IndustryBuilding(found_id)
                         if *found_id == industry_building_id =>
@@ -665,7 +665,7 @@ impl BuildingState {
 
     pub fn remove_military_building(&mut self, military_building_id: MilitaryBuildingId) {
         if let Some(removed) = self.military_buildings.remove(&military_building_id) {
-            for tile in removed.covers_tiles().to_set() {
+            for tile in removed.covers_tiles() {
                 match &self.tile_buildings[tile] {
                     TileBuildingStatus::MilitaryBuilding(found_id)
                         if *found_id == military_building_id =>
@@ -688,7 +688,7 @@ impl BuildingState {
 
     pub fn remove_station(&mut self, station_id: StationId) {
         if let Some(removed) = self.stations.remove(&station_id) {
-            for tile in removed.covers_tiles().to_set() {
+            for tile in removed.covers_tiles() {
                 match &self.tile_buildings[tile] {
                     TileBuildingStatus::Station(found_id, _) if *found_id == station_id => {
                         self.tile_buildings[tile] = TileBuildingStatus::Empty;
