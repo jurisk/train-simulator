@@ -66,7 +66,7 @@ pub fn plan_tracks(
 
     trace!("Planning tracks at {start:?} from {current:?} to {targets:?}");
 
-    // TODO: Consider optimising either by `dijkstra_all` or Floyd-Warshall
+    // TODO: Consider optimising either by `dijkstra_all` or Floyd-Warshall, with caching / live updates. Also, it could be done async. See https://github.com/loopystudios/bevy_async_task .
     let path = dijkstra(
         &current,
         |current| successors(*current, player_id, game_state, already_exists_coef),
@@ -108,10 +108,8 @@ pub fn plan_tracks(
         (tracks, length)
     });
 
-    // TODO:    We could precompute using `dijkstra_all` async and then just look up the result here, possibly with some caching.
-    //          See https://github.com/loopystudios/bevy_async_task
     let elapsed = start.elapsed();
-    let level = if elapsed > Duration::from_millis(100) {
+    let level = if elapsed > Duration::from_millis(200) {
         Level::Warn
     } else if elapsed > Duration::from_millis(20) {
         Level::Info

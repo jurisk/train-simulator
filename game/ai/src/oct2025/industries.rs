@@ -36,7 +36,9 @@ impl IndustryState {
                     *self = IndustryState::IndustryBuilt(building.id(), building.reference_tile());
                     GoalResult::SendCommands(vec![GameCommand::BuildIndustryBuilding(building)])
                 } else {
-                    error!("Failed to select building for {industry:?}");
+                    info!(
+                        "Failed to select building for {industry:?}, this could be normal if we lack resources"
+                    );
                     GoalResult::Done
                 }
             },
@@ -58,6 +60,7 @@ impl IndustryState {
                             "Building station {station:?} for {industry:?} at {industry_building_id:?}"
                         );
                         if let Some(station) = station {
+                            // TODO HIGH: Should be more gradual, we cannot declare it already built if we just sent the message
                             *self = IndustryState::StationBuilt(
                                 *industry_building_id,
                                 *location,
@@ -65,13 +68,19 @@ impl IndustryState {
                             );
                             GoalResult::SendCommands(vec![GameCommand::BuildStation(station)])
                         } else {
-                            // TODO: This could happen, as we may have built some tracks in the neighbourhood before building all industries and stations.
-                            error!("Failed to select station for {industry:?} at {location:?}");
+                            // TODO: This could also be abnormal, as we may have built tracks in the neighbourhood before building all industries and stations, which prohibit building the station!
+                            info!(
+                                "Failed to select station for {industry:?} at {location:?}, this could be normal if we lack resources"
+                            );
                             GoalResult::Done
                         }
                     } else {
-                        info!("Industry building {industry_building_id:?} not found");
-                        GoalResult::Done
+                        error!(
+                            "Industry building {industry_building_id:?} not found at {location:?}"
+                        );
+                        // TODO: This is a hack, but not sure how else to handle these weird situations - possibly race conditions.
+                        *self = IndustryState::NothingDone;
+                        GoalResult::RepeatInvocation
                     }
                 }
             },

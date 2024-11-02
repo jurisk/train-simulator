@@ -28,8 +28,8 @@ fn options(map_level: &MapLevel) -> Vec<TileCoordsXZ> {
     let mut result = vec![];
 
     for tile in map_level.all_tile_coords() {
-        // TODO: This is wrong as it means we may be placing zoning in 3x3 spot which has no opportunity to have a station placed near it.
-        let coverage = TileCoverage::rectangular_odd(tile, 3, 3);
+        // Doing 5x5 instead of 3x3 to leave room for stations
+        let coverage = TileCoverage::rectangular_odd(tile, 5, 5);
         if map_level.can_build_for_coverage(&coverage).is_ok() {
             result.push(tile);
         }

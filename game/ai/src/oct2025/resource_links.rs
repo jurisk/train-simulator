@@ -23,6 +23,25 @@ pub(crate) enum ResourceLinkState {
     TrainPurchased,
 }
 
+fn track_pairs(
+    game_state: &GameState,
+    from_industry_state: &IndustryState,
+    to_industry_state: &IndustryState,
+) -> Option<Vec<(TileTrack, TileTrack)>> {
+    let from_exit_tile_tracks = exit_tile_tracks(from_industry_state, game_state)?;
+    let to_exit_tile_tracks = exit_tile_tracks(to_industry_state, game_state)?;
+
+    let mut pairs = vec![];
+    for track_a in &from_exit_tile_tracks {
+        for track_b in &to_exit_tile_tracks {
+            pairs.push((*track_a, *track_b));
+            pairs.push((*track_b, *track_a));
+        }
+    }
+
+    Some(pairs)
+}
+
 impl ResourceLinkState {
     #[expect(clippy::collapsible_else_if)]
     #[must_use]
@@ -37,18 +56,16 @@ impl ResourceLinkState {
     ) -> GoalResult {
         match self {
             ResourceLinkState::Pending => {
-                let from_exit_tile_tracks = exit_tile_tracks(from_industry_state, game_state);
-                let to_exit_tile_tracks = exit_tile_tracks(to_industry_state, game_state);
-
-                let mut pairs = vec![];
-                for track_a in &from_exit_tile_tracks {
-                    for track_b in &to_exit_tile_tracks {
-                        pairs.push((*track_a, *track_b));
-                        pairs.push((*track_b, *track_a));
-                    }
+                match track_pairs(game_state, from_industry_state, to_industry_state) {
+                    Some(pairs) => {
+                        *self = ResourceLinkState::TracksPending(pairs);
+                        GoalResult::RepeatInvocation
+                    },
+                    None => {
+                        // This resource link is not ready yet to be planned
+                        GoalResult::Done
+                    },
                 }
-                *self = ResourceLinkState::TracksPending(pairs);
-                GoalResult::RepeatInvocation
             },
             ResourceLinkState::TracksPending(pairs) => {
                 if let Some((source, target)) = pairs.pop() {
@@ -80,6 +97,7 @@ impl ResourceLinkState {
                 }
             },
             ResourceLinkState::TracksBuilt => {
+                // TODO HIGH: Buy more transports if the tracks are long, or perhaps if a backlog of resources gets formed
                 let command = purchase_transport(
                     player_id,
                     game_state,

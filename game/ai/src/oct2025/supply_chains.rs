@@ -5,6 +5,7 @@ use shared_domain::building::industry_type::IndustryType;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
 use shared_domain::resource_type::ResourceType;
+use shared_domain::supply_chain::SupplyChain;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::{IndustryBuildingId, PlayerId};
 
@@ -89,91 +90,17 @@ impl Goal for BuildSupplyChain {
     }
 }
 
-// TODO: You can generate this from the industry definitions - this is surely needed if you want to have moddable supply chains
-fn industries_for_resource_and_target(
-    resource_type: ResourceType,
-    target_type: IndustryType,
-) -> Vec<IndustryType> {
-    match (resource_type, target_type) {
-        (ResourceType::Steel, IndustryType::ConstructionYard) => {
-            vec![
-                IndustryType::IronMine,
-                IndustryType::CoalMine,
-                IndustryType::SteelMill,
-                IndustryType::ConstructionYard,
-            ]
-        },
-        (ResourceType::Timber, IndustryType::ConstructionYard) => {
-            vec![
-                IndustryType::Forestry,
-                IndustryType::LumberMill,
-                IndustryType::ConstructionYard,
-            ]
-        },
-        (ResourceType::Concrete, IndustryType::ConstructionYard) => {
-            vec![
-                IndustryType::ClayPit,
-                IndustryType::SandAndGravelQuarry,
-                IndustryType::LimestoneMine,
-                IndustryType::CementPlant,
-                IndustryType::ConcretePlant,
-                IndustryType::ConstructionYard,
-            ]
-        },
-        (ResourceType::ArtilleryWeapons, IndustryType::MilitaryBase) => {
-            vec![
-                IndustryType::CoalMine,
-                IndustryType::IronMine,
-                IndustryType::SteelMill,
-                IndustryType::WeaponsFactory,
-                IndustryType::MilitaryBase,
-            ]
-        },
-        (ResourceType::Food, IndustryType::MilitaryBase) => {
-            vec![
-                IndustryType::Farm,
-                IndustryType::FoodProcessingPlant,
-                IndustryType::MilitaryBase,
-            ]
-        },
-        (ResourceType::Ammunition, IndustryType::MilitaryBase) => {
-            vec![
-                IndustryType::Forestry,
-                IndustryType::CellulosePlant,
-                IndustryType::AmmunitionFactory,
-                IndustryType::ExplosivesPlant,
-                IndustryType::NitrateMine,
-                IndustryType::SulfurMine,
-                IndustryType::IronMine,
-                IndustryType::CoalMine,
-                IndustryType::SteelMill,
-                IndustryType::MilitaryBase,
-            ]
-        },
-        (ResourceType::Fuel, IndustryType::MilitaryBase) => {
-            vec![
-                IndustryType::OilWell,
-                IndustryType::OilRefinery,
-                IndustryType::MilitaryBase,
-            ]
-        },
-        _ => {
-            panic!(
-                "Unsupported resource and target combination: {resource_type:?} -> {target_type:?}"
-            )
-        },
-    }
-}
-
 impl BuildSupplyChain {
     #[must_use]
     pub fn with_built_target(
+        supply_chain: &SupplyChain,
         resource_type: ResourceType,
         target_type: IndustryType,
         target_location: TileCoordsXZ,
         target_id: IndustryBuildingId,
     ) -> Self {
-        let industries = industries_for_resource_and_target(resource_type, target_type);
+        let industries =
+            supply_chain.industries_for_resource_and_target(resource_type, target_type);
 
         let mut industry_states: HashMap<IndustryType, IndustryState> = industries
             .iter()
@@ -211,21 +138,18 @@ pub(crate) struct BuildSupplyChains {
 impl BuildSupplyChains {
     #[must_use]
     pub(crate) fn for_known_target(
+        supply_chain: &SupplyChain,
         target_type: IndustryType,
         target_location: TileCoordsXZ,
         target_id: IndustryBuildingId,
     ) -> Self {
-        let resources = match target_type {
-            IndustryType::ConstructionYard | IndustryType::MilitaryBase => {
-                target_type.input_resource_types()
-            },
-            _ => panic!("Unsupported target type: {target_type:?}"),
-        };
+        let resources = supply_chain.input_resource_types(target_type);
 
         let sub_goals = resources
             .into_iter()
             .map(|resource| {
                 BuildSupplyChain::with_built_target(
+                    supply_chain,
                     resource,
                     target_type,
                     target_location,

@@ -5,6 +5,7 @@ use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
 use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::transport::transport_type::TransportType;
 use shared_domain::{PlayerId, StationId, TransportId};
+use shared_util::tap::TapNone;
 
 use crate::oct2025::industries::IndustryState;
 use crate::oct2025::stations::lookup_station_id;
@@ -16,8 +17,12 @@ pub(crate) fn purchase_transport(
     resource_type: ResourceType,
     to_industry_state: &IndustryState,
 ) -> Option<GameCommand> {
-    let from_station = lookup_station_id(from_industry_state)?;
-    let to_station = lookup_station_id(to_industry_state)?;
+    let from_station = lookup_station_id(from_industry_state).tap_none(|| {
+        log::warn!("Failed to find station for industry {from_industry_state:?}",);
+    })?;
+    let to_station = lookup_station_id(to_industry_state).tap_none(|| {
+        log::warn!("Failed to find station for industry {to_industry_state:?}",);
+    })?;
     purchase_transport_command(
         player_id,
         game_state,
@@ -40,8 +45,11 @@ fn purchase_transport_command(
     let from_station_info = game_state.building_state().find_station(from_station)?;
     let tile_tracks = from_station_info.station_exit_tile_tracks();
     let tile_track = tile_tracks.first()?;
-    let transport_location =
-        from_station_info.transport_location_at_station(tile_track.tile, tile_track.pointing_in)?;
+    let transport_location = from_station_info
+        .transport_location_at_station(tile_track.tile, tile_track.pointing_in)
+        .tap_none(|| {
+            log::warn!("Failed to find transport location for station {from_station_info:?}",);
+        })?;
 
     let transport_info = TransportInfo::new(
         TransportId::random(),

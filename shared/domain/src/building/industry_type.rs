@@ -248,7 +248,8 @@ impl WithCostToBuild for IndustryType {
     fn cost_to_build(&self) -> (IndustryType, CargoMap) {
         (
             ConstructionYard,
-            CargoMap::from([(Concrete, 8.0), (Steel, 4.0)]),
+            // TODO: Reconsider eventually, but for now setting this too high made the tests too slow
+            CargoMap::from([(Concrete, 2.0), (Steel, 1.0)]),
         )
     }
 }

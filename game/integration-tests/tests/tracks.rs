@@ -4,6 +4,7 @@ use shared_domain::game_state::GameState;
 use shared_domain::map_level::zoning::ZoningType;
 use shared_domain::metrics::NoopMetrics;
 use shared_domain::scenario::{Scenario, USA_SCENARIO_BINCODE};
+use shared_domain::supply_chain::SupplyChain;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::transport::track_length::TrackLength;
@@ -32,7 +33,7 @@ fn test_plan_tracks() {
     for industrial_tile in industrials {
         game_state
             .building_state_mut()
-            .gift_initial_construction_yard(player_id, industrial_tile);
+            .gift_initial_construction_yard(player_id, industrial_tile, &SupplyChain::new());
     }
 
     let from_tile = TileCoordsXZ::new(340, 350);

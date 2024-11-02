@@ -24,6 +24,7 @@ use crate::metrics::Metrics;
 use crate::players::player_state::PlayerState;
 use crate::resource_type::ResourceType;
 use crate::scenario::{PlayerProfile, Scenario};
+use crate::supply_chain::SupplyChain;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::track_type::TrackType;
@@ -44,6 +45,7 @@ pub struct GameState {
     buildings: BuildingState,
     transports: TransportState,
     players: PlayerState,
+    supply_chain: SupplyChain,
     time: GameTime,
     time_steps: u64,
     ignore_requesting_player_id: bool,
@@ -106,6 +108,7 @@ impl From<GameStateFlattened> for GameState {
             buildings: value.buildings,
             transports: value.transports.clone(),
             players: value.players.clone(),
+            supply_chain: SupplyChain::new(),
             time: value.time,
             time_steps: value.time_steps,
             ignore_requesting_player_id: false,
@@ -135,15 +138,19 @@ impl GameState {
             buildings: BuildingState::new(size_x, size_z),
             transports: TransportState::empty(),
             players,
+            supply_chain: SupplyChain::new(),
             time: GameTime::new(),
             time_steps: 0,
             ignore_requesting_player_id,
         };
 
         for player in scenario.players {
-            result
-                .building_state_mut()
-                .gift_initial_construction_yard(player.player_id, player.initial_construction_yard);
+            // Later: Fix hack where we do `SupplyChain::new()` twice
+            result.building_state_mut().gift_initial_construction_yard(
+                player.player_id,
+                player.initial_construction_yard,
+                &SupplyChain::new(),
+            );
         }
 
         result
@@ -505,5 +512,10 @@ impl GameState {
         } else {
             (owner_id == requesting_player_id).then_ok_unit(|| BuildError::InvalidOwner)
         }
+    }
+
+    #[must_use]
+    pub fn supply_chain(&self) -> &SupplyChain {
+        &self.supply_chain
     }
 }

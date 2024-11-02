@@ -24,6 +24,7 @@ pub mod players;
 pub mod resource_type;
 pub mod scenario;
 pub mod server_response;
+pub mod supply_chain;
 pub mod tile_coords_xz;
 pub mod tile_coverage;
 pub mod transport;

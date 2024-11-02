@@ -1,5 +1,24 @@
 #![allow(clippy::module_name_repetitions)]
 
+pub trait TapNone {
+    #[must_use]
+    fn tap_none<F>(self, func: F) -> Self
+    where
+        F: FnOnce();
+}
+
+impl<T> TapNone for Option<T> {
+    fn tap_none<F>(self, func: F) -> Self
+    where
+        F: FnOnce(),
+    {
+        if self.is_none() {
+            func();
+        }
+        self
+    }
+}
+
 pub trait TapErr<T> {
     #[must_use]
     fn tap_err<F>(self, func: F) -> Self

@@ -1,4 +1,4 @@
-use log::{error, trace};
+use log::trace;
 use shared_domain::building::building_info::WithTileCoverage;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
@@ -92,12 +92,6 @@ fn lookup_station<'a>(
 pub(crate) fn exit_tile_tracks(
     industry_state: &IndustryState,
     game_state: &GameState,
-) -> Vec<TileTrack> {
-    match lookup_station(industry_state, game_state) {
-        None => {
-            error!("No station found for {industry_state:?}");
-            vec![]
-        },
-        Some(station) => station.station_exit_tile_tracks(),
-    }
+) -> Option<Vec<TileTrack>> {
+    lookup_station(industry_state, game_state).map(StationInfo::station_exit_tile_tracks)
 }

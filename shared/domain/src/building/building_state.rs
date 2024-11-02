@@ -17,13 +17,14 @@ use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::industry_type::IndustryType;
 use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
+use crate::building::station_type::StationType;
 use crate::building::track_info::TrackInfo;
 use crate::building::track_state::{MaybeTracksOnTile, TrackState};
 use crate::building::{BuildCosts, BuildError};
-use crate::cargo_amount::CargoAmount;
 use crate::cargo_map::{CargoMap, CargoOps, WithCargo, WithCargoMut};
 use crate::game_time::GameTimeDiff;
 use crate::resource_type::ResourceType;
+use crate::supply_chain::SupplyChain;
 use crate::tile_coverage::TileCoverage;
 use crate::transport::track_type_set::TrackTypeSet;
 use crate::{
@@ -83,7 +84,12 @@ impl BuildingState {
     }
 
     #[expect(clippy::unwrap_used, clippy::missing_panics_doc)]
-    pub fn gift_initial_construction_yard(&mut self, player_id: PlayerId, tile: TileCoordsXZ) {
+    pub fn gift_initial_construction_yard(
+        &mut self,
+        player_id: PlayerId,
+        tile: TileCoordsXZ,
+        supply_chain: &SupplyChain,
+    ) {
         // Later: We could have the initial cargo a parameter and have it in the scenario. Or not.
         // Later: Having this public is wrong, but we use it from somewhat unrelated tests.
         let construction_yard_id = IndustryBuildingId::random();
@@ -102,10 +108,19 @@ impl BuildingState {
         let mut dynamic_info = construction_yard.dynamic_info_mut();
         let cargo = dynamic_info.cargo_mut();
 
-        // TODO HIGH: Lower these to only cover initial supply chains for Concrete, Steel, Timber
-        cargo.add(ResourceType::Concrete, CargoAmount::new(480.0));
-        cargo.add(ResourceType::Steel, CargoAmount::new(480.0));
-        cargo.add(ResourceType::Timber, CargoAmount::new(240.0));
+        for industry in supply_chain.industries_for_industry(IndustryType::ConstructionYard) {
+            let (_, cost) = industry.cost_to_build();
+            *cargo += &cost;
+
+            let (_, cost) = StationType::all()[0].cost_to_build();
+            *cargo += &cost;
+        }
+
+        for track in TrackType::all() {
+            let (_, cost) = track.cost_to_build();
+            let multiplied = cost * 400.0;
+            *cargo += &multiplied;
+        }
     }
 
     // TODO: Optimize this as it is called often

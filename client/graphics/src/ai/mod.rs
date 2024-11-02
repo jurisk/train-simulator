@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::log::info;
+use bevy::log::{debug, info};
 use bevy::prelude::{
     App, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time, Timer,
     TimerMode, in_state,
@@ -102,6 +102,6 @@ fn ai_step(
             )));
         }
     } else {
-        info!("AI has nothing to do");
+        debug!("AI has nothing to do");
     }
 }

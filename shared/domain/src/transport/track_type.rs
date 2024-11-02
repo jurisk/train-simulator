@@ -182,7 +182,7 @@ impl WithCostToBuild for TrackType {
     fn cost_to_build(&self) -> (IndustryType, CargoMap) {
         (
             IndustryType::ConstructionYard,
-            CargoMap::from([(ResourceType::Steel, 0.1), (ResourceType::Timber, 0.1)]),
+            CargoMap::from([(ResourceType::Steel, 0.01), (ResourceType::Timber, 0.01)]),
         )
     }
 }

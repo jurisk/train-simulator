@@ -80,10 +80,22 @@ impl Debug for GameCommand {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             GameCommand::BuildIndustryBuilding(building) => {
-                write!(f, "BuildIndustryBuilding({})", building.id())
+                write!(
+                    f,
+                    "BuildIndustryBuilding({}, {:?}, {:?})",
+                    building.id(),
+                    building.reference_tile(),
+                    building.industry_type()
+                )
             },
             GameCommand::BuildStation(station) => {
-                write!(f, "BuildStation({:?})", station.id())
+                write!(
+                    f,
+                    "BuildStation({:?}, {:?}, {:?})",
+                    station.id(),
+                    station.station_type(),
+                    station.reference_tile()
+                )
             },
             GameCommand::BuildTracks(tracks) => {
                 write!(f, "BuildTracks({} tracks)", tracks.len())

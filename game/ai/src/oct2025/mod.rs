@@ -5,7 +5,7 @@ mod stations;
 mod supply_chains;
 mod transports;
 
-use log::info;
+use log::trace;
 use shared_domain::PlayerId;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
@@ -59,7 +59,7 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
             }
         }
 
-        info!("AI has nothing to do");
+        trace!("AI has nothing to do");
         None
     }
 }
@@ -87,6 +87,7 @@ impl Oct2025ArtificialIntelligenceState {
         let construction_yard_id = construction_yard.id();
         let pending_goals: Vec<Box<dyn Goal + Send + Sync>> = vec![
             Box::new(BuildSupplyChains::for_known_target(
+                game_state.supply_chain(),
                 IndustryType::ConstructionYard,
                 construction_yard_location,
                 construction_yard_id,

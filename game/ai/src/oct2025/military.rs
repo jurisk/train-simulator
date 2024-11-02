@@ -5,6 +5,7 @@ use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
+use shared_domain::supply_chain::SupplyChain;
 use shared_domain::tile_coords_xz::{TileCoordsXZ, TileDistance};
 use shared_domain::{IndustryBuildingId, PlayerId};
 
@@ -18,9 +19,17 @@ struct MilitaryBaseAI {
 }
 
 impl MilitaryBaseAI {
-    fn for_base(location: TileCoordsXZ, base_id: IndustryBuildingId) -> Self {
-        let build_supply_chains =
-            BuildSupplyChains::for_known_target(IndustryType::MilitaryBase, location, base_id);
+    fn for_base(
+        supply_chain: &SupplyChain,
+        location: TileCoordsXZ,
+        base_id: IndustryBuildingId,
+    ) -> Self {
+        let build_supply_chains = BuildSupplyChains::for_known_target(
+            supply_chain,
+            IndustryType::MilitaryBase,
+            location,
+            base_id,
+        );
         Self {
             build_supply_chains,
         }
@@ -64,9 +73,13 @@ impl Goal for MilitaryBasesAI {
             .building_state()
             .find_industry_building_by_owner_and_type(player_id, IndustryType::MilitaryBase)
         {
-            self.bases
-                .entry(base.id())
-                .or_insert_with(|| MilitaryBaseAI::for_base(base.reference_tile(), base.id()));
+            self.bases.entry(base.id()).or_insert_with(|| {
+                MilitaryBaseAI::for_base(
+                    game_state.supply_chain(),
+                    base.reference_tile(),
+                    base.id(),
+                )
+            });
         }
 
         let empty = self.bases.is_empty();
