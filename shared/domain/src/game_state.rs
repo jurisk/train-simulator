@@ -496,8 +496,7 @@ impl GameState {
         &self.transports
     }
 
-    #[must_use]
-    pub fn all_free_zonings(&self) -> Vec<&ZoningInfo> {
+    pub fn all_free_zonings(&self) -> impl Iterator<Item = &ZoningInfo> {
         self.map_level
             .zoning()
             .all_zonings()
@@ -507,7 +506,6 @@ impl GameState {
                     .industry_building_at(zoning.reference_tile())
                     .is_none()
             })
-            .collect()
     }
 
     fn valid_owner(

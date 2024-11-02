@@ -98,10 +98,8 @@ pub(crate) fn select_industry_building(
     industry_type: IndustryType,
     reference_tile: TileCoordsXZ,
 ) -> Option<IndustryBuildingInfo> {
-    let free = game_state.all_free_zonings();
-
-    let found = free
-        .iter()
+    let found = game_state
+        .all_free_zonings()
         .filter(|zoning| Some(zoning.zoning_type()) == industry_type.required_zoning())
         .map(|zoning| {
             IndustryBuildingInfo::new(

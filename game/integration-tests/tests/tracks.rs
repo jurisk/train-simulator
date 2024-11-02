@@ -1,7 +1,7 @@
 use shared_domain::PlayerId;
 use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
-use shared_domain::map_level::zoning::ZoningType;
+use shared_domain::map_level::zoning::{ZoningInfo, ZoningType};
 use shared_domain::metrics::NoopMetrics;
 use shared_domain::scenario::{Scenario, USA_SCENARIO_BINCODE};
 use shared_domain::supply_chain::SupplyChain;
@@ -26,9 +26,8 @@ fn test_plan_tracks() {
     // planning, not availability of resources
     let industrials = game_state
         .all_free_zonings()
-        .iter()
         .filter(|zoning| zoning.zoning_type() == ZoningType::Industrial)
-        .map(|zoning| zoning.reference_tile())
+        .map(ZoningInfo::reference_tile)
         .collect::<Vec<_>>();
     for industrial_tile in industrials {
         game_state
