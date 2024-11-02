@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use serde::{Deserialize, Serialize};
 
 use crate::tile_coords_xz::{TileCoordsXZ, TileDistance, closest_tile_distance};
@@ -57,26 +55,6 @@ impl TileCoverage {
                         south_east_inclusive.z + diff,
                     ),
                 }
-            },
-        }
-    }
-
-    // TODO HIGH:   Implement `Iterator` and `IntoIterator` properly - see https://dev.to/wrongbyte/implementing-iterator-and-intoiterator-in-rust-3nio.
-    #[must_use]
-    fn to_set(self) -> HashSet<TileCoordsXZ> {
-        match self {
-            TileCoverage::Single(tile) => HashSet::from([tile]),
-            TileCoverage::Rectangular {
-                north_west_inclusive,
-                south_east_inclusive,
-            } => {
-                let mut results = HashSet::new();
-                for x in north_west_inclusive.x ..= south_east_inclusive.x {
-                    for z in north_west_inclusive.z ..= south_east_inclusive.z {
-                        results.insert(TileCoordsXZ::new(x, z));
-                    }
-                }
-                results
             },
         }
     }
@@ -189,13 +167,63 @@ impl TileCoverage {
     }
 }
 
-// TODO HIGH: Optimise
+#[expect(clippy::module_name_repetitions)]
+pub struct TileCoverageIterator {
+    next:          Option<TileCoordsXZ>,
+    tile_coverage: TileCoverage,
+}
+
 impl IntoIterator for TileCoverage {
-    type IntoIter = std::collections::hash_set::IntoIter<Self::Item>;
+    type IntoIter = TileCoverageIterator;
     type Item = TileCoordsXZ;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.to_set().into_iter()
+        let next = match self {
+            TileCoverage::Single(tile) => tile,
+            TileCoverage::Rectangular {
+                north_west_inclusive,
+                south_east_inclusive: _south_east_inclusive,
+            } => north_west_inclusive,
+        };
+        TileCoverageIterator {
+            next:          Some(next),
+            tile_coverage: self,
+        }
+    }
+}
+
+impl Iterator for TileCoverageIterator {
+    type Item = TileCoordsXZ;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.next {
+            None => None,
+            Some(result) => {
+                match self.tile_coverage {
+                    TileCoverage::Single(_) => {
+                        self.next = None;
+                        Some(result)
+                    },
+                    TileCoverage::Rectangular {
+                        north_west_inclusive,
+                        south_east_inclusive,
+                    } => {
+                        let mut next = result;
+                        next.x += 1;
+                        if next.x > south_east_inclusive.x {
+                            next.x = north_west_inclusive.x;
+                            next.z += 1;
+                        }
+                        if next.z > south_east_inclusive.z {
+                            self.next = None;
+                        } else {
+                            self.next = Some(next);
+                        }
+                        Some(result)
+                    },
+                }
+            },
+        }
     }
 }
 
