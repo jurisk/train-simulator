@@ -336,14 +336,13 @@ impl BuildingState {
     pub fn find_players_industry_buildings_without_linked_stations(
         &self,
         player_id: PlayerId,
-    ) -> Vec<&IndustryBuildingInfo> {
+    ) -> impl IntoIterator<Item = &IndustryBuildingInfo> {
         self.all_industry_buildings()
             .into_iter()
-            .filter(|building| {
+            .filter(move |building| {
                 building.owner_id() == player_id
                     && !self.closest_station_link.contains_key(&building.id())
             })
-            .collect()
     }
 
     pub fn can_build_with_coverage<T: WithTileCoverage>(
@@ -430,30 +429,30 @@ impl BuildingState {
         cost: CargoMap,
     ) -> Result<BuildCosts, BuildError> {
         let coverage = something.covers_tiles();
-        if let Some(supply_range) = providing_industry_type.supply_range_in_tiles() {
-            for building in
-                self.find_industry_building_by_owner_and_type(player_id, providing_industry_type)
-            {
-                let distance = TileCoverage::manhattan_distance_between_closest_tiles(
-                    &coverage,
-                    &building.covers_tiles(),
+        let supply_range = providing_industry_type
+            .supply_range_in_tiles()
+            .ok_or(BuildError::UnknownError)?;
+
+        for building in
+            self.find_industry_building_by_owner_and_type(player_id, providing_industry_type)
+        {
+            let distance = TileCoverage::manhattan_distance_between_closest_tiles(
+                &coverage,
+                &building.covers_tiles(),
+            );
+            if distance <= supply_range {
+                trace!(
+                    "Supply building at distance {distance} with supply range {supply_range} has cargo {:?} and we need cost {cost:?}",
+                    building.cargo()
                 );
-                if distance <= supply_range {
-                    trace!(
-                        "Supply building at distance {distance} with supply range {supply_range} has cargo {:?} and we need cost {cost:?}",
-                        building.cargo()
-                    );
-                    if building.cargo().is_superset_of(&cost) {
-                        // Later. We currently return the first one that satisfies the conditions - we could instead return the closest one, or the one with most resources.
-                        return Ok(BuildCosts::single(building.id(), cost));
-                    }
+                if building.cargo().is_superset_of(&cost) {
+                    // Later. We currently return the first one that satisfies the conditions - we could instead return the closest one, or the one with most resources.
+                    return Ok(BuildCosts::single(building.id(), cost));
                 }
             }
-
-            Err(BuildError::NotEnoughResources)
-        } else {
-            Err(BuildError::UnknownError)
         }
+
+        Err(BuildError::NotEnoughResources)
     }
 
     pub(crate) fn can_pay_cost<T: WithCostToBuild + WithTileCoverage>(
@@ -539,13 +538,12 @@ impl BuildingState {
         &self,
         owner_id: PlayerId,
         industry_type: IndustryType,
-    ) -> Vec<&IndustryBuildingInfo> {
+    ) -> impl IntoIterator<Item = &IndustryBuildingInfo> {
         self.all_industry_buildings()
             .into_iter()
-            .filter(|building| {
+            .filter(move |building| {
                 building.owner_id() == owner_id && building.industry_type() == industry_type
             })
-            .collect()
     }
 
     #[must_use]
