@@ -101,7 +101,6 @@ fn run_ai_commands(
 }
 
 #[test]
-#[ignore] // TODO HIGH: Very slow
 fn ai_until_final_goods_built_oct2025() {
     ai_until_final_goods_built(|player_id: PlayerId, game_state: &GameState| {
         Box::new(Oct2025ArtificialIntelligenceState::new(

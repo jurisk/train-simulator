@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 
+use log::warn;
 use serde::{Deserialize, Serialize};
 use shared_util::bool_ops::BoolResultOps;
 use shared_util::grid_xz::GridXZ;
@@ -174,6 +175,7 @@ impl Zoning {
                 == required)
                 .then_ok_unit(|| BuildError::InvalidZoning)
         } else {
+            warn!("Building {industry_building_info:?} has no required zoning - is this really expected?");
             industry_building_info
                 .covers_tiles()
                 .to_set()

@@ -271,16 +271,20 @@ impl MapLevel {
     ) -> Result<(), BuildError> {
         self.zoning
             .can_build_industry_building(industry_building_info)?;
-        self.can_build_for_coverage(&industry_building_info.covers_tiles())?;
-        Ok(())
+
+        if industry_building_info.required_zoning().is_some() {
+            // We used to check also the terrain, but now we assume that the map zonings will already be valid
+            Ok(())
+        } else {
+            self.can_build_for_coverage(&industry_building_info.covers_tiles())
+        }
     }
 
     pub(crate) fn can_build_military_building(
         &self,
         military_building_info: &MilitaryBuildingInfo,
     ) -> Result<(), BuildError> {
-        self.can_build_for_coverage(&military_building_info.covers_tiles())?;
-        Ok(())
+        self.can_build_for_coverage(&military_building_info.covers_tiles())
     }
 
     pub(crate) fn can_build_station(&self, station_info: &StationInfo) -> Result<(), BuildError> {
