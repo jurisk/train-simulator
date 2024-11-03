@@ -76,7 +76,7 @@ impl Goal for MilitaryBasesAI {
         // Ensure all existing this player's 'MilitaryBase'-s have corresponding AI
         for base in game_state
             .building_state()
-            .find_industry_building_by_owner_and_type(player_id, IndustryType::MilitaryBase)
+            .find_industry_buildings_by_owner_and_type(player_id, IndustryType::MilitaryBase)
         {
             self.bases.entry(base.id()).or_insert_with(|| {
                 MilitaryBaseAI::for_base(
@@ -108,7 +108,7 @@ impl Goal for MilitaryBasesAI {
 
             for artillery in game_state
                 .building_state()
-                .find_military_building_by_owner_and_type(
+                .find_military_buildings_by_owner_and_type(
                     player_id,
                     MilitaryBuildingType::FixedArtillery,
                 )
@@ -137,7 +137,7 @@ fn select_fixed_artillery(
 ) -> Option<MilitaryBuildingInfo> {
     for base in game_state
         .building_state()
-        .find_industry_building_by_owner_and_type(player_id, IndustryType::MilitaryBase)
+        .find_industry_buildings_by_owner_and_type(player_id, IndustryType::MilitaryBase)
     {
         let base_tile = base.reference_tile();
 

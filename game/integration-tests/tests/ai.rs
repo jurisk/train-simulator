@@ -6,6 +6,7 @@ use game_ai::ArtificialIntelligenceState;
 use game_ai::oct2025::Oct2025ArtificialIntelligenceState;
 use game_logic::game_service::GameService;
 use game_logic::games_service::GamesService;
+use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};
@@ -52,24 +53,40 @@ fn join_game(games_service: &mut GamesService, game_id: GameId, user_id: UserId)
     player_id
 }
 
+fn cargo_in_buildings(
+    game_state: &GameState,
+    player_id: PlayerId,
+    industry_type: IndustryType,
+) -> CargoMap {
+    let mut cargo = CargoMap::new();
+    for building in game_state
+        .building_state()
+        .find_industry_buildings_by_owner_and_type(player_id, industry_type)
+    {
+        cargo += building.cargo();
+    }
+    cargo
+}
+
 fn cargo_in_stations(game_state: &GameState, player_id: PlayerId) -> CargoMap {
     let mut cargo = CargoMap::new();
-    for station in game_state.building_state().find_players_stations(player_id) {
+    for station in game_state
+        .building_state()
+        .find_stations_by_owner(player_id)
+    {
         cargo += station.cargo();
     }
     cargo
 }
 
-fn enough_cargo(cargo: &CargoMap) -> bool {
-    [
-        ResourceType::Ammunition,
-        ResourceType::ArtilleryWeapons,
-        ResourceType::Food,
-        ResourceType::Fuel,
-        // We are skipping, e.g., Concrete as we are granting it in the initial ConstructionYard
-    ]
-    .iter()
-    .all(|resource| cargo.get(*resource) > CargoAmount::ZERO)
+fn cargo_exceeds_threshold(
+    cargo: &CargoMap,
+    check_resources: &[ResourceType],
+    threshold: CargoAmount,
+) -> bool {
+    check_resources
+        .iter()
+        .all(|resource| cargo.get(*resource) > threshold)
 }
 
 fn end_condition(game_state: &GameState, player_id: PlayerId) -> bool {
@@ -80,14 +97,19 @@ fn end_condition(game_state: &GameState, player_id: PlayerId) -> bool {
 fn player_has_fixed_artillery(game_state: &GameState, player_id: PlayerId) -> bool {
     let arty: Vec<_> = game_state
         .building_state()
-        .find_military_building_by_owner_and_type(player_id, MilitaryBuildingType::FixedArtillery)
+        .find_military_buildings_by_owner_and_type(player_id, MilitaryBuildingType::FixedArtillery)
         .into_iter()
         .collect();
     !arty.is_empty()
 }
 
 fn player_has_enough_cargo(game_state: &GameState, player_id: PlayerId) -> bool {
-    enough_cargo(&cargo_in_stations(game_state, player_id))
+    let cargo = cargo_in_buildings(game_state, player_id, IndustryType::MilitaryBase);
+    cargo_exceeds_threshold(
+        &cargo,
+        &IndustryType::MilitaryBase.input_resource_types(),
+        CargoAmount::ZERO,
+    )
 }
 
 fn run_ai_commands(
@@ -131,20 +153,31 @@ fn print_end_state(
 ) {
     for player_id in player_ais.keys() {
         println!("Player {player_id}");
+        println!();
+        println!("Cargo in stations:");
         let cargo = cargo_in_stations(game_state, *player_id);
         for resource in ResourceType::all() {
             println!("  {resource:?}: {:?}", cargo.get(resource));
         }
+        println!();
+
+        println!("Cargo in military bases:");
+        let cargo = cargo_in_buildings(game_state, *player_id, IndustryType::MilitaryBase);
+        for resource in IndustryType::MilitaryBase.input_resource_types() {
+            println!("  {resource:?}: {:?}", cargo.get(resource));
+        }
+        println!();
 
         let buildings = game_state
             .building_state()
-            .find_military_building_by_owner_and_type(
+            .find_military_buildings_by_owner_and_type(
                 *player_id,
                 MilitaryBuildingType::FixedArtillery,
             )
             .into_iter()
             .collect::<Vec<_>>();
-        println!("  Fixed artillery: {buildings:?}");
+        println!("Fixed artillery: {buildings:?}");
+        println!();
         println!();
     }
 }

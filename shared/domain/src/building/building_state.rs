@@ -237,7 +237,7 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn find_players_stations(&self, player_id: PlayerId) -> Vec<&StationInfo> {
+    pub fn find_stations_by_owner(&self, player_id: PlayerId) -> Vec<&StationInfo> {
         self.all_stations()
             .into_iter()
             .filter(|station| station.owner_id() == player_id)
@@ -314,7 +314,7 @@ impl BuildingState {
     }
 
     fn find_closest_station(&self, building: &IndustryBuildingInfo) -> Option<(&StationInfo, i32)> {
-        self.find_players_stations(building.owner_id())
+        self.find_stations_by_owner(building.owner_id())
             .into_iter()
             .map(|station| {
                 (
@@ -440,7 +440,7 @@ impl BuildingState {
             .ok_or(BuildError::UnknownError)?;
 
         for building in
-            self.find_industry_building_by_owner_and_type(player_id, providing_industry_type)
+            self.find_industry_buildings_by_owner_and_type(player_id, providing_industry_type)
         {
             let distance = TileCoverage::manhattan_distance_between_closest_tiles(
                 &coverage,
@@ -540,7 +540,7 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn find_industry_building_by_owner_and_type(
+    pub fn find_industry_buildings_by_owner_and_type(
         &self,
         owner_id: PlayerId,
         industry_type: IndustryType,
@@ -553,7 +553,7 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn find_military_building_by_owner_and_type(
+    pub fn find_military_buildings_by_owner_and_type(
         &self,
         owner_id: PlayerId,
         military_building_type: MilitaryBuildingType,

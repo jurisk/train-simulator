@@ -92,7 +92,7 @@ impl Oct2025ArtificialIntelligenceState {
     pub fn new(player_id: PlayerId, game_state: &GameState) -> Self {
         let construction_yards = game_state
             .building_state()
-            .find_industry_building_by_owner_and_type(player_id, IndustryType::ConstructionYard)
+            .find_industry_buildings_by_owner_and_type(player_id, IndustryType::ConstructionYard)
             .into_iter()
             .collect::<Vec<_>>();
         assert_eq!(
