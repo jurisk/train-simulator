@@ -16,6 +16,8 @@ use crate::hud::domain::{DemolishType, SelectedMode, TracksBuildingType};
 const MIN_X: f32 = 200.0;
 const MIN_Y: f32 = 40.0;
 
+// TODO HIGH: Have a "game speed" menu (and support faster or slower game speeds)
+
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn show_top_panel(
     mut contexts: EguiContexts,

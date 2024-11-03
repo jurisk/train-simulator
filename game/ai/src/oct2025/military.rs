@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use log::error;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
@@ -43,15 +44,8 @@ impl Goal for MilitaryBaseAI {
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> GoalResult {
-        let supply_chain_result = self
-            .build_supply_chains
-            .commands(player_id, game_state, metrics);
-        if supply_chain_result == GoalResult::Finished {
-            // TODO HIGH: let us build the FixedArtillery
-            GoalResult::Finished
-        } else {
-            supply_chain_result
-        }
+        self.build_supply_chains
+            .commands(player_id, game_state, metrics)
     }
 }
 
@@ -102,12 +96,15 @@ impl Goal for MilitaryBasesAI {
             }
         } else {
             for base in self.bases.values_mut() {
-                if let GoalResult::SendCommands(commands) =
-                    invoke_to_finished(|| base.commands(player_id, game_state, metrics))
-                {
-                    return GoalResult::SendCommands(commands);
+                let result = invoke_to_finished(|| base.commands(player_id, game_state, metrics));
+                match result {
+                    GoalResult::Finished => {},
+                    other => return other,
                 }
             }
+
+            error!("TODO: Build Fixed Artillery");
+            // TODO HIGH: Let us build FixedArtillery here, and track it
 
             GoalResult::Finished
         }

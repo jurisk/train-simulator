@@ -9,7 +9,7 @@ use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_
 
 use crate::game::PlayerIdResource;
 
-// TODO: If the selected first/last tile is a station, we should snap to the station's edge
+// TODO HIGH: If the selected first/last tile is a station, we should snap to the station's edge
 // TODO: We could improve the snapping logic, e.g. by passing in multiple tail `DirectionalEdge`-s into the pathfinding logic
 pub(crate) fn try_plan_tracks(
     player_id_resource: Res<PlayerIdResource>,
