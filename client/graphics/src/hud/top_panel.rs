@@ -16,7 +16,7 @@ use crate::hud::domain::{DemolishType, SelectedMode, TracksBuildingType};
 const MIN_X: f32 = 200.0;
 const MIN_Y: f32 = 40.0;
 
-// TODO HIGH: Have a "game speed" menu (and support faster or slower game speeds)
+// TODO HIGH: Have a "game speed" menu (and support faster or slower game speeds). Pass it as a startup parameter (useful for tests).
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn show_top_panel(
@@ -31,6 +31,7 @@ pub(crate) fn show_top_panel(
     let GameStateResource(game_state) = game_state.as_ref();
 
     egui::TopBottomPanel::top("hud_top_panel").show(contexts.ctx_mut(), |ui| {
+        // TODO HIGH: This is insufficient, as when the menu is open, it is not considered as being part of HUD. Need to pass these down to the submenus.
         pointer_over_hud.apply(ui);
         set_font_size(ui, 32.0);
 
@@ -234,6 +235,7 @@ fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
+// TODO HIGH: Have an option where AI is enabled on startup already - could be useful for profiling and testing. Consider adding auto-exit on some end conditions as well, as a launch option. That would give you an integration test with UI enabled.
 fn ai_menu(
     ai_resource: &mut ResMut<ArtificialIntelligenceResource>,
     game_state: &GameState,

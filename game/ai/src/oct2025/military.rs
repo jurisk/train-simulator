@@ -1,14 +1,15 @@
 use std::collections::HashMap;
 
-use log::error;
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
+use shared_domain::building::military_building_info::MilitaryBuildingInfo;
+use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
 use shared_domain::supply_chain::SupplyChain;
 use shared_domain::tile_coords_xz::{TileCoordsXZ, TileDistance};
-use shared_domain::{IndustryBuildingId, PlayerId};
+use shared_domain::{IndustryBuildingId, MilitaryBuildingId, PlayerId};
 
 use crate::oct2025::industries::select_industry_building;
 use crate::oct2025::supply_chains::BuildSupplyChains;
@@ -51,14 +52,16 @@ impl Goal for MilitaryBaseAI {
 
 #[derive(Clone)]
 pub(crate) struct MilitaryBasesAI {
-    bases: HashMap<IndustryBuildingId, MilitaryBaseAI>,
+    bases:             HashMap<IndustryBuildingId, MilitaryBaseAI>,
+    fixed_artilleries: HashMap<MilitaryBuildingId, TileCoordsXZ>,
 }
 
 impl MilitaryBasesAI {
     #[must_use]
     pub(crate) fn new() -> Self {
         Self {
-            bases: HashMap::new(),
+            bases:             HashMap::new(),
+            fixed_artilleries: HashMap::new(),
         }
     }
 }
@@ -103,12 +106,60 @@ impl Goal for MilitaryBasesAI {
                 }
             }
 
-            error!("TODO: Build Fixed Artillery");
-            // TODO HIGH: Let us build FixedArtillery here, and track it
+            for artillery in game_state
+                .building_state()
+                .find_military_building_by_owner_and_type(
+                    player_id,
+                    MilitaryBuildingType::FixedArtillery,
+                )
+            {
+                self.fixed_artilleries
+                    .entry(artillery.id())
+                    .or_insert_with(|| artillery.reference_tile());
+            }
 
-            GoalResult::Finished
+            if self.fixed_artilleries.len() < self.bases.len() {
+                if let Some(artillery) = select_fixed_artillery(player_id, game_state) {
+                    GoalResult::SendCommands(vec![GameCommand::BuildMilitaryBuilding(artillery)])
+                } else {
+                    GoalResult::TryAgainLater
+                }
+            } else {
+                GoalResult::Finished
+            }
         }
     }
+}
+
+fn select_fixed_artillery(
+    player_id: PlayerId,
+    game_state: &GameState,
+) -> Option<MilitaryBuildingInfo> {
+    for base in game_state
+        .building_state()
+        .find_industry_building_by_owner_and_type(player_id, IndustryType::MilitaryBase)
+    {
+        let base_tile = base.reference_tile();
+
+        // TODO: This is just for testing, in reality we should be building them in the direction of the enemy
+        let random_offset = TileCoordsXZ::new(fastrand::i32(-10 ..= 10), fastrand::i32(-10 ..= 10));
+
+        let artillery_tile = base_tile + random_offset;
+        let info = MilitaryBuildingInfo::new(
+            MilitaryBuildingId::random(),
+            player_id,
+            MilitaryBuildingType::FixedArtillery,
+            artillery_tile,
+        );
+        if game_state
+            .can_build_military_building(player_id, &info)
+            .is_ok()
+        {
+            return Some(info);
+        }
+    }
+
+    None
 }
 
 #[expect(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]

@@ -16,6 +16,7 @@ use crate::building::building_info::{
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::industry_type::IndustryType;
 use crate::building::military_building_info::MilitaryBuildingInfo;
+use crate::building::military_building_type::MilitaryBuildingType;
 use crate::building::station_info::StationInfo;
 use crate::building::station_type::StationType;
 use crate::building::track_info::TrackInfo;
@@ -246,6 +247,11 @@ impl BuildingState {
     #[must_use]
     pub fn all_industry_buildings(&self) -> impl IntoIterator<Item = &IndustryBuildingInfo> {
         self.industry_buildings.values()
+    }
+
+    #[must_use]
+    pub fn all_military_buildings(&self) -> impl IntoIterator<Item = &MilitaryBuildingInfo> {
+        self.military_buildings.values()
     }
 
     #[must_use]
@@ -543,6 +549,20 @@ impl BuildingState {
             .into_iter()
             .filter(move |building| {
                 building.owner_id() == owner_id && building.industry_type() == industry_type
+            })
+    }
+
+    #[must_use]
+    pub fn find_military_building_by_owner_and_type(
+        &self,
+        owner_id: PlayerId,
+        military_building_type: MilitaryBuildingType,
+    ) -> impl IntoIterator<Item = &MilitaryBuildingInfo> {
+        self.all_military_buildings()
+            .into_iter()
+            .filter(move |building| {
+                building.owner_id() == owner_id
+                    && building.military_building_type() == military_building_type
             })
     }
 

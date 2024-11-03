@@ -10,3 +10,4 @@ rust-version.workspace = true
 shared-domain = { path = "../../shared/domain" }
 shared-util = { path = "../../shared/util" }
 log.workspace = true
+fastrand.workspace = true

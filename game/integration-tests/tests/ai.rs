@@ -1,9 +1,12 @@
 #![expect(clippy::unwrap_used)]
 
+use std::collections::HashMap;
+
 use game_ai::ArtificialIntelligenceState;
 use game_ai::oct2025::Oct2025ArtificialIntelligenceState;
 use game_logic::game_service::GameService;
 use game_logic::games_service::GamesService;
+use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};
 use shared_domain::game_state::GameState;
@@ -69,6 +72,20 @@ fn enough_cargo(cargo: &CargoMap) -> bool {
     .all(|resource| cargo.get(*resource) > CargoAmount::ZERO)
 }
 
+fn end_condition(game_state: &GameState, player_id: PlayerId) -> bool {
+    player_has_enough_cargo(game_state, player_id)
+        && player_has_fixed_artillery(game_state, player_id)
+}
+
+fn player_has_fixed_artillery(game_state: &GameState, player_id: PlayerId) -> bool {
+    let arty: Vec<_> = game_state
+        .building_state()
+        .find_military_building_by_owner_and_type(player_id, MilitaryBuildingType::FixedArtillery)
+        .into_iter()
+        .collect();
+    !arty.is_empty()
+}
+
 fn player_has_enough_cargo(game_state: &GameState, player_id: PlayerId) -> bool {
     enough_cargo(&cargo_in_stations(game_state, player_id))
 }
@@ -108,7 +125,32 @@ fn ai_until_final_goods_built_oct2025() {
     });
 }
 
-const MAX_STEPS: usize = 40_000;
+fn print_end_state(
+    player_ais: &HashMap<PlayerId, Box<dyn ArtificialIntelligenceState>>,
+    game_state: &GameState,
+) {
+    for player_id in player_ais.keys() {
+        println!("Player {player_id}");
+        let cargo = cargo_in_stations(game_state, *player_id);
+        for resource in ResourceType::all() {
+            println!("  {resource:?}: {:?}", cargo.get(resource));
+        }
+
+        let buildings = game_state
+            .building_state()
+            .find_military_building_by_owner_and_type(
+                *player_id,
+                MilitaryBuildingType::FixedArtillery,
+            )
+            .into_iter()
+            .collect::<Vec<_>>();
+        println!("  Fixed artillery: {buildings:?}");
+        println!();
+    }
+}
+
+// TODO HIGH: That is too long. Optimise somehow. Perhaps just by more trains.
+const MAX_STEPS: usize = 100_000;
 
 #[expect(clippy::similar_names)]
 fn ai_until_final_goods_built<F>(factory: F)
@@ -117,44 +159,37 @@ where
 {
     let mut games_service = GamesService::new(false);
 
-    let user_id_1 = UserId::random();
-    let (game_id, player_id_1) = create_and_join(&mut games_service, user_id_1);
-
-    let user_id_2 = UserId::random();
-    let player_id_2 = join_game(&mut games_service, game_id, user_id_2);
+    let (game_id, player_id_1) = create_and_join(&mut games_service, UserId::random());
+    let player_id_2 = join_game(&mut games_service, game_id, UserId::random());
 
     let game_service = games_service.get_game_service_mut(game_id).unwrap();
 
     let mut time = GameTime::new();
 
-    let mut artificial_intelligence_state_1 = factory(player_id_1, game_service.game_state());
-
-    let mut artificial_intelligence_state_2 = factory(player_id_2, game_service.game_state());
+    let game_state = game_service.game_state();
+    let mut player_ais: HashMap<_, _> = vec![player_id_1, player_id_2]
+        .into_iter()
+        .map(|player_id| (player_id, factory(player_id, game_state)))
+        .collect();
 
     let mut steps = 0;
 
     while steps < MAX_STEPS {
         let game_state = game_service.game_state();
 
-        // TODO HIGH: Run until military action happens instead of just until enough cargo
-        if player_has_enough_cargo(game_state, player_id_1)
-            || player_has_enough_cargo(game_state, player_id_2)
+        // TODO HIGH: Run until military action happens instead of just until enough cargo + has military buildings
+        if player_ais
+            .keys()
+            .all(|player_id| end_condition(game_state, *player_id))
         {
+            print_end_state(&player_ais, game_service.game_state());
             println!("AI finished in {steps} steps");
             return;
         }
 
-        run_ai_commands(
-            game_service,
-            artificial_intelligence_state_1.as_mut(),
-            player_id_1,
-        );
-
-        run_ai_commands(
-            game_service,
-            artificial_intelligence_state_2.as_mut(),
-            player_id_2,
-        );
+        for (player_id, ai_state) in &mut player_ais {
+            run_ai_commands(game_service, ai_state.as_mut(), *player_id);
+        }
 
         time = time + GameTimeDiff::from_seconds(0.1);
         game_service.advance_time(time, &NoopMetrics::default());
@@ -162,9 +197,7 @@ where
         steps += 1;
     }
 
-    let end_game_state = game_service.game_state();
-    let cargo_1 = cargo_in_stations(end_game_state, player_id_1);
-    let cargo_2 = cargo_in_stations(end_game_state, player_id_2);
+    print_end_state(&player_ais, game_service.game_state());
 
-    panic!("AI did not finish in {MAX_STEPS} steps, cargo_1 = {cargo_1:?}, cargo_2 = {cargo_2:?}");
+    panic!("AI did not finish in {MAX_STEPS} steps");
 }
