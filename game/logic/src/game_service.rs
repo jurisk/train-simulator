@@ -19,7 +19,7 @@ use shared_domain::transport::transport_info::TransportInfo;
 use shared_domain::{GameId, PlayerId, StationId, TransportId, UserId};
 
 // Public only for tests
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GameResponseWithAddress {
     pub address:  AddressEnvelope,
     pub response: GameResponse,

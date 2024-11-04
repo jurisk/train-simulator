@@ -3,6 +3,7 @@ use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
+use shared_domain::server_response::{GameError, GameResponse};
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::{IndustryBuildingId, PlayerId, StationId};
 
@@ -11,14 +12,41 @@ use crate::oct2025::stations::select_station_building;
 
 #[derive(Clone, Debug)]
 pub(crate) enum IndustryState {
-    // TODO: Could have more gradual steps, e.g. don't assume that building will succeed and have "BuildingIndustry" and "BuildingStation" states...
     NothingDone,
+    BuildingIndustry(IndustryBuildingId, TileCoordsXZ),
     IndustryBuilt(IndustryBuildingId, TileCoordsXZ),
+    BuildingStation(IndustryBuildingId, TileCoordsXZ, StationId),
     StationBuilt(IndustryBuildingId, TileCoordsXZ, StationId),
 }
 
+// TODO HIGH: Should be a 'Goal' probably?
 impl IndustryState {
-    #[expect(clippy::collapsible_else_if)]
+    pub(crate) fn notify_of_response(&mut self, response: &GameResponse) {
+        if let GameResponse::Error(game_error) = response {
+            match game_error {
+                GameError::CannotBuildStation(that_station_id, build_error) => {
+                    if let IndustryState::BuildingStation(
+                        industry_building_id,
+                        location,
+                        station_id,
+                    ) = self
+                    {
+                        if *station_id == *that_station_id {
+                            error!(
+                                "Failed to build station {station_id:?} for industry at {location:?}: {build_error:?}, rolling back"
+                            );
+                            *self = IndustryState::IndustryBuilt(*industry_building_id, *location);
+                        }
+                    }
+                },
+                GameError::CannotBuildIndustryBuilding(..) => {
+                    // TODO HIGH: Implement
+                },
+                _ => {},
+            }
+        }
+    }
+
     #[must_use]
     pub(crate) fn commands(
         &mut self,
@@ -33,7 +61,8 @@ impl IndustryState {
                 if let Some(building) =
                     select_industry_building(player_id, game_state, industry, target_location)
                 {
-                    *self = IndustryState::IndustryBuilt(building.id(), building.reference_tile());
+                    *self =
+                        IndustryState::BuildingIndustry(building.id(), building.reference_tile());
                     GoalResult::SendCommands(vec![GameCommand::BuildIndustryBuilding(building)])
                 } else {
                     trace!(
@@ -42,26 +71,49 @@ impl IndustryState {
                     GoalResult::TryAgainLater
                 }
             },
-            IndustryState::IndustryBuilt(industry_building_id, location) => {
-                if let Some(station) = game_state
+            IndustryState::BuildingIndustry(industry_building_id, location) => {
+                if let Some(industry) = game_state
                     .building_state()
-                    .find_linked_station(*industry_building_id)
+                    .find_industry_building(*industry_building_id)
                 {
-                    *self =
-                        IndustryState::StationBuilt(*industry_building_id, *location, station.id());
-                    GoalResult::RepeatInvocation
-                } else {
-                    if let Some(building) = game_state
-                        .building_state()
-                        .find_industry_building(*industry_building_id)
+                    if industry.id() == *industry_building_id
+                        && industry.reference_tile() == *location
                     {
+                        *self = IndustryState::IndustryBuilt(*industry_building_id, *location);
+                        GoalResult::RepeatInvocation
+                    } else {
+                        let message = format!(
+                            "Industry building {industry_building_id:?} not found at {location:?}"
+                        );
+                        error!("{message}");
+                        GoalResult::Error(message)
+                    }
+                } else {
+                    GoalResult::TryAgainLater
+                }
+            },
+            IndustryState::IndustryBuilt(industry_building_id, location) => {
+                if let Some(building) = game_state
+                    .building_state()
+                    .find_industry_building(*industry_building_id)
+                {
+                    if let Some(station) = game_state
+                        .building_state()
+                        .find_linked_station(*industry_building_id)
+                    {
+                        *self = IndustryState::StationBuilt(
+                            *industry_building_id,
+                            *location,
+                            station.id(),
+                        );
+                        GoalResult::Finished
+                    } else {
                         let station = select_station_building(player_id, game_state, building);
                         trace!(
                             "Building station {station:?} for {industry:?} at {industry_building_id:?}"
                         );
                         if let Some(station) = station {
-                            // TODO: Should be more gradual, we cannot declare it already built if we just sent the message
-                            *self = IndustryState::StationBuilt(
+                            *self = IndustryState::BuildingStation(
                                 *industry_building_id,
                                 *location,
                                 station.id(),
@@ -74,15 +126,27 @@ impl IndustryState {
                             );
                             GoalResult::TryAgainLater
                         }
-                    } else {
-                        let message = format!(
-                            "Industry building {industry_building_id:?} not found at {location:?}"
-                        );
-                        error!("{message}");
-                        // TODO: This is a hack, but not sure how else to handle these weird situations - possibly race conditions.
-                        *self = IndustryState::NothingDone;
-                        GoalResult::Error(message)
                     }
+                } else {
+                    let message = format!(
+                        "Industry building {industry_building_id:?} not found at {location:?}"
+                    );
+                    error!("{message}");
+                    // TODO: This is a hack, but not sure how else to handle these weird situations - possibly race conditions.
+                    *self = IndustryState::NothingDone;
+                    GoalResult::Error(message)
+                }
+            },
+            IndustryState::BuildingStation(industry_building_id, location, _station_id) => {
+                if let Some(station) = game_state
+                    .building_state()
+                    .find_linked_station(*industry_building_id)
+                {
+                    *self =
+                        IndustryState::StationBuilt(*industry_building_id, *location, station.id());
+                    GoalResult::Finished
+                } else {
+                    GoalResult::TryAgainLater
                 }
             },
             IndustryState::StationBuilt(_industry_building_id, _location, _station_id) => {

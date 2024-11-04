@@ -11,6 +11,7 @@ use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
+use shared_domain::server_response::GameResponse;
 
 use crate::ArtificialIntelligenceState;
 use crate::oct2025::military::MilitaryBasesAI;
@@ -45,6 +46,8 @@ trait Goal {
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> GoalResult;
+
+    fn notify_of_response(&mut self, response: &GameResponse);
 }
 
 impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
@@ -77,6 +80,13 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
 
         trace!("AI has nothing to do");
         None
+    }
+
+    fn notify_of_response(&mut self, response: &GameResponse) {
+        trace!("AI received response: {response:?}");
+        for goal in &mut self.pending_goals {
+            goal.notify_of_response(response);
+        }
     }
 }
 

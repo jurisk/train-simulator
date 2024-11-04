@@ -7,6 +7,7 @@ use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
+use shared_domain::server_response::GameResponse;
 use shared_domain::supply_chain::SupplyChain;
 use shared_domain::tile_coords_xz::{TileCoordsXZ, TileDistance};
 use shared_domain::{IndustryBuildingId, MilitaryBuildingId, PlayerId};
@@ -47,6 +48,10 @@ impl Goal for MilitaryBaseAI {
     ) -> GoalResult {
         self.build_supply_chains
             .commands(player_id, game_state, metrics)
+    }
+
+    fn notify_of_response(&mut self, response: &GameResponse) {
+        self.build_supply_chains.notify_of_response(response);
     }
 }
 
@@ -127,6 +132,12 @@ impl Goal for MilitaryBasesAI {
             } else {
                 GoalResult::Finished
             }
+        }
+    }
+
+    fn notify_of_response(&mut self, response: &GameResponse) {
+        for base in self.bases.values_mut() {
+            base.notify_of_response(response);
         }
     }
 }

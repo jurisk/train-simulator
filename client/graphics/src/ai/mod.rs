@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use bevy::log::{debug, info};
 use bevy::prelude::{
-    App, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut, Resource, Time, Timer,
-    TimerMode, in_state,
+    App, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Plugin, Res, ResMut, Resource,
+    Time, Timer, TimerMode, in_state,
 };
 use bevy::utils::HashMap;
 use game_ai::ArtificialIntelligenceState;
@@ -12,8 +12,9 @@ use shared_domain::PlayerId;
 use shared_domain::client_command::ClientCommand;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::NoopMetrics;
+use shared_domain::server_response::ServerResponse;
 
-use crate::communication::domain::ClientMessageEvent;
+use crate::communication::domain::{ClientMessageEvent, ServerMessageEvent};
 use crate::game::GameStateResource;
 use crate::states::ClientState;
 
@@ -59,9 +60,26 @@ impl Plugin for ArtificialIntelligencePlugin {
             FixedUpdate,
             act_upon_timer.run_if(in_state(ClientState::Playing)),
         );
-        // app.insert_resource(ArtificialIntelligenceStateResource::new(Box::new(
-        //     Sep2025ArtificialIntelligenceState::default(),
-        // )));
+        app.add_systems(
+            FixedUpdate,
+            send_server_message_events_to_ais.run_if(in_state(ClientState::Playing)),
+        );
+    }
+}
+
+fn send_server_message_events_to_ais(
+    mut artificial_intelligence_resource: ResMut<ArtificialIntelligenceResource>,
+    mut server_message_events: EventReader<ServerMessageEvent>,
+) {
+    for event in server_message_events.read() {
+        // TODO HIGH: Implement sending server message events to AIs - not sure how it works if we want to send them to all AIs, not just current player - perhaps the messages should have a marker which player they are for?
+        let ServerMessageEvent { response } = event;
+
+        if let ServerResponse::Game(_game_id, game_message) = response {
+            for (_player_id, (_, ai_state)) in &mut artificial_intelligence_resource.map {
+                ai_state.notify_of_response(game_message);
+            }
+        }
     }
 }
 

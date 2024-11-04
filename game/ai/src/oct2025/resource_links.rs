@@ -5,6 +5,7 @@ use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
 use shared_domain::resource_type::ResourceType;
+use shared_domain::server_response::GameResponse;
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
 use shared_domain::{PlayerId, TransportId};
@@ -43,6 +44,10 @@ fn track_pairs(
 }
 
 impl ResourceLinkState {
+    pub(crate) fn notify_of_response(&mut self, _response: &GameResponse) {
+        // TODO HIGH: Implement, e.g. errors when we failed buying trains or building tracks
+    }
+
     #[expect(clippy::collapsible_else_if)]
     #[must_use]
     pub(crate) fn commands(

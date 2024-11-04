@@ -4,6 +4,7 @@ use shared_domain::building::industry_type::IndustryType;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
 use shared_domain::resource_type::ResourceType;
+use shared_domain::server_response::GameResponse;
 use shared_domain::supply_chain::SupplyChain;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::{IndustryBuildingId, PlayerId};
@@ -86,6 +87,16 @@ impl Goal for BuildSupplyChain {
 
         GoalResult::Finished
     }
+
+    fn notify_of_response(&mut self, response: &GameResponse) {
+        for state in self.industry_states.values_mut() {
+            state.notify_of_response(response);
+        }
+
+        for state in self.resource_link_states.values_mut() {
+            state.notify_of_response(response);
+        }
+    }
 }
 
 impl BuildSupplyChain {
@@ -130,6 +141,7 @@ impl BuildSupplyChain {
 
 #[derive(Clone)]
 pub(crate) struct BuildSupplyChains {
+    // Later: Think carefully if race conditions are still possible and whether we should thus first ensure the target industry & its station are built first, as that is shared between all the sub-goals!
     sub_goals: Vec<BuildSupplyChain>,
 }
 
@@ -168,13 +180,19 @@ impl Goal for BuildSupplyChains {
         metrics: &dyn Metrics,
     ) -> GoalResult {
         for sub_goal in &mut self.sub_goals {
-            if let GoalResult::SendCommands(commands) =
-                invoke_to_finished(|| sub_goal.commands(player_id, game_state, metrics))
-            {
-                return GoalResult::SendCommands(commands);
+            let result = invoke_to_finished(|| sub_goal.commands(player_id, game_state, metrics));
+            match result {
+                GoalResult::Finished => {},
+                other => return other,
             }
         }
 
         GoalResult::Finished
+    }
+
+    fn notify_of_response(&mut self, response: &GameResponse) {
+        for sub_goal in &mut self.sub_goals {
+            sub_goal.notify_of_response(response);
+        }
     }
 }
