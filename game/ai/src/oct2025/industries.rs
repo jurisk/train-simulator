@@ -39,8 +39,15 @@ impl IndustryState {
                         }
                     }
                 },
-                GameError::CannotBuildIndustryBuilding(..) => {
-                    // TODO HIGH: Implement
+                GameError::CannotBuildIndustryBuilding(that_industry_id, build_error) => {
+                    if let IndustryState::BuildingIndustry(industry_building_id, location) = self {
+                        if *industry_building_id == *that_industry_id {
+                            error!(
+                                "Failed to build industry {industry_building_id:?} at {location:?}: {build_error:?}, rolling back"
+                            );
+                            *self = IndustryState::NothingDone;
+                        }
+                    }
                 },
                 _ => {},
             }

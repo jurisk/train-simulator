@@ -197,7 +197,7 @@ impl GameService {
                 )])
             },
             Err(error) => {
-                Err(GameError::CannotPurchase(
+                Err(GameError::CannotPurchaseTransport(
                     transport_info.transport_id(),
                     error,
                 ))

@@ -120,7 +120,7 @@ pub enum GameError {
     CannotBuildIndustryBuilding(IndustryBuildingId, BuildError),
     CannotBuildMilitaryBuilding(MilitaryBuildingId, BuildError),
     CannotBuildTracks(Vec<TrackId>, BuildError),
-    CannotPurchase(TransportId, BuildError),
+    CannotPurchaseTransport(TransportId, BuildError),
     CannotDemolish(DemolishSelector),
     UnspecifiedError,
 }
@@ -151,7 +151,7 @@ impl Debug for GameError {
                     track_ids.len()
                 )
             },
-            GameError::CannotPurchase(transport_id, error) => {
+            GameError::CannotPurchaseTransport(transport_id, error) => {
                 write!(f, "CannotPurchase({transport_id:?}, {error:?})")
             },
             GameError::CannotDemolish(demolish_selector) => {

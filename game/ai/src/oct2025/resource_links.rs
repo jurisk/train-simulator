@@ -5,7 +5,7 @@ use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
 use shared_domain::resource_type::ResourceType;
-use shared_domain::server_response::GameResponse;
+use shared_domain::server_response::{GameError, GameResponse};
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
 use shared_domain::{PlayerId, TransportId};
@@ -43,9 +43,27 @@ fn track_pairs(
     Some(pairs)
 }
 
+// TODO HIGH: This could be a Goal?
 impl ResourceLinkState {
-    pub(crate) fn notify_of_response(&mut self, _response: &GameResponse) {
-        // TODO HIGH: Implement, e.g. errors when we failed buying trains or building tracks
+    pub(crate) fn notify_of_response(&mut self, response: &GameResponse) {
+        if let GameResponse::Error(error) = response {
+            match error {
+                GameError::CannotPurchaseTransport(transport_id, _) => {
+                    if let ResourceLinkState::PurchasingTrain(pending_transport_id) = self {
+                        if *pending_transport_id == *transport_id {
+                            *self = ResourceLinkState::TracksBuilt;
+                        }
+                    }
+                },
+                GameError::CannotBuildTracks(..) => {
+                    if let ResourceLinkState::TracksPending(_) = self {
+                        // This is somewhat questionable, as on any error we are going back to square one, and also we might be getting events unrelated to our particular resource link... but the alternative is adding some "TrackBuildingRequestId" and correlating that, and that is adding complexity.
+                        *self = ResourceLinkState::Pending;
+                    }
+                },
+                _ => {},
+            }
+        }
     }
 
     #[expect(clippy::collapsible_else_if)]
