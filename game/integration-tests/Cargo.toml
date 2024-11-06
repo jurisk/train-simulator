@@ -11,4 +11,6 @@ game-ai = { path = "../ai" }
 game-logic = { path = "../logic" }
 shared-domain = { path = "../../shared/domain" }
 shared-util = { path = "../../shared/util" }
-log = "0.4.22"
+log.workspace = true
+env_logger.workspace = true
+

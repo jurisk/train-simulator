@@ -18,6 +18,10 @@ use shared_domain::resource_type::ResourceType;
 use shared_domain::server_response::{AddressEnvelope, GameResponse, ServerResponse, UserInfo};
 use shared_domain::{GameId, PlayerId, ScenarioId, UserId, UserName};
 
+fn init_logger() {
+    let _ = env_logger::builder().is_test(true).try_init();
+}
+
 fn create_and_join(games_service: &mut GamesService, user_id: UserId) -> (GameId, PlayerId) {
     let user_info = UserInfo {
         id:   user_id,
@@ -210,6 +214,8 @@ fn ai_until_final_goods_built<F>(factory: F)
 where
     F: Fn(PlayerId, &GameState) -> Box<dyn ArtificialIntelligenceState>,
 {
+    init_logger();
+
     let mut games_service = GamesService::new(false);
 
     let (game_id, player_id_1) = create_and_join(&mut games_service, UserId::random());

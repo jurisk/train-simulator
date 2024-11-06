@@ -16,7 +16,7 @@ url.workspace = true
 bincode.workspace = true
 enfync.workspace = true
 clap.workspace = true
-log = "0.4.22"
+log.workspace = true
 
 [dependencies.bevy_simplenet]
 workspace = true
