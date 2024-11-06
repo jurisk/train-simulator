@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use log::{Level, info, log, trace, warn};
+use log::{Level, debug, log, trace, warn};
 use pathfinding::prelude::dijkstra;
 use shared_util::bool_ops::BoolOptionOps;
 use web_time::{Duration, Instant};
@@ -74,7 +74,7 @@ pub fn plan_tracks(
     );
 
     let path_length = path.as_ref().map(|(path, _length)| path.len());
-    info!(
+    debug!(
         "Found path from {current:?} to {targets:?} in {:?}: {:?} length",
         start.elapsed(),
         path_length
@@ -110,10 +110,8 @@ pub fn plan_tracks(
 
     let elapsed = start.elapsed();
     let level = if elapsed > Duration::from_millis(200) {
-        Level::Warn
-    } else if elapsed > Duration::from_millis(20) {
         Level::Info
-    } else if elapsed > Duration::from_millis(10) {
+    } else if elapsed > Duration::from_millis(20) {
         Level::Debug
     } else {
         Level::Trace

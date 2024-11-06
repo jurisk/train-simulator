@@ -13,7 +13,7 @@ use crate::oct2025::industries::IndustryState;
 use crate::oct2025::resource_links::{ResourceLinkState, resource_links};
 use crate::oct2025::{Goal, GoalResult, invoke_to_finished};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct BuildSupplyChain {
     target_location:      TileCoordsXZ,
     industry_states:      HashMap<IndustryType, IndustryState>,
@@ -139,7 +139,7 @@ impl BuildSupplyChain {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct BuildSupplyChains {
     // Later: Think carefully if race conditions are still possible and whether we should thus first ensure the target industry & its station are built first, as that is shared between all the sub-goals!
     sub_goals: Vec<BuildSupplyChain>,

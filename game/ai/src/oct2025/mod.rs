@@ -5,6 +5,8 @@ mod stations;
 mod supply_chains;
 mod transports;
 
+use std::fmt::Debug;
+
 use log::{error, trace};
 use shared_domain::PlayerId;
 use shared_domain::building::industry_type::IndustryType;
@@ -39,7 +41,7 @@ where
     }
 }
 
-trait Goal {
+trait Goal: Debug {
     fn commands(
         &mut self,
         player_id: PlayerId,
@@ -91,6 +93,7 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
 }
 
 #[expect(clippy::module_name_repetitions)]
+#[derive(Debug)]
 pub struct Oct2025ArtificialIntelligenceState {
     player_id:     PlayerId,
     pending_goals: Vec<Box<dyn Goal + Send + Sync>>,

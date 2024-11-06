@@ -94,7 +94,7 @@ fn process_messages_locally(
         let responses = server_state.process(&client_command_with_client_id);
         for response in responses {
             debug!("Simulating server: Got response: {:?}", response);
-            // TODO HIGH: Except if AIs are sending messages on behalf of various players, then we also have to feed the server responses and be able to distinguish, which players they are targetted at?
+            // Later: This is somewhat of a hack, because if AIs are sending messages on behalf of various players, then we should ideally distinguish which player each server response is targeted at. In some sense, each client can receive messages for multiple players, and those get routed to the right AI. But this is a lot of complication, so we should start fixing it only if the current approach doesn't work.
             if response.client_ids.contains(&client_id) {
                 server_messages.send(ServerMessageEvent::new(response.response));
             }

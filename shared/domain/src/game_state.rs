@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use log::{info, trace};
+use log::{debug, trace};
 use serde::{Deserialize, Serialize, Serializer};
 use shared_util::bool_ops::BoolResultOps;
 
@@ -308,7 +308,7 @@ impl GameState {
         (player_ids.len() == 1).then_ok_unit(|| BuildError::InvalidOwner)?;
         let player_id = player_ids.iter().next().unwrap();
 
-        info!("Aggregated track costs: {:?}", costs);
+        debug!("Aggregated track costs: {:?}", costs);
         self.can_pay_costs(*player_id, &costs)?;
         Ok((results, costs))
     }

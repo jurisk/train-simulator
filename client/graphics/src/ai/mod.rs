@@ -72,7 +72,7 @@ fn send_server_message_events_to_ais(
     mut server_message_events: EventReader<ServerMessageEvent>,
 ) {
     for event in server_message_events.read() {
-        // TODO HIGH: Implement sending server message events to AIs - not sure how it works if we want to send them to all AIs, not just current player - perhaps the messages should have a marker which player they are for?
+        // Later: Not all server message events may be aimed at all AIs - right now AIs may be getting server message events that are off-topic for them. Perhaps the messages should have a marker which player they are for. But this adds complexity.
         let ServerMessageEvent { response } = event;
 
         if let ServerResponse::Game(_game_id, game_message) = response {

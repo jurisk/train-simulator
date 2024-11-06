@@ -178,6 +178,29 @@ fn print_end_state(
     for player_id in player_ais.keys() {
         println!("Player {player_id}");
         println!();
+
+        println!("AI state:");
+        let ai_state = player_ais.get(player_id).unwrap().as_ref();
+        println!("{ai_state:?}");
+        println!();
+
+        println!("Transports:");
+        for transport in game_state
+            .transport_state()
+            .find_players_transports(*player_id)
+        {
+            println!("  {transport:?}");
+        }
+        println!();
+
+        println!("Industries:");
+        for industry_type in IndustryType::all() {
+            if industry_type != IndustryType::MilitaryBase {
+                let cargo = cargo_in_buildings(game_state, *player_id, industry_type);
+                println!("  {industry_type:?}: {cargo:?}");
+            }
+        }
+
         println!("Cargo in stations:");
         let cargo = cargo_in_stations(game_state, *player_id);
         for resource in ResourceType::all() {
@@ -206,8 +229,8 @@ fn print_end_state(
     }
 }
 
-// TODO HIGH: That is too long. Optimise somehow. Perhaps just by more trains.
-const MAX_STEPS: usize = 100_000;
+// TODO HIGH: The test is flaky as sometimes the supply chains fail. Once we fix the issue, we could optimise it to something lower, perhaps 10_000 - if more trains get run.
+const MAX_STEPS: usize = 200_000;
 
 #[expect(clippy::similar_names)]
 fn ai_until_final_goods_built<F>(factory: F)

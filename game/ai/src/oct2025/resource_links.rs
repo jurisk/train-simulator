@@ -1,4 +1,4 @@
-use log::{debug, trace};
+use log::{error, trace};
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
 use shared_domain::directional_edge::DirectionalEdge;
@@ -15,7 +15,7 @@ use crate::oct2025::industries::IndustryState;
 use crate::oct2025::stations::exit_tile_tracks;
 use crate::oct2025::transports::purchase_transport;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) enum ResourceLinkState {
     Pending,
     TracksPending(Vec<(TileTrack, TileTrack)>),
@@ -92,6 +92,7 @@ impl ResourceLinkState {
             },
             ResourceLinkState::TracksPending(pairs) => {
                 if let Some((source, target)) = pairs.pop() {
+                    // TODO HIGH: Save the "length" in order to assess how many trains we need?
                     if let Some((route, _length)) = plan_tracks(
                         player_id,
                         DirectionalEdge::exit_from(source),
@@ -111,8 +112,11 @@ impl ResourceLinkState {
                             }
                         }
                     } else {
-                        debug!("No route found for {:?} -> {:?}", source, target);
-                        GoalResult::RepeatInvocation
+                        // TODO HIGH: This is actually bad. This is possibly a blocked station or something else bad. And this current implementation will lead to an infinite loop.
+                        error!("Failed building a route for {source:?} -> {target:?}");
+                        // Returning the popped pair, we will try again...
+                        pairs.push((source, target));
+                        GoalResult::TryAgainLater
                     }
                 } else {
                     *self = ResourceLinkState::TracksBuilt;
@@ -121,7 +125,6 @@ impl ResourceLinkState {
             },
             ResourceLinkState::TracksBuilt => {
                 // TODO: Buy more transports if the tracks are long, or perhaps if a backlog of resources gets formed
-                // TODO HIGH: Ammunition train was missing when testing!
                 if let Some((station, transport)) = purchase_transport(
                     player_id,
                     game_state,

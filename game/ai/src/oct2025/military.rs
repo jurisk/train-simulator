@@ -16,7 +16,7 @@ use crate::oct2025::industries::select_industry_building;
 use crate::oct2025::supply_chains::BuildSupplyChains;
 use crate::oct2025::{Goal, GoalResult, invoke_to_finished};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct MilitaryBaseAI {
     build_supply_chains: BuildSupplyChains,
 }
@@ -55,7 +55,7 @@ impl Goal for MilitaryBaseAI {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct MilitaryBasesAI {
     bases:             HashMap<IndustryBuildingId, MilitaryBaseAI>,
     fixed_artilleries: HashMap<MilitaryBuildingId, TileCoordsXZ>,
