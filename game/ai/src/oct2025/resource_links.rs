@@ -1,3 +1,5 @@
+use std::collections::{HashMap, HashSet};
+
 use log::{error, trace};
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
@@ -7,6 +9,7 @@ use shared_domain::metrics::Metrics;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::server_response::{GameError, GameResponse};
 use shared_domain::transport::tile_track::TileTrack;
+use shared_domain::transport::track_length::TrackLength;
 use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
 use shared_domain::{PlayerId, TransportId};
 
@@ -18,10 +21,21 @@ use crate::oct2025::transports::purchase_transport;
 #[derive(Clone, Debug)]
 pub(crate) enum ResourceLinkState {
     Pending,
-    TracksPending(Vec<(TileTrack, TileTrack)>),
-    TracksBuilt,
-    PurchasingTrain(TransportId),
-    TrainPurchased,
+    BuildingTracks {
+        tracks_pending: Vec<(TileTrack, TileTrack)>,
+        tracks_built:   HashMap<(TileTrack, TileTrack), TrackLength>,
+    },
+    TracksBuilt(HashMap<(TileTrack, TileTrack), TrackLength>),
+    PurchasingTrains {
+        tracks_built:      HashMap<(TileTrack, TileTrack), TrackLength>,
+        target_trains:     usize,
+        purchasing_trains: HashSet<TransportId>,
+        purchased_trains:  HashSet<TransportId>,
+    },
+    TrainsPurchased {
+        tracks_built:     HashMap<(TileTrack, TileTrack), TrackLength>,
+        purchased_trains: HashSet<TransportId>,
+    },
 }
 
 fn track_pairs(
@@ -46,23 +60,44 @@ fn track_pairs(
 // TODO HIGH: This could be a Goal?
 impl ResourceLinkState {
     pub(crate) fn notify_of_response(&mut self, response: &GameResponse) {
-        if let GameResponse::Error(error) = response {
-            match error {
-                GameError::CannotPurchaseTransport(transport_id, _) => {
-                    if let ResourceLinkState::PurchasingTrain(pending_transport_id) = self {
-                        if *pending_transport_id == *transport_id {
-                            *self = ResourceLinkState::TracksBuilt;
+        match response {
+            GameResponse::TransportsAdded(transports) => {
+                if let ResourceLinkState::PurchasingTrains {
+                    purchasing_trains,
+                    purchased_trains,
+                    ..
+                } = self
+                {
+                    for transport in transports {
+                        if purchasing_trains.contains(&transport.transport_id()) {
+                            purchasing_trains.remove(&transport.transport_id());
+                            purchased_trains.insert(transport.transport_id());
                         }
                     }
-                },
-                GameError::CannotBuildTracks(..) => {
-                    if let ResourceLinkState::TracksPending(_) = self {
-                        // This is somewhat questionable, as on any error we are going back to square one, and also we might be getting events unrelated to our particular resource link... but the alternative is adding some "TrackBuildingRequestId" and correlating that, and that is adding complexity.
-                        *self = ResourceLinkState::Pending;
-                    }
-                },
-                _ => {},
-            }
+                }
+            },
+            GameResponse::Error(error) => {
+                match error {
+                    GameError::CannotPurchaseTransport(transport_id, _) => {
+                        if let ResourceLinkState::PurchasingTrains {
+                            purchasing_trains, ..
+                        } = self
+                        {
+                            if purchasing_trains.contains(transport_id) {
+                                purchasing_trains.remove(transport_id);
+                            }
+                        }
+                    },
+                    GameError::CannotBuildTracks(..) => {
+                        if let ResourceLinkState::BuildingTracks { .. } = self {
+                            // This is somewhat questionable, as on any error we are going back to square one, and also we might be getting events unrelated to our particular resource link... but the alternative is adding some "TrackBuildingRequestId" and correlating that, and that is adding complexity.
+                            *self = ResourceLinkState::Pending;
+                        }
+                    },
+                    _ => {},
+                }
+            },
+            _ => {},
         }
     }
 
@@ -81,7 +116,10 @@ impl ResourceLinkState {
             ResourceLinkState::Pending => {
                 match track_pairs(game_state, from_industry_state, to_industry_state) {
                     Some(pairs) => {
-                        *self = ResourceLinkState::TracksPending(pairs);
+                        *self = ResourceLinkState::BuildingTracks {
+                            tracks_pending: pairs,
+                            tracks_built:   HashMap::new(),
+                        };
                         GoalResult::RepeatInvocation
                     },
                     None => {
@@ -90,10 +128,13 @@ impl ResourceLinkState {
                     },
                 }
             },
-            ResourceLinkState::TracksPending(pairs) => {
-                if let Some((source, target)) = pairs.pop() {
+            ResourceLinkState::BuildingTracks {
+                tracks_pending,
+                tracks_built,
+            } => {
+                if let Some((source, target)) = tracks_pending.pop() {
                     // TODO HIGH: Save the "length" in order to assess how many trains we need?
-                    if let Some((route, _length)) = plan_tracks(
+                    if let Some((route, length)) = plan_tracks(
                         player_id,
                         DirectionalEdge::exit_from(source),
                         &[DirectionalEdge::entrance_to(target)],
@@ -106,6 +147,7 @@ impl ResourceLinkState {
                             GoalResult::RepeatInvocation
                         } else {
                             if game_state.can_build_tracks(player_id, &route).is_ok() {
+                                tracks_built.insert((source, target), length);
                                 GoalResult::SendCommands(vec![GameCommand::BuildTracks(route)])
                             } else {
                                 GoalResult::SendCommands(vec![])
@@ -115,47 +157,67 @@ impl ResourceLinkState {
                         // TODO HIGH: This is actually bad. This is possibly a blocked station or something else bad. And this current implementation will lead to an infinite loop.
                         error!("Failed building a route for {source:?} -> {target:?}");
                         // Returning the popped pair, we will try again...
-                        pairs.push((source, target));
+                        tracks_pending.push((source, target));
                         GoalResult::TryAgainLater
                     }
                 } else {
-                    *self = ResourceLinkState::TracksBuilt;
+                    *self = ResourceLinkState::TracksBuilt(tracks_built.clone());
                     GoalResult::RepeatInvocation
                 }
             },
-            ResourceLinkState::TracksBuilt => {
-                // TODO: Buy more transports if the tracks are long, or perhaps if a backlog of resources gets formed
-                if let Some((station, transport)) = purchase_transport(
-                    player_id,
-                    game_state,
-                    from_industry_state,
-                    resource,
-                    to_industry_state,
-                ) {
-                    let transport_id = transport.transport_id();
-                    *self = ResourceLinkState::PurchasingTrain(transport_id);
+            ResourceLinkState::TracksBuilt(tracks_built) => {
+                const TRAINS_PER_LENGTH_COEF: f32 = 0.01;
 
-                    let command = GameCommand::PurchaseTransport(station, transport);
-                    GoalResult::SendCommands(vec![command])
-                } else {
-                    trace!(
-                        "Failed to purchase transport for {resource:?}, this could be normal if we lack resources"
-                    );
-                    GoalResult::TryAgainLater
-                }
-            },
-            ResourceLinkState::PurchasingTrain(transport_id) => {
-                if game_state
-                    .transport_state()
-                    .find_players_transport(player_id, *transport_id)
-                    .is_some()
-                {
-                    *self = ResourceLinkState::TrainPurchased;
-                }
+                let total_length = tracks_built.values().copied().sum::<TrackLength>();
 
+                let target_trains = (total_length.to_f32() * TRAINS_PER_LENGTH_COEF)
+                    .ceil()
+                    .max(1f32) as usize;
+
+                trace!("Total length: {total_length:?}, target_trains: {target_trains:?}");
+
+                *self = ResourceLinkState::PurchasingTrains {
+                    tracks_built: tracks_built.clone(),
+                    target_trains,
+                    purchasing_trains: HashSet::new(),
+                    purchased_trains: HashSet::new(),
+                };
                 GoalResult::RepeatInvocation
             },
-            ResourceLinkState::TrainPurchased => GoalResult::Finished,
+            ResourceLinkState::PurchasingTrains {
+                tracks_built,
+                target_trains,
+                purchasing_trains,
+                purchased_trains,
+            } => {
+                if purchased_trains.len() >= *target_trains && purchasing_trains.is_empty() {
+                    *self = ResourceLinkState::TrainsPurchased {
+                        tracks_built:     tracks_built.clone(),
+                        purchased_trains: purchased_trains.clone(),
+                    };
+                    GoalResult::RepeatInvocation
+                } else {
+                    if let Some((station, transport)) = purchase_transport(
+                        player_id,
+                        game_state,
+                        from_industry_state,
+                        resource,
+                        to_industry_state,
+                    ) {
+                        let transport_id = transport.transport_id();
+                        purchasing_trains.insert(transport_id);
+
+                        let command = GameCommand::PurchaseTransport(station, transport);
+                        GoalResult::SendCommands(vec![command])
+                    } else {
+                        trace!(
+                            "Failed to purchase transport for {resource:?}, this could be normal if we lack resources"
+                        );
+                        GoalResult::TryAgainLater
+                    }
+                }
+            },
+            ResourceLinkState::TrainsPurchased { .. } => GoalResult::Finished,
         }
     }
 }

@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::iter::Sum;
 use std::ops::{Add, Div, Mul};
 
 use pathfinding::num_traits::Zero;
@@ -82,5 +83,11 @@ impl Mul<f32> for TrackLength {
 
     fn mul(self, rhs: f32) -> Self::Output {
         Self(self.0 * rhs)
+    }
+}
+
+impl Sum for TrackLength {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.fold(TrackLength::zero(), Add::add)
     }
 }
