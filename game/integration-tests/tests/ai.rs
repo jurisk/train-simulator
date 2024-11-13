@@ -283,4 +283,6 @@ where
     print_end_state(&player_ais, game_service.game_state());
 
     panic!("AI did not finish in {MAX_STEPS} steps");
+    
+    // TODO HIGH: Dump the game state to a save game for debugging
 }

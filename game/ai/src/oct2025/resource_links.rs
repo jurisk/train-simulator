@@ -27,15 +27,11 @@ pub(crate) enum ResourceLinkState {
     },
     TracksBuilt(HashMap<(TileTrack, TileTrack), TrackLength>),
     PurchasingTrains {
-        tracks_built:      HashMap<(TileTrack, TileTrack), TrackLength>,
         target_trains:     usize,
         purchasing_trains: HashSet<TransportId>,
         purchased_trains:  HashSet<TransportId>,
     },
-    TrainsPurchased {
-        tracks_built:     HashMap<(TileTrack, TileTrack), TrackLength>,
-        purchased_trains: HashSet<TransportId>,
-    },
+    TrainsPurchased,
 }
 
 fn track_pairs(
@@ -177,7 +173,6 @@ impl ResourceLinkState {
                 trace!("Total length: {total_length:?}, target_trains: {target_trains:?}");
 
                 *self = ResourceLinkState::PurchasingTrains {
-                    tracks_built: tracks_built.clone(),
                     target_trains,
                     purchasing_trains: HashSet::new(),
                     purchased_trains: HashSet::new(),
@@ -185,16 +180,12 @@ impl ResourceLinkState {
                 GoalResult::RepeatInvocation
             },
             ResourceLinkState::PurchasingTrains {
-                tracks_built,
                 target_trains,
                 purchasing_trains,
                 purchased_trains,
             } => {
                 if purchased_trains.len() >= *target_trains && purchasing_trains.is_empty() {
-                    *self = ResourceLinkState::TrainsPurchased {
-                        tracks_built:     tracks_built.clone(),
-                        purchased_trains: purchased_trains.clone(),
-                    };
+                    *self = ResourceLinkState::TrainsPurchased;
                     GoalResult::RepeatInvocation
                 } else {
                     if let Some((station, transport)) = purchase_transport(
