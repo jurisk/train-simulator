@@ -75,15 +75,22 @@ fn handle_available_games(
             let UserIdResource(user_id) = user_id_resource.as_ref();
             let game_launch_params = game_launch_params.as_ref();
 
-            let selected = select_game_to_join(games, game_launch_params, *user_id);
-
-            let command = match selected {
+            let command = match &game_launch_params.game_state {
                 None => {
-                    LobbyCommand::CreateGame(
-                        game_launch_params.scenario_id.clone().unwrap_or_default(),
-                    )
+                    let selected = select_game_to_join(games, game_launch_params, *user_id);
+
+                    match selected {
+                        None => {
+                            LobbyCommand::CreateAndJoinGameByScenario(
+                                game_launch_params.scenario_id.clone().unwrap_or_default(),
+                            )
+                        },
+                        Some(game_id) => LobbyCommand::JoinExistingGame(game_id),
+                    }
                 },
-                Some(game_id) => LobbyCommand::JoinExistingGame(game_id),
+                Some(game_state) => {
+                    LobbyCommand::CreateAndJoinGameByGameState(Box::new(game_state.clone()))
+                },
             };
 
             client_messages.send(ClientMessageEvent::new(ClientCommand::Lobby(command)));

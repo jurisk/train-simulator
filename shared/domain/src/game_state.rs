@@ -69,8 +69,9 @@ impl<'de> Deserialize<'de> for GameState {
     }
 }
 
+#[expect(clippy::module_name_repetitions)]
 #[derive(Serialize, Deserialize, Clone)]
-struct GameStateFlattened {
+pub struct GameStateFlattened {
     game_id:     GameId,
     scenario_id: ScenarioId,
     map_level:   MapLevelFlattened,

@@ -1,6 +1,7 @@
 #![expect(clippy::unwrap_used)]
 
 use std::collections::HashMap;
+use std::fs;
 
 use game_ai::ArtificialIntelligenceState;
 use game_ai::oct2025::Oct2025ArtificialIntelligenceState;
@@ -11,12 +12,13 @@ use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};
-use shared_domain::game_state::GameState;
+use shared_domain::game_state::{GameState, GameStateFlattened};
 use shared_domain::game_time::{GameTime, GameTimeDiff};
 use shared_domain::metrics::NoopMetrics;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::server_response::{AddressEnvelope, GameResponse, ServerResponse, UserInfo};
 use shared_domain::{GameId, PlayerId, ScenarioId, UserId, UserName};
+use shared_util::compression::save_to_bytes;
 
 fn init_logger() {
     let _ = env_logger::builder().is_test(true).try_init();
@@ -29,7 +31,7 @@ fn create_and_join(games_service: &mut GamesService, user_id: UserId) -> (GameId
     };
 
     let create_and_join_response = games_service
-        .create_and_join_game(&user_info, ScenarioId::all().first().unwrap())
+        .create_and_join_game_by_scenario(&user_info, ScenarioId::all().first().unwrap())
         .unwrap();
 
     let response = create_and_join_response.first().unwrap();
@@ -230,7 +232,7 @@ fn print_end_state(
 }
 
 // TODO HIGH: The test is flaky as sometimes the supply chains fail. Once we fix the issue, we could optimise it to something lower, perhaps 10_000 - if more trains get run.
-const MAX_STEPS: usize = 200_000;
+const MAX_STEPS: usize = 20_000;
 
 #[expect(clippy::similar_names)]
 fn ai_until_final_goods_built<F>(factory: F)
@@ -280,9 +282,18 @@ where
         steps += 1;
     }
 
-    print_end_state(&player_ais, game_service.game_state());
+    let final_game_state = game_service.game_state();
+    print_end_state(&player_ais, final_game_state);
 
-    panic!("AI did not finish in {MAX_STEPS} steps");
-    
-    // TODO HIGH: Dump the game state to a save game for debugging
+    let flattened: GameStateFlattened = final_game_state.clone().into();
+    let serialized = save_to_bytes(&flattened).unwrap();
+
+    let output_path = "../../ai_until_final_goods_built.game_state.bincode.gz";
+    fs::write(output_path, serialized).unwrap();
+
+    panic!("AI did not finish in {MAX_STEPS} steps, game state dumped to {output_path}");
+
+    // TODO: We should also dump - and later read - AI state for better debugging
+
+    // TODO HIGH: Learn to load the game from saved game state
 }

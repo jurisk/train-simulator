@@ -1676,6 +1676,7 @@ dependencies = [
  "client-graphics",
  "game-logic",
  "shared-domain",
+ "shared-util",
  "wasm-bindgen",
 ]
 
@@ -4788,9 +4789,7 @@ name = "shared-domain"
 version = "0.1.0"
 dependencies = [
  "bevy_math",
- "bincode",
  "fastrand",
- "flate2",
  "itertools",
  "log",
  "pathfinding",
@@ -4805,7 +4804,9 @@ name = "shared-util"
 version = "0.1.0"
 dependencies = [
  "bevy_math",
+ "bincode",
  "fastrand",
+ "flate2",
  "serde",
 ]
 

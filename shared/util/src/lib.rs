@@ -1,4 +1,5 @@
 pub mod bool_ops;
+pub mod compression;
 pub mod coords_xz;
 pub mod direction_xz;
 pub mod geometry;

@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 use log::warn;
 use shared_domain::client_command::{GameCommand, LobbyCommand};
+use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTime;
 use shared_domain::metrics::Metrics;
 use shared_domain::scenario::{EUROPE_SCENARIO_BINCODE, Scenario, USA_SCENARIO_BINCODE};
@@ -12,6 +13,7 @@ use shared_domain::server_response::{
     ServerResponseWithAddress, UserInfo,
 };
 use shared_domain::{GameId, PlayerId, ScenarioId, UserId};
+use shared_util::compression::load_from_bytes;
 
 use crate::game_service::{GameResponseWithAddress, GameService};
 
@@ -34,8 +36,10 @@ impl GamesService {
                 "usa_east" => USA_SCENARIO_BINCODE,
                 _ => USA_SCENARIO_BINCODE,
             };
-            let scenario = Scenario::load_from_bytes(scenario_bincode)
+            let scenario: Scenario = load_from_bytes(scenario_bincode)
                 .unwrap_or_else(|err| panic!("Failed to load scenario {scenario_id:?}: {err}"));
+
+            assert!(scenario.is_valid().is_ok());
 
             assert_eq!(scenario.scenario_id, scenario_id);
 
@@ -95,7 +99,16 @@ impl GamesService {
         )])
     }
 
-    pub fn create_and_join_game(
+    pub fn create_and_join_game_by_game_state(
+        &mut self,
+        requesting_user_info: &UserInfo,
+        game_state: GameState,
+    ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
+        let game_service = GameService::from_game_state(game_state);
+        self.join_and_insert_game(game_service, requesting_user_info)
+    }
+
+    pub fn create_and_join_game_by_scenario(
         &mut self,
         requesting_user_info: &UserInfo,
         scenario_id: &ScenarioId,
@@ -107,19 +120,28 @@ impl GamesService {
             )))
         })?;
 
-        let mut game_service =
-            GameService::from_prototype(scenario, self.ignore_requesting_player_id);
+        let game_service = GameService::from_prototype(scenario, self.ignore_requesting_player_id);
+
+        self.join_and_insert_game(game_service, requesting_user_info)
+    }
+
+    fn join_and_insert_game(
+        &mut self,
+        mut game_service: GameService,
+        user_info: &UserInfo,
+    ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         let game_id = game_service.game_id();
 
         // Later: Allow picking a particular `player_id` to be chosen
         // let player_id = prototype.players().ids().first().copied();
         // let player_id = player_id.ok_or(ServerResponse::Game(game_id, GameResponse::Error(GameError::UnspecifiedError)))?;
 
-        let results = game_service
-            .join_game(requesting_user_info)
-            .map_err(|err| ServerResponse::Game(game_id, GameResponse::Error(err)))?;
+        let results = Self::convert_game_response_to_server_response(
+            game_id,
+            game_service.join_game(user_info),
+        )?;
         self.game_map.insert(game_id, game_service);
-        Self::convert_game_response_to_server_response(game_id, Ok(results))
+        Ok(results)
     }
 
     pub fn join_game(
@@ -209,8 +231,11 @@ impl GamesService {
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match lobby_command {
             LobbyCommand::ListGames => self.create_game_infos(user_info.id),
-            LobbyCommand::CreateGame(scenario_id) => {
-                self.create_and_join_game(user_info, scenario_id)
+            LobbyCommand::CreateAndJoinGameByScenario(scenario_id) => {
+                self.create_and_join_game_by_scenario(user_info, scenario_id)
+            },
+            LobbyCommand::CreateAndJoinGameByGameState(game_state) => {
+                self.create_and_join_game_by_game_state(user_info, game_state.as_ref().clone())
             },
             LobbyCommand::JoinExistingGame(game_id) => self.join_game(user_info, *game_id),
             LobbyCommand::LeaveGame(game_id) => {

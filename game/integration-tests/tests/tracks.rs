@@ -3,7 +3,7 @@ use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::game_state::GameState;
 use shared_domain::map_level::zoning::{ZoningInfo, ZoningType};
 use shared_domain::metrics::NoopMetrics;
-use shared_domain::scenario::{Scenario, USA_SCENARIO_BINCODE};
+use shared_domain::scenario::USA_SCENARIO_BINCODE;
 use shared_domain::supply_chain::SupplyChain;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::tile_track::TileTrack;
@@ -11,16 +11,15 @@ use shared_domain::transport::track_length::TrackLength;
 use shared_domain::transport::track_pathfinding::find_route_to_tile_tracks;
 use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
 use shared_domain::transport::track_type::TrackType;
+use shared_util::compression::load_from_bytes;
 use shared_util::direction_xz::DirectionXZ;
 
 #[test]
 fn test_plan_tracks() {
     let player_id = PlayerId::random();
 
-    let mut game_state = GameState::from_scenario(
-        Scenario::load_from_bytes(USA_SCENARIO_BINCODE).unwrap(),
-        false,
-    );
+    let mut game_state =
+        GameState::from_scenario(load_from_bytes(USA_SCENARIO_BINCODE).unwrap(), false);
 
     // We spawn construction yards in all free spots because this test is about testing track
     // planning, not availability of resources

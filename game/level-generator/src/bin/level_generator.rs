@@ -11,6 +11,7 @@ use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::map_level::zoning::Zoning;
 use shared_domain::scenario::Scenario;
 use shared_domain::{MapId, ScenarioId};
+use shared_util::compression::save_to_bytes;
 
 fn generate_scenario(
     profile: &Profile,
@@ -37,7 +38,7 @@ fn generate_scenario(
         players,
         map_level,
     };
-    let serialized = scenario.save_to_bytes()?;
+    let serialized = save_to_bytes(&scenario)?;
     info!("Serialized map level to {} bytes", serialized.len());
     Ok(serialized)
 }

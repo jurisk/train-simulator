@@ -10,6 +10,7 @@ use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
+use crate::game_state::GameState;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
 use crate::{
@@ -36,7 +37,10 @@ pub enum AuthenticationCommand {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum LobbyCommand {
     ListGames,
-    CreateGame(ScenarioId),
+    // Later: Specify PlayerId
+    CreateAndJoinGameByScenario(ScenarioId),
+    // Later: Specify PlayerId
+    CreateAndJoinGameByGameState(Box<GameState>),
     JoinExistingGame(GameId),
     LeaveGame(GameId),
 }

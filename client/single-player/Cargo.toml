@@ -10,6 +10,7 @@ rust-version.workspace = true
 client-graphics = { path = "../graphics" }
 game-logic = { path = "../../game/logic"}
 shared-domain = { path = "../../shared/domain" }
+shared-util = { path = "../../shared/util" }
 
 bevy.workspace = true
 clap.workspace = true

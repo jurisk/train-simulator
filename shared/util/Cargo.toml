@@ -11,3 +11,5 @@ rust-version.workspace = true
 serde.workspace = true
 fastrand.workspace = true
 bevy_math.workspace = true
+bincode.workspace = true
+flate2.workspace = true

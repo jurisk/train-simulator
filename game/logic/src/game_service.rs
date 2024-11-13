@@ -48,6 +48,14 @@ impl GameService {
     }
 
     #[must_use]
+    pub fn from_game_state(game_state: GameState) -> Self {
+        Self {
+            state:        game_state,
+            user_players: BiMap::new(),
+        }
+    }
+
+    #[must_use]
     pub fn game_id(&self) -> GameId {
         self.state.game_id()
     }
@@ -316,6 +324,7 @@ impl GameService {
         requesting_user_info: &UserInfo,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         // Later: Don't allow joining multiple games at once
+        // Later: Allow selecting a specific PlayerId to join
 
         let user_id = requesting_user_info.id;
         if let Some(player_id) = self.first_free_player_id() {

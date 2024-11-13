@@ -1,8 +1,3 @@
-use std::io::{Read, Write};
-
-use flate2::Compression;
-use flate2::read::GzDecoder;
-use flate2::write::GzEncoder;
 use serde::{Deserialize, Serialize};
 
 use crate::map_level::map_level::MapLevel;
@@ -25,29 +20,6 @@ pub struct Scenario {
 
 impl Scenario {
     #[expect(clippy::missing_errors_doc)]
-    pub fn load_from_bytes(data: &[u8]) -> Result<Self, Box<dyn std::error::Error>> {
-        let mut decoder = GzDecoder::new(data);
-        let mut decompressed_data = Vec::new();
-        decoder.read_to_end(&mut decompressed_data)?;
-
-        let scenario: Self = bincode::deserialize(&decompressed_data)?;
-        scenario.is_valid()?;
-
-        Ok(scenario)
-    }
-
-    #[expect(clippy::missing_errors_doc)]
-    pub fn save_to_bytes(&self) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-        let serialized_data = bincode::serialize(self)?;
-
-        let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
-        encoder.write_all(&serialized_data)?;
-        let compressed_data = encoder.finish()?;
-
-        Ok(compressed_data)
-    }
-
-    #[expect(clippy::missing_errors_doc)]
     pub fn is_valid(&self) -> Result<(), String> {
         self.map_level.is_valid()?;
         Ok(())
@@ -56,13 +28,16 @@ impl Scenario {
 
 #[cfg(test)]
 mod tests {
+    use shared_util::compression;
+
     use super::*;
 
     #[test]
     fn test_scenarios_can_be_deserialised() {
         let scenarios = [USA_SCENARIO_BINCODE, EUROPE_SCENARIO_BINCODE];
         for scenario in scenarios {
-            assert!(Scenario::load_from_bytes(scenario).is_ok());
+            let read: Scenario = compression::load_from_bytes(scenario).unwrap();
+            assert!(read.is_valid().is_ok());
         }
     }
 }

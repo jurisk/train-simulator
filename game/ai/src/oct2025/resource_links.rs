@@ -97,7 +97,11 @@ impl ResourceLinkState {
         }
     }
 
-    #[expect(clippy::collapsible_else_if)]
+    #[expect(
+        clippy::collapsible_else_if,
+        clippy::cast_possible_truncation,
+        clippy::cast_sign_loss
+    )]
     #[must_use]
     pub(crate) fn commands(
         &mut self,
