@@ -160,21 +160,11 @@ impl GameState {
     }
 
     pub fn advance_time_diff(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
-        self.advance_time_diff_internal(diff, metrics);
-        self.time = self.time + diff;
-    }
-
-    fn advance_time_diff_internal(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
         // Later: If game is paused then no need to advance anything
         self.buildings.advance_time_diff(diff);
         self.transports
             .advance_time_diff(diff, &mut self.buildings, metrics);
-    }
-
-    pub fn advance_time(&mut self, time: GameTime, metrics: &impl Metrics) {
-        let diff = time - self.time;
-        self.advance_time_diff_internal(diff, metrics);
-        self.time = time;
+        self.time = self.time + diff;
         self.time_steps += 1;
     }
 

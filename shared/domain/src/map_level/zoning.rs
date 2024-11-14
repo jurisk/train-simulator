@@ -119,10 +119,19 @@ impl From<ZoningFlattened> for Zoning {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Zoning {
     infos: HashMap<ZoningId, ZoningInfo>,
     grid:  GridXZ<TileCoordsXZ, Option<ZoningId>>,
+}
+
+#[expect(clippy::missing_fields_in_debug)]
+impl Debug for Zoning {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Zoning")
+            .field("infos.len()", &self.infos.len())
+            .finish()
+    }
 }
 
 impl Zoning {

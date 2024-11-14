@@ -7,7 +7,7 @@ use client_single_player::run;
 #[expect(clippy::struct_field_names)]
 struct Args {
     #[clap(short, long)]
-    player_id:   Option<String>,
+    user_id:     Option<String>,
     #[clap(short, long)]
     scenario_id: Option<String>,
     #[clap(short, long)]
@@ -16,13 +16,13 @@ struct Args {
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen::prelude::wasm_bindgen]
-pub fn start(player_id: &str, scenario_id: &str, game_id: &str) {
-    run_with_string(player_id, scenario_id, game_id);
+pub fn start(user_id: &str, scenario_id: &str, game_id: &str) {
+    run_with_string(user_id, scenario_id, game_id);
 }
 
-fn run_with_string(player_id: &str, scenario_id: &str, game_id: &str) {
+fn run_with_string(user_id: &str, scenario_id: &str, game_id: &str) {
     let access_token = "valid-token";
-    let game_launch_params = GameLaunchParams::new(player_id, access_token, scenario_id, game_id);
+    let game_launch_params = GameLaunchParams::new(user_id, access_token, scenario_id, game_id);
 
     run(game_launch_params);
 }
@@ -37,7 +37,7 @@ fn main() {
 fn main() {
     let args = Args::parse();
     run_with_string(
-        &args.player_id.unwrap_or_default(),
+        &args.user_id.unwrap_or_default(),
         &args.scenario_id.unwrap_or_default(),
         &args.game_id.unwrap_or_default(),
     );

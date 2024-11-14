@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use log::warn;
 use shared_domain::client_command::{GameCommand, LobbyCommand};
 use shared_domain::game_state::GameState;
-use shared_domain::game_time::GameTime;
+use shared_domain::game_time::GameTimeDiff;
 use shared_domain::metrics::Metrics;
 use shared_domain::scenario::{EUROPE_SCENARIO_BINCODE, Scenario, USA_SCENARIO_BINCODE};
 use shared_domain::server_response::{
@@ -60,9 +60,9 @@ impl GamesService {
             .unwrap_or_default()
     }
 
-    pub fn advance_times(&mut self, time: GameTime, metrics: &impl Metrics) {
+    pub fn advance_time_diffs(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
         for game_service in self.game_map.values_mut() {
-            game_service.advance_time(time, metrics);
+            game_service.advance_time_diff(diff, metrics);
         }
     }
 
@@ -103,15 +103,17 @@ impl GamesService {
         &mut self,
         requesting_user_info: &UserInfo,
         game_state: GameState,
+        player_id: Option<PlayerId>,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         let game_service = GameService::from_game_state(game_state);
-        self.join_and_insert_game(game_service, requesting_user_info)
+        self.join_and_insert_game(game_service, requesting_user_info, player_id)
     }
 
     pub fn create_and_join_game_by_scenario(
         &mut self,
         requesting_user_info: &UserInfo,
         scenario_id: &ScenarioId,
+        player_id: Option<PlayerId>,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         // Later: Don't allow starting a game if is already a part of another game?
         let scenario = self.game_scenarios.get(scenario_id).ok_or_else(|| {
@@ -122,24 +124,20 @@ impl GamesService {
 
         let game_service = GameService::from_prototype(scenario, self.ignore_requesting_player_id);
 
-        self.join_and_insert_game(game_service, requesting_user_info)
+        self.join_and_insert_game(game_service, requesting_user_info, player_id)
     }
 
     fn join_and_insert_game(
         &mut self,
         mut game_service: GameService,
         user_info: &UserInfo,
+        player_id: Option<PlayerId>,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         let game_id = game_service.game_id();
 
-        // Later: Allow picking a particular `player_id` to be chosen
-        // let player_id = prototype.players().ids().first().copied();
-        // let player_id = player_id.ok_or(ServerResponse::Game(game_id, GameResponse::Error(GameError::UnspecifiedError)))?;
+        let response = game_service.join_game(user_info, player_id);
 
-        let results = Self::convert_game_response_to_server_response(
-            game_id,
-            game_service.join_game(user_info),
-        )?;
+        let results = Self::convert_game_response_to_server_response(game_id, response)?;
         self.game_map.insert(game_id, game_service);
         Ok(results)
     }
@@ -148,9 +146,13 @@ impl GamesService {
         &mut self,
         user_info: &UserInfo,
         game_id: GameId,
+        player_id: Option<PlayerId>,
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         let game_service = self.lookup_game_service_mut(game_id)?;
-        Self::convert_game_response_to_server_response(game_id, game_service.join_game(user_info))
+        Self::convert_game_response_to_server_response(
+            game_id,
+            game_service.join_game(user_info, player_id),
+        )
     }
 
     fn convert_game_response_to_server_response(
@@ -231,13 +233,19 @@ impl GamesService {
     ) -> Result<Vec<ServerResponseWithAddress>, Box<ServerResponse>> {
         match lobby_command {
             LobbyCommand::ListGames => self.create_game_infos(user_info.id),
-            LobbyCommand::CreateAndJoinGameByScenario(scenario_id) => {
-                self.create_and_join_game_by_scenario(user_info, scenario_id)
+            LobbyCommand::CreateAndJoinGameByScenario(scenario_id, player_id) => {
+                self.create_and_join_game_by_scenario(user_info, scenario_id, *player_id)
             },
-            LobbyCommand::CreateAndJoinGameByGameState(game_state) => {
-                self.create_and_join_game_by_game_state(user_info, game_state.as_ref().clone())
+            LobbyCommand::CreateAndJoinGameByGameState(game_state, player_id) => {
+                self.create_and_join_game_by_game_state(
+                    user_info,
+                    game_state.as_ref().clone(),
+                    *player_id,
+                )
             },
-            LobbyCommand::JoinExistingGame(game_id) => self.join_game(user_info, *game_id),
+            LobbyCommand::JoinExistingGame(game_id, player_id) => {
+                self.join_game(user_info, *game_id, *player_id)
+            },
             LobbyCommand::LeaveGame(game_id) => {
                 // Later: Not sure how this should even work if the player has buildings and transport owned in the game?
                 let game_service = self.lookup_game_service_mut(*game_id)?;

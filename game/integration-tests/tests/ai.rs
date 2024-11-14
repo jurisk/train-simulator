@@ -13,7 +13,7 @@ use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};
 use shared_domain::game_state::{GameState, GameStateFlattened};
-use shared_domain::game_time::{GameTime, GameTimeDiff};
+use shared_domain::game_time::GameTimeDiff;
 use shared_domain::metrics::NoopMetrics;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::server_response::{AddressEnvelope, GameResponse, ServerResponse, UserInfo};
@@ -31,7 +31,7 @@ fn create_and_join(games_service: &mut GamesService, user_id: UserId) -> (GameId
     };
 
     let create_and_join_response = games_service
-        .create_and_join_game_by_scenario(&user_info, ScenarioId::all().first().unwrap())
+        .create_and_join_game_by_scenario(&user_info, ScenarioId::all().first().unwrap(), None)
         .unwrap();
 
     let response = create_and_join_response.first().unwrap();
@@ -49,7 +49,7 @@ fn join_game(games_service: &mut GamesService, game_id: GameId, user_id: UserId)
         name: UserName::new(format!("AI {user_id}")),
     };
 
-    let join_response = games_service.join_game(&user_info, game_id).unwrap();
+    let join_response = games_service.join_game(&user_info, game_id, None).unwrap();
 
     let response = join_response.first().unwrap();
     let ServerResponse::Game(_game_id, GameResponse::GameJoined(player_id, _)) = response.response
@@ -248,8 +248,6 @@ where
 
     let game_service = games_service.get_game_service_mut(game_id).unwrap();
 
-    let mut time = GameTime::new();
-
     let game_state = game_service.game_state();
     let mut player_ais: HashMap<_, _> = vec![player_id_1, player_id_2]
         .into_iter()
@@ -276,8 +274,8 @@ where
             run_ai_commands(game_service, &mut player_ais, player_id);
         }
 
-        time = time + GameTimeDiff::from_seconds(0.1);
-        game_service.advance_time(time, &NoopMetrics::default());
+        let diff = GameTimeDiff::from_seconds(0.1);
+        game_service.advance_time_diff(diff, &NoopMetrics::default());
 
         steps += 1;
     }

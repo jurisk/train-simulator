@@ -60,6 +60,7 @@ pub struct GameLaunchParams {
     pub game_id:      Option<GameId>,
     pub scenario_id:  Option<ScenarioId>,
     pub game_state:   Option<GameState>,
+    pub player_id:    Option<PlayerId>,
 }
 
 impl GameLaunchParams {
@@ -83,6 +84,7 @@ impl GameLaunchParams {
             game_id,
             scenario_id,
             game_state: None,
+            player_id: None,
         }
     }
 }

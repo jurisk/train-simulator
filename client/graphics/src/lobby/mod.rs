@@ -83,13 +83,17 @@ fn handle_available_games(
                         None => {
                             LobbyCommand::CreateAndJoinGameByScenario(
                                 game_launch_params.scenario_id.clone().unwrap_or_default(),
+                                None,
                             )
                         },
-                        Some(game_id) => LobbyCommand::JoinExistingGame(game_id),
+                        Some(game_id) => LobbyCommand::JoinExistingGame(game_id, None),
                     }
                 },
                 Some(game_state) => {
-                    LobbyCommand::CreateAndJoinGameByGameState(Box::new(game_state.clone()))
+                    LobbyCommand::CreateAndJoinGameByGameState(
+                        Box::new(game_state.clone()),
+                        game_launch_params.player_id,
+                    )
                 },
             };
 

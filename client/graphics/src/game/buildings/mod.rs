@@ -160,6 +160,7 @@ fn handle_buildings_or_tracks_changed(
                         game_state.players(),
                     );
                 },
+                // TODO HIGH: When loading saved game, military buildings don't appear!?
                 GameResponse::MilitaryBuildingAdded(building_info) => {
                     game_state
                         .building_state_mut()

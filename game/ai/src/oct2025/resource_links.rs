@@ -133,7 +133,7 @@ impl ResourceLinkState {
                 tracks_built,
             } => {
                 if let Some((source, target)) = tracks_pending.pop() {
-                    // TODO HIGH: Save the "length" in order to assess how many trains we need?
+                    // TODO HIGH: We still fail to sometimes build tracks... Even if we can build them later. Perhaps we should only consider the tracks as built when we have confirmed a route exists?
                     if let Some((route, length)) = plan_tracks(
                         player_id,
                         DirectionalEdge::exit_from(source),

@@ -21,6 +21,7 @@ impl GameTimeDiff {
     }
 }
 
+// Later: Consider making discrete for better predictability and better suitability for AI? But we want smooth movement of transports.
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, PartialEq)]
 pub struct GameTime(f32);
 

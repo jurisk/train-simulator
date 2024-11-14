@@ -47,11 +47,11 @@ fn main() {
     );
 }
 
-fn run_with_string(url: &str, player_id: &str, map_id: &str, game_id: &str) {
+fn run_with_string(url: &str, user_id: &str, map_id: &str, game_id: &str) {
     let parsed_url =
         url::Url::parse(url).unwrap_or_else(|err| panic!("Invalid URL {url:?}: {err}"));
     let access_token = "valid-token";
-    let game_launch_params = GameLaunchParams::new(player_id, access_token, map_id, game_id);
+    let game_launch_params = GameLaunchParams::new(user_id, access_token, map_id, game_id);
 
     run_with_url(parsed_url, game_launch_params);
 }

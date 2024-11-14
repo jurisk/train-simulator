@@ -14,12 +14,12 @@
         const currentUrl = window.location;
 
         const searchParams = new URL(currentUrl).searchParams;
-        const playerId = searchParams.get('playerId')  || '';
+        const userId = searchParams.get('userId')  || '';
         const scenarioId = searchParams.get('scenarioId')  || '';
         const gameId = searchParams.get('gameId')  || '';
 
-        console.log(`Starting client: playerId: ${playerId}, scenarioId: ${scenarioId}, gameId: ${gameId}`);
-        start(playerId, scenarioId, gameId);
+        console.log(`Starting client: userId: ${userId}, scenarioId: ${scenarioId}, gameId: ${gameId}`);
+        start(userId, scenarioId, gameId);
     </script>
     <div>
         ESDF to move

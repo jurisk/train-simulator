@@ -14,8 +14,8 @@ use crate::game_state::GameState;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
 use crate::{
-    ClientId, GameId, IndustryBuildingId, MilitaryBuildingId, ScenarioId, StationId, TrackId,
-    TransportId, UserId,
+    ClientId, GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, ScenarioId, StationId,
+    TrackId, TransportId, UserId,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -37,11 +37,9 @@ pub enum AuthenticationCommand {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum LobbyCommand {
     ListGames,
-    // Later: Specify PlayerId
-    CreateAndJoinGameByScenario(ScenarioId),
-    // Later: Specify PlayerId
-    CreateAndJoinGameByGameState(Box<GameState>),
-    JoinExistingGame(GameId),
+    CreateAndJoinGameByScenario(ScenarioId, Option<PlayerId>),
+    CreateAndJoinGameByGameState(Box<GameState>, Option<PlayerId>),
+    JoinExistingGame(GameId, Option<PlayerId>),
     LeaveGame(GameId),
 }
 

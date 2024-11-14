@@ -19,7 +19,7 @@ use log::{Level, debug, error, info, log};
 use networking_shared::{EncodedClientMsg, EncodedServerMsg, GameChannel};
 use shared_domain::ClientId;
 use shared_domain::client_command::{ClientCommand, ClientCommandWithClientId};
-use shared_domain::game_time::GameTime;
+use shared_domain::game_time::GameTimeDiff;
 use shared_domain::server_response::{GameResponse, ServerResponse, ServerResponseWithClientIds};
 use web_time::Duration;
 
@@ -135,8 +135,8 @@ fn process_client_command_with_client_id_events(
         }
     }
 
-    server_state.advance_times(
-        GameTime::from_seconds(time.elapsed_seconds()),
+    server_state.advance_time_diffs(
+        GameTimeDiff::from_seconds(time.delta_seconds()),
         metrics.as_ref(),
     );
     for response in server_state.sync_games() {

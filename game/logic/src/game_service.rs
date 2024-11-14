@@ -8,7 +8,7 @@ use shared_domain::building::station_info::StationInfo;
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::client_command::{DemolishSelector, GameCommand};
 use shared_domain::game_state::GameState;
-use shared_domain::game_time::GameTime;
+use shared_domain::game_time::GameTimeDiff;
 use shared_domain::metrics::Metrics;
 use shared_domain::scenario::Scenario;
 use shared_domain::server_response::{
@@ -273,8 +273,8 @@ impl GameService {
         }
     }
 
-    pub fn advance_time(&mut self, time: GameTime, metrics: &impl Metrics) {
-        self.state.advance_time(time, metrics);
+    pub fn advance_time_diff(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
+        self.state.advance_time_diff(diff, metrics);
     }
 
     #[must_use]
@@ -322,12 +322,16 @@ impl GameService {
     pub(crate) fn join_game(
         &mut self,
         requesting_user_info: &UserInfo,
+        player_id: Option<PlayerId>,
     ) -> Result<Vec<GameResponseWithAddress>, GameError> {
         // Later: Don't allow joining multiple games at once
-        // Later: Allow selecting a specific PlayerId to join
 
         let user_id = requesting_user_info.id;
-        if let Some(player_id) = self.first_free_player_id() {
+        let player_id = match player_id {
+            None => self.first_free_player_id(),
+            Some(player_id) => Some(player_id),
+        };
+        if let Some(player_id) = player_id {
             self.user_players.insert(user_id, player_id);
 
             Ok(vec![

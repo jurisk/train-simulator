@@ -10,7 +10,7 @@ use shared_util::random::choose;
 
 use crate::oct2025::industries::IndustryState;
 
-#[expect(clippy::unwrap_used)]
+#[expect(clippy::unwrap_used, clippy::items_after_statements)]
 pub(crate) fn select_station_building(
     owner_id: PlayerId,
     game_state: &GameState,
@@ -44,6 +44,8 @@ pub(crate) fn select_station_building(
                                 .map_level()
                                 .can_build_for_coverage(&next_tile_coverage)
                                 .is_ok();
+                            let valid_zoning =
+                                game_state.map_level().zoning().free_at_tile(next_tile);
 
                             let within_range = costs.costs.keys().all(|providing_building_id| {
                                 let providing_building = game_state
@@ -59,9 +61,13 @@ pub(crate) fn select_station_building(
                                     .industry_type()
                                     .supply_range_in_tiles()
                                     .unwrap();
-                                distance <= supply_range_in_tiles
+
+                                // Adding some more extra range to avoid the situation where we cannot build rails connecting the station as these rails are out of range
+                                const EXTRA_RANGE_ALLOWANCE: i32 = 1;
+
+                                distance + EXTRA_RANGE_ALLOWANCE <= supply_range_in_tiles
                             });
-                            valid_terrain && free_tile && within_range
+                            valid_terrain && free_tile && within_range && valid_zoning
                         })
                 },
                 Err(_) => false,
