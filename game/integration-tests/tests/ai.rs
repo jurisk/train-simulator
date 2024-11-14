@@ -7,7 +7,7 @@ use game_ai::ArtificialIntelligenceState;
 use game_ai::oct2025::Oct2025ArtificialIntelligenceState;
 use game_logic::game_service::GameService;
 use game_logic::games_service::GamesService;
-use log::error;
+use log::{error, info};
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::cargo_amount::CargoAmount;
@@ -19,10 +19,6 @@ use shared_domain::resource_type::ResourceType;
 use shared_domain::server_response::{AddressEnvelope, GameResponse, ServerResponse, UserInfo};
 use shared_domain::{GameId, PlayerId, ScenarioId, UserId, UserName};
 use shared_util::compression::save_to_bytes;
-
-fn init_logger() {
-    let _ = env_logger::builder().is_test(true).try_init();
-}
 
 fn create_and_join(games_service: &mut GamesService, user_id: UserId) -> (GameId, PlayerId) {
     let user_info = UserInfo {
@@ -164,7 +160,7 @@ fn run_ai_commands(
     }
 }
 
-#[test]
+#[test_log::test]
 fn ai_until_final_goods_built_oct2025() {
     ai_until_final_goods_built(|player_id: PlayerId, game_state: &GameState| {
         Box::new(Oct2025ArtificialIntelligenceState::new(
@@ -239,8 +235,6 @@ fn ai_until_final_goods_built<F>(factory: F)
 where
     F: Fn(PlayerId, &GameState) -> Box<dyn ArtificialIntelligenceState>,
 {
-    init_logger();
-
     let mut games_service = GamesService::new(false);
 
     let (game_id, player_id_1) = create_and_join(&mut games_service, UserId::random());
@@ -265,7 +259,7 @@ where
             .all(|player_id| end_condition(game_state, *player_id))
         {
             print_end_state(&player_ais, game_service.game_state());
-            println!("AI finished in {steps} steps");
+            info!("AI finished in {steps} steps");
             return;
         }
 
@@ -292,6 +286,4 @@ where
     panic!("AI did not finish in {MAX_STEPS} steps, game state dumped to {output_path}");
 
     // TODO: We should also dump - and later read - AI state for better debugging
-
-    // TODO HIGH: Learn to load the game from saved game state
 }

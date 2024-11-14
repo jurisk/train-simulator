@@ -113,7 +113,7 @@ fn ai_step(
 
     if let Some(commands) = commands {
         for command in commands {
-            info!("AI chose command: {:?}", command);
+            info!("AI chose command: {command:?}");
             client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                 game_state.game_id(),
                 command,

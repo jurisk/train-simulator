@@ -1,4 +1,4 @@
-use log::trace;
+use log::{trace, warn};
 use shared_domain::game_state::GameState;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::movement_orders::{MovementOrder, MovementOrders};
@@ -18,10 +18,10 @@ pub(crate) fn purchase_transport(
     to_industry_state: &IndustryState,
 ) -> Option<(StationId, TransportInfo)> {
     let from_station = lookup_station_id(from_industry_state).tap_none(|| {
-        log::warn!("Failed to find station for industry {from_industry_state:?}",);
+        warn!("Failed to find station for industry {from_industry_state:?}",);
     })?;
     let to_station = lookup_station_id(to_industry_state).tap_none(|| {
-        log::warn!("Failed to find station for industry {to_industry_state:?}",);
+        warn!("Failed to find station for industry {to_industry_state:?}",);
     })?;
 
     let mut movement_orders = MovementOrders::one(MovementOrder::stop_at_station(from_station));
@@ -33,7 +33,7 @@ pub(crate) fn purchase_transport(
     let transport_location = from_station_info
         .transport_location_at_station(tile_track.tile, tile_track.pointing_in)
         .tap_none(|| {
-            log::warn!("Failed to find transport location for station {from_station_info:?}",);
+            warn!("Failed to find transport location for station {from_station_info:?}",);
         })?;
 
     let transport_info = TransportInfo::new(

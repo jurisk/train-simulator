@@ -119,6 +119,17 @@ fn handle_game_state_snapshot(
                             game_state.players(),
                         );
                     }
+
+                    for military_building in game_state.building_state().all_military_buildings() {
+                        create_military_building(
+                            military_building,
+                            &mut commands,
+                            &mut materials,
+                            game_assets.as_ref(),
+                            game_state.map_level(),
+                            game_state.players(),
+                        );
+                    }
                 },
                 _ => {},
             }
@@ -160,7 +171,6 @@ fn handle_buildings_or_tracks_changed(
                         game_state.players(),
                     );
                 },
-                // TODO HIGH: When loading saved game, military buildings don't appear!?
                 GameResponse::MilitaryBuildingAdded(building_info) => {
                     game_state
                         .building_state_mut()

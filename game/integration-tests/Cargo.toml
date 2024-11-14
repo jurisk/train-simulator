@@ -12,5 +12,6 @@ game-logic = { path = "../logic" }
 shared-domain = { path = "../../shared/domain" }
 shared-util = { path = "../../shared/util" }
 log.workspace = true
-env_logger.workspace = true
 
+[dev-dependencies]
+test-log.workspace = true

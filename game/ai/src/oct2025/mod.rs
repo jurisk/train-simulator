@@ -7,7 +7,7 @@ mod transports;
 
 use std::fmt::Debug;
 
-use log::{error, trace};
+use log::{error, info, trace};
 use shared_domain::PlayerId;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::client_command::GameCommand;
@@ -62,6 +62,7 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
             let result = invoke_to_finished(|| goal.commands(self.player_id, game_state, metrics));
             match result {
                 GoalResult::SendCommands(commands) => {
+                    info!("AI sending commands: {commands:?}");
                     return Some(commands);
                 },
                 GoalResult::RepeatInvocation => {
@@ -85,7 +86,7 @@ impl ArtificialIntelligenceState for Oct2025ArtificialIntelligenceState {
     }
 
     fn notify_of_response(&mut self, response: &GameResponse) {
-        trace!("AI received response: {response:?}");
+        info!("AI received response: {response:?}");
         for goal in &mut self.pending_goals {
             goal.notify_of_response(response);
         }

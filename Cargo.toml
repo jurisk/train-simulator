@@ -27,13 +27,13 @@ serde_json = { version = "1.0" }
 uuid = { version = "1.8", features = ["v4", "fast-rng"] }
 fastrand = "2.1"
 log = "0.4"
-env_logger = "0.11.5"
 bimap = "0.6"
 bincode = "1.3"
 flate2 = "1.0"
 bigdecimal = "0.4"
 pathfinding = "4.10"
 itertools = "0.13"
+test-log = "0.2"
 
 # Later:    Consider using Frame pacing:
 #           https://github.com/aevyrie/bevy_framepace
