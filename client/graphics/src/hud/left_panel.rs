@@ -56,27 +56,32 @@ fn buildings_info_panel(
     camera_control_events: &mut EventWriter<CameraControlEvent>,
 ) {
     ui.heading("Industry");
-    for building in buildings.all_industry_buildings() {
-        if building.owner_id() == player_id {
-            let label = format!(
-                "{:?} {:?}",
-                building.reference_tile(),
-                building.industry_type()
-            );
-            if ui.button(label).clicked() {
-                camera_control_events
-                    .send(CameraControlEvent::FocusOnTile(building.reference_tile()));
-            }
+    for building in buildings.find_industry_buildings_by_owner(player_id) {
+        let label = format!(
+            "{:?} {:?}",
+            building.reference_tile(),
+            building.industry_type()
+        );
+        if ui.button(label).clicked() {
+            camera_control_events.send(CameraControlEvent::FocusOnTile(building.reference_tile()));
         }
     }
     ui.heading("Stations");
-    for building in buildings.all_stations() {
-        if building.owner_id() == player_id {
-            let label = format!("{:?} {:?}", building.reference_tile(), building.cargo());
-            if ui.button(label).clicked() {
-                camera_control_events
-                    .send(CameraControlEvent::FocusOnTile(building.reference_tile()));
-            }
+    for building in buildings.find_stations_by_owner(player_id) {
+        let label = format!("{:?} {:?}", building.reference_tile(), building.cargo());
+        if ui.button(label).clicked() {
+            camera_control_events.send(CameraControlEvent::FocusOnTile(building.reference_tile()));
+        }
+    }
+    ui.heading("Military");
+    for building in buildings.find_military_buildings_by_owner(player_id) {
+        let label = format!(
+            "{:?} {:?}",
+            building.reference_tile(),
+            building.military_building_type(),
+        );
+        if ui.button(label).clicked() {
+            camera_control_events.send(CameraControlEvent::FocusOnTile(building.reference_tile()));
         }
     }
 }

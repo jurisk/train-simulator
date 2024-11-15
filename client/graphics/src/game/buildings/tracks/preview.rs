@@ -1,5 +1,7 @@
 use bevy::color::palettes::basic::BLUE;
-use bevy::prelude::{ButtonInput, DetectChanges, Gizmos, MouseButton, Res, ResMut, Resource, info};
+use bevy::prelude::{
+    ButtonInput, DetectChanges, Gizmos, MouseButton, Res, ResMut, Resource, debug,
+};
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::map_level::terrain::Terrain;
 
@@ -14,7 +16,7 @@ pub(crate) struct TrackPreviewResource(pub Vec<TrackInfo>);
 
 impl TrackPreviewResource {
     pub fn take(&mut self) -> Vec<TrackInfo> {
-        info!("TrackPreviewResource::take {}", self.0.len());
+        debug!("TrackPreviewResource::take {}", self.0.len());
         std::mem::take(&mut self.0)
     }
 
@@ -23,7 +25,7 @@ impl TrackPreviewResource {
     }
 
     pub fn update(&mut self, planned: Vec<TrackInfo>) {
-        info!("TrackPreviewResource::update {}", planned.len());
+        debug!("TrackPreviewResource::update {}", planned.len());
         self.0 = planned;
     }
 }

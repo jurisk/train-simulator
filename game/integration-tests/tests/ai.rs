@@ -162,6 +162,7 @@ fn run_ai_commands(
 
 #[test_log::test]
 fn ai_until_final_goods_built_oct2025() {
+    info!("Starting AI test Oct 2025...");
     ai_until_final_goods_built(|player_id: PlayerId, game_state: &GameState| {
         Box::new(Oct2025ArtificialIntelligenceState::new(
             player_id, game_state,
@@ -227,8 +228,8 @@ fn print_end_state(
     }
 }
 
-// TODO HIGH: The test is flaky as sometimes the supply chains fail. Once we fix the issue, we could optimise it to something lower, perhaps 10_000 - if more trains get run.
-const MAX_STEPS: usize = 20_000;
+// TODO HIGH: The test is flaky as sometimes the supply chains fail: tracks did not get built (not sure why), or stations don't get built as there is no space for them due to tracks crowding industries...
+const MAX_STEPS: usize = 10_000;
 
 #[expect(clippy::similar_names)]
 fn ai_until_final_goods_built<F>(factory: F)
@@ -259,7 +260,7 @@ where
             .all(|player_id| end_condition(game_state, *player_id))
         {
             print_end_state(&player_ais, game_service.game_state());
-            info!("AI finished in {steps} steps");
+            println!("AI finished in {steps} steps");
             return;
         }
 

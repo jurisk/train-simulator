@@ -8,6 +8,7 @@ use shared_domain::{PlayerId, UserId};
 use shared_util::compression::load_from_bytes;
 
 fn parse_player_id(game_state: &GameState, value: Option<String>) -> Option<PlayerId> {
+    // TODO: This doesn't actually get the n-th player because `infos_cloned()` returns random results, we should instead get sorted PlayerId-s and pick from those
     value
         .and_then(|s| s.parse::<usize>().ok())
         .and_then(|idx| game_state.players().infos_cloned().get(idx).cloned())

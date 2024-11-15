@@ -237,11 +237,33 @@ impl BuildingState {
     }
 
     #[must_use]
-    pub fn find_stations_by_owner(&self, player_id: PlayerId) -> Vec<&StationInfo> {
+    pub fn find_stations_by_owner(
+        &self,
+        player_id: PlayerId,
+    ) -> impl IntoIterator<Item = &StationInfo> {
         self.all_stations()
             .into_iter()
-            .filter(|station| station.owner_id() == player_id)
-            .collect()
+            .filter(move |station| station.owner_id() == player_id)
+    }
+
+    #[must_use]
+    pub fn find_industry_buildings_by_owner(
+        &self,
+        player_id: PlayerId,
+    ) -> impl IntoIterator<Item = &IndustryBuildingInfo> {
+        self.all_industry_buildings()
+            .into_iter()
+            .filter(move |building| building.owner_id() == player_id)
+    }
+
+    #[must_use]
+    pub fn find_military_buildings_by_owner(
+        &self,
+        player_id: PlayerId,
+    ) -> impl IntoIterator<Item = &MilitaryBuildingInfo> {
+        self.all_military_buildings()
+            .into_iter()
+            .filter(move |building| building.owner_id() == player_id)
     }
 
     #[must_use]
