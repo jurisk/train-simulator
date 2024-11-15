@@ -8,7 +8,7 @@ use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::{PlayerId, StationId};
 use shared_util::random::choose;
 
-use crate::oct2025::industries::IndustryState;
+use crate::oct2025::industries::{BuildIndustry, BuildIndustryState};
 
 #[expect(clippy::unwrap_used, clippy::items_after_statements)]
 pub(crate) fn select_station_building(
@@ -78,11 +78,11 @@ pub(crate) fn select_station_building(
     choose(&options).cloned()
 }
 
-pub(crate) fn lookup_station_id(industry_state: &IndustryState) -> Option<StationId> {
-    if let IndustryState::StationBuilt(_industry_building_id, _location, station_id) =
-        industry_state
+pub(crate) fn lookup_station_id(industry_state: &BuildIndustry) -> Option<StationId> {
+    if let BuildIndustryState::StationBuilt(_industry_building_id, _location, station_id) =
+        industry_state.state
     {
-        Some(*station_id)
+        Some(station_id)
     } else {
         trace!("No station built for {industry_state:?}");
         None
@@ -90,7 +90,7 @@ pub(crate) fn lookup_station_id(industry_state: &IndustryState) -> Option<Statio
 }
 
 fn lookup_station<'a>(
-    industry_state: &'a IndustryState,
+    industry_state: &'a BuildIndustry,
     game_state: &'a GameState,
 ) -> Option<&'a StationInfo> {
     let station_id = lookup_station_id(industry_state)?;
@@ -98,7 +98,7 @@ fn lookup_station<'a>(
 }
 
 pub(crate) fn exit_tile_tracks(
-    industry_state: &IndustryState,
+    industry_state: &BuildIndustry,
     game_state: &GameState,
 ) -> Option<Vec<TileTrack>> {
     lookup_station(industry_state, game_state).map(StationInfo::station_exit_tile_tracks)

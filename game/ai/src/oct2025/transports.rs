@@ -7,15 +7,15 @@ use shared_domain::transport::transport_type::TransportType;
 use shared_domain::{PlayerId, StationId, TransportId};
 use shared_util::tap::TapNone;
 
-use crate::oct2025::industries::IndustryState;
+use crate::oct2025::industries::BuildIndustry;
 use crate::oct2025::stations::lookup_station_id;
 
 pub(crate) fn purchase_transport(
     player_id: PlayerId,
     game_state: &GameState,
-    from_industry_state: &IndustryState,
+    from_industry_state: &BuildIndustry,
     resource_type: ResourceType,
-    to_industry_state: &IndustryState,
+    to_industry_state: &BuildIndustry,
 ) -> Option<(StationId, TransportInfo)> {
     let from_station = lookup_station_id(from_industry_state).tap_none(|| {
         warn!("Failed to find station for industry {from_industry_state:?}",);

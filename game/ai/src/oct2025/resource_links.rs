@@ -14,7 +14,7 @@ use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_
 use shared_domain::{PlayerId, TransportId};
 
 use crate::oct2025::GoalResult;
-use crate::oct2025::industries::IndustryState;
+use crate::oct2025::industries::BuildIndustry;
 use crate::oct2025::stations::exit_tile_tracks;
 use crate::oct2025::transports::purchase_transport;
 
@@ -36,8 +36,8 @@ pub(crate) enum ResourceLinkState {
 
 fn track_pairs(
     game_state: &GameState,
-    from_industry_state: &IndustryState,
-    to_industry_state: &IndustryState,
+    from_industry_state: &BuildIndustry,
+    to_industry_state: &BuildIndustry,
 ) -> Option<Vec<(TileTrack, TileTrack)>> {
     let from_exit_tile_tracks = exit_tile_tracks(from_industry_state, game_state)?;
     let to_exit_tile_tracks = exit_tile_tracks(to_industry_state, game_state)?;
@@ -105,9 +105,9 @@ impl ResourceLinkState {
     #[must_use]
     pub(crate) fn commands(
         &mut self,
-        from_industry_state: &IndustryState,
+        from_industry_state: &BuildIndustry,
         resource: ResourceType,
-        to_industry_state: &IndustryState,
+        to_industry_state: &BuildIndustry,
         player_id: PlayerId,
         game_state: &GameState,
         metrics: &dyn Metrics,

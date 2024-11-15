@@ -9,21 +9,20 @@ use shared_domain::supply_chain::SupplyChain;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::{IndustryBuildingId, PlayerId};
 
-use crate::oct2025::industries::IndustryState;
+use crate::oct2025::industries::{BuildIndustry, BuildIndustryState};
 use crate::oct2025::resource_links::{ResourceLinkState, resource_links};
 use crate::oct2025::{Goal, GoalResult, invoke_to_finished};
 
 #[derive(Clone, Debug)]
 struct BuildSupplyChain {
-    target_location:      TileCoordsXZ,
-    industry_states:      HashMap<IndustryType, IndustryState>,
+    industry_states:      HashMap<IndustryType, BuildIndustry>,
     resource_link_states: HashMap<(IndustryType, ResourceType, IndustryType), ResourceLinkState>,
 }
 
 impl BuildSupplyChain {
     #[expect(clippy::too_many_arguments)]
     fn resource_link_commands(
-        industry_states: &HashMap<IndustryType, IndustryState>,
+        industry_states: &HashMap<IndustryType, BuildIndustry>,
         state: &mut ResourceLinkState,
         from_industry: IndustryType,
         resource: ResourceType,
@@ -60,10 +59,10 @@ impl Goal for BuildSupplyChain {
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> GoalResult {
-        for (industry, state) in &mut self.industry_states {
-            if let GoalResult::SendCommands(responses) = invoke_to_finished(|| {
-                state.commands(*industry, player_id, game_state, self.target_location)
-            }) {
+        for state in &mut self.industry_states.values_mut() {
+            if let GoalResult::SendCommands(responses) =
+                invoke_to_finished(|| state.commands(player_id, game_state, metrics))
+            {
                 return GoalResult::SendCommands(responses);
             }
         }
@@ -111,15 +110,22 @@ impl BuildSupplyChain {
         let industries =
             supply_chain.industries_for_resource_and_target(resource_type, target_type);
 
-        let mut industry_states: HashMap<IndustryType, IndustryState> = industries
+        let mut industry_states: HashMap<IndustryType, BuildIndustry> = industries
             .iter()
-            .map(|industry| (*industry, IndustryState::NothingDone))
+            .map(|&industry_type| {
+                (industry_type, BuildIndustry {
+                    industry_type,
+                    target_location,
+                    state: BuildIndustryState::NothingDone,
+                })
+            })
             .collect();
 
-        industry_states.insert(
-            target_type,
-            IndustryState::IndustryBuilt(target_id, target_location),
-        );
+        industry_states.insert(target_type, BuildIndustry {
+            industry_type: target_type,
+            target_location,
+            state: BuildIndustryState::IndustryBuilt(target_id, target_location),
+        });
 
         let resource_link_states = resource_links(&industries)
             .into_iter()
@@ -132,7 +138,6 @@ impl BuildSupplyChain {
             .collect();
 
         Self {
-            target_location,
             industry_states,
             resource_link_states,
         }

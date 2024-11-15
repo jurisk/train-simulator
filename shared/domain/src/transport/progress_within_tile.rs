@@ -6,6 +6,7 @@ use bevy_math::Vec3;
 use log::warn;
 use serde::{Deserialize, Serialize};
 
+// Later: Consider moving to u16 together with making GameTime discrete
 #[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct ProgressWithinTile(f32);
 
