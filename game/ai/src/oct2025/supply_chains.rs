@@ -10,22 +10,20 @@ use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::{IndustryBuildingId, PlayerId};
 
 use crate::oct2025::industries::{BuildIndustry, BuildIndustryState};
-use crate::oct2025::resource_links::{ResourceLinkState, resource_links};
+use crate::oct2025::resource_links::{BuildResourceLink, ResourceLinkState, resource_links};
 use crate::oct2025::{Goal, GoalResult, invoke_to_finished};
 
 #[derive(Clone, Debug)]
 struct BuildSupplyChain {
     industry_states:      HashMap<IndustryType, BuildIndustry>,
-    resource_link_states: HashMap<(IndustryType, ResourceType, IndustryType), ResourceLinkState>,
+    resource_link_states: HashMap<(IndustryType, ResourceType, IndustryType), BuildResourceLink>,
 }
 
 impl BuildSupplyChain {
-    #[expect(clippy::too_many_arguments)]
     fn resource_link_commands(
         industry_states: &HashMap<IndustryType, BuildIndustry>,
-        state: &mut ResourceLinkState,
+        resource_link: &mut BuildResourceLink,
         from_industry: IndustryType,
-        resource: ResourceType,
         to_industry: IndustryType,
         player_id: PlayerId,
         game_state: &GameState,
@@ -36,9 +34,8 @@ impl BuildSupplyChain {
         if let (Some(from_industry_state), Some(to_industry_state)) =
             (from_industry_state, to_industry_state)
         {
-            state.commands(
+            resource_link.commands(
                 from_industry_state,
-                resource,
                 to_industry_state,
                 player_id,
                 game_state,
@@ -67,13 +64,12 @@ impl Goal for BuildSupplyChain {
             }
         }
 
-        for ((from_industry, resource, to_industry), state) in &mut self.resource_link_states {
+        for ((from_industry, _resource, to_industry), state) in &mut self.resource_link_states {
             if let GoalResult::SendCommands(responses) = invoke_to_finished(|| {
                 Self::resource_link_commands(
                     &self.industry_states,
                     state,
                     *from_industry,
-                    *resource,
                     *to_industry,
                     player_id,
                     game_state,
@@ -130,10 +126,10 @@ impl BuildSupplyChain {
         let resource_link_states = resource_links(&industries)
             .into_iter()
             .map(|(from_industry, resource, to_industry)| {
-                (
-                    (from_industry, resource, to_industry),
-                    ResourceLinkState::Pending,
-                )
+                ((from_industry, resource, to_industry), BuildResourceLink {
+                    resource,
+                    state: ResourceLinkState::Pending,
+                })
             })
             .collect();
 

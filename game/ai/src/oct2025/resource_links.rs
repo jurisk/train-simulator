@@ -19,6 +19,12 @@ use crate::oct2025::stations::exit_tile_tracks;
 use crate::oct2025::transports::purchase_transport;
 
 #[derive(Clone, Debug)]
+pub(crate) struct BuildResourceLink {
+    pub(crate) resource: ResourceType,
+    pub(crate) state:    ResourceLinkState,
+}
+
+#[derive(Clone, Debug)]
 pub(crate) enum ResourceLinkState {
     Pending,
     BuildingTracks {
@@ -53,8 +59,8 @@ fn track_pairs(
     Some(pairs)
 }
 
-// TODO HIGH: This could be a Goal?
-impl ResourceLinkState {
+// We wanted this to be a `Goal` but it was not trivial to achieve
+impl BuildResourceLink {
     pub(crate) fn notify_of_response(&mut self, response: &GameResponse) {
         match response {
             GameResponse::TransportsAdded(transports) => {
@@ -62,7 +68,7 @@ impl ResourceLinkState {
                     purchasing_trains,
                     purchased_trains,
                     ..
-                } = self
+                } = &mut self.state
                 {
                     for transport in transports {
                         if purchasing_trains.contains(&transport.transport_id()) {
@@ -77,7 +83,7 @@ impl ResourceLinkState {
                     GameError::CannotPurchaseTransport(transport_id, _) => {
                         if let ResourceLinkState::PurchasingTrains {
                             purchasing_trains, ..
-                        } = self
+                        } = &mut self.state
                         {
                             if purchasing_trains.contains(transport_id) {
                                 purchasing_trains.remove(transport_id);
@@ -85,9 +91,9 @@ impl ResourceLinkState {
                         }
                     },
                     GameError::CannotBuildTracks(..) => {
-                        if let ResourceLinkState::BuildingTracks { .. } = self {
+                        if let ResourceLinkState::BuildingTracks { .. } = &self.state {
                             // This is somewhat questionable, as on any error we are going back to square one, and also we might be getting events unrelated to our particular resource link... but the alternative is adding some "TrackBuildingRequestId" and correlating that, and that is adding complexity.
-                            *self = ResourceLinkState::Pending;
+                            self.state = ResourceLinkState::Pending;
                         }
                     },
                     _ => {},
@@ -106,17 +112,16 @@ impl ResourceLinkState {
     pub(crate) fn commands(
         &mut self,
         from_industry_state: &BuildIndustry,
-        resource: ResourceType,
         to_industry_state: &BuildIndustry,
         player_id: PlayerId,
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> GoalResult {
-        match self {
+        match &mut self.state {
             ResourceLinkState::Pending => {
                 match track_pairs(game_state, from_industry_state, to_industry_state) {
                     Some(pairs) => {
-                        *self = ResourceLinkState::BuildingTracks {
+                        self.state = ResourceLinkState::BuildingTracks {
                             tracks_pending: pairs,
                             tracks_built:   HashMap::new(),
                         };
@@ -161,7 +166,7 @@ impl ResourceLinkState {
                         GoalResult::TryAgainLater
                     }
                 } else {
-                    *self = ResourceLinkState::TracksBuilt(tracks_built.clone());
+                    self.state = ResourceLinkState::TracksBuilt(tracks_built.clone());
                     GoalResult::RepeatInvocation
                 }
             },
@@ -176,7 +181,7 @@ impl ResourceLinkState {
 
                 trace!("Total length: {total_length:?}, target_trains: {target_trains:?}");
 
-                *self = ResourceLinkState::PurchasingTrains {
+                self.state = ResourceLinkState::PurchasingTrains {
                     target_trains,
                     purchasing_trains: HashSet::new(),
                     purchased_trains: HashSet::new(),
@@ -189,14 +194,14 @@ impl ResourceLinkState {
                 purchased_trains,
             } => {
                 if purchased_trains.len() >= *target_trains && purchasing_trains.is_empty() {
-                    *self = ResourceLinkState::TrainsPurchased;
+                    self.state = ResourceLinkState::TrainsPurchased;
                     GoalResult::RepeatInvocation
                 } else {
                     if let Some((station, transport)) = purchase_transport(
                         player_id,
                         game_state,
                         from_industry_state,
-                        resource,
+                        self.resource,
                         to_industry_state,
                     ) {
                         let transport_id = transport.transport_id();
@@ -206,7 +211,8 @@ impl ResourceLinkState {
                         GoalResult::SendCommands(vec![command])
                     } else {
                         trace!(
-                            "Failed to purchase transport for {resource:?}, this could be normal if we lack resources"
+                            "Failed to purchase transport for {:?}, this could be normal if we lack resources",
+                            self.resource
                         );
                         GoalResult::TryAgainLater
                     }
