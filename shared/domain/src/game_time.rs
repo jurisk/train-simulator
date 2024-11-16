@@ -1,6 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 
-use std::ops::{Add, Div, Sub, SubAssign};
+use std::ops::{Add, Div, Mul, Sub, SubAssign};
 
 use serde::{Deserialize, Serialize};
 
@@ -80,5 +80,29 @@ impl Div<GameTimeDiff> for GameTimeDiff {
 
     fn div(self, rhs: GameTimeDiff) -> Self::Output {
         self.0 / rhs.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, Debug)]
+pub struct TimeFactor(f32);
+
+impl TimeFactor {
+    #[must_use]
+    pub fn new(time_factor: f32) -> Self {
+        Self(time_factor)
+    }
+}
+
+impl Default for TimeFactor {
+    fn default() -> Self {
+        Self(1.0)
+    }
+}
+
+impl Mul<TimeFactor> for GameTimeDiff {
+    type Output = GameTimeDiff;
+
+    fn mul(self, rhs: TimeFactor) -> Self::Output {
+        GameTimeDiff(self.0 * rhs.0)
     }
 }

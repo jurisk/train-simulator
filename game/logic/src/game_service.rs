@@ -109,6 +109,10 @@ impl GameService {
             GameCommand::RequestGameStateSnapshot => {
                 self.request_game_state_snapshot(requesting_player_id)
             },
+            GameCommand::SetTimeFactor(time_factor) => {
+                self.state.set_time_factor(*time_factor);
+                Ok(vec![self.create_dynamic_info_sync(true)])
+            },
         }
     }
 
@@ -269,7 +273,7 @@ impl GameService {
                 .update_transport_movement_orders(transport_id, movement_orders)
             {
                 Err(()) => Err(GameError::UnspecifiedError),
-                Ok(()) => Ok(vec![self.create_dynamic_info_sync()]),
+                Ok(()) => Ok(vec![self.create_dynamic_info_sync(false)]),
             }
         } else {
             Err(GameError::UnspecifiedError)
@@ -362,17 +366,18 @@ impl GameService {
     pub(crate) fn sync(&mut self) -> Vec<GameResponseWithAddress> {
         self.sync_steps += 1;
         if self.sync_steps % SYNC_EVERY_N_STEPS == 0 {
-            vec![self.create_dynamic_info_sync()]
+            vec![self.create_dynamic_info_sync(true)]
         } else {
             vec![]
         }
     }
 
-    fn create_dynamic_info_sync(&self) -> GameResponseWithAddress {
+    fn create_dynamic_info_sync(&self, include_time_factor: bool) -> GameResponseWithAddress {
         GameResponseWithAddress::new(
             AddressEnvelope::ToAllPlayersInGame(self.game_id()),
             GameResponse::DynamicInfosSync(
                 self.state.time(),
+                include_time_factor.then(|| self.state.time_factor()),
                 self.state
                     .building_state()
                     .all_industry_buildings()

@@ -4,19 +4,20 @@ use egui::{Ui, menu};
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::building::station_type::{StationOrientation, StationType};
+use shared_domain::client_command::{ClientCommand, GameCommand};
 use shared_domain::game_state::GameState;
+use shared_domain::game_time::TimeFactor;
 use shared_domain::resource_type::ResourceType;
 use shared_domain::transport::transport_type::TransportType;
 
 use crate::ai::ArtificialIntelligenceResource;
+use crate::communication::domain::ClientMessageEvent;
 use crate::game::GameStateResource;
 use crate::hud::PointerOverHud;
 use crate::hud::domain::{DemolishType, SelectedMode, TracksBuildingType};
 
 const MIN_X: f32 = 200.0;
 const MIN_Y: f32 = 40.0;
-
-// TODO HIGH: Have a "game speed" menu (and support faster or slower game speeds). Pass it as a startup parameter (useful for tests).
 
 #[expect(clippy::needless_pass_by_value)]
 pub(crate) fn show_top_panel(
@@ -26,6 +27,7 @@ pub(crate) fn show_top_panel(
     mut ai_resource: ResMut<ArtificialIntelligenceResource>,
     mut pointer_over_hud: ResMut<PointerOverHud>,
     mut exit: EventWriter<AppExit>,
+    mut client_messages: EventWriter<ClientMessageEvent>,
 ) {
     // Later: We need to better depict the current building mode in the main menu, in case it's a sub-menu item that is selected
     let GameStateResource(game_state) = game_state.as_ref();
@@ -46,7 +48,7 @@ pub(crate) fn show_top_panel(
             trains_menu(&mut selected_mode, ui);
             demolish_menu(&mut selected_mode, ui);
             ai_menu(&mut ai_resource, game_state, ui);
-            actions_menu(&mut exit, ui);
+            actions_menu(&mut exit, game_state, &mut client_messages, ui);
         });
     });
 }
@@ -280,9 +282,43 @@ fn ai_menu(
     });
 }
 
-fn actions_menu(exit: &mut EventWriter<AppExit>, ui: &mut Ui) {
+fn actions_menu(
+    exit: &mut EventWriter<AppExit>,
+    game_state: &GameState,
+    client_messages: &mut EventWriter<ClientMessageEvent>,
+    ui: &mut Ui,
+) {
     menu::menu_button(ui, "Actions", |ui| {
         set_font_size(ui, 24.0);
+        ui.menu_button("Game Speed", |ui| {
+            for (name, speed) in [
+                ("Pause", 0.0),
+                ("¼×", 0.25),
+                ("½×", 0.5),
+                ("Normal", 1.0),
+                ("2×", 2.0),
+                ("4×", 4.0),
+                ("8×", 8.0),
+                ("16×", 16.0),
+            ] {
+                let time_factor = TimeFactor::new(speed);
+                if ui
+                    .add(
+                        egui::Button::new(name)
+                            .selected(game_state.time_factor() == time_factor)
+                            .min_size(egui::vec2(MIN_X, MIN_Y)),
+                    )
+                    .clicked()
+                {
+                    client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
+                        game_state.game_id,
+                        GameCommand::SetTimeFactor(time_factor),
+                    )));
+                    ui.close_menu();
+                }
+            }
+        });
+
         if ui
             .add(egui::Button::new("❎ Exit").min_size(egui::vec2(MIN_X, MIN_Y)))
             .clicked()

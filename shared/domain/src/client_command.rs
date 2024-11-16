@@ -11,6 +11,7 @@ use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::game_state::GameState;
+use crate::game_time::TimeFactor;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
 use crate::{
@@ -73,6 +74,7 @@ pub enum GameCommand {
     PurchaseTransport(StationId, TransportInfo),
     UpdateTransportMovementOrders(TransportId, MovementOrders),
     Demolish(DemolishSelector),
+    SetTimeFactor(TimeFactor),
 
     // Later: This is only used for testing purposes, perhaps we can refactor to avoid this
     RequestGameStateSnapshot,
@@ -116,6 +118,9 @@ impl Debug for GameCommand {
             },
             GameCommand::RequestGameStateSnapshot => {
                 write!(f, "RequestGameStateSnapshot")
+            },
+            GameCommand::SetTimeFactor(time_factor) => {
+                write!(f, "SetTimeFactor({time_factor:?})")
             },
         }
     }

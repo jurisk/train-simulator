@@ -15,7 +15,7 @@ use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::{BuildCosts, BuildError};
-use crate::game_time::{GameTime, GameTimeDiff};
+use crate::game_time::{GameTime, GameTimeDiff, TimeFactor};
 use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::ZoningInfo;
 use crate::metrics::Metrics;
@@ -44,6 +44,7 @@ pub struct GameState {
     players: PlayerState,
     supply_chain: SupplyChain,
     time: GameTime,
+    time_factor: TimeFactor,
     ignore_requesting_player_id: bool,
 }
 
@@ -78,6 +79,7 @@ pub struct GameStateFlattened {
     transports:  TransportState,
     players:     PlayerState,
     time:        GameTime,
+    time_factor: TimeFactor,
 }
 
 impl From<GameState> for GameStateFlattened {
@@ -90,6 +92,7 @@ impl From<GameState> for GameStateFlattened {
             transports:  value.transports.clone(),
             players:     value.players.clone(),
             time:        value.time,
+            time_factor: value.time_factor,
         }
     }
 }
@@ -105,6 +108,7 @@ impl From<GameStateFlattened> for GameState {
             players: value.players.clone(),
             supply_chain: SupplyChain::new(),
             time: value.time,
+            time_factor: value.time_factor,
             ignore_requesting_player_id: false,
         }
     }
@@ -134,6 +138,7 @@ impl GameState {
             players,
             supply_chain: SupplyChain::new(),
             time: GameTime::new(),
+            time_factor: TimeFactor::default(),
             ignore_requesting_player_id,
         };
 
@@ -149,17 +154,28 @@ impl GameState {
         result
     }
 
+    pub fn set_time_factor(&mut self, time_factor: TimeFactor) {
+        self.time_factor = time_factor;
+    }
+
+    #[must_use]
+    pub fn time_factor(&self) -> TimeFactor {
+        self.time_factor
+    }
+
     #[must_use]
     pub fn time(&self) -> GameTime {
         self.time
     }
 
     pub fn advance_time_diff(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
-        // Later: If game is paused then no need to advance anything
-        self.buildings.advance_time_diff(diff);
-        self.transports
-            .advance_time_diff(diff, &mut self.buildings, metrics);
-        self.time = self.time + diff;
+        let diff = diff * self.time_factor;
+        if diff != GameTimeDiff::ZERO {
+            self.buildings.advance_time_diff(diff);
+            self.transports
+                .advance_time_diff(diff, &mut self.buildings, metrics);
+            self.time = self.time + diff;
+        }
     }
 
     #[must_use]

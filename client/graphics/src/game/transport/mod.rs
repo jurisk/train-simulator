@@ -122,11 +122,15 @@ fn handle_transports_sync(
         if let ServerResponse::Game(_game_id, game_response) = &message.response {
             if let GameResponse::DynamicInfosSync(
                 game_time,
+                time_factor,
                 industry_building_infos,
                 station_building_infos,
                 transport_infos,
             ) = game_response
             {
+                if let Some(time_factor) = time_factor {
+                    game_state.set_time_factor(*time_factor);
+                }
                 game_state.update_dynamic_infos(
                     *game_time,
                     industry_building_infos,

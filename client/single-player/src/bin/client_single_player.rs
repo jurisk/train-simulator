@@ -2,6 +2,8 @@ use clap::Parser;
 use client_graphics::game::GameLaunchParams;
 use client_single_player::run;
 
+// Later: Pass the initial "game speed" as a startup parameter (for UI tests).
+
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 #[expect(clippy::struct_field_names)]

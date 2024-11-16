@@ -14,7 +14,7 @@ use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::client_command::DemolishSelector;
 use crate::game_state::GameState;
-use crate::game_time::GameTime;
+use crate::game_time::{GameTime, TimeFactor};
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::{
     ClientId, GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, PlayerName, ScenarioId,
@@ -103,6 +103,7 @@ pub enum GameResponse {
     TransportsAdded(Vec<TransportInfo>),
     DynamicInfosSync(
         GameTime,
+        Option<TimeFactor>,
         HashMap<IndustryBuildingId, BuildingDynamicInfo>,
         HashMap<StationId, BuildingDynamicInfo>,
         HashMap<TransportId, TransportDynamicInfo>,
@@ -206,11 +207,16 @@ impl Debug for GameResponse {
                         .join(", ")
                 )
             },
-            GameResponse::DynamicInfosSync(game_time, buildings, stations, transports) => {
+            GameResponse::DynamicInfosSync(
+                game_time,
+                time_factor,
+                buildings,
+                stations,
+                transports,
+            ) => {
                 write!(
                     f,
-                    "DynamicInfosSync({:?} time, {} industry, {} stations, {} transports)",
-                    game_time,
+                    "DynamicInfosSync({game_time:?} time, {time_factor:?} time_factor, {} industry, {} stations, {} transports)",
                     buildings.len(),
                     stations.len(),
                     transports.len()
