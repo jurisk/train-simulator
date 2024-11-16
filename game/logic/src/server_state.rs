@@ -37,7 +37,7 @@ impl ServerState {
     }
 
     #[must_use]
-    pub fn sync_games(&self) -> Vec<ServerResponseWithClientIds> {
+    pub fn sync_games(&mut self) -> Vec<ServerResponseWithClientIds> {
         self.games_service
             .sync_games()
             .into_iter()

@@ -34,9 +34,10 @@ impl GameResponseWithAddress {
 pub struct GameService {
     state:        GameState,
     user_players: BiMap<UserId, PlayerId>,
+    sync_steps:   u64,
 }
 
-const SYNC_EVERY_N_TIMESTEPS: u64 = 100;
+const SYNC_EVERY_N_STEPS: u64 = 100;
 
 impl GameService {
     #[must_use]
@@ -44,6 +45,7 @@ impl GameService {
         Self {
             state:        GameState::from_scenario(scenario.clone(), ignore_requesting_player_id),
             user_players: BiMap::new(),
+            sync_steps:   0,
         }
     }
 
@@ -52,6 +54,7 @@ impl GameService {
         Self {
             state:        game_state,
             user_players: BiMap::new(),
+            sync_steps:   0,
         }
     }
 
@@ -356,8 +359,9 @@ impl GameService {
             .collect()
     }
 
-    pub(crate) fn sync(&self) -> Vec<GameResponseWithAddress> {
-        if self.state.time_steps() % SYNC_EVERY_N_TIMESTEPS == 0 {
+    pub(crate) fn sync(&mut self) -> Vec<GameResponseWithAddress> {
+        self.sync_steps += 1;
+        if self.sync_steps % SYNC_EVERY_N_STEPS == 0 {
             vec![self.create_dynamic_info_sync()]
         } else {
             vec![]

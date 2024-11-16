@@ -66,9 +66,9 @@ impl GamesService {
         }
     }
 
-    pub(crate) fn sync_games(&self) -> Vec<ServerResponseWithAddress> {
+    pub(crate) fn sync_games(&mut self) -> Vec<ServerResponseWithAddress> {
         self.game_map
-            .iter()
+            .iter_mut()
             .flat_map(|(game_id, game_service)| {
                 let results = game_service.sync();
                 results

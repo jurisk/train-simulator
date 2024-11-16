@@ -44,7 +44,6 @@ pub struct GameState {
     players: PlayerState,
     supply_chain: SupplyChain,
     time: GameTime,
-    time_steps: u64,
     ignore_requesting_player_id: bool,
 }
 
@@ -79,7 +78,6 @@ pub struct GameStateFlattened {
     transports:  TransportState,
     players:     PlayerState,
     time:        GameTime,
-    time_steps:  u64,
 }
 
 impl From<GameState> for GameStateFlattened {
@@ -92,7 +90,6 @@ impl From<GameState> for GameStateFlattened {
             transports:  value.transports.clone(),
             players:     value.players.clone(),
             time:        value.time,
-            time_steps:  value.time_steps,
         }
     }
 }
@@ -108,7 +105,6 @@ impl From<GameStateFlattened> for GameState {
             players: value.players.clone(),
             supply_chain: SupplyChain::new(),
             time: value.time,
-            time_steps: value.time_steps,
             ignore_requesting_player_id: false,
         }
     }
@@ -138,7 +134,6 @@ impl GameState {
             players,
             supply_chain: SupplyChain::new(),
             time: GameTime::new(),
-            time_steps: 0,
             ignore_requesting_player_id,
         };
 
@@ -165,7 +160,6 @@ impl GameState {
         self.transports
             .advance_time_diff(diff, &mut self.buildings, metrics);
         self.time = self.time + diff;
-        self.time_steps += 1;
     }
 
     #[must_use]
@@ -176,11 +170,6 @@ impl GameState {
     #[must_use]
     pub fn scenario_id(&self) -> ScenarioId {
         self.scenario_id.clone()
-    }
-
-    #[must_use]
-    pub fn time_steps(&self) -> u64 {
-        self.time_steps
     }
 
     #[must_use]
