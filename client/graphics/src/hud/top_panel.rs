@@ -33,22 +33,29 @@ pub(crate) fn show_top_panel(
     let GameStateResource(game_state) = game_state.as_ref();
 
     egui::TopBottomPanel::top("hud_top_panel").show(contexts.ctx_mut(), |ui| {
-        // TODO HIGH: This is insufficient, as when the menu is open, it is not considered as being part of HUD. Need to pass these down to the submenus.
         pointer_over_hud.apply(ui);
         set_font_size(ui, 32.0);
 
         // The way we pass `ResMut<SelectedMode>` is on purpose, so that change detection works correctly.
         menu::bar(ui, |ui| {
+            pointer_over_hud.apply(ui);
+
             // Later: Landscaping for terrain modification
             info_menu(&mut selected_mode, ui);
             tracks_menu(&mut selected_mode, ui);
-            stations_menu(&mut selected_mode, ui);
-            industry_menu(&mut selected_mode, ui);
-            military_menu(&mut selected_mode, ui);
-            trains_menu(&mut selected_mode, ui);
-            demolish_menu(&mut selected_mode, ui);
-            ai_menu(&mut ai_resource, game_state, ui);
-            actions_menu(&mut exit, game_state, &mut client_messages, ui);
+            stations_menu(&mut selected_mode, &mut pointer_over_hud, ui);
+            industry_menu(&mut selected_mode, &mut pointer_over_hud, ui);
+            military_menu(&mut selected_mode, &mut pointer_over_hud, ui);
+            trains_menu(&mut selected_mode, &mut pointer_over_hud, ui);
+            demolish_menu(&mut selected_mode, &mut pointer_over_hud, ui);
+            ai_menu(&mut ai_resource, game_state, &mut pointer_over_hud, ui);
+            actions_menu(
+                &mut exit,
+                game_state,
+                &mut client_messages,
+                &mut pointer_over_hud,
+                ui,
+            );
         });
     });
 }
@@ -88,9 +95,14 @@ fn tracks_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     }
 }
 
-fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
+fn stations_menu(
+    selected_mode: &mut ResMut<SelectedMode>,
+    pointer_over_hud: &mut ResMut<PointerOverHud>,
+    ui: &mut Ui,
+) {
     // Later: We could build stations by just dragging the mouse, but it can wait.
     menu::menu_button(ui, "🚉 Stations", |ui| {
+        pointer_over_hud.apply(ui);
         set_font_size(ui, 24.0);
 
         for station_type in StationType::all() {
@@ -117,8 +129,14 @@ fn stations_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 }
 
 #[expect(clippy::match_same_arms)]
-fn industry_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
+fn industry_menu(
+    selected_mode: &mut ResMut<SelectedMode>,
+    pointer_over_hud: &mut ResMut<PointerOverHud>,
+
+    ui: &mut Ui,
+) {
     menu::menu_button(ui, "⚒ Industry", |ui| {
+        pointer_over_hud.apply(ui);
         set_font_size(ui, 24.0);
 
         for industry_type in IndustryType::all() {
@@ -164,8 +182,14 @@ fn industry_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
-fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
+fn military_menu(
+    selected_mode: &mut ResMut<SelectedMode>,
+    pointer_over_hud: &mut ResMut<PointerOverHud>,
+
+    ui: &mut Ui,
+) {
     menu::menu_button(ui, "⚔ Military", |ui| {
+        pointer_over_hud.apply(ui);
         set_font_size(ui, 24.0);
 
         for military_building_type in MilitaryBuildingType::all() {
@@ -187,8 +211,14 @@ fn military_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
-fn trains_menu(selected_mode_res: &mut ResMut<SelectedMode>, ui: &mut Ui) {
+fn trains_menu(
+    selected_mode_res: &mut ResMut<SelectedMode>,
+    pointer_over_hud: &mut ResMut<PointerOverHud>,
+
+    ui: &mut Ui,
+) {
     menu::menu_button(ui, "🚆 Trains", |ui| {
+        pointer_over_hud.apply(ui);
         set_font_size(ui, 24.0);
 
         for resource_type in ResourceType::all() {
@@ -209,8 +239,14 @@ fn trains_menu(selected_mode_res: &mut ResMut<SelectedMode>, ui: &mut Ui) {
     });
 }
 
-fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
+fn demolish_menu(
+    selected_mode: &mut ResMut<SelectedMode>,
+    pointer_over_hud: &mut ResMut<PointerOverHud>,
+
+    ui: &mut Ui,
+) {
     menu::menu_button(ui, "❎ Demolish", |ui| {
+        pointer_over_hud.apply(ui);
         set_font_size(ui, 24.0);
 
         for (name, mode) in [
@@ -241,10 +277,13 @@ fn demolish_menu(selected_mode: &mut ResMut<SelectedMode>, ui: &mut Ui) {
 fn ai_menu(
     ai_resource: &mut ResMut<ArtificialIntelligenceResource>,
     game_state: &GameState,
+    pointer_over_hud: &mut ResMut<PointerOverHud>,
+
     ui: &mut Ui,
 ) {
     // Later: Could disable the currently selected AI mode, but that does not matter much
     menu::menu_button(ui, "🖥 AI", |ui| {
+        pointer_over_hud.apply(ui);
         set_font_size(ui, 24.0);
 
         for player in game_state.players().infos() {
@@ -286,10 +325,14 @@ fn actions_menu(
     exit: &mut EventWriter<AppExit>,
     game_state: &GameState,
     client_messages: &mut EventWriter<ClientMessageEvent>,
+    pointer_over_hud: &mut ResMut<PointerOverHud>,
+
     ui: &mut Ui,
 ) {
     menu::menu_button(ui, "Actions", |ui| {
+        pointer_over_hud.apply(ui);
         set_font_size(ui, 24.0);
+
         ui.menu_button("Game Speed", |ui| {
             for (name, speed) in [
                 ("Pause", 0.0),
