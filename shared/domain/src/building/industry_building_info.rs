@@ -9,7 +9,6 @@ use crate::building::building_info::{
     WithBuildingDynamicInfoMut, WithCostToBuild, WithOwner, WithTileCoverage,
 };
 use crate::building::industry_type::IndustryType;
-use crate::building::station_type::StationType;
 use crate::cargo_map::{CargoMap, WithCargo, WithCargoMut};
 use crate::game_time::GameTimeDiff;
 use crate::map_level::zoning::ZoningType;
@@ -91,26 +90,6 @@ impl IndustryBuildingInfo {
             result.insert(input.resource);
         }
         result
-    }
-
-    #[must_use]
-    pub fn candidate_station_locations(&self) -> Vec<(TileCoordsXZ, StationType)> {
-        let mut results = vec![];
-
-        for z in -4 ..= 1 {
-            results.push((TileCoordsXZ::new(-2, z), StationType::NS_1_4));
-            results.push((TileCoordsXZ::new(2, z), StationType::NS_1_4));
-        }
-
-        for x in -4 ..= 1 {
-            results.push((TileCoordsXZ::new(x, -2), StationType::WE_1_4));
-            results.push((TileCoordsXZ::new(x, 2), StationType::WE_1_4));
-        }
-
-        results
-            .into_iter()
-            .map(|(tile, station_type)| (self.reference_tile() + tile, station_type))
-            .collect()
     }
 
     #[must_use]

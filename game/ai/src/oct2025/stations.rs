@@ -1,8 +1,10 @@
 use log::trace;
-use shared_domain::building::building_info::WithTileCoverage;
+use shared_domain::building::building_info::{WithOwner, WithTileCoverage};
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
+use shared_domain::building::station_type::StationType;
 use shared_domain::game_state::GameState;
+use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::{PlayerId, StationId};
@@ -10,18 +12,38 @@ use shared_util::random::choose;
 
 use crate::oct2025::industries::{BuildIndustry, BuildIndustryState};
 
+// Later: This is very hard-coded to 3x3 buildings
+#[must_use]
+fn candidate_stations(building: &IndustryBuildingInfo) -> Vec<StationInfo> {
+    let mut results = vec![];
+
+    for z in -4 ..= 1 {
+        results.push((TileCoordsXZ::new(-2, z), StationType::NS_1_4));
+        results.push((TileCoordsXZ::new(2, z), StationType::NS_1_4));
+    }
+
+    for x in -4 ..= 1 {
+        results.push((TileCoordsXZ::new(x, -2), StationType::WE_1_4));
+        results.push((TileCoordsXZ::new(x, 2), StationType::WE_1_4));
+    }
+
+    results
+        .into_iter()
+        .map(|(tile, station_type)| {
+            let tile = building.reference_tile() + tile;
+            StationInfo::new(building.owner_id(), StationId::random(), tile, station_type)
+        })
+        .collect()
+}
+
 #[expect(clippy::unwrap_used, clippy::items_after_statements)]
 pub(crate) fn select_station_building(
     owner_id: PlayerId,
     game_state: &GameState,
     industry_building: &IndustryBuildingInfo,
 ) -> Option<StationInfo> {
-    let options = industry_building
-        .candidate_station_locations()
+    let options = candidate_stations(industry_building)
         .into_iter()
-        .map(|(tile, station_type)| {
-            StationInfo::new(owner_id, StationId::random(), tile, station_type)
-        })
         .filter(|station_info| {
             let costs = game_state.can_build_station(owner_id, station_info);
             match costs {
@@ -33,6 +55,7 @@ pub(crate) fn select_station_building(
                             // This is all somewhat hacky, but we are trying to avoid situation where we build the station, but cannot build tracks to connect it
 
                             // TODO HIGH: This still doesn't avoid invalid stations which block other stations
+                            // TODO HIGH: Perhaps you should give a rating to each station... and allow it to bulldoze tracks assuming they will get rebuilt?
 
                             let next_tile = tile_track.next_tile_coords();
                             let next_tile_coverage = TileCoverage::Single(next_tile);
