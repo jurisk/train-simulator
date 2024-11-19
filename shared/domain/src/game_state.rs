@@ -340,7 +340,7 @@ impl GameState {
     ) -> Result<BuildCosts, BuildError> {
         self.valid_owner(requesting_player_id, building.owner_id())?;
         self.map_level.can_build_industry_building(building)?;
-        self.buildings.can_build_with_coverage(building)?;
+        self.buildings.can_build_industry_building(building)?;
 
         self.can_pay_cost(building.owner_id(), building)
     }
@@ -353,7 +353,7 @@ impl GameState {
     ) -> Result<BuildCosts, BuildError> {
         self.valid_owner(requesting_player_id, building.owner_id())?;
         self.map_level.can_build_military_building(building)?;
-        self.buildings.can_build_with_coverage(building)?;
+        self.buildings.can_build_military_building(building)?;
 
         self.can_pay_cost(building.owner_id(), building)
     }
@@ -384,7 +384,7 @@ impl GameState {
     ) -> Result<BuildCosts, BuildError> {
         self.valid_owner(requesting_player_id, station.owner_id())?;
         self.map_level.can_build_station(station)?;
-        self.buildings.can_build_with_coverage(station)?;
+        self.buildings.can_build_station(station)?;
         self.can_pay_cost(station.owner_id(), station)
     }
 

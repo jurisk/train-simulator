@@ -373,12 +373,37 @@ impl BuildingState {
             })
     }
 
-    pub fn can_build_with_coverage<T: WithTileCoverage>(
+    pub fn can_build_station(&self, station: &StationInfo) -> Result<(), BuildError> {
+        self.can_build_for_coverage(&station.covers_tiles(), |tile, obtained| {
+            let track_types = station.station_track_types_at(tile);
+            let owner_id = station.owner_id();
+            // If the station is providing exactly the same tracks as already exist there, we should allow building it.
+            // This makes it less likely that we fail to build a station due to tracks crowding the place where we want to build it.
+            obtained == MaybeTracksOnTile::Empty
+                || obtained
+                    == MaybeTracksOnTile::SingleOwner {
+                        owner_id,
+                        track_types,
+                    }
+        })
+    }
+
+    pub fn can_build_industry_building(
         &self,
-        building_info: &T,
+        industry_building_info: &IndustryBuildingInfo,
     ) -> Result<(), BuildError> {
-        self.can_build_for_coverage(&building_info.covers_tiles())?;
-        Ok(())
+        self.can_build_for_coverage(&industry_building_info.covers_tiles(), |_tile, obtained| {
+            obtained == MaybeTracksOnTile::Empty
+        })
+    }
+
+    pub fn can_build_military_building(
+        &self,
+        military_building_info: &MilitaryBuildingInfo,
+    ) -> Result<(), BuildError> {
+        self.can_build_for_coverage(&military_building_info.covers_tiles(), |_tile, obtained| {
+            obtained == MaybeTracksOnTile::Empty
+        })
     }
 
     pub(crate) fn build_tracks(&mut self, tracks: Vec<TrackInfo>, costs: BuildCosts) {
@@ -493,13 +518,20 @@ impl BuildingState {
         self.can_pay_known_cost(player_id, something, providing_industry_type, cost)
     }
 
-    pub fn can_build_for_coverage(&self, tile_coverage: &TileCoverage) -> Result<(), BuildError> {
-        let invalid_overlaps = tile_coverage.into_iter().any(|tile| {
-            self.tile_buildings[tile] != TileBuildingStatus::Empty
-                || self.tracks_at(tile) != MaybeTracksOnTile::Empty
+    fn can_build_for_coverage<F>(
+        &self,
+        tile_coverage: &TileCoverage,
+        track_validator: F,
+    ) -> Result<(), BuildError>
+    where
+        F: Fn(TileCoordsXZ, MaybeTracksOnTile) -> bool,
+    {
+        let valid_overlaps = tile_coverage.into_iter().all(|tile| {
+            self.tile_buildings[tile] == TileBuildingStatus::Empty
+                && track_validator(tile, self.tracks_at(tile))
         });
 
-        invalid_overlaps.then_err_unit(|| BuildError::InvalidOverlap)
+        valid_overlaps.then_ok_unit(|| BuildError::InvalidOverlap)
     }
 
     pub(crate) fn build_industry_building(
@@ -507,7 +539,7 @@ impl BuildingState {
         industry_building_info: &IndustryBuildingInfo,
         costs: BuildCosts,
     ) -> Result<(), BuildError> {
-        self.can_build_with_coverage(industry_building_info)?;
+        self.can_build_industry_building(industry_building_info)?;
         self.pay_costs(costs);
         self.append_industry_building(industry_building_info.clone());
         Ok(())
@@ -518,7 +550,7 @@ impl BuildingState {
         military_building_info: &MilitaryBuildingInfo,
         costs: BuildCosts,
     ) -> Result<(), BuildError> {
-        self.can_build_with_coverage(military_building_info)?;
+        self.can_build_military_building(military_building_info)?;
         self.pay_costs(costs);
         self.append_military_building(military_building_info.clone());
         Ok(())
@@ -540,7 +572,7 @@ impl BuildingState {
         station_info: &StationInfo,
         costs: BuildCosts,
     ) -> Result<(), BuildError> {
-        self.can_build_with_coverage(station_info)?;
+        self.can_build_station(station_info)?;
         self.pay_costs(costs);
         self.append_station(station_info.clone());
         Ok(())
@@ -599,6 +631,11 @@ impl BuildingState {
     #[must_use]
     pub(crate) fn find_station_mut(&mut self, station_id: StationId) -> Option<&mut StationInfo> {
         self.stations.get_mut(&station_id)
+    }
+
+    #[must_use]
+    pub fn free_at(&self, tile: TileCoordsXZ) -> bool {
+        self.tile_buildings[tile] == TileBuildingStatus::Empty
     }
 
     pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff) {
@@ -833,7 +870,34 @@ mod tests {
             TileCoordsXZ::new(0, 0),
             StationType::WE_1_4,
         );
-        let result = building_state.can_build_with_coverage(&station_info);
+        let result = building_state.can_build_station(&station_info);
         assert_eq!(result, Err(BuildError::InvalidOverlap));
+    }
+
+    #[test]
+    fn test_allow_build_station_if_station_matches_tracks_previously_under_it() {
+        let size_x = 4;
+        let size_z = 1;
+        let mut building_state = BuildingState::new(size_x, size_z);
+        let owner_id = PlayerId::random();
+
+        let station_info = StationInfo::new(
+            owner_id,
+            StationId::random(),
+            TileCoordsXZ::new(0, 0),
+            StationType::WE_1_4,
+        );
+
+        let tracks = station_info
+            .tile_tracks()
+            .into_iter()
+            .map(|tile_track| TrackInfo::from_tile_track(owner_id, tile_track))
+            .collect();
+
+        building_state.append_tracks(tracks);
+
+        let result = building_state.can_build_station(&station_info);
+
+        assert_eq!(result, Ok(()));
     }
 }

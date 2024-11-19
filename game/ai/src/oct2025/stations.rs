@@ -54,15 +54,13 @@ pub(crate) fn select_station_building(
                         .all(|tile_track| {
                             // This is all somewhat hacky, but we are trying to avoid situation where we build the station, but cannot build tracks to connect it
 
-                            // TODO HIGH: This still doesn't avoid invalid stations which block other stations
-                            // TODO HIGH: Perhaps you should give a rating to each station... and allow it to bulldoze tracks assuming they will get rebuilt?
+                            // TODO HIGH: This still doesn't avoid invalid stations which block other stations - check "side" tiles for this!
+                            // TODO: Perhaps you should give a rating to each station, depending on how close it is to the industry, etc.?
 
                             let next_tile = tile_track.next_tile_coords();
+                            let free_tile = game_state.building_state().free_at(next_tile);
+
                             let next_tile_coverage = TileCoverage::Single(next_tile);
-                            let free_tile = game_state
-                                .building_state()
-                                .can_build_for_coverage(&next_tile_coverage)
-                                .is_ok();
                             let valid_terrain = game_state
                                 .map_level()
                                 .can_build_for_coverage(&next_tile_coverage)

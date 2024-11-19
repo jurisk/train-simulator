@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::building::building_info::WithTileCoverage;
 use crate::tile_coords_xz::{TileCoordsXZ, TileDistance, closest_tile_distance};
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
@@ -224,6 +225,12 @@ impl Iterator for TileCoverageIterator {
                 }
             },
         }
+    }
+}
+
+impl WithTileCoverage for TileCoverage {
+    fn covers_tiles(&self) -> TileCoverage {
+        *self
     }
 }
 
