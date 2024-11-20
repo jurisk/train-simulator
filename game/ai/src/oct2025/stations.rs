@@ -1,4 +1,3 @@
-use log::trace;
 use shared_domain::building::building_info::{WithOwner, WithTileCoverage};
 use shared_domain::building::industry_building_info::IndustryBuildingInfo;
 use shared_domain::building::station_info::StationInfo;
@@ -9,8 +8,6 @@ use shared_domain::tile_coverage::TileCoverage;
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::{PlayerId, StationId};
 use shared_util::random::choose;
-
-use crate::oct2025::industries::{BuildIndustry, BuildIndustryState};
 
 // Later: This is very hard-coded to 3x3 buildings
 #[must_use]
@@ -99,28 +96,12 @@ pub(crate) fn select_station_building(
     choose(&options).cloned()
 }
 
-pub(crate) fn lookup_station_id(industry_state: &BuildIndustry) -> Option<StationId> {
-    if let BuildIndustryState::StationBuilt(_industry_building_id, _location, station_id) =
-        industry_state.state
-    {
-        Some(station_id)
-    } else {
-        trace!("No station built for {industry_state:?}");
-        None
-    }
-}
-
-fn lookup_station<'a>(
-    industry_state: &'a BuildIndustry,
-    game_state: &'a GameState,
-) -> Option<&'a StationInfo> {
-    let station_id = lookup_station_id(industry_state)?;
-    game_state.building_state().find_station(station_id)
-}
-
 pub(crate) fn exit_tile_tracks(
-    industry_state: &BuildIndustry,
+    station_id: StationId,
     game_state: &GameState,
 ) -> Option<Vec<TileTrack>> {
-    lookup_station(industry_state, game_state).map(StationInfo::station_exit_tile_tracks)
+    game_state
+        .building_state()
+        .find_station(station_id)
+        .map(StationInfo::station_exit_tile_tracks)
 }

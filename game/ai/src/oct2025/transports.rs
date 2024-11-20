@@ -7,27 +7,17 @@ use shared_domain::transport::transport_type::TransportType;
 use shared_domain::{PlayerId, StationId, TransportId};
 use shared_util::tap::TapNone;
 
-use crate::oct2025::industries::BuildIndustry;
-use crate::oct2025::stations::lookup_station_id;
-
 pub(crate) fn purchase_transport(
     player_id: PlayerId,
     game_state: &GameState,
-    from_industry_state: &BuildIndustry,
+    from_station_id: StationId,
     resource_type: ResourceType,
-    to_industry_state: &BuildIndustry,
+    to_station_id: StationId,
 ) -> Option<(StationId, TransportInfo)> {
-    let from_station = lookup_station_id(from_industry_state).tap_none(|| {
-        warn!("Failed to find station for industry {from_industry_state:?}",);
-    })?;
-    let to_station = lookup_station_id(to_industry_state).tap_none(|| {
-        warn!("Failed to find station for industry {to_industry_state:?}",);
-    })?;
+    let mut movement_orders = MovementOrders::one(MovementOrder::stop_at_station(from_station_id));
+    movement_orders.push(MovementOrder::stop_at_station(to_station_id));
 
-    let mut movement_orders = MovementOrders::one(MovementOrder::stop_at_station(from_station));
-    movement_orders.push(MovementOrder::stop_at_station(to_station));
-
-    let from_station_info = game_state.building_state().find_station(from_station)?;
+    let from_station_info = game_state.building_state().find_station(from_station_id)?;
     let tile_tracks = from_station_info.station_exit_tile_tracks();
     let tile_track = tile_tracks.first()?;
     let transport_location = from_station_info
@@ -44,9 +34,9 @@ pub(crate) fn purchase_transport(
         movement_orders,
     );
 
-    match game_state.can_purchase_transport(player_id, from_station, &transport_info) {
+    match game_state.can_purchase_transport(player_id, from_station_id, &transport_info) {
         Ok(_) => {
-            let result = (from_station, transport_info);
+            let result = (from_station_id, transport_info);
             Some(result)
         },
         Err(error) => {

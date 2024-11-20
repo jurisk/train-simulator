@@ -16,7 +16,6 @@ shared-util = { path = "../../shared/util" }
 game-ai = { path = "../../game/ai" }
 
 serde.workspace = true
-serde_json.workspace = true
 fastrand.workspace = true
 bigdecimal.workspace = true
 

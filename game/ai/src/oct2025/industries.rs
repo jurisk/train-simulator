@@ -191,9 +191,16 @@ pub(crate) fn select_industry_building(
     industry_type: IndustryType,
     reference_tile: TileCoordsXZ,
 ) -> Option<IndustryBuildingInfo> {
-    let found = game_state
+    let mut zonings: Vec<_> = game_state
         .all_free_zonings()
         .filter(|zoning| Some(zoning.zoning_type()) == industry_type.required_zoning())
+        .collect();
+
+    // TODO: Actually, build close to related industries in this supply chain - I think this 'reference_tile' is for the main building
+    zonings.sort_by_key(|zoning| zoning.reference_tile().manhattan_distance(reference_tile));
+
+    let found = zonings
+        .into_iter()
         .map(|zoning| {
             IndustryBuildingInfo::new(
                 owner_id,
@@ -202,14 +209,10 @@ pub(crate) fn select_industry_building(
                 industry_type,
             )
         })
-        .filter(|info| {
+        .find(|info| {
             game_state
                 .can_build_industry_building(owner_id, info)
                 .is_ok()
-        })
-        .min_by_key(|info| {
-            // TODO: Actually, build close to related industries in this supply chain
-            info.reference_tile().manhattan_distance(reference_tile)
         });
 
     // TODO: If industry has no zoning requirement, build in an empty space, but choose the best place - closest to the industries for its inputs/outputs, or even just closest to ConstructionYard.

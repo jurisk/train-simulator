@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use log::trace;
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::game_state::GameState;
 use shared_domain::metrics::Metrics;
@@ -7,7 +8,7 @@ use shared_domain::resource_type::ResourceType;
 use shared_domain::server_response::GameResponse;
 use shared_domain::supply_chain::SupplyChain;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
-use shared_domain::{IndustryBuildingId, PlayerId};
+use shared_domain::{IndustryBuildingId, PlayerId, StationId};
 
 use crate::oct2025::industries::{BuildIndustry, BuildIndustryState};
 use crate::oct2025::resource_links::{BuildResourceLink, ResourceLinkState, resource_links};
@@ -16,36 +17,18 @@ use crate::oct2025::{Goal, GoalResult, invoke_to_finished};
 #[derive(Clone, Debug)]
 struct BuildSupplyChain {
     industry_states:      HashMap<IndustryType, BuildIndustry>,
-    resource_link_states: HashMap<(IndustryType, ResourceType, IndustryType), BuildResourceLink>,
+    resource_link_states:
+        HashMap<(IndustryType, ResourceType, IndustryType), Option<BuildResourceLink>>,
 }
 
-impl BuildSupplyChain {
-    fn resource_link_commands(
-        industry_states: &HashMap<IndustryType, BuildIndustry>,
-        resource_link: &mut BuildResourceLink,
-        from_industry: IndustryType,
-        to_industry: IndustryType,
-        player_id: PlayerId,
-        game_state: &GameState,
-        metrics: &dyn Metrics,
-    ) -> GoalResult {
-        let from_industry_state = industry_states.get(&from_industry);
-        let to_industry_state = industry_states.get(&to_industry);
-        if let (Some(from_industry_state), Some(to_industry_state)) =
-            (from_industry_state, to_industry_state)
-        {
-            resource_link.commands(
-                from_industry_state,
-                to_industry_state,
-                player_id,
-                game_state,
-                metrics,
-            )
-        } else {
-            GoalResult::Error(format!(
-                "Missing industry state for resource link: {from_industry:?} -> {to_industry:?}"
-            ))
-        }
+fn lookup_station_id(industry_state: &BuildIndustry) -> Option<StationId> {
+    if let BuildIndustryState::StationBuilt(_industry_building_id, _location, station_id) =
+        industry_state.state
+    {
+        Some(station_id)
+    } else {
+        trace!("No station built for {industry_state:?}");
+        None
     }
 }
 
@@ -64,18 +47,33 @@ impl Goal for BuildSupplyChain {
             }
         }
 
-        for ((from_industry, _resource, to_industry), state) in &mut self.resource_link_states {
-            if let GoalResult::SendCommands(responses) = invoke_to_finished(|| {
-                Self::resource_link_commands(
-                    &self.industry_states,
-                    state,
-                    *from_industry,
-                    *to_industry,
-                    player_id,
-                    game_state,
-                    metrics,
-                )
-            }) {
+        for ((from_industry, resource, to_industry), resource_link) in
+            &mut self.resource_link_states
+        {
+            if resource_link.is_none() {
+                if let (Some(from_industry), Some(to_industry)) = (
+                    self.industry_states.get(from_industry),
+                    self.industry_states.get(to_industry),
+                ) {
+                    if let (Some(from_station_id), Some(to_station_id)) = (
+                        lookup_station_id(from_industry),
+                        lookup_station_id(to_industry),
+                    ) {
+                        *resource_link = Some(BuildResourceLink {
+                            from_station_id,
+                            resource: *resource,
+                            to_station_id,
+                            state: ResourceLinkState::Pending,
+                        });
+                    }
+                }
+            }
+        }
+
+        for resource_link in &mut self.resource_link_states.values_mut().flatten() {
+            if let GoalResult::SendCommands(responses) =
+                invoke_to_finished(|| resource_link.commands(player_id, game_state, metrics))
+            {
                 return GoalResult::SendCommands(responses);
             }
         }
@@ -84,12 +82,12 @@ impl Goal for BuildSupplyChain {
     }
 
     fn notify_of_response(&mut self, response: &GameResponse) {
-        for state in self.industry_states.values_mut() {
-            state.notify_of_response(response);
+        for industry_state in self.industry_states.values_mut() {
+            industry_state.notify_of_response(response);
         }
 
-        for state in self.resource_link_states.values_mut() {
-            state.notify_of_response(response);
+        for resource_link in self.resource_link_states.values_mut().flatten() {
+            resource_link.notify_of_response(response);
         }
     }
 }
@@ -126,10 +124,7 @@ impl BuildSupplyChain {
         let resource_link_states = resource_links(&industries)
             .into_iter()
             .map(|(from_industry, resource, to_industry)| {
-                ((from_industry, resource, to_industry), BuildResourceLink {
-                    resource,
-                    state: ResourceLinkState::Pending,
-                })
+                ((from_industry, resource, to_industry), None)
             })
             .collect();
 

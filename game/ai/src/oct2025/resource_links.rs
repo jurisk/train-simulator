@@ -11,17 +11,18 @@ use shared_domain::server_response::{GameError, GameResponse};
 use shared_domain::transport::tile_track::TileTrack;
 use shared_domain::transport::track_length::TrackLength;
 use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
-use shared_domain::{PlayerId, TransportId};
+use shared_domain::{PlayerId, StationId, TransportId};
 
 use crate::oct2025::GoalResult;
-use crate::oct2025::industries::BuildIndustry;
 use crate::oct2025::stations::exit_tile_tracks;
 use crate::oct2025::transports::purchase_transport;
 
 #[derive(Clone, Debug)]
 pub(crate) struct BuildResourceLink {
-    pub(crate) resource: ResourceType,
-    pub(crate) state:    ResourceLinkState,
+    pub(crate) from_station_id: StationId,
+    pub(crate) resource:        ResourceType,
+    pub(crate) to_station_id:   StationId,
+    pub(crate) state:           ResourceLinkState,
 }
 
 #[derive(Clone, Debug)]
@@ -42,11 +43,11 @@ pub(crate) enum ResourceLinkState {
 
 fn track_pairs(
     game_state: &GameState,
-    from_industry_state: &BuildIndustry,
-    to_industry_state: &BuildIndustry,
+    from_station_id: StationId,
+    to_station_id: StationId,
 ) -> Option<Vec<(TileTrack, TileTrack)>> {
-    let from_exit_tile_tracks = exit_tile_tracks(from_industry_state, game_state)?;
-    let to_exit_tile_tracks = exit_tile_tracks(to_industry_state, game_state)?;
+    let from_exit_tile_tracks = exit_tile_tracks(from_station_id, game_state)?;
+    let to_exit_tile_tracks = exit_tile_tracks(to_station_id, game_state)?;
 
     let mut pairs = vec![];
     for track_a in &from_exit_tile_tracks {
@@ -111,15 +112,13 @@ impl BuildResourceLink {
     #[must_use]
     pub(crate) fn commands(
         &mut self,
-        from_industry_state: &BuildIndustry,
-        to_industry_state: &BuildIndustry,
         player_id: PlayerId,
         game_state: &GameState,
         metrics: &dyn Metrics,
     ) -> GoalResult {
         match &mut self.state {
             ResourceLinkState::Pending => {
-                match track_pairs(game_state, from_industry_state, to_industry_state) {
+                match track_pairs(game_state, self.from_station_id, self.to_station_id) {
                     Some(pairs) => {
                         self.state = ResourceLinkState::BuildingTracks {
                             tracks_pending: pairs,
@@ -200,9 +199,9 @@ impl BuildResourceLink {
                     if let Some((station, transport)) = purchase_transport(
                         player_id,
                         game_state,
-                        from_industry_state,
+                        self.from_station_id,
                         self.resource,
-                        to_industry_state,
+                        self.to_station_id,
                     ) {
                         let transport_id = transport.transport_id();
                         purchasing_trains.insert(transport_id);

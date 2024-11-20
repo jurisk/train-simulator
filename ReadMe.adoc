@@ -232,7 +232,7 @@ Pruning, as Rancher tends to eat up all available space:
 
 [source,bash]
 ----
-docker system prune -f
+docker system prune -a -f
 docker builder prune -f
 ----
 
