@@ -59,7 +59,7 @@ metrics-exporter-prometheus = {  version = "0.16", default-features = false, fea
 web-time = "1.1"
 
 # Using version from Git until they release the new version: https://github.com/georust/geotiff/issues/7
-geotiff = { git = "https://github.com/georust/geotiff", branch = "main" }
+geotiff = { git = "https://github.com/georust/geotiff", rev = "77ec3f7683069ca1fec8431a7bbdc7d71bf4c613" }
 
 # Should only be imported by the `networking-*` code
 # These versions should match bevy_simplenet's (and dependencies such as `enfync` and `ezsockets`) versions.

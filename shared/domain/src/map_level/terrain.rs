@@ -88,6 +88,16 @@ impl Terrain {
     }
 
     #[must_use]
+    pub fn tile_center_coordinate(&self, tile: TileCoordsXZ) -> Vec3 {
+        let (a, b, c, d) = tile.vertex_coords_nw_ne_se_sw();
+        let a = self.logical_to_world(a);
+        let b = self.logical_to_world(b);
+        let c = self.logical_to_world(c);
+        let d = self.logical_to_world(d);
+        (a + b + c + d) / 4.0
+    }
+
+    #[must_use]
     pub fn vertex_coordinates_clockwise(
         &self,
         direction: DirectionXZ,

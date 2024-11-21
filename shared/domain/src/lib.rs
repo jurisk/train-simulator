@@ -20,6 +20,7 @@ pub mod game_state;
 pub mod game_time;
 pub mod map_level;
 pub mod metrics;
+pub mod military;
 pub mod players;
 pub mod resource_type;
 pub mod scenario;
