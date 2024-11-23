@@ -1,4 +1,4 @@
-bin/housekeeping.ps1
+bin/test.ps1
 
 bin/wasm-build.ps1
 

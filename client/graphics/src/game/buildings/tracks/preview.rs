@@ -1,6 +1,8 @@
-use bevy::color::palettes::basic::BLUE;
+use bevy::color::palettes::basic::{BLUE, RED};
+use bevy::math::Vec3;
 use bevy::prelude::{
-    ButtonInput, DetectChanges, Gizmos, MouseButton, Res, ResMut, Resource, debug,
+    ButtonInput, CubicCardinalSpline, CubicGenerator, DetectChanges, Gizmos, MouseButton, Res,
+    ResMut, Resource, debug,
 };
 use shared_domain::building::track_info::TrackInfo;
 use shared_domain::map_level::terrain::Terrain;
@@ -88,9 +90,32 @@ pub(crate) fn draw_track_preview(
     let GameStateResource(game_state) = game_state_resource.as_ref();
     let TrackPreviewResource(track_preview) = track_preview_resource.as_ref();
 
-    for track_info in track_preview {
-        debug_draw_track(track_info, &mut gizmos, game_state.map_level().terrain());
+    if !track_preview.is_empty() {
+        let terrain = game_state.map_level().terrain();
+        debug_draw_track_spline(track_preview, &mut gizmos, terrain);
+
+        for track_info in track_preview {
+            debug_draw_track(track_info, &mut gizmos, terrain);
+        }
     }
+}
+
+fn debug_draw_track_spline(track_preview: &[TrackInfo], gizmos: &mut Gizmos, terrain: &Terrain) {
+    let mut points: Vec<Vec3> = vec![];
+    for track_info in track_preview {
+        // TODO HIGH: This is actually not an ordered list of edge centers, it can be in the wrong order - we should instead get an ordered list of edges and then map it to Vec3.
+        let (direction, _) = track_info.track_type.connections_clockwise();
+        let coordinate = terrain.edge_center_coordinate(direction, track_info.tile);
+        points.push(coordinate);
+    }
+
+    if let Some(last) = track_preview.last() {
+        let (_, finishing) = last.track_type.connections_clockwise();
+        points.push(terrain.edge_center_coordinate(finishing, last.tile));
+    }
+
+    let curve = CubicCardinalSpline::new_catmull_rom(points).to_curve();
+    gizmos.linestrip(curve.iter_positions(50), RED);
 }
 
 fn debug_draw_track(track_info: &TrackInfo, gizmos: &mut Gizmos, terrain: &Terrain) {
