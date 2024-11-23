@@ -27,12 +27,12 @@ pub(crate) fn build_tracks_when_mouse_released(
             *selected_mode_resource = SelectedMode::Tracks(TracksBuildingType::SelectStart);
 
             let GameStateResource(game_state) = game_state_resource.as_ref();
-            let tracks = track_preview_resource.take();
+            let track_preview = track_preview_resource.take();
 
-            if !tracks.is_empty() {
+            if let Some(track_preview) = track_preview {
                 client_messages.send(ClientMessageEvent::new(ClientCommand::Game(
                     game_state.game_id(),
-                    GameCommand::BuildTracks(tracks),
+                    GameCommand::BuildTracks(track_preview.tracks),
                 )));
             }
         }

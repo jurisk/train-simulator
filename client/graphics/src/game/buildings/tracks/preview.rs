@@ -2,9 +2,10 @@ use bevy::color::palettes::basic::{BLUE, RED};
 use bevy::math::Vec3;
 use bevy::prelude::{
     ButtonInput, CubicCardinalSpline, CubicGenerator, DetectChanges, Gizmos, MouseButton, Res,
-    ResMut, Resource, debug,
+    ResMut, Resource,
 };
 use shared_domain::building::track_info::TrackInfo;
+use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::map_level::terrain::Terrain;
 
 use crate::game::buildings::tracks::plan::{resolve_head, try_plan_tracks};
@@ -13,21 +14,26 @@ use crate::game::{GameStateResource, PlayerIdResource};
 use crate::hud::domain::{SelectedMode, TracksBuildingType};
 use crate::selection::{HoveredEdge, HoveredTile};
 
+#[derive(Eq, PartialEq)]
+pub(crate) struct TrackPreview {
+    pub head:   DirectionalEdge,
+    pub tracks: Vec<TrackInfo>,
+    pub tail:   DirectionalEdge,
+}
+
 #[derive(Resource, Default)]
-pub(crate) struct TrackPreviewResource(pub Vec<TrackInfo>);
+pub(crate) struct TrackPreviewResource(pub Option<TrackPreview>);
 
 impl TrackPreviewResource {
-    pub fn take(&mut self) -> Vec<TrackInfo> {
-        debug!("TrackPreviewResource::take {}", self.0.len());
+    pub fn take(&mut self) -> Option<TrackPreview> {
         std::mem::take(&mut self.0)
     }
 
-    pub fn should_update(&self, new: &[TrackInfo]) -> bool {
-        self.0 != new
+    pub fn should_update(&self, new: &Option<TrackPreview>) -> bool {
+        &self.0 != new
     }
 
-    pub fn update(&mut self, planned: Vec<TrackInfo>) {
-        debug!("TrackPreviewResource::update {}", planned.len());
+    pub fn update(&mut self, planned: Option<TrackPreview>) {
         self.0 = planned;
     }
 }
@@ -72,8 +78,7 @@ pub(crate) fn update_track_preview(
                 *start,
                 hovered_tile.0,
                 hovered_edge.0,
-            )
-            .unwrap_or_default();
+            );
 
             if track_preview.should_update(&planned) {
                 track_preview.update(planned);
@@ -90,32 +95,29 @@ pub(crate) fn draw_track_preview(
     let GameStateResource(game_state) = game_state_resource.as_ref();
     let TrackPreviewResource(track_preview) = track_preview_resource.as_ref();
 
-    if !track_preview.is_empty() {
+    if let Some(track_preview) = track_preview {
         let terrain = game_state.map_level().terrain();
         debug_draw_track_spline(track_preview, &mut gizmos, terrain);
 
-        for track_info in track_preview {
+        for track_info in &track_preview.tracks {
             debug_draw_track(track_info, &mut gizmos, terrain);
         }
     }
 }
 
-fn debug_draw_track_spline(track_preview: &[TrackInfo], gizmos: &mut Gizmos, terrain: &Terrain) {
+fn debug_draw_track_spline(track_preview: &TrackPreview, gizmos: &mut Gizmos, terrain: &Terrain) {
     let mut points: Vec<Vec3> = vec![];
-    for track_info in track_preview {
-        // TODO HIGH: This is actually not an ordered list of edge centers, it can be in the wrong order - we should instead get an ordered list of edges and then map it to Vec3.
+    for track_info in &track_preview.tracks {
+        // TODO HIGH: This is actually not an ordered list of edge centers, it can be in the wrong order - we should use the `head` to go through it in order. And don't forget about both end-points!
         let (direction, _) = track_info.track_type.connections_clockwise();
         let coordinate = terrain.edge_center_coordinate(direction, track_info.tile);
         points.push(coordinate);
     }
 
-    if let Some(last) = track_preview.last() {
-        let (_, finishing) = last.track_type.connections_clockwise();
-        points.push(terrain.edge_center_coordinate(finishing, last.tile));
+    if points.len() > 3 {
+        let curve = CubicCardinalSpline::new_catmull_rom(points).to_curve();
+        gizmos.linestrip(curve.iter_positions(50), RED);
     }
-
-    let curve = CubicCardinalSpline::new_catmull_rom(points).to_curve();
-    gizmos.linestrip(curve.iter_positions(50), RED);
 }
 
 fn debug_draw_track(track_info: &TrackInfo, gizmos: &mut Gizmos, terrain: &Terrain) {

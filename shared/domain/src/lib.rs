@@ -183,7 +183,7 @@ impl ScenarioId {
 #[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord, Debug)]
 pub struct MapId(pub String);
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 pub struct TrackId {
     pub tile:       TileCoordsXZ,
     pub track_type: TrackType,

@@ -12,7 +12,7 @@ use crate::{PlayerId, TrackId};
 
 // Later:   This is somewhat awkward as it's really just a DTO at this point and our internal
 //          representation is different - perhaps it can be refactored to something more elegant.
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Debug)]
 pub struct TrackInfo {
     id:             TrackId,
     owner_id:       PlayerId,

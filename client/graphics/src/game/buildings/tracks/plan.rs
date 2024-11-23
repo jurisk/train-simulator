@@ -1,5 +1,4 @@
 use bevy::prelude::Res;
-use shared_domain::building::track_info::TrackInfo;
 use shared_domain::directional_edge::DirectionalEdge;
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::game_state::GameState;
@@ -8,6 +7,7 @@ use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_domain::transport::track_planner::{DEFAULT_ALREADY_EXISTS_COEF, plan_tracks};
 
 use crate::game::PlayerIdResource;
+use crate::game::buildings::tracks::preview::TrackPreview;
 
 // TODO HIGH: If the selected first/last tile is a station, we should snap to the station's edge
 // TODO: We could improve the snapping logic, e.g. by passing in multiple tail `DirectionalEdge`-s into the pathfinding logic
@@ -17,7 +17,7 @@ pub(crate) fn try_plan_tracks(
     head: DirectionalEdge,
     tail_tile: Option<TileCoordsXZ>,
     tail_edge: Option<EdgeXZ>,
-) -> Option<Vec<TrackInfo>> {
+) -> Option<TrackPreview> {
     let tail = resolve_tail(tail_tile, tail_edge)?;
 
     let PlayerIdResource(player_id) = *player_id_resource;
@@ -29,7 +29,7 @@ pub(crate) fn try_plan_tracks(
         DEFAULT_ALREADY_EXISTS_COEF,
         &NoopMetrics::default(),
     )
-    .map(|(track_infos, _)| track_infos)
+    .map(|(tracks, _)| TrackPreview { head, tracks, tail })
 }
 
 pub(crate) fn resolve_head(
