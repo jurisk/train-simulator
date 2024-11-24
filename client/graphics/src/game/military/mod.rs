@@ -36,6 +36,7 @@ fn test_shell_when_keyboard_pressed(
     game_state: Res<GameStateResource>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
+    // TODO HIGH: Remove as this is just debug code
     if keyboard_input.pressed(KeyCode::Space) {
         let GameStateResource(game_state) = game_state.as_ref();
         create_shell_entity(
@@ -53,8 +54,7 @@ fn create_shell_entity(
     game_state: &GameState,
     tile: TileCoordsXZ,
 ) {
-    // TODO HIGH: Do something better here
-
+    // TODO HIGH: Do something better here: the spawning of shells on GameResponse::ProjectilesAdded and de-spawning on GameResponse::ProjectilesRemoved
     let mut position = game_state
         .map_level()
         .terrain()

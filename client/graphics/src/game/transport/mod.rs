@@ -126,6 +126,7 @@ fn handle_transports_sync(
                 industry_building_infos,
                 station_building_infos,
                 transport_infos,
+                projectile_infos,
             ) = game_response
             {
                 if let Some(time_factor) = time_factor {
@@ -136,6 +137,7 @@ fn handle_transports_sync(
                     industry_building_infos,
                     station_building_infos,
                     transport_infos,
+                    projectile_infos,
                 );
             }
         }

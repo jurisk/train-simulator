@@ -19,6 +19,8 @@ use crate::game_time::{GameTime, GameTimeDiff, TimeFactor};
 use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::ZoningInfo;
 use crate::metrics::Metrics;
+use crate::military::projectile_info::{ProjectileDynamicInfo, ProjectileInfo};
+use crate::military::projectile_stile::ProjectileState;
 use crate::players::player_state::PlayerState;
 use crate::scenario::{PlayerProfile, Scenario};
 use crate::supply_chain::SupplyChain;
@@ -28,8 +30,8 @@ use crate::transport::track_type::TrackType;
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::transport::transport_state::TransportState;
 use crate::{
-    GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, ScenarioId, StationId, TrackId,
-    TransportId,
+    GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, ProjectileId, ScenarioId, StationId,
+    TrackId, TransportId,
 };
 
 // Later:   So this is used both on the server (to store authoritative game state), and on the client (to store the game state as known by the client).
@@ -41,6 +43,7 @@ pub struct GameState {
     map_level: MapLevel,
     buildings: BuildingState,
     transports: TransportState,
+    projectiles: ProjectileState,
     players: PlayerState,
     supply_chain: SupplyChain,
     time: GameTime,
@@ -77,6 +80,7 @@ pub struct GameStateFlattened {
     map_level:   MapLevelFlattened,
     buildings:   BuildingState,
     transports:  TransportState,
+    projectiles: ProjectileState,
     players:     PlayerState,
     time:        GameTime,
     time_factor: TimeFactor,
@@ -90,6 +94,7 @@ impl From<GameState> for GameStateFlattened {
             map_level:   value.map_level.into(),
             buildings:   value.buildings.clone(),
             transports:  value.transports.clone(),
+            projectiles: value.projectiles.clone(),
             players:     value.players.clone(),
             time:        value.time,
             time_factor: value.time_factor,
@@ -105,6 +110,7 @@ impl From<GameStateFlattened> for GameState {
             map_level: value.map_level.into(),
             buildings: value.buildings,
             transports: value.transports.clone(),
+            projectiles: value.projectiles.clone(),
             players: value.players.clone(),
             supply_chain: SupplyChain::new(),
             time: value.time,
@@ -135,6 +141,7 @@ impl GameState {
             map_level: scenario.map_level,
             buildings: BuildingState::new(size_x, size_z),
             transports: TransportState::empty(),
+            projectiles: ProjectileState::empty(),
             players,
             supply_chain: SupplyChain::new(),
             time: GameTime::new(),
@@ -191,6 +198,11 @@ impl GameState {
     #[must_use]
     pub fn transport_infos(&self) -> &Vec<TransportInfo> {
         self.transports.all_transports()
+    }
+
+    #[must_use]
+    pub fn projectile_infos(&self) -> impl IntoIterator<Item = &ProjectileInfo> {
+        self.projectiles.all_projectiles()
     }
 
     #[must_use]
@@ -462,16 +474,18 @@ impl GameState {
         industry_building_dynamic_infos: &HashMap<IndustryBuildingId, BuildingDynamicInfo>,
         station_dynamic_infos: &HashMap<StationId, BuildingDynamicInfo>,
         transport_dynamic_infos: &HashMap<TransportId, TransportDynamicInfo>,
+        projectile_dynamic_infos: &HashMap<ProjectileId, ProjectileDynamicInfo>,
     ) {
         let diff = server_time - self.time;
         trace!(
-            "Updated dynamic infos, diff {:?}, old {:?}, new {:?}, {} buildings, {} stations, {} transports",
+            "Updated dynamic infos, diff {:?}, old {:?}, new {:?}, {} buildings, {} stations, {} transports, {} projectiles",
             diff,
             self.time,
             server_time,
             industry_building_dynamic_infos.len(),
             station_dynamic_infos.len(),
             transport_dynamic_infos.len(),
+            projectile_dynamic_infos.len(),
         );
         self.time = server_time;
         for (transport_id, transport_dynamic_info) in transport_dynamic_infos {
@@ -480,6 +494,8 @@ impl GameState {
         }
         self.buildings
             .update_dynamic_infos(industry_building_dynamic_infos, station_dynamic_infos);
+        self.projectiles
+            .update_dynamic_infos(projectile_dynamic_infos);
     }
 
     #[must_use]

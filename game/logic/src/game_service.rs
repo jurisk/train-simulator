@@ -395,6 +395,16 @@ impl GameService {
                     .iter()
                     .map(|transport| (transport.transport_id(), transport.dynamic_info().clone()))
                     .collect(),
+                self.state
+                    .projectile_infos()
+                    .into_iter()
+                    .map(|projectile| {
+                        (
+                            projectile.projectile_id(),
+                            projectile.dynamic_info().clone(),
+                        )
+                    })
+                    .collect(),
             ),
         )
     }

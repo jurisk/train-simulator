@@ -203,6 +203,8 @@ fn handle_game_joining_and_game_state_snapshot(
                 GameResponse::TracksAdded(_) => {},
                 GameResponse::TracksRemoved(_) => {},
                 GameResponse::TransportsAdded(_) => {},
+                GameResponse::ProjectilesAdded(_) => {},
+                GameResponse::ProjectilesRemoved(_) => {},
                 GameResponse::DynamicInfosSync(..) => {},
                 GameResponse::GameJoined(player_id, snapshot) => {
                     commands.insert_resource(GameStateResource(snapshot.clone()));

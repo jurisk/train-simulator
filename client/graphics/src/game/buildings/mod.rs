@@ -137,7 +137,11 @@ fn handle_game_state_snapshot(
     }
 }
 
-#[expect(clippy::match_same_arms, clippy::too_many_arguments)]
+#[expect(
+    clippy::match_same_arms,
+    clippy::too_many_arguments,
+    clippy::too_many_lines
+)]
 fn handle_buildings_or_tracks_changed(
     mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
@@ -248,6 +252,8 @@ fn handle_buildings_or_tracks_changed(
                     }
                 },
                 GameResponse::TransportsAdded(_) => {},
+                GameResponse::ProjectilesAdded(_) => {},
+                GameResponse::ProjectilesRemoved(_) => {},
                 GameResponse::DynamicInfosSync(..) => {},
                 GameResponse::GameJoined(..) => {},
                 GameResponse::GameLeft => {},

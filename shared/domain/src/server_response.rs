@@ -15,10 +15,11 @@ use crate::building::track_info::TrackInfo;
 use crate::client_command::DemolishSelector;
 use crate::game_state::GameState;
 use crate::game_time::{GameTime, TimeFactor};
+use crate::military::projectile_info::{ProjectileDynamicInfo, ProjectileInfo};
 use crate::transport::transport_info::{TransportDynamicInfo, TransportInfo};
 use crate::{
-    ClientId, GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, PlayerName, ScenarioId,
-    StationId, TrackId, TransportId, UserId, UserName,
+    ClientId, GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, PlayerName, ProjectileId,
+    ScenarioId, StationId, TrackId, TransportId, UserId, UserName,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -101,12 +102,15 @@ pub enum GameResponse {
     TracksAdded(Vec<TrackInfo>),
     TracksRemoved(Vec<TrackId>),
     TransportsAdded(Vec<TransportInfo>),
+    ProjectilesAdded(Vec<ProjectileInfo>),
+    ProjectilesRemoved(Vec<ProjectileId>),
     DynamicInfosSync(
         GameTime,
         Option<TimeFactor>,
         HashMap<IndustryBuildingId, BuildingDynamicInfo>,
         HashMap<StationId, BuildingDynamicInfo>,
         HashMap<TransportId, TransportDynamicInfo>,
+        HashMap<ProjectileId, ProjectileDynamicInfo>,
     ),
     GameJoined(PlayerId, GameState),
     GameLeft,
@@ -213,13 +217,15 @@ impl Debug for GameResponse {
                 buildings,
                 stations,
                 transports,
+                projectiles,
             ) => {
                 write!(
                     f,
-                    "DynamicInfosSync({game_time:?} time, {time_factor:?} time_factor, {} industry, {} stations, {} transports)",
+                    "DynamicInfosSync({game_time:?} time, {time_factor:?} time_factor, {} industry, {} stations, {} transports, {} projectiles)",
                     buildings.len(),
                     stations.len(),
-                    transports.len()
+                    transports.len(),
+                    projectiles.len(),
                 )
             },
             GameResponse::GameJoined(player_id, _game_state) => {
@@ -234,6 +240,16 @@ impl Debug for GameResponse {
             },
             GameResponse::TracksRemoved(track_ids) => {
                 write!(f, "TracksRemoved({:?} tracks)", track_ids.len())
+            },
+            GameResponse::ProjectilesAdded(projectiles) => {
+                write!(f, "ProjectilesAdded({:?} projectiles)", projectiles.len())
+            },
+            GameResponse::ProjectilesRemoved(projectile_ids) => {
+                write!(
+                    f,
+                    "ProjectilesRemoved({:?} projectiles)",
+                    projectile_ids.len()
+                )
             },
         }
     }

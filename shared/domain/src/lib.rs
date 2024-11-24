@@ -29,6 +29,7 @@ pub mod supply_chain;
 pub mod tile_coords_xz;
 pub mod tile_coverage;
 pub mod transport;
+pub mod vector3;
 pub mod vertex_coords_xz;
 pub mod water;
 
@@ -152,6 +153,7 @@ newtype_uuid!(IndustryBuildingId, "IB");
 newtype_uuid!(MilitaryBuildingId, "MB");
 newtype_uuid!(TransportId, "T");
 newtype_uuid!(ZoningId, "Z");
+newtype_uuid!(ProjectileId, "P");
 
 #[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord, Debug)]
 pub struct ScenarioId(pub String);

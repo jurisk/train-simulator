@@ -83,7 +83,10 @@ fn read_on_client(
                     Ok(response) => {
                         let log_level = if matches!(
                             response,
-                            ServerResponse::Game(_, GameResponse::DynamicInfosSync(_, _, _, _, _))
+                            ServerResponse::Game(
+                                _,
+                                GameResponse::DynamicInfosSync(_, _, _, _, _, _)
+                            )
                         ) {
                             Level::Trace
                         } else {
