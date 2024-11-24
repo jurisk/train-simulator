@@ -1,21 +1,24 @@
 pub(crate) mod assets;
 
-use bevy::app::App;
-use bevy::input::ButtonInput;
 use bevy::log::debug;
 use bevy::math::{Quat, Vec3};
 use bevy::prelude::{
-    Commands, IntoSystemConfigs, KeyCode, PbrBundle, Plugin, Res, Transform, Update, default,
-    in_state,
+    App, Commands, Component, Entity, EventReader, FixedUpdate, IntoSystemConfigs, PbrBundle,
+    Plugin, Query, Res, ResMut, Transform, default, in_state,
 };
-use shared_domain::game_state::GameState;
+use shared_domain::ProjectileId;
 use shared_domain::military::ShellType;
-use shared_domain::tile_coords_xz::TileCoordsXZ;
+use shared_domain::military::projectile_info::ProjectileInfo;
+use shared_domain::server_response::{GameResponse, ServerResponse};
 
 use crate::assets::GameAssets;
+use crate::communication::domain::ServerMessageEvent;
 use crate::game::GameStateResource;
 use crate::game::military::assets::MilitaryAssets;
 use crate::states::ClientState;
+
+#[derive(Component)]
+pub struct ProjectileIdComponent(ProjectileId);
 
 pub struct MilitaryPlugin;
 
@@ -23,45 +26,82 @@ impl Plugin for MilitaryPlugin {
     fn build(&self, app: &mut App) {
         // TODO HIGH: Actually add events for spawning shells, and spawn them, and animate them. But how to handle impacts & explosions?
         app.add_systems(
-            Update,
-            test_shell_when_keyboard_pressed.run_if(in_state(ClientState::Playing)),
+            FixedUpdate,
+            handle_projectile_added_or_removed.run_if(in_state(ClientState::Playing)),
         );
     }
 }
 
-#[expect(clippy::needless_pass_by_value)]
-fn test_shell_when_keyboard_pressed(
+#[expect(clippy::match_same_arms, clippy::needless_pass_by_value)]
+fn handle_projectile_added_or_removed(
+    mut server_messages: EventReader<ServerMessageEvent>,
     mut commands: Commands,
     game_assets: Res<GameAssets>,
-    game_state: Res<GameStateResource>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut game_state_resource: ResMut<GameStateResource>,
+    projectile_id_query: Query<(Entity, &ProjectileIdComponent)>,
 ) {
-    // TODO HIGH: Remove as this is just debug code
-    if keyboard_input.pressed(KeyCode::Space) {
-        let GameStateResource(game_state) = game_state.as_ref();
-        create_shell_entity(
-            &mut commands,
-            game_assets.as_ref(),
-            game_state,
-            TileCoordsXZ::new(100, 100),
-        );
+    let GameStateResource(game_state) = game_state_resource.as_mut();
+    for message in server_messages.read() {
+        if let ServerResponse::Game(_game_id, game_response) = &message.response {
+            match game_response {
+                GameResponse::GameStateSnapshot(_) => {},
+                GameResponse::PlayersUpdated(_) => {},
+                GameResponse::IndustryBuildingAdded(_) => {},
+                GameResponse::IndustryBuildingRemoved(_) => {},
+                GameResponse::MilitaryBuildingAdded(_) => {},
+                GameResponse::MilitaryBuildingRemoved(_) => {},
+                GameResponse::StationAdded(_) => {},
+                GameResponse::StationRemoved(_) => {},
+                GameResponse::TracksAdded(_) => {},
+                GameResponse::TracksRemoved(_) => {},
+                GameResponse::TransportsAdded(_) => {},
+                GameResponse::ProjectilesAdded(projectiles) => {
+                    for projectile in projectiles {
+                        game_state.upsert_projectile(projectile.clone());
+
+                        create_shell_entity(&mut commands, game_assets.as_ref(), projectile);
+                    }
+                },
+                GameResponse::ProjectilesRemoved(projectile_ids) => {
+                    for projectile_id in projectile_ids {
+                        game_state.remove_projectile(*projectile_id);
+                    }
+
+                    remove_industry_building_entities(
+                        projectile_ids,
+                        &mut commands,
+                        &projectile_id_query,
+                    );
+                },
+                GameResponse::DynamicInfosSync(..) => {},
+                GameResponse::GameJoined(..) => {},
+                GameResponse::GameLeft => {},
+                GameResponse::Error(_) => {},
+            }
+        }
+    }
+}
+
+fn remove_industry_building_entities(
+    projectile_ids: &[ProjectileId],
+    commands: &mut Commands,
+    query: &Query<(Entity, &ProjectileIdComponent)>,
+) {
+    for (entity, projectile_id_component) in query {
+        let ProjectileIdComponent(found_projectile_id) = projectile_id_component;
+        if projectile_ids.contains(found_projectile_id) {
+            commands.entity(entity).despawn();
+        }
     }
 }
 
 fn create_shell_entity(
     commands: &mut Commands,
     game_assets: &GameAssets,
-    game_state: &GameState,
-    tile: TileCoordsXZ,
+    projectile: &ProjectileInfo,
 ) {
-    // TODO HIGH: Do something better here: the spawning of shells on GameResponse::ProjectilesAdded and de-spawning on GameResponse::ProjectilesRemoved
-    let mut position = game_state
-        .map_level()
-        .terrain()
-        .tile_center_coordinate(tile);
-    position.y += 2.0;
-
-    let velocity = Vec3::new(1.0, 1.0, 1.0);
+    let position = projectile.dynamic_info.location.into();
+    let velocity = projectile.dynamic_info.velocity.into();
     let rotation = Quat::from_rotation_arc(Vec3::Y, velocity);
 
     let pbr_bundle = create_shell_pbr_bundle(
@@ -70,7 +110,10 @@ fn create_shell_entity(
         rotation,
         &game_assets.military_assets,
     );
-    commands.spawn(pbr_bundle);
+
+    commands
+        .spawn(pbr_bundle)
+        .insert(ProjectileIdComponent(projectile.projectile_id()));
 }
 
 fn create_shell_pbr_bundle(

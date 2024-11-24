@@ -181,6 +181,7 @@ impl GameState {
             self.buildings.advance_time_diff(diff);
             self.transports
                 .advance_time_diff(diff, &mut self.buildings, metrics);
+            self.projectiles.advance_time_diff(diff);
             self.time = self.time + diff;
         }
     }
@@ -218,6 +219,14 @@ impl GameState {
     #[must_use]
     pub fn players(&self) -> &PlayerState {
         &self.players
+    }
+
+    pub fn upsert_projectile(&mut self, projectile: ProjectileInfo) {
+        self.projectiles.upsert(projectile);
+    }
+
+    pub fn remove_projectile(&mut self, projectile_id: ProjectileId) {
+        self.projectiles.remove(projectile_id);
     }
 
     pub fn upsert_transport(&mut self, transport: TransportInfo) {

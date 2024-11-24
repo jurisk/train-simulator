@@ -5,6 +5,7 @@ use log::warn;
 use serde::{Deserialize, Serialize};
 
 use crate::ProjectileId;
+use crate::game_time::GameTimeDiff;
 use crate::military::projectile_info::{ProjectileDynamicInfo, ProjectileInfo};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -25,6 +26,15 @@ impl ProjectileState {
         self.projectiles.values().collect()
     }
 
+    pub(crate) fn upsert(&mut self, projectile: ProjectileInfo) {
+        let projectile_id = projectile.projectile_id();
+        self.projectiles.insert(projectile_id, projectile);
+    }
+
+    pub(crate) fn remove(&mut self, projectile_id: ProjectileId) {
+        self.projectiles.remove(&projectile_id);
+    }
+
     pub fn update_dynamic_infos(
         &mut self,
         projectile_dynamic_infos: &HashMap<ProjectileId, ProjectileDynamicInfo>,
@@ -35,6 +45,12 @@ impl ProjectileState {
             } else {
                 warn!("No projectile found for dynamic info: {projectile_id:?}");
             }
+        }
+    }
+
+    pub fn advance_time_diff(&mut self, time_diff: GameTimeDiff) {
+        for projectile_info in self.projectiles.values_mut() {
+            projectile_info.advance_time_diff(time_diff);
         }
     }
 }

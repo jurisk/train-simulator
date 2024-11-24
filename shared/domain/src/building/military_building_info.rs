@@ -7,6 +7,7 @@ use crate::building::building_info::{BuildingInfo, WithCostToBuild, WithOwner, W
 use crate::building::industry_type::IndustryType;
 use crate::building::military_building_type::MilitaryBuildingType;
 use crate::cargo_map::CargoMap;
+use crate::game_time::GameTimeDiff;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::{MilitaryBuildingId, PlayerId};
@@ -60,6 +61,11 @@ impl MilitaryBuildingInfo {
     #[must_use]
     pub fn reference_tile(&self) -> TileCoordsXZ {
         self.reference_tile
+    }
+
+    pub fn advance_time_diff(&mut self, time_diff: GameTimeDiff) {
+        // TODO HIGH: Check if our reload is finished, and if yes, fire according to building type.
+        // TODO HIGH: But how do you spawn projectiles and also generate game responses? This seems a road to spaghetti code. Think carefully.
     }
 }
 

@@ -645,6 +645,9 @@ impl BuildingState {
         for (industry_building_id, station_id) in self.closest_station_link.clone() {
             self.exchange_cargo(industry_building_id, station_id);
         }
+        for military_building in &mut self.military_buildings.values_mut() {
+            military_building.advance_time_diff(diff);
+        }
     }
 
     #[expect(clippy::unwrap_used)]
