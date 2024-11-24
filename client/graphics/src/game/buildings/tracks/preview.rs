@@ -106,12 +106,14 @@ pub(crate) fn draw_track_preview(
 }
 
 fn debug_draw_track_spline(track_preview: &TrackPreview, gizmos: &mut Gizmos, terrain: &Terrain) {
-    let mut points: Vec<Vec3> = vec![];
+    let mut points: Vec<Vec3> = vec![terrain.directional_edge_entry_coordinate(track_preview.head)];
+
+    let mut current_edge = track_preview.head.from_direction;
     for track_info in &track_preview.tracks {
-        // TODO HIGH: This is actually not an ordered list of edge centers, it can be in the wrong order - we should use the `head` to go through it in order. And don't forget about both end-points!
-        let (direction, _) = track_info.track_type.connections_clockwise();
-        let coordinate = terrain.edge_center_coordinate(direction, track_info.tile);
+        let next_edge = track_info.track_type.other_end_unsafe(current_edge);
+        let coordinate = terrain.edge_center_coordinate(next_edge, track_info.tile);
         points.push(coordinate);
+        current_edge = next_edge.reverse();
     }
 
     if points.len() > 3 {

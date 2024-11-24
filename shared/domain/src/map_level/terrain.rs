@@ -8,6 +8,7 @@ use shared_util::direction_xz::DirectionXZ;
 use shared_util::grid_xz::GridXZ;
 
 use crate::building::BuildError;
+use crate::directional_edge::DirectionalEdge;
 use crate::map_level::map_level::{Height, TerrainType};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::tile_track::TileTrack;
@@ -79,6 +80,11 @@ impl Terrain {
     #[must_use]
     pub fn tile_count_z(&self) -> usize {
         self.vertex_count_z() - 1
+    }
+
+    #[must_use]
+    pub fn directional_edge_entry_coordinate(&self, directional_edge: DirectionalEdge) -> Vec3 {
+        self.edge_center_coordinate(directional_edge.from_direction, directional_edge.into_tile)
     }
 
     #[must_use]
