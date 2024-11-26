@@ -1,5 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 
+use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub, SubAssign};
 
 use serde::{Deserialize, Serialize};
@@ -80,6 +81,21 @@ impl Div<GameTimeDiff> for GameTimeDiff {
 
     fn div(self, rhs: GameTimeDiff) -> Self::Output {
         self.0 / rhs.0
+    }
+}
+
+impl Eq for GameTime {}
+
+impl PartialOrd for GameTime {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+#[expect(clippy::unwrap_used)]
+impl Ord for GameTime {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0.partial_cmp(&other.0).unwrap()
     }
 }
 

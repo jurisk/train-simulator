@@ -391,6 +391,12 @@ impl GameService {
                     .map(|building| (building.id(), building.dynamic_info().clone()))
                     .collect(),
                 self.state
+                    .building_state()
+                    .all_military_buildings()
+                    .into_iter()
+                    .map(|building| (building.id(), building.dynamic_info().clone()))
+                    .collect(),
+                self.state
                     .transport_infos()
                     .iter()
                     .map(|transport| (transport.transport_id(), transport.dynamic_info().clone()))

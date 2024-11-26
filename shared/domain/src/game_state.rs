@@ -11,7 +11,7 @@ use crate::building::building_info::{
 };
 use crate::building::building_state::{BuildingState, CanBuildResponse};
 use crate::building::industry_building_info::IndustryBuildingInfo;
-use crate::building::military_building_info::MilitaryBuildingInfo;
+use crate::building::military_building_info::{MilitaryBuildingDynamicInfo, MilitaryBuildingInfo};
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::{BuildCosts, BuildError};
@@ -178,11 +178,14 @@ impl GameState {
     pub fn advance_time_diff(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
         let diff = diff * self.time_factor;
         if diff != GameTimeDiff::ZERO {
-            self.buildings.advance_time_diff(diff);
+            let previous_game_time = self.time;
+            let new_game_time = previous_game_time + diff;
+            self.buildings
+                .advance_time_diff(previous_game_time, diff, new_game_time);
             self.transports
                 .advance_time_diff(diff, &mut self.buildings, metrics);
             self.projectiles.advance_time_diff(diff);
-            self.time = self.time + diff;
+            self.time = new_game_time;
         }
     }
 
@@ -482,17 +485,19 @@ impl GameState {
         server_time: GameTime,
         industry_building_dynamic_infos: &HashMap<IndustryBuildingId, BuildingDynamicInfo>,
         station_dynamic_infos: &HashMap<StationId, BuildingDynamicInfo>,
+        military_building_dynamic_infos: &HashMap<MilitaryBuildingId, MilitaryBuildingDynamicInfo>,
         transport_dynamic_infos: &HashMap<TransportId, TransportDynamicInfo>,
         projectile_dynamic_infos: &HashMap<ProjectileId, ProjectileDynamicInfo>,
     ) {
         let diff = server_time - self.time;
         trace!(
-            "Updated dynamic infos, diff {:?}, old {:?}, new {:?}, {} buildings, {} stations, {} transports, {} projectiles",
+            "Updated dynamic infos, diff {:?}, old {:?}, new {:?}, {} buildings, {} stations, {} military, {} transports, {} projectiles",
             diff,
             self.time,
             server_time,
             industry_building_dynamic_infos.len(),
             station_dynamic_infos.len(),
+            military_building_dynamic_infos.len(),
             transport_dynamic_infos.len(),
             projectile_dynamic_infos.len(),
         );
@@ -501,8 +506,11 @@ impl GameState {
             self.transports
                 .update_dynamic_info(*transport_id, transport_dynamic_info);
         }
-        self.buildings
-            .update_dynamic_infos(industry_building_dynamic_infos, station_dynamic_infos);
+        self.buildings.update_dynamic_infos(
+            industry_building_dynamic_infos,
+            station_dynamic_infos,
+            military_building_dynamic_infos,
+        );
         self.projectiles
             .update_dynamic_infos(projectile_dynamic_infos);
     }

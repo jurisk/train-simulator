@@ -7,7 +7,7 @@ use bevy::prelude::{
     Plugin, Query, Res, ResMut, Transform, default, in_state,
 };
 use shared_domain::ProjectileId;
-use shared_domain::military::ShellType;
+use shared_domain::military::ProjectileType;
 use shared_domain::military::projectile_info::ProjectileInfo;
 use shared_domain::server_response::{GameResponse, ServerResponse};
 
@@ -105,7 +105,7 @@ fn create_shell_entity(
     let rotation = Quat::from_rotation_arc(Vec3::Y, velocity);
 
     let pbr_bundle = create_shell_pbr_bundle(
-        ShellType::Standard,
+        ProjectileType::Standard,
         position,
         rotation,
         &game_assets.military_assets,
@@ -117,7 +117,7 @@ fn create_shell_entity(
 }
 
 fn create_shell_pbr_bundle(
-    shell_type: ShellType,
+    shell_type: ProjectileType,
     position: Vec3,
     rotation: Quat,
     military_assets: &MilitaryAssets,

@@ -6,6 +6,8 @@ use crate::building::WithRelativeTileCoverage;
 use crate::building::building_info::WithCostToBuild;
 use crate::building::industry_type::IndustryType;
 use crate::cargo_map::CargoMap;
+use crate::game_time::GameTimeDiff;
+use crate::military::ProjectileType;
 use crate::resource_type::ResourceType;
 use crate::tile_coverage::TileCoverage;
 
@@ -27,6 +29,20 @@ impl MilitaryBuildingType {
     #[must_use]
     pub fn all() -> Vec<MilitaryBuildingType> {
         vec![MilitaryBuildingType::FixedArtillery]
+    }
+
+    #[must_use]
+    pub fn reload_time(&self) -> GameTimeDiff {
+        match self {
+            MilitaryBuildingType::FixedArtillery => GameTimeDiff::from_seconds(2.0),
+        }
+    }
+
+    #[must_use]
+    pub fn projectile_type(&self) -> ProjectileType {
+        match self {
+            MilitaryBuildingType::FixedArtillery => ProjectileType::Standard,
+        }
     }
 }
 

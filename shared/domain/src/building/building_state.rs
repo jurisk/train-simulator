@@ -15,7 +15,7 @@ use crate::building::building_info::{
 };
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::industry_type::IndustryType;
-use crate::building::military_building_info::MilitaryBuildingInfo;
+use crate::building::military_building_info::{MilitaryBuildingDynamicInfo, MilitaryBuildingInfo};
 use crate::building::military_building_type::MilitaryBuildingType;
 use crate::building::station_info::StationInfo;
 use crate::building::station_type::StationType;
@@ -23,7 +23,7 @@ use crate::building::track_info::TrackInfo;
 use crate::building::track_state::{MaybeTracksOnTile, TrackState};
 use crate::building::{BuildCosts, BuildError};
 use crate::cargo_map::{CargoMap, CargoOps, WithCargo, WithCargoMut};
-use crate::game_time::GameTimeDiff;
+use crate::game_time::{GameTime, GameTimeDiff};
 use crate::resource_type::ResourceType;
 use crate::supply_chain::SupplyChain;
 use crate::tile_coverage::TileCoverage;
@@ -621,6 +621,14 @@ impl BuildingState {
     }
 
     #[must_use]
+    pub(crate) fn find_military_building_mut(
+        &mut self,
+        military_building_id: MilitaryBuildingId,
+    ) -> Option<&mut MilitaryBuildingInfo> {
+        self.military_buildings.get_mut(&military_building_id)
+    }
+
+    #[must_use]
     pub(crate) fn find_industry_building_mut(
         &mut self,
         industry_building_id: IndustryBuildingId,
@@ -638,7 +646,12 @@ impl BuildingState {
         self.tile_buildings[tile] == TileBuildingStatus::Empty
     }
 
-    pub(crate) fn advance_time_diff(&mut self, diff: GameTimeDiff) {
+    pub(crate) fn advance_time_diff(
+        &mut self,
+        previous_game_time: GameTime,
+        diff: GameTimeDiff,
+        new_game_time: GameTime,
+    ) {
         for industry_building in &mut self.industry_buildings.values_mut() {
             industry_building.advance_industry_building(diff);
         }
@@ -646,7 +659,7 @@ impl BuildingState {
             self.exchange_cargo(industry_building_id, station_id);
         }
         for military_building in &mut self.military_buildings.values_mut() {
-            military_building.advance_time_diff(diff);
+            military_building.advance_time_diff(previous_game_time, diff, new_game_time);
         }
     }
 
@@ -679,6 +692,7 @@ impl BuildingState {
         &mut self,
         industry_building_dynamic_infos: &HashMap<IndustryBuildingId, BuildingDynamicInfo>,
         station_dynamic_infos: &HashMap<StationId, BuildingDynamicInfo>,
+        military_building_dynamic_infos: &HashMap<MilitaryBuildingId, MilitaryBuildingDynamicInfo>,
     ) {
         for (industry_building_id, building_dynamic_info) in industry_building_dynamic_infos {
             self.update_industry_building_dynamic_info(
@@ -689,6 +703,28 @@ impl BuildingState {
 
         for (station_id, building_dynamic_info) in station_dynamic_infos {
             self.update_station_dynamic_info(*station_id, building_dynamic_info);
+        }
+
+        for (military_building_id, building_dynamic_info) in military_building_dynamic_infos {
+            self.update_military_building_dynamic_info(
+                *military_building_id,
+                building_dynamic_info,
+            );
+        }
+    }
+
+    fn update_military_building_dynamic_info(
+        &mut self,
+        military_building_id: MilitaryBuildingId,
+        building_dynamic_info: &MilitaryBuildingDynamicInfo,
+    ) {
+        if let Some(building) = self.find_military_building_mut(military_building_id) {
+            building.update_dynamic_info(building_dynamic_info);
+        } else {
+            warn!(
+                "Could not find military building with id {:?}",
+                military_building_id
+            );
         }
     }
 

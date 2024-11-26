@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Formatter};
 
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 use crate::building::WithRelativeTileCoverage;
@@ -7,10 +8,15 @@ use crate::building::building_info::{BuildingInfo, WithCostToBuild, WithOwner, W
 use crate::building::industry_type::IndustryType;
 use crate::building::military_building_type::MilitaryBuildingType;
 use crate::cargo_map::CargoMap;
-use crate::game_time::GameTimeDiff;
+use crate::game_time::{GameTime, GameTimeDiff};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::{MilitaryBuildingId, PlayerId};
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Default)]
+pub struct MilitaryBuildingDynamicInfo {
+    last_fired_at: GameTime,
+}
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct MilitaryBuildingInfo {
@@ -18,6 +24,7 @@ pub struct MilitaryBuildingInfo {
     owner_id:               PlayerId,
     military_building_type: MilitaryBuildingType,
     reference_tile:         TileCoordsXZ,
+    dynamic_info:           MilitaryBuildingDynamicInfo,
 }
 
 impl Debug for MilitaryBuildingInfo {
@@ -45,12 +52,22 @@ impl MilitaryBuildingInfo {
             owner_id,
             military_building_type,
             reference_tile,
+            dynamic_info: MilitaryBuildingDynamicInfo::default(),
         }
     }
 
     #[must_use]
     pub fn id(&self) -> MilitaryBuildingId {
         self.id
+    }
+
+    #[must_use]
+    pub fn dynamic_info(&self) -> &MilitaryBuildingDynamicInfo {
+        &self.dynamic_info
+    }
+
+    pub(crate) fn update_dynamic_info(&mut self, dynamic_info: &MilitaryBuildingDynamicInfo) {
+        self.dynamic_info = dynamic_info.clone();
     }
 
     #[must_use]
@@ -63,9 +80,27 @@ impl MilitaryBuildingInfo {
         self.reference_tile
     }
 
-    pub fn advance_time_diff(&mut self, time_diff: GameTimeDiff) {
-        // TODO HIGH: Check if our reload is finished, and if yes, fire according to building type.
-        // TODO HIGH: But how do you spawn projectiles and also generate game responses? This seems a road to spaghetti code. Think carefully.
+    #[must_use]
+    fn ready_to_fire_at(&self) -> GameTime {
+        self.dynamic_info.last_fired_at + self.military_building_type.reload_time()
+    }
+
+    pub fn advance_time_diff(
+        &mut self,
+        previous_game_time: GameTime,
+        _time_diff: GameTimeDiff,
+        new_game_time: GameTime,
+    ) {
+        let ready_at = self.ready_to_fire_at();
+        if new_game_time >= ready_at {
+            // Note: This can miss firing in cases where the reload rate is faster than our time diff tick, and we should have fired multiple times per this tick...
+            self.dynamic_info.last_fired_at = ready_at.max(previous_game_time);
+            warn!(
+                "We would be firing {:?} now!",
+                self.military_building_type().projectile_type()
+            );
+            // TODO HIGH: But how do you spawn projectiles and also generate game responses? This seems a road to spaghetti code. Think carefully.
+        }
     }
 }
 

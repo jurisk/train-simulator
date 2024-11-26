@@ -1,15 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 use crate::game_time::GameTimeDiff;
-use crate::military::ShellType;
+use crate::military::ProjectileType;
 use crate::vector3::Vector3;
 use crate::{PlayerId, ProjectileId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct ProjectileStaticInfo {
-    pub projectile_id: ProjectileId,
-    pub owner_id:      PlayerId,
-    pub shell_type:    ShellType,
+    pub projectile_id:   ProjectileId,
+    pub owner_id:        PlayerId,
+    pub projectile_type: ProjectileType,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]

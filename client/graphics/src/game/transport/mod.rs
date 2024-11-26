@@ -125,6 +125,7 @@ fn handle_transports_sync(
                 time_factor,
                 industry_building_infos,
                 station_building_infos,
+                military_building_infos,
                 transport_infos,
                 projectile_infos,
             ) = game_response
@@ -136,6 +137,7 @@ fn handle_transports_sync(
                     *game_time,
                     industry_building_infos,
                     station_building_infos,
+                    military_building_infos,
                     transport_infos,
                     projectile_infos,
                 );

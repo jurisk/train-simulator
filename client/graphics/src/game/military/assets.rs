@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use bevy::prelude::{Assets, Color, Mesh, StandardMaterial};
-use shared_domain::military::ShellType;
+use shared_domain::military::ProjectileType;
 
 use crate::assets::MeshAndMaterial;
 use crate::util::shapes::generate_cone;
@@ -20,7 +20,7 @@ impl MilitaryAssets {
 
 pub struct ShellAssets {
     fallback:             MeshAndMaterial,
-    shell_meshes_by_type: HashMap<ShellType, MeshAndMaterial>,
+    shell_meshes_by_type: HashMap<ProjectileType, MeshAndMaterial>,
 }
 
 impl ShellAssets {
@@ -34,7 +34,7 @@ impl ShellAssets {
         let mesh_and_material = MeshAndMaterial { mesh, material };
 
         let shell_meshes_by_type =
-            HashMap::from([(ShellType::Standard, mesh_and_material.clone())]);
+            HashMap::from([(ProjectileType::Standard, mesh_and_material.clone())]);
 
         Self {
             fallback: mesh_and_material,
@@ -44,7 +44,7 @@ impl ShellAssets {
 
     pub(crate) fn mesh_and_material_for_shell_type(
         &self,
-        shell_type: ShellType,
+        shell_type: ProjectileType,
     ) -> MeshAndMaterial {
         self.shell_meshes_by_type
             .get(&shell_type)

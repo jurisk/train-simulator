@@ -9,7 +9,7 @@ use web_time::Duration;
 use crate::building::BuildError;
 use crate::building::building_info::BuildingDynamicInfo;
 use crate::building::industry_building_info::IndustryBuildingInfo;
-use crate::building::military_building_info::MilitaryBuildingInfo;
+use crate::building::military_building_info::{MilitaryBuildingDynamicInfo, MilitaryBuildingInfo};
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::client_command::DemolishSelector;
@@ -109,6 +109,7 @@ pub enum GameResponse {
         Option<TimeFactor>,
         HashMap<IndustryBuildingId, BuildingDynamicInfo>,
         HashMap<StationId, BuildingDynamicInfo>,
+        HashMap<MilitaryBuildingId, MilitaryBuildingDynamicInfo>,
         HashMap<TransportId, TransportDynamicInfo>,
         HashMap<ProjectileId, ProjectileDynamicInfo>,
     ),
@@ -214,16 +215,18 @@ impl Debug for GameResponse {
             GameResponse::DynamicInfosSync(
                 game_time,
                 time_factor,
-                buildings,
+                industry_buildings,
                 stations,
+                military_buildings,
                 transports,
                 projectiles,
             ) => {
                 write!(
                     f,
-                    "DynamicInfosSync({game_time:?} time, {time_factor:?} time_factor, {} industry, {} stations, {} transports, {} projectiles)",
-                    buildings.len(),
+                    "DynamicInfosSync({game_time:?} time, {time_factor:?} time_factor, {} industry, {} stations, {} military {} transports, {} projectiles)",
+                    industry_buildings.len(),
                     stations.len(),
+                    military_buildings.len(),
                     transports.len(),
                     projectiles.len(),
                 )

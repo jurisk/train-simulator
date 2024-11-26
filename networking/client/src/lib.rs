@@ -85,7 +85,7 @@ fn read_on_client(
                             response,
                             ServerResponse::Game(
                                 _,
-                                GameResponse::DynamicInfosSync(_, _, _, _, _, _)
+                                GameResponse::DynamicInfosSync(_, _, _, _, _, _, _)
                             )
                         ) {
                             Level::Trace

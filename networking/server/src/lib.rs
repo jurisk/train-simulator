@@ -147,7 +147,7 @@ fn process_client_command_with_client_id_events(
 fn send_responses_to_clients(server: &Server<GameChannel>, response: &ServerResponseWithClientIds) {
     let log_level = if matches!(
         response.response,
-        ServerResponse::Game(_, GameResponse::DynamicInfosSync(_, _, _, _, _, _))
+        ServerResponse::Game(_, GameResponse::DynamicInfosSync(_, _, _, _, _, _, _))
     ) {
         Level::Trace
     } else {
