@@ -12,6 +12,7 @@ use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::game_state::GameState;
 use crate::game_time::TimeFactor;
+use crate::military::projectile_info::ProjectileInfo;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
 use crate::{
@@ -63,6 +64,11 @@ impl Debug for DemolishSelector {
             },
         }
     }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub enum InternalGameCommand {
+    SpawnProjectile(ProjectileInfo),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]

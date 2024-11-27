@@ -23,6 +23,7 @@ use crate::building::track_info::TrackInfo;
 use crate::building::track_state::{MaybeTracksOnTile, TrackState};
 use crate::building::{BuildCosts, BuildError};
 use crate::cargo_map::{CargoMap, CargoOps, WithCargo, WithCargoMut};
+use crate::client_command::InternalGameCommand;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::resource_type::ResourceType;
 use crate::supply_chain::SupplyChain;
@@ -646,12 +647,15 @@ impl BuildingState {
         self.tile_buildings[tile] == TileBuildingStatus::Empty
     }
 
+    #[must_use]
     pub(crate) fn advance_time_diff(
         &mut self,
         previous_game_time: GameTime,
         diff: GameTimeDiff,
         new_game_time: GameTime,
-    ) {
+    ) -> Vec<InternalGameCommand> {
+        let mut responses = vec![];
+
         for industry_building in &mut self.industry_buildings.values_mut() {
             industry_building.advance_industry_building(diff);
         }
@@ -659,8 +663,11 @@ impl BuildingState {
             self.exchange_cargo(industry_building_id, station_id);
         }
         for military_building in &mut self.military_buildings.values_mut() {
-            military_building.advance_time_diff(previous_game_time, diff, new_game_time);
+            let r = military_building.advance_time_diff(previous_game_time, diff, new_game_time);
+            responses.extend(r);
         }
+
+        responses
     }
 
     #[expect(clippy::unwrap_used)]

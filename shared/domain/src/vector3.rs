@@ -3,7 +3,7 @@ use std::ops::{AddAssign, Mul};
 use bevy_math::Vec3;
 use serde::{Deserialize, Serialize};
 
-// Later: Do we really need this separate from Vec3? But we do if we want to avoid floats and have a more granular, more predictable data model.
+// Later: Do we really need this separate from Bevy/glam Vec3? But we do if we want to avoid floats and have a more granular, more predictable data model.
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub struct Vector3 {
     pub x: f32,

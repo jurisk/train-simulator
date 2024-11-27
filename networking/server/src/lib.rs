@@ -135,10 +135,12 @@ fn process_client_command_with_client_id_events(
         }
     }
 
-    server_state.advance_time_diffs(
+    for response in server_state.advance_time_diffs(
         GameTimeDiff::from_seconds(time.delta_seconds()),
         metrics.as_ref(),
-    );
+    ) {
+        send_responses_to_clients(server.as_ref(), &response);
+    }
     for response in server_state.sync_games() {
         send_responses_to_clients(server.as_ref(), &response);
     }

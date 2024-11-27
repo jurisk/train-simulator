@@ -15,6 +15,7 @@ use crate::building::military_building_info::{MilitaryBuildingDynamicInfo, Milit
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::{BuildCosts, BuildError};
+use crate::client_command::InternalGameCommand;
 use crate::game_time::{GameTime, GameTimeDiff, TimeFactor};
 use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::ZoningInfo;
@@ -23,6 +24,7 @@ use crate::military::projectile_info::{ProjectileDynamicInfo, ProjectileInfo};
 use crate::military::projectile_stile::ProjectileState;
 use crate::players::player_state::PlayerState;
 use crate::scenario::{PlayerProfile, Scenario};
+use crate::server_response::GameResponse;
 use crate::supply_chain::SupplyChain;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::movement_orders::MovementOrders;
@@ -175,18 +177,48 @@ impl GameState {
         self.time
     }
 
-    pub fn advance_time_diff(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
+    #[must_use]
+    pub fn advance_time_diff(
+        &mut self,
+        diff: GameTimeDiff,
+        metrics: &impl Metrics,
+    ) -> Vec<GameResponse> {
+        self.advance_time_diff_internal(diff, metrics)
+            .into_iter()
+            .flat_map(|command| self.process_internal_command(command))
+            .collect()
+    }
+
+    fn process_internal_command(&mut self, command: InternalGameCommand) -> Vec<GameResponse> {
+        match command {
+            InternalGameCommand::SpawnProjectile(projectile) => {
+                self.upsert_projectile(projectile.clone());
+                vec![GameResponse::ProjectilesAdded(vec![projectile])]
+            },
+        }
+    }
+
+    #[must_use]
+    pub fn advance_time_diff_internal(
+        &mut self,
+        diff: GameTimeDiff,
+        metrics: &impl Metrics,
+    ) -> Vec<InternalGameCommand> {
+        let mut responses = vec![];
         let diff = diff * self.time_factor;
         if diff != GameTimeDiff::ZERO {
             let previous_game_time = self.time;
             let new_game_time = previous_game_time + diff;
-            self.buildings
+            let r = self
+                .buildings
                 .advance_time_diff(previous_game_time, diff, new_game_time);
+            responses.extend(r);
             self.transports
                 .advance_time_diff(diff, &mut self.buildings, metrics);
             self.projectiles.advance_time_diff(diff);
             self.time = new_game_time;
         }
+        responses
     }
 
     #[must_use]

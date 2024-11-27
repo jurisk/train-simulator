@@ -32,8 +32,17 @@ impl ServerState {
         }
     }
 
-    pub fn advance_time_diffs(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
-        self.games_service.advance_time_diffs(diff, metrics);
+    #[must_use]
+    pub fn advance_time_diffs(
+        &mut self,
+        diff: GameTimeDiff,
+        metrics: &impl Metrics,
+    ) -> Vec<ServerResponseWithClientIds> {
+        self.games_service
+            .advance_time_diffs(diff, metrics)
+            .into_iter()
+            .map(|response| self.translate_response(response))
+            .collect()
     }
 
     #[must_use]

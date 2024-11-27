@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 
-use log::warn;
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::building::WithRelativeTileCoverage;
@@ -8,10 +8,16 @@ use crate::building::building_info::{BuildingInfo, WithCostToBuild, WithOwner, W
 use crate::building::industry_type::IndustryType;
 use crate::building::military_building_type::MilitaryBuildingType;
 use crate::cargo_map::CargoMap;
+use crate::client_command::InternalGameCommand;
 use crate::game_time::{GameTime, GameTimeDiff};
+use crate::military::ProjectileType;
+use crate::military::projectile_info::{
+    ProjectileDynamicInfo, ProjectileInfo, ProjectileStaticInfo,
+};
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
-use crate::{MilitaryBuildingId, PlayerId};
+use crate::vector3::Vector3;
+use crate::{MilitaryBuildingId, PlayerId, ProjectileId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Default)]
 pub struct MilitaryBuildingDynamicInfo {
@@ -90,16 +96,27 @@ impl MilitaryBuildingInfo {
         previous_game_time: GameTime,
         _time_diff: GameTimeDiff,
         new_game_time: GameTime,
-    ) {
+    ) -> Vec<InternalGameCommand> {
         let ready_at = self.ready_to_fire_at();
         if new_game_time >= ready_at {
             // Note: This can miss firing in cases where the reload rate is faster than our time diff tick, and we should have fired multiple times per this tick...
             self.dynamic_info.last_fired_at = ready_at.max(previous_game_time);
-            warn!(
-                "We would be firing {:?} now!",
-                self.military_building_type().projectile_type()
-            );
-            // TODO HIGH: But how do you spawn projectiles and also generate game responses? This seems a road to spaghetti code. Think carefully.
+            let mut location: Vector3 = Vector3::new(0.0, 0.0, 0.0); // TODO HIGH: actually, it should shoot from self.reference_tile().into();
+            location.y += 1.0; // This is just for debug purposes
+            // TODO HIGH: Have a targeting mechanism, determine the target location, determine the velocity to hit the target.
+            let velocity: Vector3 = Vector3::new(4.0, 6.0, 2.0); // This is just for debug purposes
+            let projectile_info = ProjectileInfo {
+                static_info:  ProjectileStaticInfo {
+                    projectile_id:   ProjectileId::random(),
+                    owner_id:        self.owner_id,
+                    projectile_type: ProjectileType::Standard,
+                },
+                dynamic_info: ProjectileDynamicInfo { location, velocity },
+            };
+            info!("Firing {projectile_info:?}",);
+            vec![InternalGameCommand::SpawnProjectile(projectile_info)]
+        } else {
+            vec![]
         }
     }
 }

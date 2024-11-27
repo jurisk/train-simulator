@@ -5,13 +5,14 @@ use std::fs;
 
 use game_ai::ArtificialIntelligenceState;
 use game_ai::oct2025::Oct2025ArtificialIntelligenceState;
-use game_logic::game_service::GameService;
+use game_logic::game_service::{GameResponseWithAddress, GameService};
 use game_logic::games_service::GamesService;
 use log::{error, info};
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};
+use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::{GameState, GameStateFlattened};
 use shared_domain::game_time::GameTimeDiff;
 use shared_domain::metrics::NoopMetrics;
@@ -128,34 +129,42 @@ fn run_ai_commands(
             let responses = game_service.process_command(player_id, &command);
             match responses {
                 Ok(responses) => {
-                    for response in responses {
-                        if let GameResponse::Error(error) = &response.response {
-                            error!("Failed to process command: {command:?}: {error:?}");
-                        }
-
-                        match &response.address {
-                            AddressEnvelope::ToClient(_) | AddressEnvelope::ToUser(_) => {
-                                error!("Unexpected response: {response:?}");
-                            },
-                            AddressEnvelope::ToPlayer(_, player_id) => {
-                                artificial_intelligence_states
-                                    .get_mut(player_id)
-                                    .unwrap()
-                                    .as_mut()
-                                    .notify_of_response(&response.response);
-                            },
-                            AddressEnvelope::ToAllPlayersInGame(_) => {
-                                for ai_state in artificial_intelligence_states.values_mut() {
-                                    ai_state.notify_of_response(&response.response);
-                                }
-                            },
-                        }
-                    }
+                    apply_game_responses(artificial_intelligence_states, &Some(command), responses);
                 },
                 Err(err) => {
                     panic!("Failed to process command: {command:?}: {err:?}",);
                 },
             }
+        }
+    }
+}
+
+fn apply_game_responses(
+    artificial_intelligence_states: &mut HashMap<PlayerId, Box<dyn ArtificialIntelligenceState>>,
+    command: &Option<GameCommand>,
+    responses: Vec<GameResponseWithAddress>,
+) {
+    for response in responses {
+        if let GameResponse::Error(error) = &response.response {
+            error!("Failed to process command: {command:?}: {error:?}");
+        }
+
+        match &response.address {
+            AddressEnvelope::ToClient(_) | AddressEnvelope::ToUser(_) => {
+                error!("Unexpected response: {response:?}");
+            },
+            AddressEnvelope::ToPlayer(_, player_id) => {
+                artificial_intelligence_states
+                    .get_mut(player_id)
+                    .unwrap()
+                    .as_mut()
+                    .notify_of_response(&response.response);
+            },
+            AddressEnvelope::ToAllPlayersInGame(_) => {
+                for ai_state in artificial_intelligence_states.values_mut() {
+                    ai_state.notify_of_response(&response.response);
+                }
+            },
         }
     }
 }
@@ -270,7 +279,8 @@ where
         }
 
         let diff = GameTimeDiff::from_seconds(0.1);
-        game_service.advance_time_diff(diff, &NoopMetrics::default());
+        let responses = game_service.advance_time_diff(diff, &NoopMetrics::default());
+        apply_game_responses(&mut player_ais, &None, responses);
 
         steps += 1;
     }

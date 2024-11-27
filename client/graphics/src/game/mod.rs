@@ -127,12 +127,22 @@ pub struct PlayerIdResource(pub PlayerId);
 
 // Movement prediction on the client side
 #[expect(clippy::needless_pass_by_value)]
-fn client_side_time_advance(mut game_state_resource: ResMut<GameStateResource>, time: Res<Time>) {
+fn client_side_time_advance(
+    mut game_state_resource: ResMut<GameStateResource>,
+    mut server_messages: EventWriter<ServerMessageEvent>,
+    time: Res<Time>,
+) {
     let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
-    game_state.advance_time_diff(
+    let responses = game_state.advance_time_diff(
         GameTimeDiff::from_seconds(time.delta_seconds()),
         &NoopMetrics::default(),
     );
+    for response in responses {
+        server_messages.send(ServerMessageEvent::new(ServerResponse::Game(
+            game_state.game_id,
+            response,
+        )));
+    }
 }
 
 #[expect(clippy::needless_pass_by_value)]

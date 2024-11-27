@@ -280,8 +280,22 @@ impl GameService {
         }
     }
 
-    pub fn advance_time_diff(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
-        self.state.advance_time_diff(diff, metrics);
+    #[must_use]
+    pub fn advance_time_diff(
+        &mut self,
+        diff: GameTimeDiff,
+        metrics: &impl Metrics,
+    ) -> Vec<GameResponseWithAddress> {
+        self.state
+            .advance_time_diff(diff, metrics)
+            .into_iter()
+            .map(|response| {
+                GameResponseWithAddress::new(
+                    AddressEnvelope::ToAllPlayersInGame(self.game_id()),
+                    response,
+                )
+            })
+            .collect()
     }
 
     #[must_use]
