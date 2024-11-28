@@ -117,7 +117,7 @@ impl MilitaryBuildingInfo {
             location.y += 1.0; // This is just for debug purposes
             let landing_on = TileCoordsXZ::new(0, 0); // TODO HIGH: Have a target selection, initially just the closest enemy building
             // TODO HIGH: For `velocity`, have a targeting mechanism (take from other code you have), determine the target location, determine the velocity to hit the target (if possible).
-            let velocity: Vector3 = Vector3::new(40.0, 60.0, 20.0);
+            let velocity: Vector3 = Vector3::new(10.0, 20.0, 5.0);
             let projectile_info = ProjectileInfo {
                 static_info:  ProjectileStaticInfo {
                     projectile_id: ProjectileId::random(),
