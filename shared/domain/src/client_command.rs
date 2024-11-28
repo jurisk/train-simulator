@@ -16,8 +16,8 @@ use crate::military::projectile_info::ProjectileInfo;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
 use crate::{
-    ClientId, GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, ScenarioId, StationId,
-    TrackId, TransportId, UserId,
+    ClientId, GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, ProjectileId, ScenarioId,
+    StationId, TrackId, TransportId, UserId,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -69,6 +69,7 @@ impl Debug for DemolishSelector {
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub enum InternalGameCommand {
     SpawnProjectile(ProjectileInfo),
+    ProjectileLanded(ProjectileId),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]

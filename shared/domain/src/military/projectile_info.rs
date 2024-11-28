@@ -1,6 +1,7 @@
-use log::info;
+use log::trace;
 use serde::{Deserialize, Serialize};
 
+use crate::client_command::InternalGameCommand;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::military::ProjectileType;
 use crate::tile_coords_xz::TileCoordsXZ;
@@ -41,12 +42,26 @@ impl ProjectileInfo {
         &self.dynamic_info
     }
 
+    #[must_use]
+    pub(crate) fn generate_commands(
+        &self,
+        _previous_game_time: GameTime,
+        _diff: GameTimeDiff,
+        new_game_time: GameTime,
+    ) -> Vec<InternalGameCommand> {
+        if new_game_time < self.static_info.landing_at {
+            vec![]
+        } else {
+            vec![InternalGameCommand::ProjectileLanded(self.projectile_id())]
+        }
+    }
+
     pub fn advance_time_diff(&mut self, time_diff: GameTimeDiff) {
-        // TODO HIGH: Take physics model from 'kido-butai', including drag.
+        // TODO HIGH: Take physics model from other code you have, including drag.
         let gravity = Vector3::new(0.0, -9.81, 0.0);
         self.dynamic_info.velocity += gravity * time_diff.to_seconds();
         self.dynamic_info.location += self.dynamic_info.velocity * time_diff.to_seconds();
-        info!(
+        trace!(
             "Projectile {projectile_id:?} advanced to {location:?}",
             projectile_id = self.projectile_id(),
             location = self.dynamic_info.location

@@ -4,7 +4,8 @@ use std::fmt::{Debug, Formatter};
 use log::warn;
 use serde::{Deserialize, Serialize};
 
-use crate::game_time::GameTimeDiff;
+use crate::client_command::InternalGameCommand;
+use crate::game_time::{GameTime, GameTimeDiff};
 use crate::military::projectile_info::{ProjectileDynamicInfo, ProjectileInfo};
 use crate::{PlayerId, ProjectileId};
 
@@ -61,6 +62,20 @@ impl ProjectileState {
                 warn!("No projectile found for dynamic info: {projectile_id:?}");
             }
         }
+    }
+
+    pub(crate) fn generate_commands(
+        &self,
+        previous_game_time: GameTime,
+        diff: GameTimeDiff,
+        new_game_time: GameTime,
+    ) -> Vec<InternalGameCommand> {
+        self.projectiles
+            .values()
+            .flat_map(|projectile_info| {
+                projectile_info.generate_commands(previous_game_time, diff, new_game_time)
+            })
+            .collect()
     }
 
     pub fn advance_time_diff(&mut self, time_diff: GameTimeDiff) {

@@ -206,17 +206,28 @@ impl GameState {
                 self.upsert_projectile(projectile.clone());
                 vec![GameResponse::ProjectilesAdded(vec![projectile])]
             },
+            InternalGameCommand::ProjectileLanded(projectile_id) => {
+                // TODO HIGH: Spawn explosion, do damage, etc.
+                self.remove_projectile(projectile_id);
+                vec![GameResponse::ProjectilesRemoved(vec![projectile_id])]
+            },
         }
     }
 
+    #[must_use]
     fn generate_commands(
         &self,
         previous_game_time: GameTime,
         diff: GameTimeDiff,
         new_game_time: GameTime,
     ) -> Vec<InternalGameCommand> {
-        self.buildings
-            .generate_commands(previous_game_time, diff, new_game_time, self)
+        let building_commands =
+            self.buildings
+                .generate_commands(previous_game_time, diff, new_game_time, self);
+        let projectile_commands =
+            self.projectiles
+                .generate_commands(previous_game_time, diff, new_game_time);
+        [building_commands, projectile_commands].concat()
     }
 
     #[must_use]
