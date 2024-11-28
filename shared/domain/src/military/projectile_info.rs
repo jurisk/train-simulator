@@ -1,3 +1,4 @@
+use log::info;
 use serde::{Deserialize, Serialize};
 
 use crate::game_time::{GameTime, GameTimeDiff};
@@ -45,5 +46,10 @@ impl ProjectileInfo {
         let gravity = Vector3::new(0.0, -9.81, 0.0);
         self.dynamic_info.velocity += gravity * time_diff.to_seconds();
         self.dynamic_info.location += self.dynamic_info.velocity * time_diff.to_seconds();
+        info!(
+            "Projectile {projectile_id:?} advanced to {location:?}",
+            projectile_id = self.projectile_id(),
+            location = self.dynamic_info.location
+        );
     }
 }

@@ -1,5 +1,6 @@
 pub(crate) mod assets;
 
+use bevy::app::Update;
 use bevy::log::debug;
 use bevy::math::{Quat, Vec3};
 use bevy::prelude::{
@@ -24,12 +25,45 @@ pub struct MilitaryPlugin;
 
 impl Plugin for MilitaryPlugin {
     fn build(&self, app: &mut App) {
-        // TODO HIGH: Actually add events for spawning shells, and spawn them, and animate them. But how to handle impacts & explosions?
+        // TODO HIGH: Handle shell impacts & explosions.
+
+        app.add_systems(
+            Update,
+            move_projectiles.run_if(in_state(ClientState::Playing)),
+        );
         app.add_systems(
             FixedUpdate,
             handle_projectile_added_or_removed.run_if(in_state(ClientState::Playing)),
         );
     }
+}
+
+#[expect(clippy::needless_pass_by_value)]
+fn move_projectiles(
+    game_state_resource: Res<GameStateResource>,
+    mut query: Query<(&mut Transform, &ProjectileIdComponent)>,
+) {
+    let GameStateResource(game_state) = game_state_resource.as_ref();
+    for (mut transform, projectile_id_component) in &mut query {
+        let ProjectileIdComponent(projectile_id) = projectile_id_component;
+        if let Some(projectile) = game_state
+            .projectile_state()
+            .find_projectile(*projectile_id)
+        {
+            let (position, rotation) = calculate_position_and_rotation(projectile);
+
+            transform.translation = position;
+            transform.rotation = rotation;
+        }
+    }
+}
+
+fn calculate_position_and_rotation(projectile: &ProjectileInfo) -> (Vec3, Quat) {
+    let position = projectile.dynamic_info.location.into();
+    let velocity = projectile.dynamic_info.velocity.into();
+    let rotation = Quat::from_rotation_arc(Vec3::Y, velocity);
+
+    (position, rotation)
 }
 
 #[expect(clippy::match_same_arms, clippy::needless_pass_by_value)]
@@ -100,9 +134,7 @@ fn create_shell_entity(
     game_assets: &GameAssets,
     projectile: &ProjectileInfo,
 ) {
-    let position = projectile.dynamic_info.location.into();
-    let velocity = projectile.dynamic_info.velocity.into();
-    let rotation = Quat::from_rotation_arc(Vec3::Y, velocity);
+    let (position, rotation) = calculate_position_and_rotation(projectile);
 
     let pbr_bundle = create_shell_pbr_bundle(
         ProjectileType::Standard,

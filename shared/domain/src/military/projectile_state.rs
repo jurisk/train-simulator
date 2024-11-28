@@ -27,6 +27,11 @@ impl ProjectileState {
     }
 
     #[must_use]
+    pub fn find_projectile(&self, projectile_id: ProjectileId) -> Option<&ProjectileInfo> {
+        self.projectiles.get(&projectile_id)
+    }
+
+    #[must_use]
     pub fn find_projectiles_by_owner(
         &self,
         owner_id: PlayerId,
