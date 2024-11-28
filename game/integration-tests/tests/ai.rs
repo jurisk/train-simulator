@@ -96,6 +96,16 @@ fn cargo_exceeds_threshold(
 fn end_condition(game_state: &GameState, player_id: PlayerId) -> bool {
     player_has_enough_cargo(game_state, player_id)
         && player_has_fixed_artillery(game_state, player_id)
+        && player_has_projectiles(game_state, player_id)
+}
+
+fn player_has_projectiles(game_state: &GameState, player_id: PlayerId) -> bool {
+    game_state
+        .projectile_state()
+        .find_projectiles_by_owner(player_id)
+        .into_iter()
+        .next()
+        .is_some()
 }
 
 fn player_has_fixed_artillery(game_state: &GameState, player_id: PlayerId) -> bool {
@@ -170,9 +180,9 @@ fn apply_game_responses(
 }
 
 #[test_log::test]
-fn ai_until_final_goods_built_oct2025() {
+fn ai_test_oct2025() {
     info!("Starting AI test Oct 2025...");
-    ai_until_final_goods_built(|player_id: PlayerId, game_state: &GameState| {
+    ai_test(|player_id: PlayerId, game_state: &GameState| {
         Box::new(Oct2025ArtificialIntelligenceState::new(
             player_id, game_state,
         ))
@@ -241,7 +251,7 @@ fn print_end_state(
 const MAX_STEPS: usize = 10_000;
 
 #[expect(clippy::similar_names)]
-fn ai_until_final_goods_built<F>(factory: F)
+fn ai_test<F>(factory: F)
 where
     F: Fn(PlayerId, &GameState) -> Box<dyn ArtificialIntelligenceState>,
 {

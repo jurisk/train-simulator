@@ -9,6 +9,7 @@ use crate::building::industry_type::IndustryType;
 use crate::building::military_building_type::MilitaryBuildingType;
 use crate::cargo_map::CargoMap;
 use crate::client_command::InternalGameCommand;
+use crate::game_state::GameState;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::military::ProjectileType;
 use crate::military::projectile_info::{
@@ -86,30 +87,46 @@ impl MilitaryBuildingInfo {
         self.reference_tile
     }
 
+    pub(crate) fn update_last_fired_at(&mut self, last_fired_at: GameTime) {
+        self.dynamic_info.last_fired_at = self.dynamic_info.last_fired_at.max(last_fired_at);
+    }
+
     #[must_use]
     fn ready_to_fire_at(&self) -> GameTime {
         self.dynamic_info.last_fired_at + self.military_building_type.reload_time()
     }
 
-    pub fn advance_time_diff(
-        &mut self,
+    #[must_use]
+    pub fn generate_commands(
+        &self,
         previous_game_time: GameTime,
         _time_diff: GameTimeDiff,
         new_game_time: GameTime,
+        game_state: &GameState,
     ) -> Vec<InternalGameCommand> {
         let ready_at = self.ready_to_fire_at();
         if new_game_time >= ready_at {
             // Note: This can miss firing in cases where the reload rate is faster than our time diff tick, and we should have fired multiple times per this tick...
-            self.dynamic_info.last_fired_at = ready_at.max(previous_game_time);
-            let mut location: Vector3 = Vector3::new(0.0, 0.0, 0.0); // TODO HIGH: actually, it should shoot from self.reference_tile().into();
+            let fired_at = ready_at.max(previous_game_time);
+            let landing_at = fired_at + GameTimeDiff::from_seconds(10.0); // TODO HIGH: Calculate flight time
+            let mut location: Vector3 = game_state
+                .map_level()
+                .terrain()
+                .tile_center_coordinate(self.reference_tile())
+                .into();
             location.y += 1.0; // This is just for debug purposes
-            // TODO HIGH: Have a targeting mechanism, determine the target location, determine the velocity to hit the target.
-            let velocity: Vector3 = Vector3::new(4.0, 6.0, 2.0); // This is just for debug purposes
+            let landing_on = TileCoordsXZ::new(0, 0); // TODO HIGH: Have a target selection
+            // TODO HIGH: For `velocity`, have a targeting mechanism, determine the target location, determine the velocity to hit the target.
+            let velocity: Vector3 = Vector3::new(4.0, 6.0, 2.0);
             let projectile_info = ProjectileInfo {
                 static_info:  ProjectileStaticInfo {
-                    projectile_id:   ProjectileId::random(),
-                    owner_id:        self.owner_id,
+                    projectile_id: ProjectileId::random(),
+                    owner_id: self.owner_id,
                     projectile_type: ProjectileType::Standard,
+                    fired_from: self.id,
+                    fired_at,
+                    landing_at,
+                    landing_on,
                 },
                 dynamic_info: ProjectileDynamicInfo { location, velocity },
             };
@@ -118,6 +135,15 @@ impl MilitaryBuildingInfo {
         } else {
             vec![]
         }
+    }
+
+    pub fn advance_time_diff(
+        &mut self,
+        _previous_game_time: GameTime,
+        _time_diff: GameTimeDiff,
+        _new_game_time: GameTime,
+    ) {
+        // Empty on purpose, at least for now
     }
 }
 

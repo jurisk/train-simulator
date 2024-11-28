@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use log::{debug, trace};
+use log::{debug, trace, warn};
 use serde::{Deserialize, Serialize, Serializer};
 use shared_util::bool_ops::BoolResultOps;
 
@@ -21,7 +21,7 @@ use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::ZoningInfo;
 use crate::metrics::Metrics;
 use crate::military::projectile_info::{ProjectileDynamicInfo, ProjectileInfo};
-use crate::military::projectile_stile::ProjectileState;
+use crate::military::projectile_state::ProjectileState;
 use crate::players::player_state::PlayerState;
 use crate::scenario::{PlayerProfile, Scenario};
 use crate::server_response::GameResponse;
@@ -192,10 +192,31 @@ impl GameState {
     fn process_internal_command(&mut self, command: InternalGameCommand) -> Vec<GameResponse> {
         match command {
             InternalGameCommand::SpawnProjectile(projectile) => {
+                if let Some(building) = self
+                    .buildings
+                    .find_military_building_mut(projectile.static_info.fired_from)
+                {
+                    building.update_last_fired_at(projectile.static_info.fired_at);
+                } else {
+                    warn!(
+                        "Failed to find building {:?} for projectile {projectile:?}",
+                        projectile.static_info.fired_from
+                    );
+                }
                 self.upsert_projectile(projectile.clone());
                 vec![GameResponse::ProjectilesAdded(vec![projectile])]
             },
         }
+    }
+
+    fn generate_commands(
+        &self,
+        previous_game_time: GameTime,
+        diff: GameTimeDiff,
+        new_game_time: GameTime,
+    ) -> Vec<InternalGameCommand> {
+        self.buildings
+            .generate_commands(previous_game_time, diff, new_game_time, self)
     }
 
     #[must_use]
@@ -204,21 +225,20 @@ impl GameState {
         diff: GameTimeDiff,
         metrics: &impl Metrics,
     ) -> Vec<InternalGameCommand> {
-        let mut responses = vec![];
         let diff = diff * self.time_factor;
-        if diff != GameTimeDiff::ZERO {
+        if diff > GameTimeDiff::ZERO {
             let previous_game_time = self.time;
             let new_game_time = previous_game_time + diff;
-            let r = self
-                .buildings
+            self.buildings
                 .advance_time_diff(previous_game_time, diff, new_game_time);
-            responses.extend(r);
             self.transports
                 .advance_time_diff(diff, &mut self.buildings, metrics);
             self.projectiles.advance_time_diff(diff);
             self.time = new_game_time;
+            self.generate_commands(previous_game_time, diff, new_game_time)
+        } else {
+            vec![]
         }
-        responses
     }
 
     #[must_use]
@@ -234,6 +254,11 @@ impl GameState {
     #[must_use]
     pub fn transport_infos(&self) -> &Vec<TransportInfo> {
         self.transports.all_transports()
+    }
+
+    #[must_use]
+    pub fn projectile_state(&self) -> &ProjectileState {
+        &self.projectiles
     }
 
     #[must_use]

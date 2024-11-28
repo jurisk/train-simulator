@@ -1,15 +1,20 @@
 use serde::{Deserialize, Serialize};
 
-use crate::game_time::GameTimeDiff;
+use crate::game_time::{GameTime, GameTimeDiff};
 use crate::military::ProjectileType;
+use crate::tile_coords_xz::TileCoordsXZ;
 use crate::vector3::Vector3;
-use crate::{PlayerId, ProjectileId};
+use crate::{MilitaryBuildingId, PlayerId, ProjectileId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct ProjectileStaticInfo {
     pub projectile_id:   ProjectileId,
     pub owner_id:        PlayerId,
     pub projectile_type: ProjectileType,
+    pub fired_from:      MilitaryBuildingId,
+    pub fired_at:        GameTime,
+    pub landing_at:      GameTime,
+    pub landing_on:      TileCoordsXZ,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]

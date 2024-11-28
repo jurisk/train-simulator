@@ -4,9 +4,9 @@ use std::fmt::{Debug, Formatter};
 use log::warn;
 use serde::{Deserialize, Serialize};
 
-use crate::ProjectileId;
 use crate::game_time::GameTimeDiff;
 use crate::military::projectile_info::{ProjectileDynamicInfo, ProjectileInfo};
+use crate::{PlayerId, ProjectileId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct ProjectileState {
@@ -24,6 +24,16 @@ impl ProjectileState {
     #[must_use]
     pub fn all_projectiles(&self) -> Vec<&ProjectileInfo> {
         self.projectiles.values().collect()
+    }
+
+    #[must_use]
+    pub fn find_projectiles_by_owner(
+        &self,
+        owner_id: PlayerId,
+    ) -> impl IntoIterator<Item = &ProjectileInfo> {
+        self.projectiles
+            .values()
+            .filter(move |projectile_info| projectile_info.static_info.owner_id == owner_id)
     }
 
     pub(crate) fn upsert(&mut self, projectile: ProjectileInfo) {
