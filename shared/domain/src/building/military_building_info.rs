@@ -12,9 +12,7 @@ use crate::client_command::InternalGameCommand;
 use crate::game_state::GameState;
 use crate::game_time::{GameTime, GameTimeDiff};
 use crate::military::ProjectileType;
-use crate::military::projectile_info::{
-    ProjectileDynamicInfo, ProjectileInfo, ProjectileStaticInfo,
-};
+use crate::military::projectile_info::ProjectileInfo;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
 use crate::vector3::Vector3;
@@ -118,18 +116,17 @@ impl MilitaryBuildingInfo {
             let landing_on = TileCoordsXZ::new(0, 0); // TODO HIGH: Have a target selection, initially just the closest enemy building
             // TODO HIGH: For `velocity`, have a targeting mechanism (take from other code you have), determine the target location, determine the velocity to hit the target (if possible).
             let velocity: Vector3 = Vector3::new(10.0, 20.0, 5.0);
-            let projectile_info = ProjectileInfo {
-                static_info:  ProjectileStaticInfo {
-                    projectile_id: ProjectileId::random(),
-                    owner_id: self.owner_id,
-                    projectile_type: ProjectileType::Standard,
-                    fired_from: self.id,
-                    fired_at,
-                    landing_at,
-                    landing_on,
-                },
-                dynamic_info: ProjectileDynamicInfo { location, velocity },
-            };
+            let projectile_info = ProjectileInfo::new(
+                ProjectileId::random(),
+                self.owner_id,
+                ProjectileType::Standard,
+                self.id,
+                fired_at,
+                landing_at,
+                landing_on,
+                location,
+                velocity,
+            );
             info!("Firing {projectile_info:?}",);
             vec![InternalGameCommand::SpawnProjectile(projectile_info)]
         } else {

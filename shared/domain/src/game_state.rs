@@ -194,13 +194,13 @@ impl GameState {
             InternalGameCommand::SpawnProjectile(projectile) => {
                 if let Some(building) = self
                     .buildings
-                    .find_military_building_mut(projectile.static_info.fired_from)
+                    .find_military_building_mut(projectile.fired_from())
                 {
-                    building.update_last_fired_at(projectile.static_info.fired_at);
+                    building.update_last_fired_at(projectile.fired_at());
                 } else {
                     warn!(
                         "Failed to find building {:?} for projectile {projectile:?}",
-                        projectile.static_info.fired_from
+                        projectile.fired_from()
                     );
                 }
                 self.upsert_projectile(projectile.clone());

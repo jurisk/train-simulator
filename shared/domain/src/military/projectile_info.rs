@@ -9,29 +9,61 @@ use crate::vector3::Vector3;
 use crate::{MilitaryBuildingId, PlayerId, ProjectileId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
-pub struct ProjectileStaticInfo {
-    pub projectile_id:   ProjectileId,
-    pub owner_id:        PlayerId,
-    pub projectile_type: ProjectileType,
-    pub fired_from:      MilitaryBuildingId,
-    pub fired_at:        GameTime,
-    pub landing_at:      GameTime,
-    pub landing_on:      TileCoordsXZ,
+struct ProjectileStaticInfo {
+    projectile_id:   ProjectileId,
+    owner_id:        PlayerId,
+    projectile_type: ProjectileType,
+    fired_from:      MilitaryBuildingId,
+    fired_at:        GameTime,
+    landing_at:      GameTime,
+    landing_on:      TileCoordsXZ,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct ProjectileDynamicInfo {
-    pub location: Vector3,
-    pub velocity: Vector3,
+    location: Vector3,
+    velocity: Vector3,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct ProjectileInfo {
-    pub static_info:  ProjectileStaticInfo,
-    pub dynamic_info: ProjectileDynamicInfo,
+    static_info:  ProjectileStaticInfo,
+    dynamic_info: ProjectileDynamicInfo,
 }
 
 impl ProjectileInfo {
+    #[must_use]
+    #[expect(clippy::too_many_arguments)]
+    pub fn new(
+        projectile_id: ProjectileId,
+        owner_id: PlayerId,
+        projectile_type: ProjectileType,
+        fired_from: MilitaryBuildingId,
+        fired_at: GameTime,
+        landing_at: GameTime,
+        landing_on: TileCoordsXZ,
+        location: Vector3,
+        velocity: Vector3,
+    ) -> Self {
+        Self {
+            static_info:  ProjectileStaticInfo {
+                projectile_id,
+                owner_id,
+                projectile_type,
+                fired_from,
+                fired_at,
+                landing_at,
+                landing_on,
+            },
+            dynamic_info: ProjectileDynamicInfo { location, velocity },
+        }
+    }
+
+    #[must_use]
+    pub fn owner_id(&self) -> PlayerId {
+        self.static_info.owner_id
+    }
+
     #[must_use]
     pub fn projectile_id(&self) -> ProjectileId {
         self.static_info.projectile_id
@@ -40,6 +72,30 @@ impl ProjectileInfo {
     #[must_use]
     pub fn dynamic_info(&self) -> &ProjectileDynamicInfo {
         &self.dynamic_info
+    }
+
+    pub fn update_dynamic_info(&mut self, dynamic_info: ProjectileDynamicInfo) {
+        self.dynamic_info = dynamic_info;
+    }
+
+    #[must_use]
+    pub fn fired_from(&self) -> MilitaryBuildingId {
+        self.static_info.fired_from
+    }
+
+    #[must_use]
+    pub fn fired_at(&self) -> GameTime {
+        self.static_info.fired_at
+    }
+
+    #[must_use]
+    pub fn location(&self) -> Vector3 {
+        self.dynamic_info.location
+    }
+
+    #[must_use]
+    pub fn velocity(&self) -> Vector3 {
+        self.dynamic_info.velocity
     }
 
     #[must_use]

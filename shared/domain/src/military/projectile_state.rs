@@ -39,7 +39,7 @@ impl ProjectileState {
     ) -> impl IntoIterator<Item = &ProjectileInfo> {
         self.projectiles
             .values()
-            .filter(move |projectile_info| projectile_info.static_info.owner_id == owner_id)
+            .filter(move |projectile_info| projectile_info.owner_id() == owner_id)
     }
 
     pub(crate) fn upsert(&mut self, projectile: ProjectileInfo) {
@@ -57,7 +57,7 @@ impl ProjectileState {
     ) {
         for (projectile_id, dynamic_info) in projectile_dynamic_infos {
             if let Some(projectile_info) = self.projectiles.get_mut(projectile_id) {
-                projectile_info.dynamic_info = dynamic_info.clone();
+                projectile_info.update_dynamic_info(dynamic_info.clone());
             } else {
                 warn!("No projectile found for dynamic info: {projectile_id:?}");
             }

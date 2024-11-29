@@ -19,8 +19,8 @@ fn build_transport_command(
     player_id: &PlayerId,
     transport_type: &TransportType,
     game_state: &GameState,
-    hovered_edge: &Option<EdgeXZ>,
-    hovered_tile: &Option<TileCoordsXZ>,
+    hovered_edge: Option<&EdgeXZ>,
+    hovered_tile: Option<&TileCoordsXZ>,
 ) -> Result<ClientCommand, String> {
     let game_id = game_state.game_id();
     let edge = hovered_edge.ok_or("No edge hovered")?;
@@ -28,15 +28,15 @@ fn build_transport_command(
     let options = edge
         .both_tiles_and_directions()
         .into_iter()
-        .filter(|(t, _direction)| *t == tile)
+        .filter(|(t, _direction)| *t == *tile)
         .collect::<Vec<_>>();
     let (_t, direction) = options.first().ok_or("Failed to find direction")?;
     let building = game_state
         .building_state()
-        .station_at(tile)
+        .station_at(*tile)
         .ok_or(format!("No station at tile {tile:?}"))?;
     let location = building
-        .transport_location_at_station(tile, *direction)
+        .transport_location_at_station(*tile, *direction)
         .ok_or(format!("No transport location at tile {tile:?}"))?;
     let movement_orders = MovementOrders::one(MovementOrder::stop_at_station(building.id()));
     let transport_info = TransportInfo::new(
@@ -80,8 +80,8 @@ pub(crate) fn build_transport_when_mouse_released(
                 player_id,
                 transport_type,
                 game_state,
-                hovered_edge,
-                hovered_tile,
+                hovered_edge.as_ref(),
+                hovered_tile.as_ref(),
             ) {
                 Ok(command) => {
                     client_messages.send(ClientMessageEvent::new(command));

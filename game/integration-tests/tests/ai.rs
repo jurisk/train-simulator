@@ -139,7 +139,7 @@ fn run_ai_commands(
             let responses = game_service.process_command(player_id, &command);
             match responses {
                 Ok(responses) => {
-                    apply_game_responses(artificial_intelligence_states, &Some(command), responses);
+                    apply_game_responses(artificial_intelligence_states, Some(&command), responses);
                 },
                 Err(err) => {
                     panic!("Failed to process command: {command:?}: {err:?}",);
@@ -151,7 +151,7 @@ fn run_ai_commands(
 
 fn apply_game_responses(
     artificial_intelligence_states: &mut HashMap<PlayerId, Box<dyn ArtificialIntelligenceState>>,
-    command: &Option<GameCommand>,
+    command: Option<&GameCommand>,
     responses: Vec<GameResponseWithAddress>,
 ) {
     for response in responses {
@@ -290,7 +290,7 @@ where
 
         let diff = GameTimeDiff::from_seconds(0.1);
         let responses = game_service.advance_time_diff(diff, &NoopMetrics::default());
-        apply_game_responses(&mut player_ais, &None, responses);
+        apply_game_responses(&mut player_ais, None, responses);
 
         steps += 1;
     }

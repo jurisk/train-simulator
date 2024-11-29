@@ -5,6 +5,7 @@ use shared_domain::PlayerId;
 use shared_domain::building::building_info::WithOwner;
 use shared_domain::building::building_state::BuildingState;
 use shared_domain::cargo_map::WithCargo;
+use shared_domain::military::projectile_info::ProjectileInfo;
 use shared_domain::players::player_state::PlayerState;
 use shared_domain::transport::transport_info::TransportInfo;
 
@@ -42,6 +43,12 @@ pub(crate) fn show_left_panel(
                         *player_id,
                         game_state.transport_infos(),
                         &mut transport_to_show,
+                    );
+                    projectile_info_panel(
+                        ui,
+                        game_state
+                            .projectile_state()
+                            .find_projectiles_by_owner(*player_id),
                     );
                 });
             });
@@ -110,6 +117,17 @@ fn transport_info_panel(
                 }
             }
         }
+    }
+}
+
+fn projectile_info_panel<'a>(
+    ui: &mut Ui,
+    projectiles: impl IntoIterator<Item = &'a ProjectileInfo>,
+) {
+    ui.heading("Projectiles");
+    for projectile in projectiles {
+        let label = format!("{projectile:?}");
+        ui.label(label);
     }
 }
 

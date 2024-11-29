@@ -59,8 +59,8 @@ fn move_projectiles(
 }
 
 fn calculate_position_and_rotation(projectile: &ProjectileInfo) -> (Vec3, Quat) {
-    let position = projectile.dynamic_info.location.into();
-    let velocity = projectile.dynamic_info.velocity.into();
+    let position = projectile.location().into();
+    let velocity = projectile.velocity().into();
     let rotation = Quat::from_rotation_arc(Vec3::Y, velocity);
 
     (position, rotation)

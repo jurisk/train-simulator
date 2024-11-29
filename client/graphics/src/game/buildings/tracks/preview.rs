@@ -29,8 +29,8 @@ impl TrackPreviewResource {
         std::mem::take(&mut self.0)
     }
 
-    pub fn should_update(&self, new: &Option<TrackPreview>) -> bool {
-        &self.0 != new
+    pub fn should_update(&self, new: Option<&TrackPreview>) -> bool {
+        self.0.as_ref() != new
     }
 
     pub fn update(&mut self, planned: Option<TrackPreview>) {
@@ -80,7 +80,7 @@ pub(crate) fn update_track_preview(
                 hovered_edge.0,
             );
 
-            if track_preview.should_update(&planned) {
+            if track_preview.should_update(planned.as_ref()) {
                 track_preview.update(planned);
             }
         }
