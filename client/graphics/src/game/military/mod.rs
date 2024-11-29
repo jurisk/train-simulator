@@ -2,7 +2,6 @@ pub(crate) mod assets;
 
 use bevy::app::Update;
 use bevy::log::debug;
-use bevy::math::{Quat, Vec3};
 use bevy::prelude::{
     App, Commands, Component, Entity, EventReader, FixedUpdate, IntoSystemConfigs, PbrBundle,
     Plugin, Query, Res, ResMut, Transform, default, in_state,
@@ -17,6 +16,7 @@ use crate::communication::domain::ServerMessageEvent;
 use crate::game::GameStateResource;
 use crate::game::military::assets::MilitaryAssets;
 use crate::states::ClientState;
+use crate::util::transform_from_midpoint_and_direction;
 
 #[derive(Component)]
 pub struct ProjectileIdComponent(ProjectileId);
@@ -50,20 +50,16 @@ fn move_projectiles(
             .projectile_state()
             .find_projectile(*projectile_id)
         {
-            let (position, rotation) = calculate_position_and_rotation(projectile);
-
-            transform.translation = position;
-            transform.rotation = rotation;
+            *transform = calculate_transform(projectile);
         }
     }
 }
 
-fn calculate_position_and_rotation(projectile: &ProjectileInfo) -> (Vec3, Quat) {
-    let position = projectile.location().into();
-    let velocity = projectile.velocity().into();
-    let rotation = Quat::from_rotation_arc(Vec3::Y, velocity);
-
-    (position, rotation)
+fn calculate_transform(projectile: &ProjectileInfo) -> Transform {
+    transform_from_midpoint_and_direction(
+        projectile.location().into(),
+        projectile.velocity().into(),
+    )
 }
 
 #[expect(clippy::match_same_arms, clippy::needless_pass_by_value)]
@@ -93,7 +89,7 @@ fn handle_projectile_added_or_removed(
                     for projectile in projectiles {
                         game_state.upsert_projectile(projectile.clone());
 
-                        create_shell_entity(&mut commands, game_assets.as_ref(), projectile);
+                        create_projectile_entity(&mut commands, game_assets.as_ref(), projectile);
                     }
                 },
                 GameResponse::ProjectilesRemoved(projectile_ids) => {
@@ -101,11 +97,7 @@ fn handle_projectile_added_or_removed(
                         game_state.remove_projectile(*projectile_id);
                     }
 
-                    remove_industry_building_entities(
-                        projectile_ids,
-                        &mut commands,
-                        &projectile_id_query,
-                    );
+                    remove_projectile_entities(projectile_ids, &mut commands, &projectile_id_query);
                 },
                 GameResponse::DynamicInfosSync(..) => {},
                 GameResponse::GameJoined(..) => {},
@@ -116,7 +108,7 @@ fn handle_projectile_added_or_removed(
     }
 }
 
-fn remove_industry_building_entities(
+fn remove_projectile_entities(
     projectile_ids: &[ProjectileId],
     commands: &mut Commands,
     query: &Query<(Entity, &ProjectileIdComponent)>,
@@ -129,17 +121,15 @@ fn remove_industry_building_entities(
     }
 }
 
-fn create_shell_entity(
+fn create_projectile_entity(
     commands: &mut Commands,
     game_assets: &GameAssets,
     projectile: &ProjectileInfo,
 ) {
-    let (position, rotation) = calculate_position_and_rotation(projectile);
-
+    let transform = calculate_transform(projectile);
     let pbr_bundle = create_shell_pbr_bundle(
         ProjectileType::Standard,
-        position,
-        rotation,
+        transform,
         &game_assets.military_assets,
     );
 
@@ -150,11 +140,10 @@ fn create_shell_entity(
 
 fn create_shell_pbr_bundle(
     shell_type: ProjectileType,
-    position: Vec3,
-    rotation: Quat,
+    transform: Transform,
     military_assets: &MilitaryAssets,
 ) -> PbrBundle {
-    debug!("Spawning a shell at {position} with rotation {rotation}...");
+    debug!("Spawning a shell at {transform:?}...");
 
     let shell = military_assets
         .shells
@@ -163,7 +152,7 @@ fn create_shell_pbr_bundle(
     PbrBundle {
         mesh: shell.mesh.clone(),
         material: shell.material.clone(),
-        transform: Transform::from_xyz(position.x, position.y, position.z).with_rotation(rotation),
+        transform,
         ..default()
     }
 }
