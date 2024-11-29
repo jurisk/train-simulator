@@ -62,7 +62,13 @@ pub fn draw_labels(
                         camera_transform,
                         &mut client_messages,
                     );
-                    draw_industry_labels(game_state, context, ui, camera, camera_transform);
+                    draw_industry_building_labels(
+                        game_state,
+                        context,
+                        ui,
+                        camera,
+                        camera_transform,
+                    );
                     draw_station_labels(game_state, context, ui, camera, camera_transform);
                     draw_transport_labels(
                         game_state,
@@ -71,6 +77,13 @@ pub fn draw_labels(
                         camera,
                         camera_transform,
                         &mut show_transport_details,
+                    );
+                    draw_military_building_labels(
+                        game_state,
+                        context,
+                        ui,
+                        camera,
+                        camera_transform,
                     );
                 });
         }
@@ -124,7 +137,7 @@ fn draw_zoning_buttons(
     }
 }
 
-fn draw_industry_labels(
+fn draw_industry_building_labels(
     game_state: &GameState,
     context: &Context,
     ui: &mut Ui,
@@ -141,6 +154,33 @@ fn draw_industry_labels(
         with_tile_coverage_label(
             label,
             industry_building,
+            game_state,
+            context,
+            ui,
+            camera,
+            camera_transform,
+        );
+    }
+}
+
+fn draw_military_building_labels(
+    game_state: &GameState,
+    context: &Context,
+    ui: &mut Ui,
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+) {
+    for military_building in game_state.building_state().all_military_buildings() {
+        let label = if game_state.time() >= military_building.ready_to_fire_at() {
+            "Ready".to_string()
+        } else {
+            let time_to_ready = military_building.ready_to_fire_at() - game_state.time();
+            format!("Ready in {time_to_ready:?}")
+        };
+
+        with_tile_coverage_label(
+            label,
+            military_building,
             game_state,
             context,
             ui,

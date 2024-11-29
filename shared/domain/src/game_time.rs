@@ -1,12 +1,19 @@
 #![allow(clippy::module_name_repetitions)]
 
 use std::cmp::Ordering;
+use std::fmt::{Debug, Formatter};
 use std::ops::{Add, Div, Mul, Sub, SubAssign};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, PartialEq, PartialOrd)]
+#[derive(Serialize, Deserialize, Copy, Clone, Default, PartialEq, PartialOrd)]
 pub struct GameTimeDiff(f32);
+
+impl Debug for GameTimeDiff {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:.2}", self.0)
+    }
+}
 
 impl GameTimeDiff {
     pub const ZERO: Self = Self(0.0);

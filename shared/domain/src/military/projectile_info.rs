@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Formatter};
+
 use log::trace;
 use serde::{Deserialize, Serialize};
 
@@ -19,16 +21,22 @@ struct ProjectileStaticInfo {
     landing_on:      TileCoordsXZ,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct ProjectileDynamicInfo {
     location: Vector3,
     velocity: Vector3,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone)]
 pub struct ProjectileInfo {
     static_info:  ProjectileStaticInfo,
     dynamic_info: ProjectileDynamicInfo,
+}
+
+impl Debug for ProjectileInfo {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.static_info.projectile_id)
+    }
 }
 
 impl ProjectileInfo {

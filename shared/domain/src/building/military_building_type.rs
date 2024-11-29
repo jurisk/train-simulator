@@ -34,7 +34,7 @@ impl MilitaryBuildingType {
     #[must_use]
     pub fn reload_time(&self) -> GameTimeDiff {
         match self {
-            MilitaryBuildingType::FixedArtillery => GameTimeDiff::from_seconds(20.0),
+            MilitaryBuildingType::FixedArtillery => GameTimeDiff::from_seconds(10.0),
         }
     }
 

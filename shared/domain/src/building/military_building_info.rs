@@ -95,7 +95,7 @@ impl MilitaryBuildingInfo {
     }
 
     #[must_use]
-    fn ready_to_fire_at(&self) -> GameTime {
+    pub fn ready_to_fire_at(&self) -> GameTime {
         self.dynamic_info.last_fired_at + self.military_building_type.reload_time()
     }
 
