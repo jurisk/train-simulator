@@ -16,7 +16,7 @@ use crate::communication::domain::ServerMessageEvent;
 use crate::game::GameStateResource;
 use crate::game::military::assets::MilitaryAssets;
 use crate::states::ClientState;
-use crate::util::transform_from_midpoint_and_direction;
+use crate::util::transform_from_midpoint_and_direction_yz;
 
 #[derive(Component)]
 pub struct ProjectileIdComponent(ProjectileId);
@@ -56,7 +56,7 @@ fn move_projectiles(
 }
 
 fn calculate_transform(projectile: &ProjectileInfo) -> Transform {
-    transform_from_midpoint_and_direction(
+    transform_from_midpoint_and_direction_yz(
         projectile.location().into(),
         projectile.velocity().into(),
     )

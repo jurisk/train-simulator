@@ -12,13 +12,13 @@ use shared_domain::transport::transport_type::TrainComponentType;
 use crate::game::transport::TransportIndexComponent;
 use crate::game::transport::assets::TransportAssets;
 use crate::game::transport::train_layout::calculate_train_component_head_tails_and_final_tail_position;
-use crate::util::transform_from_midpoint_and_direction;
+use crate::util::transform_from_midpoint_and_direction_zy;
 
 fn transform_from_head_and_tail(head: Vec3, tail: Vec3) -> Transform {
     let direction = head - tail; // Recalculating with new tail
     let midpoint = (head + tail) / 2.0;
 
-    transform_from_midpoint_and_direction(midpoint, direction)
+    transform_from_midpoint_and_direction_zy(midpoint, direction)
 }
 
 pub(crate) fn calculate_train_component_transforms(

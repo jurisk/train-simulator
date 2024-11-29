@@ -3,8 +3,17 @@ pub mod shapes;
 use bevy::prelude::{Mesh, Transform, Vec3};
 use bevy::render::mesh::VertexAttributeValues;
 
+// Y is forward for the mesh
 #[must_use]
-pub fn transform_from_midpoint_and_direction(midpoint: Vec3, direction: Vec3) -> Transform {
+pub fn transform_from_midpoint_and_direction_yz(midpoint: Vec3, direction: Vec3) -> Transform {
+    let mut transform = Transform::from_translation(midpoint);
+    transform.align(Vec3::Y, direction.normalize(), Vec3::Z, Vec3::Z);
+    transform
+}
+
+// Z is forward for the mesh
+#[must_use]
+pub fn transform_from_midpoint_and_direction_zy(midpoint: Vec3, direction: Vec3) -> Transform {
     let mut transform = Transform::from_translation(midpoint);
     transform.align(Vec3::Z, direction.normalize(), Vec3::Y, Vec3::Y);
     transform
