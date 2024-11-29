@@ -196,7 +196,7 @@ impl GameState {
                     .buildings
                     .find_military_building_mut(projectile.fired_from())
                 {
-                    building.update_last_fired_at(projectile.fired_at());
+                    building.update_projectile_fired(&projectile);
                 } else {
                     warn!(
                         "Failed to find building {:?} for projectile {projectile:?}",

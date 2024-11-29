@@ -153,7 +153,23 @@ newtype_uuid!(IndustryBuildingId, "IB");
 newtype_uuid!(MilitaryBuildingId, "MB");
 newtype_uuid!(TransportId, "T");
 newtype_uuid!(ZoningId, "Z");
-newtype_uuid!(ProjectileId, "P");
+
+// We have predictable projectile IDs, because we are generating them upon reload on both the client & the server, and want to - ideally - the IDs to match
+#[derive(Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord, Debug)]
+pub struct ProjectileId {
+    fired_by:        MilitaryBuildingId,
+    sequence_number: usize,
+}
+
+impl ProjectileId {
+    #[must_use]
+    pub fn new(fired_by: MilitaryBuildingId, sequence_number: usize) -> Self {
+        Self {
+            fired_by,
+            sequence_number,
+        }
+    }
+}
 
 #[derive(Clone, Serialize, Deserialize, Eq, PartialEq, Hash, PartialOrd, Ord, Debug)]
 pub struct ScenarioId(pub String);

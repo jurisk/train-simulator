@@ -116,6 +116,10 @@ impl Plugin for GamePlugin {
             client_side_time_advance.run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(FixedUpdate, handle_errors);
+        app.add_systems(
+            FixedUpdate,
+            handle_dynamic_infos_sync.run_if(in_state(ClientState::Playing)),
+        );
     }
 }
 
@@ -307,4 +311,39 @@ pub fn create_object_entity(
         Name::new(label),
     ));
     commands.insert(additional);
+}
+
+#[expect(clippy::collapsible_match)]
+fn handle_dynamic_infos_sync(
+    mut server_messages: EventReader<ServerMessageEvent>,
+    mut game_state_resource: ResMut<GameStateResource>,
+) {
+    // TODO: What if we are missing some objects, e.g. projectiles, that we have in Bevy state? Should we be removing them?
+    let GameStateResource(game_state) = game_state_resource.as_mut();
+    for message in server_messages.read() {
+        if let ServerResponse::Game(_game_id, game_response) = &message.response {
+            if let GameResponse::DynamicInfosSync(
+                game_time,
+                time_factor,
+                industry_building_infos,
+                station_building_infos,
+                military_building_infos,
+                transport_infos,
+                projectile_infos,
+            ) = game_response
+            {
+                if let Some(time_factor) = time_factor {
+                    game_state.set_time_factor(*time_factor);
+                }
+                game_state.update_dynamic_infos(
+                    *game_time,
+                    industry_building_infos,
+                    station_building_infos,
+                    military_building_infos,
+                    transport_infos,
+                    projectile_infos,
+                );
+            }
+        }
+    }
 }

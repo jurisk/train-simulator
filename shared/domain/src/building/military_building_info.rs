@@ -20,7 +20,8 @@ use crate::{MilitaryBuildingId, PlayerId, ProjectileId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Default)]
 pub struct MilitaryBuildingDynamicInfo {
-    last_fired_at: GameTime,
+    last_fired_at:                   GameTime,
+    next_projectile_sequence_number: usize,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -85,8 +86,12 @@ impl MilitaryBuildingInfo {
         self.reference_tile
     }
 
-    pub(crate) fn update_last_fired_at(&mut self, last_fired_at: GameTime) {
-        self.dynamic_info.last_fired_at = self.dynamic_info.last_fired_at.max(last_fired_at);
+    pub(crate) fn update_projectile_fired(&mut self, projectile: &ProjectileInfo) {
+        // TODO: This is rather iffy, but I did not think of a better way how to do this
+        self.dynamic_info.last_fired_at =
+            self.dynamic_info.last_fired_at.max(projectile.fired_at());
+        self.dynamic_info.next_projectile_sequence_number =
+            projectile.projectile_id().sequence_number + 1;
     }
 
     #[must_use]
@@ -117,7 +122,7 @@ impl MilitaryBuildingInfo {
             // TODO HIGH: For `velocity`, have a targeting mechanism (take from other code you have), determine the target location, determine the velocity to hit the target (if possible).
             let velocity: Vector3 = Vector3::new(10.0, 20.0, 5.0);
             let projectile_info = ProjectileInfo::new(
-                ProjectileId::random(),
+                ProjectileId::new(self.id, self.dynamic_info.next_projectile_sequence_number),
                 self.owner_id,
                 ProjectileType::Standard,
                 self.id,

@@ -86,10 +86,17 @@ fn handle_projectile_added_or_removed(
                 GameResponse::TracksRemoved(_) => {},
                 GameResponse::TransportsAdded(_) => {},
                 GameResponse::ProjectilesAdded(projectiles) => {
+                    // The tricky part is that we can receive the same projectile multiple times - once from the client side game state, once from the server side game state...
+                    // Is there a better way? Not sure.
+
                     for projectile in projectiles {
                         game_state.upsert_projectile(projectile.clone());
-
-                        create_projectile_entity(&mut commands, game_assets.as_ref(), projectile);
+                        ensure_projectile_entity_exists(
+                            &mut commands,
+                            game_assets.as_ref(),
+                            projectile,
+                            &projectile_id_query,
+                        );
                     }
                 },
                 GameResponse::ProjectilesRemoved(projectile_ids) => {
@@ -100,11 +107,36 @@ fn handle_projectile_added_or_removed(
                     remove_projectile_entities(projectile_ids, &mut commands, &projectile_id_query);
                 },
                 GameResponse::DynamicInfosSync(..) => {},
-                GameResponse::GameJoined(..) => {},
+                GameResponse::GameJoined(_player_id, game_state) => {
+                    for projectile in game_state.projectile_infos() {
+                        ensure_projectile_entity_exists(
+                            &mut commands,
+                            game_assets.as_ref(),
+                            projectile,
+                            &projectile_id_query,
+                        );
+                    }
+                },
                 GameResponse::GameLeft => {},
                 GameResponse::Error(_) => {},
             }
         }
+    }
+}
+
+fn ensure_projectile_entity_exists(
+    commands: &mut Commands,
+    game_assets: &GameAssets,
+    projectile: &ProjectileInfo,
+    query: &Query<(Entity, &ProjectileIdComponent)>,
+) {
+    if query
+        .iter()
+        .all(|(_, ProjectileIdComponent(projectile_id))| {
+            *projectile_id != projectile.projectile_id()
+        })
+    {
+        create_projectile_entity(commands, game_assets, projectile);
     }
 }
 
