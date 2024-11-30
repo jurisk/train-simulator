@@ -33,6 +33,11 @@ impl ProjectileState {
     }
 
     #[must_use]
+    pub fn has_projectile(&self, projectile_id: ProjectileId) -> bool {
+        self.projectiles.contains_key(&projectile_id)
+    }
+
+    #[must_use]
     pub fn find_projectiles_by_owner(
         &self,
         owner_id: PlayerId,

@@ -32,6 +32,10 @@ impl Plugin for MilitaryPlugin {
             move_projectiles.run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(
+            Update,
+            sync_projectiles_with_state.run_if(in_state(ClientState::Playing)),
+        );
+        app.add_systems(
             FixedUpdate,
             handle_projectile_added_or_removed.run_if(in_state(ClientState::Playing)),
         );
@@ -62,13 +66,10 @@ fn calculate_transform(projectile: &ProjectileInfo) -> Transform {
     )
 }
 
-#[expect(clippy::match_same_arms, clippy::needless_pass_by_value)]
+#[expect(clippy::match_same_arms)]
 fn handle_projectile_added_or_removed(
     mut server_messages: EventReader<ServerMessageEvent>,
-    mut commands: Commands,
-    game_assets: Res<GameAssets>,
     mut game_state_resource: ResMut<GameStateResource>,
-    projectile_id_query: Query<(Entity, &ProjectileIdComponent)>,
 ) {
     let GameStateResource(game_state) = game_state_resource.as_mut();
     for message in server_messages.read() {
@@ -91,32 +92,15 @@ fn handle_projectile_added_or_removed(
 
                     for projectile in projectiles {
                         game_state.upsert_projectile(projectile.clone());
-                        ensure_projectile_entity_exists(
-                            &mut commands,
-                            game_assets.as_ref(),
-                            projectile,
-                            &projectile_id_query,
-                        );
                     }
                 },
                 GameResponse::ProjectilesRemoved(projectile_ids) => {
                     for projectile_id in projectile_ids {
                         game_state.remove_projectile(*projectile_id);
                     }
-
-                    remove_projectile_entities(projectile_ids, &mut commands, &projectile_id_query);
                 },
                 GameResponse::DynamicInfosSync(..) => {},
-                GameResponse::GameJoined(_player_id, game_state) => {
-                    for projectile in game_state.projectile_infos() {
-                        ensure_projectile_entity_exists(
-                            &mut commands,
-                            game_assets.as_ref(),
-                            projectile,
-                            &projectile_id_query,
-                        );
-                    }
-                },
+                GameResponse::GameJoined(_player_id, _game_state) => {},
                 GameResponse::GameLeft => {},
                 GameResponse::Error(_) => {},
             }
@@ -140,16 +124,34 @@ fn ensure_projectile_entity_exists(
     }
 }
 
-fn remove_projectile_entities(
-    projectile_ids: &[ProjectileId],
-    commands: &mut Commands,
-    query: &Query<(Entity, &ProjectileIdComponent)>,
+#[expect(clippy::needless_pass_by_value)]
+fn sync_projectiles_with_state(
+    game_assets: Res<GameAssets>,
+    game_state_resource: Res<GameStateResource>,
+    mut commands: Commands,
+    projectile_id_query: Query<(Entity, &ProjectileIdComponent)>,
 ) {
-    for (entity, projectile_id_component) in query {
+    // Later: Would using set subtraction be more efficient? Anyway, it can wait.
+
+    let GameStateResource(game_state) = game_state_resource.as_ref();
+
+    for (entity, projectile_id_component) in &projectile_id_query {
         let ProjectileIdComponent(found_projectile_id) = projectile_id_component;
-        if projectile_ids.contains(found_projectile_id) {
+        if !game_state
+            .projectile_state()
+            .has_projectile(*found_projectile_id)
+        {
             commands.entity(entity).despawn();
         }
+    }
+
+    for projectile in game_state.projectile_infos() {
+        ensure_projectile_entity_exists(
+            &mut commands,
+            game_assets.as_ref(),
+            projectile,
+            &projectile_id_query,
+        );
     }
 }
 
