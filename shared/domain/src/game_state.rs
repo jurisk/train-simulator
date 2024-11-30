@@ -185,31 +185,46 @@ impl GameState {
     ) -> Vec<GameResponse> {
         self.advance_time_diff_internal(diff, metrics)
             .into_iter()
-            .flat_map(|command| self.process_internal_command(command))
+            .flat_map(|command| self.process_internal_command(&command))
             .collect()
     }
 
-    fn process_internal_command(&mut self, command: InternalGameCommand) -> Vec<GameResponse> {
+    fn spawn_projectile(
+        &mut self,
+        projectile: &ProjectileInfo,
+        costs: &BuildCosts,
+    ) -> Result<GameResponse, BuildError> {
+        self.can_pay_costs(projectile.owner_id(), costs)?;
+        let building = self
+            .buildings
+            .find_military_building_mut(projectile.fired_from())
+            .ok_or(BuildError::UnknownError)?;
+
+        building.update_projectile_fired(projectile);
+        self.upsert_projectile(projectile.clone());
+        self.pay_costs(costs);
+        Ok(GameResponse::ProjectilesAdded(vec![projectile.clone()]))
+    }
+
+    fn process_internal_command(&mut self, command: &InternalGameCommand) -> Vec<GameResponse> {
         match command {
-            InternalGameCommand::SpawnProjectile(projectile) => {
-                if let Some(building) = self
-                    .buildings
-                    .find_military_building_mut(projectile.fired_from())
-                {
-                    building.update_projectile_fired(&projectile);
-                } else {
-                    warn!(
-                        "Failed to find building {:?} for projectile {projectile:?}",
-                        projectile.fired_from()
-                    );
+            InternalGameCommand::SpawnProjectile(projectile, costs) => {
+                match self.spawn_projectile(projectile, costs) {
+                    Ok(response) => {
+                        vec![response]
+                    },
+                    Err(error) => {
+                        warn!(
+                            "Failed to spawn projectile {projectile:?} with costs {costs:?} due to {error:?}"
+                        );
+                        vec![]
+                    },
                 }
-                self.upsert_projectile(projectile.clone());
-                vec![GameResponse::ProjectilesAdded(vec![projectile])]
             },
             InternalGameCommand::ProjectileLanded(projectile_id) => {
                 // TODO HIGH: Spawn explosion, do damage, etc.
-                self.remove_projectile(projectile_id);
-                vec![GameResponse::ProjectilesRemoved(vec![projectile_id])]
+                self.remove_projectile(*projectile_id);
+                vec![GameResponse::ProjectilesRemoved(vec![*projectile_id])]
             },
         }
     }
@@ -319,7 +334,7 @@ impl GameState {
         tracks: &[TrackInfo],
     ) -> Result<Vec<TrackInfo>, BuildError> {
         let (filtered, costs) = self.can_build_tracks(requesting_player_id, tracks)?;
-        self.buildings.build_tracks(filtered.clone(), costs);
+        self.buildings.build_tracks(filtered.clone(), &costs);
         Ok(filtered)
     }
 
@@ -358,10 +373,14 @@ impl GameState {
         let costs =
             self.can_purchase_transport(requesting_player_id, station_id, transport_info)?;
 
-        self.buildings.pay_costs(costs);
+        self.pay_costs(&costs);
         self.upsert_transport(transport_info.clone());
 
         Ok(())
+    }
+
+    pub fn pay_costs(&mut self, costs: &BuildCosts) {
+        self.buildings.pay_costs(costs);
     }
 
     #[expect(clippy::missing_panics_doc, clippy::unwrap_used)]
@@ -456,7 +475,7 @@ impl GameState {
         building: &IndustryBuildingInfo,
     ) -> Result<(), BuildError> {
         let costs = self.can_build_industry_building(requesting_player_id, building)?;
-        self.buildings.build_industry_building(building, costs)
+        self.buildings.build_industry_building(building, &costs)
     }
 
     pub fn build_military_building(
@@ -465,7 +484,7 @@ impl GameState {
         building: &MilitaryBuildingInfo,
     ) -> Result<(), BuildError> {
         let costs = self.can_build_military_building(requesting_player_id, building)?;
-        self.buildings.build_military_building(building, costs)
+        self.buildings.build_military_building(building, &costs)
     }
 
     #[expect(clippy::missing_errors_doc)]
@@ -498,7 +517,7 @@ impl GameState {
         station: &StationInfo,
     ) -> Result<(), BuildError> {
         let costs = self.can_build_station(requesting_player_id, station)?;
-        self.buildings.build_station(station, costs)
+        self.buildings.build_station(station, &costs)
     }
 
     pub fn remove_tracks(

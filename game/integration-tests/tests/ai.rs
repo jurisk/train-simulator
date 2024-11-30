@@ -278,8 +278,8 @@ where
             .keys()
             .all(|player_id| end_condition(game_state, *player_id))
         {
-            print_end_state(&player_ais, game_service.game_state());
-            println!("AI finished in {steps} steps");
+            finish(&player_ais, game_service);
+            println!("AI finished successfully in {steps} steps");
             return;
         }
 
@@ -295,8 +295,16 @@ where
         steps += 1;
     }
 
+    finish(&player_ais, game_service);
+    panic!("AI did not finish in {MAX_STEPS} steps, game state dumped");
+}
+
+fn finish(
+    player_ais: &HashMap<PlayerId, Box<dyn ArtificialIntelligenceState>>,
+    game_service: &GameService,
+) {
     let final_game_state = game_service.game_state();
-    print_end_state(&player_ais, final_game_state);
+    print_end_state(player_ais, final_game_state);
 
     let flattened: GameStateFlattened = final_game_state.clone().into();
     let serialized = save_to_bytes(&flattened).unwrap();
@@ -304,7 +312,5 @@ where
     let output_path = "../../ai_until_final_goods_built.game_state.bincode.gz";
     fs::write(output_path, serialized).unwrap();
 
-    panic!("AI did not finish in {MAX_STEPS} steps, game state dumped to {output_path}");
-
-    // TODO: We should also dump - and later read - AI state for better debugging
+    println!("Game state saved to {output_path}, use `load_saved_game` to load it");
 }

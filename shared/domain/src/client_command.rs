@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use web_time::Duration;
 
+use crate::building::BuildCosts;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
@@ -66,9 +67,9 @@ impl Debug for DemolishSelector {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum InternalGameCommand {
-    SpawnProjectile(ProjectileInfo),
+    SpawnProjectile(ProjectileInfo, BuildCosts),
     ProjectileLanded(ProjectileId),
 }
 

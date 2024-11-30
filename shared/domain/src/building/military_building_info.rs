@@ -99,6 +99,53 @@ impl MilitaryBuildingInfo {
         self.dynamic_info.last_fired_at + self.military_building_type.reload_time()
     }
 
+    fn make_projectile(&self, game_state: &GameState, fired_at: GameTime) -> ProjectileInfo {
+        let landing_at = fired_at + GameTimeDiff::from_seconds(10.0); // TODO HIGH: Calculate flight time
+        let mut location: Vector3 = game_state
+            .map_level()
+            .terrain()
+            .tile_center_coordinate(self.reference_tile())
+            .into();
+        location.y += 1.0; // This is just for debug purposes
+        let landing_on = TileCoordsXZ::new(0, 0); // TODO HIGH: Have a target selection, initially just the closest enemy building
+        // TODO HIGH: For `velocity`, have a targeting mechanism (take from other code you have), determine the target location, determine the velocity to hit the target (if possible).
+        let velocity: Vector3 = Vector3::new(10.0, 20.0, 5.0);
+        let projectile_info = ProjectileInfo::new(
+            ProjectileId::new(self.id, self.dynamic_info.next_projectile_sequence_number),
+            self.owner_id,
+            ProjectileType::Standard,
+            self.id,
+            fired_at,
+            landing_at,
+            landing_on,
+            location,
+            velocity,
+        );
+        info!("Firing {projectile_info:?}",);
+        projectile_info
+    }
+
+    #[must_use]
+    fn fire_command(
+        &self,
+        game_state: &GameState,
+        fired_at: GameTime,
+    ) -> Option<InternalGameCommand> {
+        let costs = game_state.building_state().can_pay_known_cost(
+            self.owner_id,
+            self,
+            IndustryType::MilitaryBase,
+            self.military_building_type
+                .projectile_type()
+                .cost_per_shot(),
+        );
+        let projectile_info = self.make_projectile(game_state, fired_at);
+        match costs {
+            Ok(costs) => Some(InternalGameCommand::SpawnProjectile(projectile_info, costs)),
+            Err(_) => None,
+        }
+    }
+
     #[must_use]
     pub fn generate_commands(
         &self,
@@ -107,33 +154,13 @@ impl MilitaryBuildingInfo {
         new_game_time: GameTime,
         game_state: &GameState,
     ) -> Vec<InternalGameCommand> {
-        let ready_at = self.ready_to_fire_at();
-        if new_game_time >= ready_at {
+        let ready_to_fire = self.ready_to_fire_at();
+        if new_game_time >= ready_to_fire {
+            let fired_at = ready_to_fire.max(previous_game_time);
             // Note: This can miss firing in cases where the reload rate is faster than our time diff tick, and we should have fired multiple times per this tick...
-            let fired_at = ready_at.max(previous_game_time);
-            let landing_at = fired_at + GameTimeDiff::from_seconds(10.0); // TODO HIGH: Calculate flight time
-            let mut location: Vector3 = game_state
-                .map_level()
-                .terrain()
-                .tile_center_coordinate(self.reference_tile())
-                .into();
-            location.y += 1.0; // This is just for debug purposes
-            let landing_on = TileCoordsXZ::new(0, 0); // TODO HIGH: Have a target selection, initially just the closest enemy building
-            // TODO HIGH: For `velocity`, have a targeting mechanism (take from other code you have), determine the target location, determine the velocity to hit the target (if possible).
-            let velocity: Vector3 = Vector3::new(10.0, 20.0, 5.0);
-            let projectile_info = ProjectileInfo::new(
-                ProjectileId::new(self.id, self.dynamic_info.next_projectile_sequence_number),
-                self.owner_id,
-                ProjectileType::Standard,
-                self.id,
-                fired_at,
-                landing_at,
-                landing_on,
-                location,
-                velocity,
-            );
-            info!("Firing {projectile_info:?}",);
-            vec![InternalGameCommand::SpawnProjectile(projectile_info)]
+            self.fire_command(game_state, fired_at)
+                .into_iter()
+                .collect()
         } else {
             vec![]
         }

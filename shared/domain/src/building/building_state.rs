@@ -105,7 +105,7 @@ impl BuildingState {
             IndustryType::ConstructionYard,
         );
         let () = self
-            .build_industry_building(&construction_yard, BuildCosts::none())
+            .build_industry_building(&construction_yard, &BuildCosts::none())
             .unwrap();
         let construction_yard = self
             .find_industry_building_mut(construction_yard_id)
@@ -408,7 +408,7 @@ impl BuildingState {
         })
     }
 
-    pub(crate) fn build_tracks(&mut self, tracks: Vec<TrackInfo>, costs: BuildCosts) {
+    pub(crate) fn build_tracks(&mut self, tracks: Vec<TrackInfo>, costs: &BuildCosts) {
         self.append_tracks(tracks);
         self.pay_costs(costs);
     }
@@ -501,7 +501,7 @@ impl BuildingState {
                     building.cargo()
                 );
                 if building.cargo().is_superset_of(&cost) {
-                    // Later. We currently return the first one that satisfies the conditions - we could instead return the closest one, or the one with most resources.
+                    // TODO: We currently return the first one that satisfies the conditions - we could instead return the closest one, or the one with most resources.
                     return Ok(BuildCosts::single(building.id(), cost));
                 }
             }
@@ -539,7 +539,7 @@ impl BuildingState {
     pub(crate) fn build_industry_building(
         &mut self,
         industry_building_info: &IndustryBuildingInfo,
-        costs: BuildCosts,
+        costs: &BuildCosts,
     ) -> Result<(), BuildError> {
         self.can_build_industry_building(industry_building_info)?;
         self.pay_costs(costs);
@@ -550,7 +550,7 @@ impl BuildingState {
     pub(crate) fn build_military_building(
         &mut self,
         military_building_info: &MilitaryBuildingInfo,
-        costs: BuildCosts,
+        costs: &BuildCosts,
     ) -> Result<(), BuildError> {
         self.can_build_military_building(military_building_info)?;
         self.pay_costs(costs);
@@ -558,11 +558,10 @@ impl BuildingState {
         Ok(())
     }
 
-    pub(crate) fn pay_costs(&mut self, costs: BuildCosts) {
-        for (industry_building_id, cargo_map) in costs.costs {
-            if let Some(industry_building) = self.industry_buildings.get_mut(&industry_building_id)
-            {
-                industry_building.remove_cargo(&cargo_map);
+    pub(crate) fn pay_costs(&mut self, costs: &BuildCosts) {
+        for (industry_building_id, cargo_map) in &costs.costs {
+            if let Some(industry_building) = self.industry_buildings.get_mut(industry_building_id) {
+                industry_building.remove_cargo(cargo_map);
             } else {
                 warn!("Could not find industry building with id {industry_building_id:?}");
             }
@@ -572,7 +571,7 @@ impl BuildingState {
     pub(crate) fn build_station(
         &mut self,
         station_info: &StationInfo,
-        costs: BuildCosts,
+        costs: &BuildCosts,
     ) -> Result<(), BuildError> {
         self.can_build_station(station_info)?;
         self.pay_costs(costs);
