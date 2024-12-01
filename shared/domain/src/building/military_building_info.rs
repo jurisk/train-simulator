@@ -1,7 +1,11 @@
 use std::fmt::{Debug, Formatter};
 
+use bevy_math::Vec3;
 use log::info;
 use serde::{Deserialize, Serialize};
+use shared_physics::projectile::{
+    ProjectileProperties, ShellType, best_effort_start_velocity_vector_given_start_velocity,
+};
 
 use crate::building::WithRelativeTileCoverage;
 use crate::building::building_info::{BuildingInfo, WithCostToBuild, WithOwner, WithTileCoverage};
@@ -15,7 +19,6 @@ use crate::military::ProjectileType;
 use crate::military::projectile_info::ProjectileInfo;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
-use crate::vector3::Vector3;
 use crate::{MilitaryBuildingId, PlayerId, ProjectileId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Default)]
@@ -99,30 +102,67 @@ impl MilitaryBuildingInfo {
         self.dynamic_info.last_fired_at + self.military_building_type.reload_time()
     }
 
-    fn make_projectile(&self, game_state: &GameState, fired_at: GameTime) -> ProjectileInfo {
-        let landing_at = fired_at + GameTimeDiff::from_seconds(10.0); // TODO HIGH: Calculate flight time
-        let mut location: Vector3 = game_state
+    fn make_projectile(
+        &self,
+        game_state: &GameState,
+        fired_at: GameTime,
+    ) -> Option<ProjectileInfo> {
+        let artillery_height = Vec3::new(0.0, 0.5, 0.0);
+        let from_position = game_state
             .map_level()
             .terrain()
             .tile_center_coordinate(self.reference_tile())
-            .into();
-        location.y += 1.0; // This is just for debug purposes
-        let landing_on = TileCoordsXZ::new(0, 0); // TODO HIGH: Have a target selection, initially just the closest enemy building
-        // TODO HIGH: For `velocity`, have a targeting mechanism (take from other code you have), determine the target location, determine the velocity to hit the target (if possible).
-        let velocity: Vector3 = Vector3::new(10.0, 20.0, 5.0);
-        let projectile_info = ProjectileInfo::new(
-            ProjectileId::new(self.id, self.dynamic_info.next_projectile_sequence_number),
-            self.owner_id,
-            ProjectileType::Standard,
-            self.id,
-            fired_at,
-            landing_at,
-            landing_on,
-            location,
-            velocity,
+            + artillery_height;
+        let location = from_position.into();
+
+        // TODO HIGH: Have a target selection, initially just the closest enemy building
+        let landing_on = TileCoordsXZ::new(56, 207);
+
+        let target_position = game_state
+            .map_level()
+            .terrain()
+            .tile_center_coordinate(landing_on);
+
+        // TODO HIGH: This is a temporary hack, we cannot create it here every time
+        let mut projectile_properties = ProjectileProperties::for_shell(ShellType::Naval16Inch);
+
+        // TODO HIGH: Temporary hack as the real speeds were too fast for the map size
+        projectile_properties.start_speed = 19.0;
+
+        let velocity = best_effort_start_velocity_vector_given_start_velocity(
+            from_position,
+            target_position,
+            &projectile_properties,
         );
-        info!("Firing {projectile_info:?}",);
-        projectile_info
+
+        info!("Calculated velocity: {velocity:?}");
+
+        // TODO HIGH: Calculate flight time. Our targeting calculator should calculate it and return it.
+        let landing_at = fired_at + GameTimeDiff::from_seconds(10.0);
+
+        match velocity {
+            None => {
+                info!(
+                    "Failed to create projectile from {from_position:?} to {target_position:?} - perhaps the target is too far?"
+                );
+                None
+            },
+            Some(velocity) => {
+                let projectile_info = ProjectileInfo::new(
+                    ProjectileId::new(self.id, self.dynamic_info.next_projectile_sequence_number),
+                    self.owner_id,
+                    ProjectileType::Standard,
+                    self.id,
+                    fired_at,
+                    landing_at,
+                    landing_on,
+                    location,
+                    velocity.into(),
+                );
+                info!("Firing {projectile_info:?}",);
+                Some(projectile_info)
+            },
+        }
     }
 
     #[must_use]
@@ -139,9 +179,13 @@ impl MilitaryBuildingInfo {
                 .projectile_type()
                 .cost_per_shot(),
         );
-        let projectile_info = self.make_projectile(game_state, fired_at);
         match costs {
-            Ok(costs) => Some(InternalGameCommand::SpawnProjectile(projectile_info, costs)),
+            Ok(costs) => {
+                let projectile_info = self.make_projectile(game_state, fired_at);
+                projectile_info.map(|projectile_info| {
+                    InternalGameCommand::SpawnProjectile(projectile_info, costs)
+                })
+            },
             Err(_) => None,
         }
     }

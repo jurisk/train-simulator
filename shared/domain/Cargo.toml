@@ -8,6 +8,7 @@ rust-version.workspace = true
 
 [dependencies]
 shared-util = { path = "../util" }
+shared-physics = { path = "../physics" }
 
 # Note - not allowed to have a `bevy` (except `bevy_math`) or any networking dependencies!
 fastrand.workspace = true

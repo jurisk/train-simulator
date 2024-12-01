@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Formatter};
 
-use log::trace;
 use serde::{Deserialize, Serialize};
+use shared_physics::projectile::{ProjectileProperties, ShellType, calculate_acceleration};
 
 use crate::client_command::InternalGameCommand;
 use crate::game_time::{GameTime, GameTimeDiff};
@@ -121,14 +121,18 @@ impl ProjectileInfo {
     }
 
     pub fn advance_time_diff(&mut self, time_diff: GameTimeDiff) {
-        // TODO HIGH: Take physics model from other code you have, including drag.
-        let gravity = Vector3::new(0.0, -9.81, 0.0);
-        self.dynamic_info.velocity += gravity * time_diff.to_seconds();
-        self.dynamic_info.location += self.dynamic_info.velocity * time_diff.to_seconds();
-        trace!(
-            "Projectile {projectile_id:?} advanced to {location:?}",
-            projectile_id = self.projectile_id(),
-            location = self.dynamic_info.location
-        );
+        let delta = time_diff.to_seconds();
+
+        // TODO HIGH: You cannot create this every time. You should optimise
+        let projectile_properties = ProjectileProperties::for_shell(ShellType::Naval16Inch);
+
+        // Apply velocity
+        self.dynamic_info.location += self.velocity() * delta;
+
+        // Apply total acceleration
+        let total_acceleration =
+            calculate_acceleration(self.dynamic_info.velocity.into(), &projectile_properties);
+
+        self.dynamic_info.velocity += (total_acceleration * delta).into();
     }
 }
