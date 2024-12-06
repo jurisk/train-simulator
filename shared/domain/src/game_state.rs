@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use log::{debug, trace, warn};
+use log::{debug, info, trace, warn};
 use serde::{Deserialize, Serialize, Serializer};
 use shared_util::bool_ops::BoolResultOps;
 
@@ -223,6 +223,7 @@ impl GameState {
             },
             InternalGameCommand::ProjectileLanded(projectile_id) => {
                 // TODO HIGH: Spawn explosion, do damage, etc.
+                info!("Projectile {projectile_id:?} landed");
                 self.remove_projectile(*projectile_id);
                 vec![GameResponse::ProjectilesRemoved(vec![*projectile_id])]
             },

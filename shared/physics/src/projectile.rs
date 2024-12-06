@@ -8,7 +8,7 @@ use shared_math::ode_solver::rk4_method;
 use shared_math::search::bisection_search_for_minimum;
 
 use crate::constants::{AIR_DENSITY, GRAVITY_VECTOR, METERS_PER_INCH};
-use crate::{Angle, Distance, Speed};
+use crate::{Angle, Distance, Speed, Time};
 
 #[derive(Debug, Clone)]
 pub struct ProjectileProperties {
@@ -80,11 +80,11 @@ pub fn best_effort_start_velocity_vector_given_start_velocity(
     from_position: Vec3,
     target_position: Vec3,
     projectile: &ProjectileProperties,
-) -> Option<Vec3> {
+) -> Option<(Vec3, Time)> {
     const MIN_ELEVATION_IN_DEGREES: f32 = 0.;
     const MAX_ELEVATION_IN_DEGREES: f32 = 45.;
 
-    find_angle_that_hits_target(
+    find_angle_and_flight_time_that_hits_target(
         from_position,
         target_position,
         projectile.start_speed,
@@ -92,13 +92,14 @@ pub fn best_effort_start_velocity_vector_given_start_velocity(
         MIN_ELEVATION_IN_DEGREES.to_radians(),
         MAX_ELEVATION_IN_DEGREES.to_radians(),
     )
-    .map(|elevation_angle| {
-        velocity_vector_from_position_to_angle_with_start_speed_at_elevation_angle(
+    .map(|(elevation_angle, time)| {
+        let v = velocity_vector_from_position_to_angle_with_start_speed_at_elevation_angle(
             from_position,
             target_position,
             projectile.start_speed,
             elevation_angle,
-        )
+        );
+        (v, time)
     })
 }
 
@@ -177,13 +178,13 @@ impl Div<f32> for VelocityAndAcceleration {
 }
 
 #[must_use]
-pub fn find_distance_to_target_assuming_angle(
+pub fn find_distance_and_flight_time_to_target_assuming_angle(
     from_position: Vec3,
     target_position: Vec3,
     start_speed: Speed,
     projectile: &ProjectileProperties,
     angle: Angle,
-) -> Distance {
+) -> (Distance, Time) {
     const DT: f32 = 0.25;
 
     let velocity = velocity_vector_from_position_to_angle_with_start_speed_at_elevation_angle(
@@ -198,7 +199,7 @@ pub fn find_distance_to_target_assuming_angle(
         velocity,
     };
 
-    let result = rk4_method(
+    let (result, t) = rk4_method(
         0.0,
         start,
         |_t, state| {
@@ -214,26 +215,25 @@ pub fn find_distance_to_target_assuming_angle(
         },
     );
 
-    // TODO HIGH: Return flight time here - you have it as 't' in the 'should_stop' condition
     // Later: I think this is too imprecise as we return the position after we have crossed below the target's Y plane
 
-    (result.position - target_position).length()
+    ((result.position - target_position).length(), t)
 }
 
 #[must_use]
-pub fn find_angle_that_hits_target(
+pub fn find_angle_and_flight_time_that_hits_target(
     from_position: Vec3,
     target_position: Vec3,
     start_speed: Speed,
     projectile: &ProjectileProperties,
     min_elevation: Angle,
     max_elevation: Angle,
-) -> Option<Angle> {
-    const EPS: Angle = 0.001;
-    let found = bisection_search_for_minimum(min_elevation, max_elevation, EPS, |angle| {
-        // TODO HIGH: Also return flight time
+) -> Option<(Angle, Time)> {
+    // TODO: Also return distance to target, and then check it if it is close enough and return None if not
 
-        find_distance_to_target_assuming_angle(
+    const EPS: Angle = 0.001;
+    let (angle, times) = bisection_search_for_minimum(min_elevation, max_elevation, EPS, |angle| {
+        find_distance_and_flight_time_to_target_assuming_angle(
             from_position,
             target_position,
             start_speed,
@@ -242,8 +242,10 @@ pub fn find_angle_that_hits_target(
         )
     });
 
-    // TODO HIGH: Check if we are close enough and return None if not
-    Some(found)
+    match times {
+        (Some(a), Some(b)) => Some((angle, (a + b) / 2.0)),
+        _ => None,
+    }
 }
 
 #[expect(non_snake_case)]
@@ -278,7 +280,7 @@ mod tests {
         let projectile = ProjectileProperties::for_shell(ShellType::Naval16Inch);
         let angle = 30f32.to_radians();
 
-        let distance = find_distance_to_target_assuming_angle(
+        let (distance, time) = find_distance_and_flight_time_to_target_assuming_angle(
             from_position,
             target_position,
             start_speed,
@@ -286,8 +288,10 @@ mod tests {
             angle,
         );
 
-        println!("{distance}");
+        println!("{distance} {time}");
         assert!(distance >= 975.0);
         assert!(distance < 980.0);
+        assert!(time >= 14.9);
+        assert!(time <= 15.1);
     }
 }

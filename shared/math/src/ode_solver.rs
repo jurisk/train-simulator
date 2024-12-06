@@ -26,7 +26,7 @@ pub fn rk4_method<
     y_prim: F,
     dt: T,
     should_stop: CF,
-) -> Y
+) -> (Y, T)
 where
     F: Fn(T, Y) -> YPrim,
     CF: Fn(T, Y) -> bool,
@@ -53,7 +53,7 @@ where
         }
     }
 
-    y_n
+    (y_n, t_n)
 }
 
 /// <https://en.wikipedia.org/wiki/Euler_method>
@@ -102,8 +102,8 @@ mod tests {
         let tests = vec![1., 0.25, 0.1, 0.05, 0.025, 0.0125];
 
         for step in tests {
-            let result = rk4_method(0., 1., |_t, y| y, step, |t, _y| t >= 4.);
-            println!("{step} {result}");
+            let (result, t) = rk4_method(0., 1., |_t, y| y, step, |t, _y| t >= 4.);
+            println!("{step} {result} {t}");
             assert!(result > 53.0);
             assert!(result < 58.0);
         }
@@ -290,7 +290,7 @@ mod tests {
 
     #[test]
     fn test_rk4_with_vec3() {
-        let result = rk4_method(
+        let (result, t) = rk4_method(
             0f32,
             PositionAndVelocity {
                 position: START_POSITION,
@@ -301,9 +301,12 @@ mod tests {
             |_, y| y.position.y < 0.0,
         );
 
-        println!("{result:?}");
+        println!("{result:?} {t}");
 
         compare_vec3(result.position, EXPECTED_RESULT.position, 0.75);
         compare_vec3(result.velocity, EXPECTED_RESULT.velocity, 0.75);
+
+        assert!(t < 10.1);
+        assert!(t > 9.9);
     }
 }

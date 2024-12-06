@@ -129,25 +129,24 @@ impl MilitaryBuildingInfo {
         // TODO HIGH: Temporary hack as the real speeds were too fast for the map size
         projectile_properties.start_speed = 19.0;
 
-        let velocity = best_effort_start_velocity_vector_given_start_velocity(
+        let velocity_and_time = best_effort_start_velocity_vector_given_start_velocity(
             from_position,
             target_position,
             &projectile_properties,
         );
 
-        info!("Calculated velocity: {velocity:?}");
+        info!("Calculated velocity and time: {velocity_and_time:?}");
 
-        // TODO HIGH: Calculate flight time. Our targeting calculator should calculate it and return it.
-        let landing_at = fired_at + GameTimeDiff::from_seconds(10.0);
-
-        match velocity {
+        match velocity_and_time {
             None => {
                 info!(
                     "Failed to create projectile from {from_position:?} to {target_position:?} - perhaps the target is too far?"
                 );
                 None
             },
-            Some(velocity) => {
+            Some((velocity, time)) => {
+                let landing_at = fired_at + GameTimeDiff::from_seconds(time);
+
                 let projectile_info = ProjectileInfo::new(
                     ProjectileId::new(self.id, self.dynamic_info.next_projectile_sequence_number),
                     self.owner_id,
