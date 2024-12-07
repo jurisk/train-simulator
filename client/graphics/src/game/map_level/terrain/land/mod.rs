@@ -41,7 +41,8 @@ enum LandMaterialType {
     Debug,
 }
 
-const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
+// TODO HIGH: Due to https://github.com/bevyengine/bevy/issues/16588 we switched to Debug material
+const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Debug;
 
 #[expect(clippy::needless_pass_by_value, clippy::collapsible_match)]
 fn handle_map_level_updated(
