@@ -8,11 +8,7 @@ use bevy::core::Name;
 use bevy::log::{error, warn};
 use bevy::math::Vec3;
 use bevy::pbr::{PbrBundle, StandardMaterial};
-use bevy::prelude::{
-    Bundle, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Mesh, NextState,
-    OnEnter, Plugin, Res, ResMut, Resource, Time, Transform, Update, default, in_state, info,
-    trace,
-};
+use bevy::prelude::{Bundle, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Mesh, NextState, OnEnter, Plugin, Res, ResMut, Resource, Time, Transform, Update, default, in_state, info, trace, MeshMaterial3d, Mesh3d};
 use shared_domain::building::building_info::WithTileCoverage;
 use shared_domain::client_command::{
     AccessToken, AuthenticationCommand, ClientCommand, LobbyCommand,
@@ -138,7 +134,7 @@ fn client_side_time_advance(
 ) {
     let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
     let responses = game_state.advance_time_diff(
-        GameTimeDiff::from_seconds(time.delta_seconds()),
+        GameTimeDiff::from_seconds(time.delta_secs()),
         &NoopMetrics::default(),
     );
     for response in responses {
@@ -304,8 +300,8 @@ pub fn create_object_entity(
                 translation: center,
                 ..default()
             },
-            material,
-            mesh,
+            material: MeshMaterial3d(material),
+            mesh: Mesh3d(mesh),
             ..default()
         },
         Name::new(label),

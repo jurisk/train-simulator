@@ -77,7 +77,7 @@ fn animate_light_direction(
     mut query: Query<&mut Transform, With<DirectionalLight>>,
 ) {
     for mut transform in &mut query {
-        let elapsed = time.elapsed_seconds();
+        let elapsed = time.elapsed_secs();
         let angle = (elapsed / FULL_ROTATION_SECONDS) * (2.0 * PI);
         let x = RADIUS * angle.cos();
         let z = RADIUS * angle.sin();

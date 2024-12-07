@@ -1,8 +1,8 @@
 use bevy::asset::Assets;
 use bevy::core::Name;
 use bevy::math::Vec3;
-use bevy::pbr::{PbrBundle, StandardMaterial};
-use bevy::prelude::{BuildChildren, Color, Commands, Entity, ResMut, Transform, default};
+use bevy::pbr::{MeshMaterial3d, PbrBundle, StandardMaterial};
+use bevy::prelude::{BuildChildren, Color, Commands, Entity, Mesh3d, ResMut, Transform, default};
 use shared_domain::TransportId;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::server_response::Colour;
@@ -72,7 +72,7 @@ pub(crate) fn create_train(
         .spawn(Name::new(format!("Train {transport_id:?}")))
         .id();
 
-    commands.entity(parent).push_children(&children);
+    commands.entity(parent).add_children(&children);
     parent
 }
 
@@ -89,9 +89,9 @@ fn create_train_component(
 
     let entity_commands = commands.spawn((
         PbrBundle {
-            material: materials.add(color),
+            material: MeshMaterial3d(materials.add(color)),
             transform,
-            mesh,
+            mesh: Mesh3d(mesh),
             ..default()
         },
         TransportIndexComponent(index),

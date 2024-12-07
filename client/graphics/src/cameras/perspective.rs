@@ -99,7 +99,7 @@ fn move_camera(
 ) {
     for (mut transform, camera_component, camera) in &mut query {
         if camera_component.id == CameraId::Perspective && camera.is_active {
-            movement_and_rotation(time.delta_seconds(), &keyboard_input, &mut transform);
+            movement_and_rotation(time.delta_secs(), &keyboard_input, &mut transform);
 
             // TODO: Consider doing zooming using the FOV, as per https://bevy-cheatbook.github.io/graphics/camera.html
             let zoom_value = zoom_value(&keyboard_input, &mut mouse_wheel, &pointer_over_hud);
@@ -107,7 +107,7 @@ fn move_camera(
                 const CAMERA_ZOOM_SPEED: f32 = 80.0;
                 let forward = transform.forward();
                 transform.translation +=
-                    forward * zoom_value * CAMERA_ZOOM_SPEED * time.delta_seconds();
+                    forward * zoom_value * CAMERA_ZOOM_SPEED * time.delta_secs();
             }
         }
     }

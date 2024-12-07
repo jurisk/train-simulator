@@ -2,9 +2,10 @@ pub(crate) mod assets;
 
 use bevy::app::Update;
 use bevy::log::debug;
+use bevy::pbr::MeshMaterial3d;
 use bevy::prelude::{
-    App, Commands, Component, Entity, EventReader, FixedUpdate, IntoSystemConfigs, PbrBundle,
-    Plugin, Query, Res, ResMut, Transform, default, in_state,
+    App, Commands, Component, Entity, EventReader, FixedUpdate, IntoSystemConfigs, Mesh3d,
+    PbrBundle, Plugin, Query, Res, ResMut, Transform, default, in_state,
 };
 use shared_domain::ProjectileId;
 use shared_domain::military::ProjectileType;
@@ -184,8 +185,8 @@ fn create_shell_pbr_bundle(
         .mesh_and_material_for_shell_type(shell_type);
 
     PbrBundle {
-        mesh: shell.mesh.clone(),
-        material: shell.material.clone(),
+        mesh: Mesh3d(shell.mesh.clone()),
+        material: MeshMaterial3d(shell.material.clone()),
         transform,
         ..default()
     }

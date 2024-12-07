@@ -1,11 +1,8 @@
 use bevy::asset::{AssetServer, Assets};
 use bevy::color::palettes::css::GRAY;
 use bevy::core::Name;
-use bevy::pbr::ExtendedMaterial;
-use bevy::prelude::{
-    App, Color, Commands, EventReader, FixedUpdate, MaterialMeshBundle, Mesh, Plugin, Res, ResMut,
-    StandardMaterial, Transform, default,
-};
+use bevy::pbr::{ExtendedMaterial, MeshMaterial3d};
+use bevy::prelude::{App, Color, Commands, EventReader, FixedUpdate, MaterialMeshBundle, Mesh, Plugin, Res, ResMut, StandardMaterial, Transform, default, Mesh3d};
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
 use bevy_mod_raycast::prelude::RaycastMesh;
@@ -130,12 +127,9 @@ pub(crate) fn create_land(
                 ..default()
             });
             commands.spawn((
-                MaterialMeshBundle {
-                    mesh,
-                    material,
-                    transform,
-                    ..default()
-                },
+                Mesh3d(mesh),
+                MeshMaterial3d(material),
+                transform,
                 RaycastMesh::<()>::default(), // For bevy_mod_raycast
                 Name::new("Land"),
             ));
