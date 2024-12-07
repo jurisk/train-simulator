@@ -70,7 +70,7 @@ fn advance_time_locally(
     let ServerStateResource(ref mut server_state) = server_state_resource.as_mut();
 
     let advance_time_responses = server_state.advance_time_diffs(
-        GameTimeDiff::from_seconds(time.delta_seconds()),
+        GameTimeDiff::from_seconds(time.delta_secs()),
         &NoopMetrics::default(),
     );
 

@@ -118,7 +118,7 @@ fn debug_draw_track_spline(track_preview: &TrackPreview, gizmos: &mut Gizmos, te
 
     if points.len() > 3 {
         let curve = CubicCardinalSpline::new_catmull_rom(points).to_curve();
-        gizmos.linestrip(curve.iter_positions(50), RED);
+        gizmos.linestrip(curve.expect("success").iter_positions(50), RED);
     }
 }
 

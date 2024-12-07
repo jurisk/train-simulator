@@ -2,10 +2,13 @@ use bevy::asset::{AssetServer, Assets};
 use bevy::color::palettes::css::GRAY;
 use bevy::core::Name;
 use bevy::pbr::{ExtendedMaterial, MeshMaterial3d};
-use bevy::prelude::{App, Color, Commands, EventReader, FixedUpdate, MaterialMeshBundle, Mesh, Plugin, Res, ResMut, StandardMaterial, Transform, default, Mesh3d};
+use bevy::picking::mesh_picking::RayCastPickable;
+use bevy::prelude::{
+    App, Color, Commands, EventReader, FixedUpdate, MaterialMeshBundle, Mesh, Mesh3d, Plugin, Res,
+    ResMut, StandardMaterial, Transform, default,
+};
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
-use bevy_mod_raycast::prelude::RaycastMesh;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::server_response::{GameResponse, ServerResponse};
 use shared_domain::vertex_coords_xz::VertexCoordsXZ;
@@ -110,12 +113,12 @@ pub(crate) fn create_land(
             let material = advanced_materials.add(create_advanced_land_material(asset_server));
             commands.spawn((
                 MaterialMeshBundle {
-                    mesh,
-                    material,
+                    mesh: Mesh3d(mesh),
+                    material: MeshMaterial3d(material),
                     transform,
                     ..default()
                 },
-                RaycastMesh::<()>::default(), // For bevy_mod_raycast
+                RayCastPickable,
                 Name::new("Land"),
             ));
         },
@@ -130,7 +133,7 @@ pub(crate) fn create_land(
                 Mesh3d(mesh),
                 MeshMaterial3d(material),
                 transform,
-                RaycastMesh::<()>::default(), // For bevy_mod_raycast
+                RayCastPickable,
                 Name::new("Land"),
             ));
         },

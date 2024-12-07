@@ -4,12 +4,12 @@ use bevy::app::App;
 use bevy::color::palettes::basic::LIME;
 use bevy::color::palettes::css::{PINK, PURPLE, TOMATO};
 use bevy::input::ButtonInput;
+use bevy::picking::pointer::PointerInteraction;
 use bevy::prelude::{
-    DetectChanges, Gizmos, IntoSystemConfigs, MouseButton, Plugin, Query, Res, ResMut, Resource,
-    TypePath, Update, Vec3, in_state, info,
+    DetectChanges, Gizmos, IntoSystemConfigs, MeshPickingPlugin, MeshPickingSettings, MouseButton,
+    Plugin, Query, RayCastVisibility, Res, ResMut, Resource, TypePath, Update, Vec3, in_state,
+    info,
 };
-use bevy_mod_raycast::deferred::RaycastSource;
-use bevy_mod_raycast::prelude::{DeferredRaycastingPlugin, RaycastPluginState};
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
@@ -101,8 +101,11 @@ pub(crate) struct SelectionPlugin;
 
 impl Plugin for SelectionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(DeferredRaycastingPlugin::<()>::default());
-        app.insert_resource(RaycastPluginState::<()>::default()); // Add .with_debug_cursor() for default debug cursor
+        app.add_plugins(MeshPickingPlugin::default());
+        app.insert_resource(MeshPickingSettings {
+            require_markers:     true,
+            ray_cast_visibility: RayCastVisibility::VisibleInView,
+        });
         app.add_systems(
             Update,
             update_selections::<()>.run_if(in_state(ClientState::Playing)),
@@ -251,7 +254,7 @@ fn closest_edge(
     clippy::collapsible_if
 )]
 fn update_selections<T: TypePath + Send + Sync>(
-    sources: Query<&RaycastSource<T>>,
+    sources: Query<&PointerInteraction>,
     mut gizmos: Gizmos,
     tiles: Option<Res<Tiles>>,
     mut selected_tiles: ResMut<SelectedTiles>,
@@ -263,22 +266,25 @@ fn update_selections<T: TypePath + Send + Sync>(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
 ) {
     for (is_first, intersection) in sources.iter().flat_map(|m| {
-        m.intersections()
-            .iter()
-            .map(|(_entity, intersection_data)| intersection_data.clone())
+        m.iter()
+            .map(|(entity, hit_data)| hit_data.clone())
             .enumerate()
             .map(|(i, hit)| (i == 0, hit))
     }) {
+        let position = intersection.position.unwrap();
+        let normal = intersection.normal.unwrap();
+
         let color = match is_first {
             true => PURPLE,
             false => PINK,
         };
-        gizmos.ray(intersection.position(), intersection.normal(), color);
+
+        gizmos.ray(position, normal, color);
 
         if is_first {
             if let Some(tiles) = &tiles {
                 let tiles = &tiles.tiles;
-                let closest_tile = closest_tile(tiles, intersection.position());
+                let closest_tile = closest_tile(tiles, position);
 
                 // Later: If selection is too far away, there is no selection. To avoid sides getting selected when the actual mouse is outside the playing field.
 
@@ -311,7 +317,7 @@ fn update_selections<T: TypePath + Send + Sync>(
                 }
 
                 if let Some(closest_tile) = closest_tile {
-                    let closest_edge = closest_edge(tiles, closest_tile, intersection.position());
+                    let closest_edge = closest_edge(tiles, closest_tile, position);
 
                     if hovered_edge.should_update(closest_edge) {
                         hovered_edge.update(closest_edge);
