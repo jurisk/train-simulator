@@ -1,7 +1,7 @@
 pub(crate) mod assets;
 
+use bevy::app::Update;
 use bevy::log::debug;
-use bevy::math::{Quat, Vec3};
 use bevy::prelude::{
     App, Commands, Component, Entity, EventReader, FixedUpdate, IntoSystemConfigs, PbrBundle,
     Plugin, Query, Res, ResMut, Transform, default, in_state,
@@ -16,6 +16,7 @@ use crate::communication::domain::ServerMessageEvent;
 use crate::game::GameStateResource;
 use crate::game::military::assets::MilitaryAssets;
 use crate::states::ClientState;
+use crate::util::transform_from_midpoint_and_direction_yz;
 
 #[derive(Component)]
 pub struct ProjectileIdComponent(ProjectileId);
@@ -24,7 +25,16 @@ pub struct MilitaryPlugin;
 
 impl Plugin for MilitaryPlugin {
     fn build(&self, app: &mut App) {
-        // TODO HIGH: Actually add events for spawning shells, and spawn them, and animate them. But how to handle impacts & explosions?
+        // TODO HIGH: Handle shell impacts & explosions.
+
+        app.add_systems(
+            Update,
+            move_projectiles.run_if(in_state(ClientState::Playing)),
+        );
+        app.add_systems(
+            Update,
+            sync_projectiles_with_state.run_if(in_state(ClientState::Playing)),
+        );
         app.add_systems(
             FixedUpdate,
             handle_projectile_added_or_removed.run_if(in_state(ClientState::Playing)),
@@ -32,13 +42,34 @@ impl Plugin for MilitaryPlugin {
     }
 }
 
-#[expect(clippy::match_same_arms, clippy::needless_pass_by_value)]
+#[expect(clippy::needless_pass_by_value)]
+fn move_projectiles(
+    game_state_resource: Res<GameStateResource>,
+    mut query: Query<(&mut Transform, &ProjectileIdComponent)>,
+) {
+    let GameStateResource(game_state) = game_state_resource.as_ref();
+    for (mut transform, projectile_id_component) in &mut query {
+        let ProjectileIdComponent(projectile_id) = projectile_id_component;
+        if let Some(projectile) = game_state
+            .projectile_state()
+            .find_projectile(*projectile_id)
+        {
+            *transform = calculate_transform(projectile);
+        }
+    }
+}
+
+fn calculate_transform(projectile: &ProjectileInfo) -> Transform {
+    transform_from_midpoint_and_direction_yz(
+        projectile.location().into(),
+        projectile.velocity().into(),
+    )
+}
+
+#[expect(clippy::match_same_arms)]
 fn handle_projectile_added_or_removed(
     mut server_messages: EventReader<ServerMessageEvent>,
-    mut commands: Commands,
-    game_assets: Res<GameAssets>,
     mut game_state_resource: ResMut<GameStateResource>,
-    projectile_id_query: Query<(Entity, &ProjectileIdComponent)>,
 ) {
     let GameStateResource(game_state) = game_state_resource.as_mut();
     for message in server_messages.read() {
@@ -56,25 +87,20 @@ fn handle_projectile_added_or_removed(
                 GameResponse::TracksRemoved(_) => {},
                 GameResponse::TransportsAdded(_) => {},
                 GameResponse::ProjectilesAdded(projectiles) => {
+                    // The tricky part is that we can receive the same projectile multiple times - once from the client side game state, once from the server side game state...
+                    // Is there a better way? Not sure.
+
                     for projectile in projectiles {
                         game_state.upsert_projectile(projectile.clone());
-
-                        create_shell_entity(&mut commands, game_assets.as_ref(), projectile);
                     }
                 },
                 GameResponse::ProjectilesRemoved(projectile_ids) => {
                     for projectile_id in projectile_ids {
                         game_state.remove_projectile(*projectile_id);
                     }
-
-                    remove_industry_building_entities(
-                        projectile_ids,
-                        &mut commands,
-                        &projectile_id_query,
-                    );
                 },
                 GameResponse::DynamicInfosSync(..) => {},
-                GameResponse::GameJoined(..) => {},
+                GameResponse::GameJoined(_player_id, _game_state) => {},
                 GameResponse::GameLeft => {},
                 GameResponse::Error(_) => {},
             }
@@ -82,32 +108,62 @@ fn handle_projectile_added_or_removed(
     }
 }
 
-fn remove_industry_building_entities(
-    projectile_ids: &[ProjectileId],
+fn ensure_projectile_entity_exists(
     commands: &mut Commands,
+    game_assets: &GameAssets,
+    projectile: &ProjectileInfo,
     query: &Query<(Entity, &ProjectileIdComponent)>,
 ) {
-    for (entity, projectile_id_component) in query {
-        let ProjectileIdComponent(found_projectile_id) = projectile_id_component;
-        if projectile_ids.contains(found_projectile_id) {
-            commands.entity(entity).despawn();
-        }
+    if query
+        .iter()
+        .all(|(_, ProjectileIdComponent(projectile_id))| {
+            *projectile_id != projectile.projectile_id()
+        })
+    {
+        create_projectile_entity(commands, game_assets, projectile);
     }
 }
 
-fn create_shell_entity(
+#[expect(clippy::needless_pass_by_value)]
+fn sync_projectiles_with_state(
+    game_assets: Res<GameAssets>,
+    game_state_resource: Res<GameStateResource>,
+    mut commands: Commands,
+    projectile_id_query: Query<(Entity, &ProjectileIdComponent)>,
+) {
+    // Later: Would using set subtraction be more efficient? Anyway, it can wait.
+
+    let GameStateResource(game_state) = game_state_resource.as_ref();
+
+    for (entity, projectile_id_component) in &projectile_id_query {
+        let ProjectileIdComponent(found_projectile_id) = projectile_id_component;
+        if !game_state
+            .projectile_state()
+            .has_projectile(*found_projectile_id)
+        {
+            commands.entity(entity).despawn();
+        }
+    }
+
+    for projectile in game_state.projectile_infos() {
+        ensure_projectile_entity_exists(
+            &mut commands,
+            game_assets.as_ref(),
+            projectile,
+            &projectile_id_query,
+        );
+    }
+}
+
+fn create_projectile_entity(
     commands: &mut Commands,
     game_assets: &GameAssets,
     projectile: &ProjectileInfo,
 ) {
-    let position = projectile.dynamic_info.location.into();
-    let velocity = projectile.dynamic_info.velocity.into();
-    let rotation = Quat::from_rotation_arc(Vec3::Y, velocity);
-
+    let transform = calculate_transform(projectile);
     let pbr_bundle = create_shell_pbr_bundle(
         ProjectileType::Standard,
-        position,
-        rotation,
+        transform,
         &game_assets.military_assets,
     );
 
@@ -118,11 +174,10 @@ fn create_shell_entity(
 
 fn create_shell_pbr_bundle(
     shell_type: ProjectileType,
-    position: Vec3,
-    rotation: Quat,
+    transform: Transform,
     military_assets: &MilitaryAssets,
 ) -> PbrBundle {
-    debug!("Spawning a shell at {position} with rotation {rotation}...");
+    debug!("Spawning a shell at {transform:?}...");
 
     let shell = military_assets
         .shells
@@ -131,7 +186,7 @@ fn create_shell_pbr_bundle(
     PbrBundle {
         mesh: shell.mesh.clone(),
         material: shell.material.clone(),
-        transform: Transform::from_xyz(position.x, position.y, position.z).with_rotation(rotation),
+        transform,
         ..default()
     }
 }

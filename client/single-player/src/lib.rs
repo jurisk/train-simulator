@@ -68,10 +68,17 @@ fn advance_time_locally(
 ) {
     let ClientIdResource(client_id) = *client_id_resource;
     let ServerStateResource(ref mut server_state) = server_state_resource.as_mut();
-    server_state.advance_time_diffs(
+
+    let advance_time_responses = server_state.advance_time_diffs(
         GameTimeDiff::from_seconds(time.delta_seconds()),
         &NoopMetrics::default(),
     );
+
+    for response in advance_time_responses {
+        if response.client_ids.contains(&client_id) {
+            server_messages.send(ServerMessageEvent::new(response.response));
+        }
+    }
 
     let sync_responses = server_state.sync_games();
     for response in sync_responses {

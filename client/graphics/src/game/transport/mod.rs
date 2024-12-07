@@ -47,10 +47,6 @@ impl Plugin for TransportPlugin {
             handle_transport_created.run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(
-            FixedUpdate,
-            handle_transports_sync.run_if(in_state(ClientState::Playing)),
-        );
-        app.add_systems(
             Update,
             move_transports.run_if(in_state(ClientState::Playing)),
         );
@@ -108,40 +104,6 @@ fn move_transports(
             }
         } else {
             warn!("Transport {:?} not found", transport_id);
-        }
-    }
-}
-
-#[expect(clippy::collapsible_match)]
-fn handle_transports_sync(
-    mut server_messages: EventReader<ServerMessageEvent>,
-    mut game_state_resource: ResMut<GameStateResource>,
-) {
-    let GameStateResource(game_state) = game_state_resource.as_mut();
-    for message in server_messages.read() {
-        if let ServerResponse::Game(_game_id, game_response) = &message.response {
-            if let GameResponse::DynamicInfosSync(
-                game_time,
-                time_factor,
-                industry_building_infos,
-                station_building_infos,
-                military_building_infos,
-                transport_infos,
-                projectile_infos,
-            ) = game_response
-            {
-                if let Some(time_factor) = time_factor {
-                    game_state.set_time_factor(*time_factor);
-                }
-                game_state.update_dynamic_infos(
-                    *game_time,
-                    industry_building_infos,
-                    station_building_infos,
-                    military_building_infos,
-                    transport_infos,
-                    projectile_infos,
-                );
-            }
         }
     }
 }

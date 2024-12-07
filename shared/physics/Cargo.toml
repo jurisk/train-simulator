@@ -1,0 +1,11 @@
+[package]
+name = "shared-physics"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+shared-math = { path = "../math" }
+bevy_math.workspace = true

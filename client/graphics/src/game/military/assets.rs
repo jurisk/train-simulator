@@ -25,7 +25,7 @@ pub struct ShellAssets {
 
 impl ShellAssets {
     pub fn new(meshes: &mut Assets<Mesh>, materials: &mut Assets<StandardMaterial>) -> Self {
-        let mesh = generate_cone(1.0, 2.0, 16);
+        let mesh = generate_cone(0.25, 0.5, 16);
         let mesh = meshes.add(mesh);
 
         let color = Color::srgb(1.0, 0.0, 0.0);

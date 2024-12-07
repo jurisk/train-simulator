@@ -15,7 +15,6 @@ impl BoolOptionOps for bool {
 
 pub trait BoolResultOps {
     #[expect(clippy::missing_errors_doc)]
-
     fn then_ok_unit<E, FE>(self, error: FE) -> Result<(), E>
     where
         FE: FnOnce() -> E;

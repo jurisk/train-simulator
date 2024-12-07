@@ -1,21 +1,28 @@
 use std::fmt::{Debug, Formatter};
 
-use log::warn;
+use bevy_math::Vec3;
+use log::info;
 use serde::{Deserialize, Serialize};
+use shared_physics::projectile::best_effort_start_velocity_vector_given_start_velocity;
 
 use crate::building::WithRelativeTileCoverage;
 use crate::building::building_info::{BuildingInfo, WithCostToBuild, WithOwner, WithTileCoverage};
 use crate::building::industry_type::IndustryType;
 use crate::building::military_building_type::MilitaryBuildingType;
 use crate::cargo_map::CargoMap;
+use crate::client_command::InternalGameCommand;
+use crate::game_state::GameState;
 use crate::game_time::{GameTime, GameTimeDiff};
+use crate::military::ProjectileType;
+use crate::military::projectile_info::ProjectileInfo;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::tile_coverage::TileCoverage;
-use crate::{MilitaryBuildingId, PlayerId};
+use crate::{MilitaryBuildingId, PlayerId, ProjectileId};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Default)]
 pub struct MilitaryBuildingDynamicInfo {
-    last_fired_at: GameTime,
+    last_fired_at:                   GameTime,
+    next_projectile_sequence_number: usize,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
@@ -80,27 +87,131 @@ impl MilitaryBuildingInfo {
         self.reference_tile
     }
 
+    pub(crate) fn update_projectile_fired(&mut self, projectile: &ProjectileInfo) {
+        // TODO: This is rather iffy, but I did not think of a better way how to do this
+        self.dynamic_info.last_fired_at =
+            self.dynamic_info.last_fired_at.max(projectile.fired_at());
+        self.dynamic_info.next_projectile_sequence_number =
+            projectile.projectile_id().sequence_number + 1;
+    }
+
     #[must_use]
-    fn ready_to_fire_at(&self) -> GameTime {
+    pub fn ready_to_fire_at(&self) -> GameTime {
         self.dynamic_info.last_fired_at + self.military_building_type.reload_time()
+    }
+
+    fn make_projectile(
+        &self,
+        game_state: &GameState,
+        fired_at: GameTime,
+    ) -> Option<ProjectileInfo> {
+        let artillery_height = Vec3::new(0.0, 0.5, 0.0);
+        let from_position = game_state
+            .map_level()
+            .terrain()
+            .tile_center_coordinate(self.reference_tile())
+            + artillery_height;
+        let location = from_position.into();
+
+        // TODO HIGH: Have a target selection (with the "instructions" selected in dynamic_info - initially just the closest enemy building)
+        let landing_on = TileCoordsXZ::new(56, 207);
+
+        let target_position = game_state
+            .map_level()
+            .terrain()
+            .tile_center_coordinate(landing_on);
+
+        let projectile_type = ProjectileType::Standard;
+
+        let projectile_properties = projectile_type.projectile_properties();
+
+        let velocity_and_time = best_effort_start_velocity_vector_given_start_velocity(
+            from_position,
+            target_position,
+            &projectile_properties,
+        );
+
+        info!("Calculated velocity and time: {velocity_and_time:?}");
+
+        match velocity_and_time {
+            None => {
+                info!(
+                    "Failed to create projectile from {from_position:?} to {target_position:?} - perhaps the target is too far?"
+                );
+                None
+            },
+            Some((velocity, time)) => {
+                let landing_at = fired_at + GameTimeDiff::from_seconds(time);
+
+                let projectile_info = ProjectileInfo::new(
+                    ProjectileId::new(self.id, self.dynamic_info.next_projectile_sequence_number),
+                    self.owner_id,
+                    projectile_type,
+                    self.id,
+                    fired_at,
+                    landing_at,
+                    landing_on,
+                    location,
+                    velocity.into(),
+                );
+                info!("Firing {projectile_info:?}",);
+                Some(projectile_info)
+            },
+        }
+    }
+
+    #[must_use]
+    fn fire_command(
+        &self,
+        game_state: &GameState,
+        fired_at: GameTime,
+    ) -> Option<InternalGameCommand> {
+        let costs = game_state.building_state().can_pay_known_cost(
+            self.owner_id,
+            self,
+            IndustryType::MilitaryBase,
+            self.military_building_type
+                .projectile_type()
+                .cost_per_shot(),
+        );
+        match costs {
+            Ok(costs) => {
+                let projectile_info = self.make_projectile(game_state, fired_at);
+                projectile_info.map(|projectile_info| {
+                    InternalGameCommand::SpawnProjectile(projectile_info, costs)
+                })
+            },
+            Err(_) => None,
+        }
+    }
+
+    #[must_use]
+    pub fn generate_commands(
+        &self,
+        previous_game_time: GameTime,
+        _time_diff: GameTimeDiff,
+        new_game_time: GameTime,
+        game_state: &GameState,
+    ) -> Vec<InternalGameCommand> {
+        let ready_to_fire = self.ready_to_fire_at();
+        if new_game_time >= ready_to_fire {
+            let fired_at = ready_to_fire.max(previous_game_time);
+            // Note: This can miss firing in cases where the reload rate is faster than our time diff tick, and we should have fired multiple times per this tick...
+            self.fire_command(game_state, fired_at)
+                .into_iter()
+                .collect()
+        } else {
+            vec![]
+        }
     }
 
     pub fn advance_time_diff(
         &mut self,
-        previous_game_time: GameTime,
+        _previous_game_time: GameTime,
         _time_diff: GameTimeDiff,
-        new_game_time: GameTime,
+        _new_game_time: GameTime,
     ) {
-        let ready_at = self.ready_to_fire_at();
-        if new_game_time >= ready_at {
-            // Note: This can miss firing in cases where the reload rate is faster than our time diff tick, and we should have fired multiple times per this tick...
-            self.dynamic_info.last_fired_at = ready_at.max(previous_game_time);
-            warn!(
-                "We would be firing {:?} now!",
-                self.military_building_type().projectile_type()
-            );
-            // TODO HIGH: But how do you spawn projectiles and also generate game responses? This seems a road to spaghetti code. Think carefully.
-        }
+        // Empty on purpose, at least for now
     }
 }
 

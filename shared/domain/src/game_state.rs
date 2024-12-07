@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use log::{debug, trace};
+use log::{debug, info, trace, warn};
 use serde::{Deserialize, Serialize, Serializer};
 use shared_util::bool_ops::BoolResultOps;
 
@@ -15,14 +15,16 @@ use crate::building::military_building_info::{MilitaryBuildingDynamicInfo, Milit
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::building::{BuildCosts, BuildError};
+use crate::client_command::InternalGameCommand;
 use crate::game_time::{GameTime, GameTimeDiff, TimeFactor};
 use crate::map_level::map_level::{MapLevel, MapLevelFlattened};
 use crate::map_level::zoning::ZoningInfo;
 use crate::metrics::Metrics;
 use crate::military::projectile_info::{ProjectileDynamicInfo, ProjectileInfo};
-use crate::military::projectile_stile::ProjectileState;
+use crate::military::projectile_state::ProjectileState;
 use crate::players::player_state::PlayerState;
 use crate::scenario::{PlayerProfile, Scenario};
+use crate::server_response::GameResponse;
 use crate::supply_chain::SupplyChain;
 use crate::tile_coords_xz::TileCoordsXZ;
 use crate::transport::movement_orders::MovementOrders;
@@ -175,9 +177,83 @@ impl GameState {
         self.time
     }
 
-    pub fn advance_time_diff(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
+    #[must_use]
+    pub fn advance_time_diff(
+        &mut self,
+        diff: GameTimeDiff,
+        metrics: &impl Metrics,
+    ) -> Vec<GameResponse> {
+        self.advance_time_diff_internal(diff, metrics)
+            .into_iter()
+            .flat_map(|command| self.process_internal_command(&command))
+            .collect()
+    }
+
+    fn spawn_projectile(
+        &mut self,
+        projectile: &ProjectileInfo,
+        costs: &BuildCosts,
+    ) -> Result<GameResponse, BuildError> {
+        self.can_pay_costs(projectile.owner_id(), costs)?;
+        let building = self
+            .buildings
+            .find_military_building_mut(projectile.fired_from())
+            .ok_or(BuildError::UnknownError)?;
+
+        building.update_projectile_fired(projectile);
+        self.upsert_projectile(projectile.clone());
+        self.pay_costs(costs);
+        Ok(GameResponse::ProjectilesAdded(vec![projectile.clone()]))
+    }
+
+    fn process_internal_command(&mut self, command: &InternalGameCommand) -> Vec<GameResponse> {
+        match command {
+            InternalGameCommand::SpawnProjectile(projectile, costs) => {
+                match self.spawn_projectile(projectile, costs) {
+                    Ok(response) => {
+                        vec![response]
+                    },
+                    Err(error) => {
+                        warn!(
+                            "Failed to spawn projectile {projectile:?} with costs {costs:?} due to {error:?}"
+                        );
+                        vec![]
+                    },
+                }
+            },
+            InternalGameCommand::ProjectileLanded(projectile_id) => {
+                // TODO HIGH: Spawn explosion, do damage, etc.
+                info!("Projectile {projectile_id:?} landed");
+                self.remove_projectile(*projectile_id);
+                vec![GameResponse::ProjectilesRemoved(vec![*projectile_id])]
+            },
+        }
+    }
+
+    #[must_use]
+    fn generate_commands(
+        &self,
+        previous_game_time: GameTime,
+        diff: GameTimeDiff,
+        new_game_time: GameTime,
+    ) -> Vec<InternalGameCommand> {
+        let building_commands =
+            self.buildings
+                .generate_commands(previous_game_time, diff, new_game_time, self);
+        let projectile_commands =
+            self.projectiles
+                .generate_commands(previous_game_time, diff, new_game_time);
+        [building_commands, projectile_commands].concat()
+    }
+
+    #[must_use]
+    pub fn advance_time_diff_internal(
+        &mut self,
+        diff: GameTimeDiff,
+        metrics: &impl Metrics,
+    ) -> Vec<InternalGameCommand> {
         let diff = diff * self.time_factor;
-        if diff != GameTimeDiff::ZERO {
+        if diff > GameTimeDiff::ZERO {
             let previous_game_time = self.time;
             let new_game_time = previous_game_time + diff;
             self.buildings
@@ -186,6 +262,9 @@ impl GameState {
                 .advance_time_diff(diff, &mut self.buildings, metrics);
             self.projectiles.advance_time_diff(diff);
             self.time = new_game_time;
+            self.generate_commands(previous_game_time, diff, new_game_time)
+        } else {
+            vec![]
         }
     }
 
@@ -202,6 +281,11 @@ impl GameState {
     #[must_use]
     pub fn transport_infos(&self) -> &Vec<TransportInfo> {
         self.transports.all_transports()
+    }
+
+    #[must_use]
+    pub fn projectile_state(&self) -> &ProjectileState {
+        &self.projectiles
     }
 
     #[must_use]
@@ -251,7 +335,7 @@ impl GameState {
         tracks: &[TrackInfo],
     ) -> Result<Vec<TrackInfo>, BuildError> {
         let (filtered, costs) = self.can_build_tracks(requesting_player_id, tracks)?;
-        self.buildings.build_tracks(filtered.clone(), costs);
+        self.buildings.build_tracks(filtered.clone(), &costs);
         Ok(filtered)
     }
 
@@ -290,10 +374,14 @@ impl GameState {
         let costs =
             self.can_purchase_transport(requesting_player_id, station_id, transport_info)?;
 
-        self.buildings.pay_costs(costs);
+        self.pay_costs(&costs);
         self.upsert_transport(transport_info.clone());
 
         Ok(())
+    }
+
+    pub fn pay_costs(&mut self, costs: &BuildCosts) {
+        self.buildings.pay_costs(costs);
     }
 
     #[expect(clippy::missing_panics_doc, clippy::unwrap_used)]
@@ -388,7 +476,7 @@ impl GameState {
         building: &IndustryBuildingInfo,
     ) -> Result<(), BuildError> {
         let costs = self.can_build_industry_building(requesting_player_id, building)?;
-        self.buildings.build_industry_building(building, costs)
+        self.buildings.build_industry_building(building, &costs)
     }
 
     pub fn build_military_building(
@@ -397,7 +485,7 @@ impl GameState {
         building: &MilitaryBuildingInfo,
     ) -> Result<(), BuildError> {
         let costs = self.can_build_military_building(requesting_player_id, building)?;
-        self.buildings.build_military_building(building, costs)
+        self.buildings.build_military_building(building, &costs)
     }
 
     #[expect(clippy::missing_errors_doc)]
@@ -430,7 +518,7 @@ impl GameState {
         station: &StationInfo,
     ) -> Result<(), BuildError> {
         let costs = self.can_build_station(requesting_player_id, station)?;
-        self.buildings.build_station(station, costs)
+        self.buildings.build_station(station, &costs)
     }
 
     pub fn remove_tracks(

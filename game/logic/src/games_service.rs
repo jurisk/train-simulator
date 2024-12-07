@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use log::warn;
+use log::{error, warn};
 use shared_domain::client_command::{GameCommand, LobbyCommand};
 use shared_domain::game_state::GameState;
 use shared_domain::game_time::GameTimeDiff;
@@ -60,10 +60,29 @@ impl GamesService {
             .unwrap_or_default()
     }
 
-    pub fn advance_time_diffs(&mut self, diff: GameTimeDiff, metrics: &impl Metrics) {
+    #[must_use]
+    pub fn advance_time_diffs(
+        &mut self,
+        diff: GameTimeDiff,
+        metrics: &impl Metrics,
+    ) -> Vec<ServerResponseWithAddress> {
+        let mut results = vec![];
         for game_service in self.game_map.values_mut() {
-            game_service.advance_time_diff(diff, metrics);
+            let responses = game_service.advance_time_diff(diff, metrics);
+            let converted = Self::convert_game_response_to_server_response(
+                game_service.game_id(),
+                Ok(responses),
+            );
+            match converted {
+                Ok(converted) => {
+                    results.extend(converted);
+                },
+                Err(errors) => {
+                    error!("Failed to advance time diffs: {errors:?}");
+                },
+            }
         }
+        results
     }
 
     pub(crate) fn sync_games(&mut self) -> Vec<ServerResponseWithAddress> {

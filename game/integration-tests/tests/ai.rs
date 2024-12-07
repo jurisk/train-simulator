@@ -5,13 +5,14 @@ use std::fs;
 
 use game_ai::ArtificialIntelligenceState;
 use game_ai::oct2025::Oct2025ArtificialIntelligenceState;
-use game_logic::game_service::GameService;
+use game_logic::game_service::{GameResponseWithAddress, GameService};
 use game_logic::games_service::GamesService;
 use log::{error, info};
 use shared_domain::building::industry_type::IndustryType;
 use shared_domain::building::military_building_type::MilitaryBuildingType;
 use shared_domain::cargo_amount::CargoAmount;
 use shared_domain::cargo_map::{CargoMap, WithCargo};
+use shared_domain::client_command::GameCommand;
 use shared_domain::game_state::{GameState, GameStateFlattened};
 use shared_domain::game_time::GameTimeDiff;
 use shared_domain::metrics::NoopMetrics;
@@ -95,6 +96,16 @@ fn cargo_exceeds_threshold(
 fn end_condition(game_state: &GameState, player_id: PlayerId) -> bool {
     player_has_enough_cargo(game_state, player_id)
         && player_has_fixed_artillery(game_state, player_id)
+        && player_has_projectiles(game_state, player_id)
+}
+
+fn player_has_projectiles(game_state: &GameState, player_id: PlayerId) -> bool {
+    game_state
+        .projectile_state()
+        .find_projectiles_by_owner(player_id)
+        .into_iter()
+        .next()
+        .is_some()
 }
 
 fn player_has_fixed_artillery(game_state: &GameState, player_id: PlayerId) -> bool {
@@ -128,29 +139,7 @@ fn run_ai_commands(
             let responses = game_service.process_command(player_id, &command);
             match responses {
                 Ok(responses) => {
-                    for response in responses {
-                        if let GameResponse::Error(error) = &response.response {
-                            error!("Failed to process command: {command:?}: {error:?}");
-                        }
-
-                        match &response.address {
-                            AddressEnvelope::ToClient(_) | AddressEnvelope::ToUser(_) => {
-                                error!("Unexpected response: {response:?}");
-                            },
-                            AddressEnvelope::ToPlayer(_, player_id) => {
-                                artificial_intelligence_states
-                                    .get_mut(player_id)
-                                    .unwrap()
-                                    .as_mut()
-                                    .notify_of_response(&response.response);
-                            },
-                            AddressEnvelope::ToAllPlayersInGame(_) => {
-                                for ai_state in artificial_intelligence_states.values_mut() {
-                                    ai_state.notify_of_response(&response.response);
-                                }
-                            },
-                        }
-                    }
+                    apply_game_responses(artificial_intelligence_states, Some(&command), responses);
                 },
                 Err(err) => {
                     panic!("Failed to process command: {command:?}: {err:?}",);
@@ -160,10 +149,40 @@ fn run_ai_commands(
     }
 }
 
+fn apply_game_responses(
+    artificial_intelligence_states: &mut HashMap<PlayerId, Box<dyn ArtificialIntelligenceState>>,
+    command: Option<&GameCommand>,
+    responses: Vec<GameResponseWithAddress>,
+) {
+    for response in responses {
+        if let GameResponse::Error(error) = &response.response {
+            error!("Failed to process command: {command:?}: {error:?}");
+        }
+
+        match &response.address {
+            AddressEnvelope::ToClient(_) | AddressEnvelope::ToUser(_) => {
+                error!("Unexpected response: {response:?}");
+            },
+            AddressEnvelope::ToPlayer(_, player_id) => {
+                artificial_intelligence_states
+                    .get_mut(player_id)
+                    .unwrap()
+                    .as_mut()
+                    .notify_of_response(&response.response);
+            },
+            AddressEnvelope::ToAllPlayersInGame(_) => {
+                for ai_state in artificial_intelligence_states.values_mut() {
+                    ai_state.notify_of_response(&response.response);
+                }
+            },
+        }
+    }
+}
+
 #[test_log::test]
-fn ai_until_final_goods_built_oct2025() {
+fn ai_test_oct2025() {
     info!("Starting AI test Oct 2025...");
-    ai_until_final_goods_built(|player_id: PlayerId, game_state: &GameState| {
+    ai_test(|player_id: PlayerId, game_state: &GameState| {
         Box::new(Oct2025ArtificialIntelligenceState::new(
             player_id, game_state,
         ))
@@ -232,7 +251,7 @@ fn print_end_state(
 const MAX_STEPS: usize = 10_000;
 
 #[expect(clippy::similar_names)]
-fn ai_until_final_goods_built<F>(factory: F)
+fn ai_test<F>(factory: F)
 where
     F: Fn(PlayerId, &GameState) -> Box<dyn ArtificialIntelligenceState>,
 {
@@ -259,8 +278,8 @@ where
             .keys()
             .all(|player_id| end_condition(game_state, *player_id))
         {
-            print_end_state(&player_ais, game_service.game_state());
-            println!("AI finished in {steps} steps");
+            finish(&player_ais, game_service);
+            println!("AI finished successfully in {steps} steps");
             return;
         }
 
@@ -270,13 +289,22 @@ where
         }
 
         let diff = GameTimeDiff::from_seconds(0.1);
-        game_service.advance_time_diff(diff, &NoopMetrics::default());
+        let responses = game_service.advance_time_diff(diff, &NoopMetrics::default());
+        apply_game_responses(&mut player_ais, None, responses);
 
         steps += 1;
     }
 
+    finish(&player_ais, game_service);
+    panic!("AI did not finish in {MAX_STEPS} steps, game state dumped");
+}
+
+fn finish(
+    player_ais: &HashMap<PlayerId, Box<dyn ArtificialIntelligenceState>>,
+    game_service: &GameService,
+) {
     let final_game_state = game_service.game_state();
-    print_end_state(&player_ais, final_game_state);
+    print_end_state(player_ais, final_game_state);
 
     let flattened: GameStateFlattened = final_game_state.clone().into();
     let serialized = save_to_bytes(&flattened).unwrap();
@@ -284,7 +312,5 @@ where
     let output_path = "../../ai_until_final_goods_built.game_state.bincode.gz";
     fs::write(output_path, serialized).unwrap();
 
-    panic!("AI did not finish in {MAX_STEPS} steps, game state dumped to {output_path}");
-
-    // TODO: We should also dump - and later read - AI state for better debugging
+    println!("Game state saved to {output_path}, use `load_saved_game` to load it");
 }

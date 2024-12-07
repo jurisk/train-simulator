@@ -6,17 +6,19 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use web_time::Duration;
 
+use crate::building::BuildCosts;
 use crate::building::industry_building_info::IndustryBuildingInfo;
 use crate::building::military_building_info::MilitaryBuildingInfo;
 use crate::building::station_info::StationInfo;
 use crate::building::track_info::TrackInfo;
 use crate::game_state::GameState;
 use crate::game_time::TimeFactor;
+use crate::military::projectile_info::ProjectileInfo;
 use crate::transport::movement_orders::MovementOrders;
 use crate::transport::transport_info::TransportInfo;
 use crate::{
-    ClientId, GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, ScenarioId, StationId,
-    TrackId, TransportId, UserId,
+    ClientId, GameId, IndustryBuildingId, MilitaryBuildingId, PlayerId, ProjectileId, ScenarioId,
+    StationId, TrackId, TransportId, UserId,
 };
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -63,6 +65,12 @@ impl Debug for DemolishSelector {
             },
         }
     }
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum InternalGameCommand {
+    SpawnProjectile(ProjectileInfo, BuildCosts),
+    ProjectileLanded(ProjectileId),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone)]
