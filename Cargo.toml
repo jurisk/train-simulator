@@ -39,17 +39,17 @@ num-traits = "0.2"
 
 # Later:    Consider using Frame pacing:
 #           https://github.com/aevyrie/bevy_framepace
-bevy = { version = "0.14", default-features = false, features = [] }
-bevy_math = "0.14"
-bevy_simplenet = { version = "0.13", default-features = false, features = [] }
+bevy = { version = "0.15", default-features = false, features = [] }
+bevy_math = "0.15"
+bevy_simplenet = { version = "0.14", default-features = false, features = [] }
 
 # https://github.com/jakobhellermann/bevy-inspector-egui
 # https://crates.io/crates/bevy-inspector-egui/versions
 # Pulls in egui and that has to match with other egui versions used!
 
-bevy-inspector-egui = { version = "0.27", features = ["highlight_changes", "bevy_pbr"] }
+bevy-inspector-egui = { version = "0.28", features = ["highlight_changes", "bevy_pbr"] }
 
-bevy_egui = "0.30"
+bevy_egui = "0.31"
 egui = "0.29"
 
 bevy_mod_raycast = "0.18"
