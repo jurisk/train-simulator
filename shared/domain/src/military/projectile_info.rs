@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Formatter};
 
 use serde::{Deserialize, Serialize};
-use shared_physics::projectile::{ProjectileProperties, ShellType, calculate_acceleration};
+use shared_physics::projectile::calculate_acceleration;
 
 use crate::client_command::InternalGameCommand;
 use crate::game_time::{GameTime, GameTimeDiff};
@@ -123,8 +123,7 @@ impl ProjectileInfo {
     pub fn advance_time_diff(&mut self, time_diff: GameTimeDiff) {
         let delta = time_diff.to_seconds();
 
-        // TODO HIGH: You cannot create this every time. You should optimise
-        let projectile_properties = ProjectileProperties::for_shell(ShellType::Naval16Inch);
+        let projectile_properties = self.static_info.projectile_type.projectile_properties();
 
         // Apply velocity
         self.dynamic_info.location += self.velocity() * delta;

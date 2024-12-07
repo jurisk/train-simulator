@@ -21,7 +21,8 @@ pub struct ProjectileProperties {
 }
 
 impl ProjectileProperties {
-    pub(crate) fn create_from_inches(
+    #[must_use]
+    pub const fn create_from_inches(
         diameter_in_inches: f32,
         mass: f32,
         height_in_meters: f32,
@@ -32,45 +33,11 @@ impl ProjectileProperties {
         Self {
             // From http://www.navweaps.com/index_tech/tech-073.php
             drag_coefficient: 0.3,
-            cross_section: radius.powi(2) * PI,
+            cross_section: (radius * radius) * PI,
             mass,
             diameter: diameter_in_meters,
             height: height_in_meters,
             start_speed: start_speed_in_mps,
-        }
-    }
-}
-
-// TODO: We should eliminate or move this, this is not part of Physics
-#[derive(Debug, Clone, Copy)]
-pub enum ShellType {
-    Naval16Inch,
-    Naval14Inch,
-    Naval5Inch,
-}
-
-impl ProjectileProperties {
-    #[must_use]
-    pub fn for_shell(shell_type: ShellType) -> Self {
-        match shell_type {
-            ShellType::Naval16Inch => {
-                // From https://en.wikipedia.org/wiki/16-inch/50-caliber_Mark_7_gun
-                ProjectileProperties::create_from_inches(16.0, 1225.0, 1.829, 762.0)
-            },
-            ShellType::Naval14Inch => {
-                // From http://www.navweaps.com/Weapons/WNJAP_14-45_t41.php
-                // Failed to find shell height, so just estimating it
-                ProjectileProperties::create_from_inches(
-                    14.0,
-                    673.5,
-                    4.0 * 14.0 * METERS_PER_INCH,
-                    772.5,
-                )
-            },
-            ShellType::Naval5Inch => {
-                // From http://www.navweaps.com/Weapons/WNGER_5-45_skc34.php
-                ProjectileProperties::create_from_inches(5.0, 28.0, 0.68, 830.0)
-            },
         }
     }
 }
@@ -277,7 +244,7 @@ mod tests {
         let from_position = Vec3::new(0.0, 0.0, 0.0);
         let target_position = Vec3::new(12.0, 10.0, 30.0);
         let start_speed = 100.0;
-        let projectile = ProjectileProperties::for_shell(ShellType::Naval16Inch);
+        let projectile = ProjectileProperties::create_from_inches(16.0, 1225.0, 1.829, 762.0);
         let angle = 30f32.to_radians();
 
         let (distance, time) = find_distance_and_flight_time_to_target_assuming_angle(

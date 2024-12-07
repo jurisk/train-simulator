@@ -3,9 +3,7 @@ use std::fmt::{Debug, Formatter};
 use bevy_math::Vec3;
 use log::info;
 use serde::{Deserialize, Serialize};
-use shared_physics::projectile::{
-    ProjectileProperties, ShellType, best_effort_start_velocity_vector_given_start_velocity,
-};
+use shared_physics::projectile::best_effort_start_velocity_vector_given_start_velocity;
 
 use crate::building::WithRelativeTileCoverage;
 use crate::building::building_info::{BuildingInfo, WithCostToBuild, WithOwner, WithTileCoverage};
@@ -115,7 +113,7 @@ impl MilitaryBuildingInfo {
             + artillery_height;
         let location = from_position.into();
 
-        // TODO HIGH: Have a target selection, initially just the closest enemy building
+        // TODO HIGH: Have a target selection (with the "instructions" selected in dynamic_info - initially just the closest enemy building)
         let landing_on = TileCoordsXZ::new(56, 207);
 
         let target_position = game_state
@@ -123,11 +121,9 @@ impl MilitaryBuildingInfo {
             .terrain()
             .tile_center_coordinate(landing_on);
 
-        // TODO HIGH: This is a temporary hack, we cannot create it here every time
-        let mut projectile_properties = ProjectileProperties::for_shell(ShellType::Naval16Inch);
+        let projectile_type = ProjectileType::Standard;
 
-        // TODO HIGH: Temporary hack as the real speeds were too fast for the map size
-        projectile_properties.start_speed = 19.0;
+        let projectile_properties = projectile_type.projectile_properties();
 
         let velocity_and_time = best_effort_start_velocity_vector_given_start_velocity(
             from_position,
@@ -150,7 +146,7 @@ impl MilitaryBuildingInfo {
                 let projectile_info = ProjectileInfo::new(
                     ProjectileId::new(self.id, self.dynamic_info.next_projectile_sequence_number),
                     self.owner_id,
-                    ProjectileType::Standard,
+                    projectile_type,
                     self.id,
                     fired_at,
                     landing_at,
