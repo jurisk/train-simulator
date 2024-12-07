@@ -7,8 +7,7 @@ use bevy::input::ButtonInput;
 use bevy::picking::pointer::PointerInteraction;
 use bevy::prelude::{
     DetectChanges, Gizmos, IntoSystemConfigs, MeshPickingPlugin, MeshPickingSettings, MouseButton,
-    Plugin, Query, RayCastVisibility, Res, ResMut, Resource, TypePath, Update, Vec3, in_state,
-    info,
+    Plugin, Query, RayCastVisibility, Res, ResMut, Resource, Update, Vec3, in_state, info,
 };
 use log::warn;
 use shared_domain::edge_xz::EdgeXZ;
@@ -102,14 +101,14 @@ pub(crate) struct SelectionPlugin;
 
 impl Plugin for SelectionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(MeshPickingPlugin::default());
+        app.add_plugins(MeshPickingPlugin);
         app.insert_resource(MeshPickingSettings {
             require_markers:     true,
             ray_cast_visibility: RayCastVisibility::VisibleInView,
         });
         app.add_systems(
             Update,
-            update_selections::<()>.run_if(in_state(ClientState::Playing)),
+            update_selections.run_if(in_state(ClientState::Playing)),
         );
         app.add_systems(
             Update,
@@ -254,7 +253,7 @@ fn closest_edge(
     clippy::collapsible_else_if,
     clippy::collapsible_if
 )]
-fn update_selections<T: TypePath + Send + Sync>(
+fn update_selections(
     sources: Query<&PointerInteraction>,
     mut gizmos: Gizmos,
     tiles: Option<Res<Tiles>>,
@@ -268,100 +267,98 @@ fn update_selections<T: TypePath + Send + Sync>(
 ) {
     for (is_first, intersection) in sources.iter().flat_map(|m| {
         m.iter()
-            .map(|(entity, hit_data)| hit_data.clone())
+            .map(|(_entity, hit_data)| hit_data.clone())
             .enumerate()
             .map(|(i, hit)| (i == 0, hit))
     }) {
-        let position = intersection.position.expect(&format!(
-            "Position should be present in intersection {intersection:?}"
-        ));
+        if let Some(position) = intersection.position {
+            let color = match is_first {
+                true => PURPLE,
+                false => PINK,
+            };
 
-        let color = match is_first {
-            true => PURPLE,
-            false => PINK,
-        };
+            match intersection.normal {
+                Some(normal) => {
+                    gizmos.ray(position, normal, color);
+                },
+                None => {
+                    warn!("No normal found for intersection {intersection:?}");
+                },
+            }
 
-        match intersection.normal {
-            Some(normal) => {
-                gizmos.ray(position, normal, color);
-            },
-            None => {
-                warn!("No normal found for intersection {intersection:?}");
-            },
-        }
+            if is_first {
+                if let Some(tiles) = &tiles {
+                    let tiles = &tiles.tiles;
+                    let closest_tile = closest_tile(tiles, position);
 
-        if is_first {
-            if let Some(tiles) = &tiles {
-                let tiles = &tiles.tiles;
-                let closest_tile = closest_tile(tiles, position);
+                    // Later: If selection is too far away, there is no selection. To avoid sides getting selected when the actual mouse is outside the playing field.
 
-                // Later: If selection is too far away, there is no selection. To avoid sides getting selected when the actual mouse is outside the playing field.
-
-                if hovered_tile.should_update(closest_tile) {
-                    hovered_tile.update(closest_tile);
-                }
-
-                let SelectedTiles {
-                    ordered: ordered_selected_tiles,
-                } = selected_tiles.as_mut();
-
-                if mouse_buttons.just_pressed(MouseButton::Left) {
-                    if clicked_tile.should_update(closest_tile) {
-                        clicked_tile.update(closest_tile);
-                    }
-                }
-
-                if mouse_buttons.just_released(MouseButton::Left) {
-                    if clicked_tile.should_update(None) {
-                        clicked_tile.update(None);
-                    }
-                }
-
-                if mouse_buttons.pressed(MouseButton::Left) {
-                    if let Some(closest) = closest_tile {
-                        if !ordered_selected_tiles.contains(&closest) {
-                            ordered_selected_tiles.push(closest);
-                        }
-                    }
-                }
-
-                if let Some(closest_tile) = closest_tile {
-                    let closest_edge = closest_edge(tiles, closest_tile, position);
-
-                    if hovered_edge.should_update(closest_edge) {
-                        hovered_edge.update(closest_edge);
+                    if hovered_tile.should_update(closest_tile) {
+                        hovered_tile.update(closest_tile);
                     }
 
-                    let SelectedEdges {
-                        ordered: ordered_selected_edges,
-                    } = selected_edges.as_mut();
+                    let SelectedTiles {
+                        ordered: ordered_selected_tiles,
+                    } = selected_tiles.as_mut();
 
                     if mouse_buttons.just_pressed(MouseButton::Left) {
-                        if clicked_edge.should_update(closest_edge) {
-                            clicked_edge.update(closest_edge);
+                        if clicked_tile.should_update(closest_tile) {
+                            clicked_tile.update(closest_tile);
                         }
                     }
 
                     if mouse_buttons.just_released(MouseButton::Left) {
-                        if clicked_edge.should_update(None) {
-                            clicked_edge.update(None);
+                        if clicked_tile.should_update(None) {
+                            clicked_tile.update(None);
                         }
                     }
 
                     if mouse_buttons.pressed(MouseButton::Left) {
-                        if let Some(closest) = closest_edge {
-                            if !ordered_selected_edges.contains(&closest) {
-                                ordered_selected_edges.push(closest);
+                        if let Some(closest) = closest_tile {
+                            if !ordered_selected_tiles.contains(&closest) {
+                                ordered_selected_tiles.push(closest);
                             }
                         }
-                    } else {
-                        if clicked_edge.should_update(None) {
-                            clicked_edge.update(None);
+                    }
+
+                    if let Some(closest_tile) = closest_tile {
+                        let closest_edge = closest_edge(tiles, closest_tile, position);
+
+                        if hovered_edge.should_update(closest_edge) {
+                            hovered_edge.update(closest_edge);
+                        }
+
+                        let SelectedEdges {
+                            ordered: ordered_selected_edges,
+                        } = selected_edges.as_mut();
+
+                        if mouse_buttons.just_pressed(MouseButton::Left) {
+                            if clicked_edge.should_update(closest_edge) {
+                                clicked_edge.update(closest_edge);
+                            }
+                        }
+
+                        if mouse_buttons.just_released(MouseButton::Left) {
+                            if clicked_edge.should_update(None) {
+                                clicked_edge.update(None);
+                            }
+                        }
+
+                        if mouse_buttons.pressed(MouseButton::Left) {
+                            if let Some(closest) = closest_edge {
+                                if !ordered_selected_edges.contains(&closest) {
+                                    ordered_selected_edges.push(closest);
+                                }
+                            }
+                        } else {
+                            if clicked_edge.should_update(None) {
+                                clicked_edge.update(None);
+                            }
                         }
                     }
-                }
 
-                // We don't clear the selected tiles / edges here as it will be done by the system that handles the action
+                    // We don't clear the selected tiles / edges here as it will be done by the system that handles the action
+                }
             }
         }
     }

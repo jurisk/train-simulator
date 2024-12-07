@@ -105,6 +105,7 @@ pub(crate) fn draw_track_preview(
     }
 }
 
+#[expect(clippy::expect_used)]
 fn debug_draw_track_spline(track_preview: &TrackPreview, gizmos: &mut Gizmos, terrain: &Terrain) {
     let mut points: Vec<Vec3> = vec![terrain.directional_edge_entry_coordinate(track_preview.head)];
 

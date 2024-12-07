@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use bevy::core::Name;
 use bevy::math::EulerRot;
-use bevy::pbr::{DirectionalLight, DirectionalLightBundle};
+use bevy::pbr::DirectionalLight;
 use bevy::prelude::{
     App, Commands, IntoSystemConfigs, OnEnter, Plugin, Quat, Query, Res, Time, Transform, Update,
     Vec3, With, default, in_state,
@@ -58,15 +58,12 @@ fn create_lights(mut commands: Commands) {
     };
 
     commands.spawn((
-        DirectionalLightBundle {
-            directional_light: DirectionalLight {
-                illuminance: 4_000.0,
-                shadows_enabled: true,
-                ..default()
-            },
-            transform,
+        DirectionalLight {
+            illuminance: 4_000.0,
+            shadows_enabled: true,
             ..default()
         },
+        transform,
         Name::new("Directional Light"),
     ));
 }
