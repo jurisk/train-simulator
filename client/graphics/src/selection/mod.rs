@@ -10,6 +10,7 @@ use bevy::prelude::{
     Plugin, Query, RayCastVisibility, Res, ResMut, Resource, TypePath, Update, Vec3, in_state,
     info,
 };
+use log::warn;
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_util::direction_xz::DirectionXZ;
@@ -271,15 +272,23 @@ fn update_selections<T: TypePath + Send + Sync>(
             .enumerate()
             .map(|(i, hit)| (i == 0, hit))
     }) {
-        let position = intersection.position.unwrap();
-        let normal = intersection.normal.unwrap();
+        let position = intersection.position.expect(&format!(
+            "Position should be present in intersection {intersection:?}"
+        ));
 
         let color = match is_first {
             true => PURPLE,
             false => PINK,
         };
 
-        gizmos.ray(position, normal, color);
+        match intersection.normal {
+            Some(normal) => {
+                gizmos.ray(position, normal, color);
+            },
+            None => {
+                warn!("No normal found for intersection {intersection:?}");
+            },
+        }
 
         if is_first {
             if let Some(tiles) = &tiles {
