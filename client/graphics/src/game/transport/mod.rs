@@ -9,7 +9,7 @@ use bevy::asset::Assets;
 use bevy::pbr::StandardMaterial;
 use bevy::prelude::{
     Children, Commands, Component, Entity, EventReader, FixedUpdate, IntoSystemConfigs, Plugin,
-    Query, Res, ResMut, SpatialBundle, Transform, Update, in_state, warn,
+    Query, Res, ResMut, Transform, Update, Visibility, in_state, warn,
 };
 use shared_domain::TransportId;
 use shared_domain::building::building_info::WithOwner;
@@ -193,7 +193,7 @@ fn create_transport(
     if let Some(entity) = entity {
         commands
             .entity(entity)
-            .insert(SpatialBundle::default()) // For https://bevyengine.org/learn/errors/b0004/
+            .insert((Transform::default(), Visibility::default())) // For https://bevyengine.org/learn/errors/b0004/
             .insert(TransportIdComponent(transport_info.transport_id()));
     }
 }

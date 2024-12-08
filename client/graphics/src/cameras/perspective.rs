@@ -5,8 +5,8 @@ use bevy::input::mouse::MouseWheel;
 use bevy::log::info;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    ButtonInput, Camera, Commands, EventReader, IntoSystemConfigs, KeyCode, Plugin, PostUpdate,
-    Query, Res, Startup, Time, Transform, default, in_state,
+    ButtonInput, Camera, Camera3d, Commands, EventReader, IntoSystemConfigs, KeyCode, Plugin,
+    PostUpdate, Query, Res, Startup, Time, Transform, default, in_state,
 };
 use bevy::render::view::ColorGrading;
 
@@ -75,6 +75,7 @@ fn create_camera(mut commands: Commands) {
             hdr: true,
             ..default()
         },
+        Camera3d::default(),
         Tonemapping::None,
         ColorGrading { ..default() },
         transform,

@@ -4,7 +4,7 @@ use bevy::app::App;
 use bevy::core::Name;
 use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::math::Vec3;
-use bevy::prelude::{Camera, Commands, Plugin, Startup, Transform, default};
+use bevy::prelude::{Camera, Camera3d, Commands, Plugin, Startup, Transform, default};
 use bevy::render::view::ColorGrading;
 
 use crate::cameras::{CameraComponent, CameraId};
@@ -30,6 +30,7 @@ fn create_camera(mut commands: Commands) {
             hdr: true,
             ..default()
         },
+        Camera3d::default(),
         transform,
         Tonemapping::None,
         ColorGrading { ..default() },
