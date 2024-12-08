@@ -1,8 +1,9 @@
 use std::f32::consts::FRAC_PI_2;
 
 use bevy::core::Name;
+use bevy::pbr::MeshMaterial3d;
 use bevy::prelude::{
-    AlphaMode, App, Assets, Color, Commands, EventReader, FixedUpdate, Mesh, PbrBundle, Plugin,
+    AlphaMode, App, Assets, Color, Commands, EventReader, FixedUpdate, Mesh, Mesh3d, Plugin,
     Rectangle, ResMut, StandardMaterial, Transform, default,
 };
 use shared_domain::map_level::map_level::MapLevel;
@@ -65,16 +66,13 @@ fn create_water(
     //  * https://github.com/NickToony/gd-retroterrain/blob/master/WaterPlane.gdshader
     //  * https://github.com/Neopallium/bevy_water/tree/main/assets/shaders
     commands.spawn((
-        PbrBundle {
-            mesh,
-            material: materials.add(StandardMaterial {
-                base_color: Color::srgba_u8(0, 164, 196, 224),
-                alpha_mode: AlphaMode::Blend,
-                ..default()
-            }),
-            transform,
+        Mesh3d(mesh),
+        MeshMaterial3d(materials.add(StandardMaterial {
+            base_color: Color::srgba_u8(0, 164, 196, 224),
+            alpha_mode: AlphaMode::Blend,
             ..default()
-        },
+        })),
+        transform,
         Name::new("Water"),
     ));
 }

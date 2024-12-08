@@ -2,9 +2,10 @@ pub(crate) mod assets;
 
 use bevy::app::Update;
 use bevy::log::debug;
+use bevy::pbr::MeshMaterial3d;
 use bevy::prelude::{
-    App, Commands, Component, Entity, EventReader, FixedUpdate, IntoSystemConfigs, PbrBundle,
-    Plugin, Query, Res, ResMut, Transform, default, in_state,
+    App, Commands, Component, Entity, EventReader, FixedUpdate, IntoSystemConfigs, Mesh3d, Plugin,
+    Query, Res, ResMut, Transform, in_state,
 };
 use shared_domain::ProjectileId;
 use shared_domain::military::ProjectileType;
@@ -14,7 +15,6 @@ use shared_domain::server_response::{GameResponse, ServerResponse};
 use crate::assets::GameAssets;
 use crate::communication::domain::ServerMessageEvent;
 use crate::game::GameStateResource;
-use crate::game::military::assets::MilitaryAssets;
 use crate::states::ClientState;
 use crate::util::transform_from_midpoint_and_direction_yz;
 
@@ -161,32 +161,18 @@ fn create_projectile_entity(
     projectile: &ProjectileInfo,
 ) {
     let transform = calculate_transform(projectile);
-    let pbr_bundle = create_shell_pbr_bundle(
-        ProjectileType::Standard,
-        transform,
-        &game_assets.military_assets,
-    );
 
-    commands
-        .spawn(pbr_bundle)
-        .insert(ProjectileIdComponent(projectile.projectile_id()));
-}
-
-fn create_shell_pbr_bundle(
-    shell_type: ProjectileType,
-    transform: Transform,
-    military_assets: &MilitaryAssets,
-) -> PbrBundle {
     debug!("Spawning a shell at {transform:?}...");
 
-    let shell = military_assets
+    let shell = game_assets
+        .military_assets
         .shells
-        .mesh_and_material_for_shell_type(shell_type);
+        .mesh_and_material_for_shell_type(ProjectileType::Standard);
 
-    PbrBundle {
-        mesh: shell.mesh.clone(),
-        material: shell.material.clone(),
+    commands.spawn((
+        Mesh3d(shell.mesh.clone()),
+        MeshMaterial3d(shell.material.clone()),
         transform,
-        ..default()
-    }
+        ProjectileIdComponent(projectile.projectile_id()),
+    ));
 }

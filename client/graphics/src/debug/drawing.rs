@@ -1,4 +1,5 @@
-use bevy::prelude::{Gizmos, Quat, Srgba};
+use bevy::math::Isometry3d;
+use bevy::prelude::{Gizmos, Srgba};
 use shared_domain::edge_xz::EdgeXZ;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 use shared_util::grid_xz::GridXZ;
@@ -17,8 +18,8 @@ pub fn debug_draw_edge(
             // Later:   Actually, we cannot select the edges on some corners of the map (e.g. left side of the map)
             //          because of the way we represent the edges. We can fix this later, probably by avoiding `to_tile_and_direction`.
             let (a, b) = tiles[tile].quad.vertex_coordinates_clockwise(direction);
-            gizmos.sphere(a.position, Quat::default(), 0.1, color);
-            gizmos.sphere(b.position, Quat::default(), 0.1, color);
+            gizmos.sphere(Isometry3d::from_translation(a.position), 0.1, color);
+            gizmos.sphere(Isometry3d::from_translation(b.position), 0.1, color);
         }
     }
 }

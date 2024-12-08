@@ -1,9 +1,8 @@
 use bevy::input::ButtonInput;
 use bevy::prelude::{
-    App, Camera, Commands, Component, Entity, Event, KeyCode, Plugin, PostStartup, Query, Res,
-    Update, info,
+    App, Camera, Commands, Component, Entity, Event, KeyCode, Plugin, PostStartup, Query,
+    RayCastPickable, Res, Update, info,
 };
-use bevy_mod_raycast::deferred::RaycastSource;
 use shared_domain::tile_coords_xz::TileCoordsXZ;
 
 use crate::cameras::perspective::PerspectiveCameraPlugin;
@@ -86,12 +85,11 @@ fn switch_to_camera(
         let is_active = camera_type_component.id == next_camera;
         camera.is_active = is_active;
 
-        // For bevy_mod_raycast
         let mut entity_commands = commands.entity(entity);
         if is_active {
-            entity_commands.insert(RaycastSource::<()>::new_cursor());
+            entity_commands.insert(RayCastPickable);
         } else {
-            entity_commands.remove::<RaycastSource<()>>();
+            entity_commands.remove::<RayCastPickable>();
         }
     }
 }

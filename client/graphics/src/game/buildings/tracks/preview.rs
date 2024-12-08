@@ -105,6 +105,7 @@ pub(crate) fn draw_track_preview(
     }
 }
 
+#[expect(clippy::expect_used)]
 fn debug_draw_track_spline(track_preview: &TrackPreview, gizmos: &mut Gizmos, terrain: &Terrain) {
     let mut points: Vec<Vec3> = vec![terrain.directional_edge_entry_coordinate(track_preview.head)];
 
@@ -118,7 +119,7 @@ fn debug_draw_track_spline(track_preview: &TrackPreview, gizmos: &mut Gizmos, te
 
     if points.len() > 3 {
         let curve = CubicCardinalSpline::new_catmull_rom(points).to_curve();
-        gizmos.linestrip(curve.iter_positions(50), RED);
+        gizmos.linestrip(curve.expect("success").iter_positions(50), RED);
     }
 }
 

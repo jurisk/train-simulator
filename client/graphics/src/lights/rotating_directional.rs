@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use bevy::core::Name;
 use bevy::math::EulerRot;
-use bevy::pbr::{DirectionalLight, DirectionalLightBundle};
+use bevy::pbr::DirectionalLight;
 use bevy::prelude::{
     App, Commands, IntoSystemConfigs, OnEnter, Plugin, Quat, Query, Res, Time, Transform, Update,
     Vec3, With, default, in_state,
@@ -58,15 +58,12 @@ fn create_lights(mut commands: Commands) {
     };
 
     commands.spawn((
-        DirectionalLightBundle {
-            directional_light: DirectionalLight {
-                illuminance: 4_000.0,
-                shadows_enabled: true,
-                ..default()
-            },
-            transform,
+        DirectionalLight {
+            illuminance: 4_000.0,
+            shadows_enabled: true,
             ..default()
         },
+        transform,
         Name::new("Directional Light"),
     ));
 }
@@ -77,7 +74,7 @@ fn animate_light_direction(
     mut query: Query<&mut Transform, With<DirectionalLight>>,
 ) {
     for mut transform in &mut query {
-        let elapsed = time.elapsed_seconds();
+        let elapsed = time.elapsed_secs();
         let angle = (elapsed / FULL_ROTATION_SECONDS) * (2.0 * PI);
         let x = RADIUS * angle.cos();
         let z = RADIUS * angle.sin();

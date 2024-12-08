@@ -19,7 +19,6 @@ serde.workspace = true
 fastrand.workspace = true
 bigdecimal.workspace = true
 
-bevy_mod_raycast.workspace = true
 bevy_egui.workspace = true
 egui.workspace = true
 bevy-inspector-egui.workspace = true
@@ -36,13 +35,15 @@ workspace = true
 features = [
     "bevy_core_pipeline",
     "bevy_gizmos",
-    "bevy_gltf",
     "bevy_pbr",
     "bevy_dev_tools",
+    "bevy_picking",
+    "bevy_mesh_picking_backend",
     "bevy_render",
     "bevy_state",
     "bevy_text",
     "bevy_ui",
+    "bevy_window",
     "default_font",
     "ktx2",
     "png",

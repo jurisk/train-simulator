@@ -36,7 +36,6 @@ workspace = true
 features = [
     "bevy_core_pipeline",
     "bevy_gizmos",
-    "bevy_gltf",
     "bevy_pbr",
     "bevy_render",
     "bevy_state",

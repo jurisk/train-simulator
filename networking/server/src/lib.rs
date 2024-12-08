@@ -136,7 +136,7 @@ fn process_client_command_with_client_id_events(
     }
 
     for response in server_state.advance_time_diffs(
-        GameTimeDiff::from_seconds(time.delta_seconds()),
+        GameTimeDiff::from_seconds(time.delta_secs()),
         metrics.as_ref(),
     ) {
         send_responses_to_clients(server.as_ref(), &response);

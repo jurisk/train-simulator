@@ -7,11 +7,11 @@ use bevy::color::Color;
 use bevy::core::Name;
 use bevy::log::{error, warn};
 use bevy::math::Vec3;
-use bevy::pbr::{PbrBundle, StandardMaterial};
+use bevy::pbr::StandardMaterial;
 use bevy::prelude::{
-    Bundle, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Mesh, NextState,
-    OnEnter, Plugin, Res, ResMut, Resource, Time, Transform, Update, default, in_state, info,
-    trace,
+    Bundle, Commands, EventReader, EventWriter, FixedUpdate, IntoSystemConfigs, Mesh, Mesh3d,
+    MeshMaterial3d, NextState, OnEnter, Plugin, Res, ResMut, Resource, Time, Transform, Update,
+    default, in_state, info, trace,
 };
 use shared_domain::building::building_info::WithTileCoverage;
 use shared_domain::client_command::{
@@ -138,7 +138,7 @@ fn client_side_time_advance(
 ) {
     let GameStateResource(ref mut game_state) = game_state_resource.as_mut();
     let responses = game_state.advance_time_diff(
-        GameTimeDiff::from_seconds(time.delta_seconds()),
+        GameTimeDiff::from_seconds(time.delta_secs()),
         &NoopMetrics::default(),
     );
     for response in responses {
@@ -299,15 +299,12 @@ pub fn create_object_entity(
     // TODO: Make buildings distinguishable from each other - e.g. use `label` to also draw text on the sides / roof of the building
 
     let mut commands = commands.spawn((
-        PbrBundle {
-            transform: Transform {
-                translation: center,
-                ..default()
-            },
-            material,
-            mesh,
+        Transform {
+            translation: center,
             ..default()
         },
+        MeshMaterial3d(material),
+        Mesh3d(mesh),
         Name::new(label),
     ));
     commands.insert(additional);
