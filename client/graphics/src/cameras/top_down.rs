@@ -4,7 +4,7 @@ use bevy::app::App;
 use bevy::core::Name;
 use bevy::core_pipeline::tonemapping::Tonemapping;
 use bevy::math::Vec3;
-use bevy::prelude::{Camera, Camera3dBundle, Commands, Plugin, Startup, Transform, default};
+use bevy::prelude::{Camera, Commands, Plugin, Startup, Transform, default};
 use bevy::render::view::ColorGrading;
 
 use crate::cameras::{CameraComponent, CameraId};
@@ -25,17 +25,14 @@ fn create_camera(mut commands: Commands) {
     let mut transform = from.looking_at(target, UP);
     transform.rotate_local_z(-FRAC_PI_2);
     commands.spawn((
-        Camera3dBundle {
-            camera: Camera {
-                is_active: false,
-                hdr: true,
-                ..default()
-            },
-            transform,
-            tonemapping: Tonemapping::None,
-            color_grading: ColorGrading { ..default() },
+        Camera {
+            is_active: false,
+            hdr: true,
             ..default()
         },
+        transform,
+        Tonemapping::None,
+        ColorGrading { ..default() },
         CameraComponent {
             id: CameraId::TopDown,
         },

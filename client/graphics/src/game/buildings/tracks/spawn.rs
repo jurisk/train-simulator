@@ -2,7 +2,7 @@ use bevy::asset::Assets;
 use bevy::color::Color;
 use bevy::core::Name;
 use bevy::math::{Quat, Vec3};
-use bevy::pbr::{MeshMaterial3d, PbrBundle, StandardMaterial};
+use bevy::pbr::{MeshMaterial3d, StandardMaterial};
 use bevy::prelude::{Commands, Entity, Mesh3d, Query, ResMut, Transform, default};
 use shared_domain::building::building_info::WithOwner;
 use shared_domain::building::track_info::TrackInfo;
@@ -99,16 +99,13 @@ fn spawn_rail(
     let direction = direction.normalize();
 
     let mut entity_commands = commands.spawn((
-        PbrBundle {
-            transform: Transform {
-                translation: a + direction * length / 2.0,
-                rotation: Quat::from_rotation_arc(Vec3::Z, direction),
-                ..default()
-            },
-            material: MeshMaterial3d(materials.add(color)),
-            mesh: Mesh3d(track_assets.rail_mesh_for(a, b)),
+        Transform {
+            translation: a + direction * length / 2.0,
+            rotation: Quat::from_rotation_arc(Vec3::Z, direction),
             ..default()
         },
+        MeshMaterial3d(materials.add(color)),
+        Mesh3d(track_assets.rail_mesh_for(a, b)),
         Name::new(name),
     ));
 

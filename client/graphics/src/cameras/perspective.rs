@@ -5,8 +5,8 @@ use bevy::input::mouse::MouseWheel;
 use bevy::log::info;
 use bevy::math::Vec3;
 use bevy::prelude::{
-    ButtonInput, Camera, Camera3dBundle, Commands, EventReader, IntoSystemConfigs, KeyCode, Plugin,
-    PostUpdate, Query, Res, Startup, Time, Transform, default, in_state,
+    ButtonInput, Camera, Commands, EventReader, IntoSystemConfigs, KeyCode, Plugin, PostUpdate,
+    Query, Res, Startup, Time, Transform, default, in_state,
 };
 use bevy::render::view::ColorGrading;
 
@@ -70,21 +70,17 @@ fn create_camera(mut commands: Commands) {
     let transform = transform_from_target(Vec3::ZERO, 200.0);
 
     commands.spawn((
-        Camera3dBundle {
-            camera: Camera {
-                is_active: false,
-                hdr: true,
-                ..default()
-            },
-            tonemapping: Tonemapping::None,
-            color_grading: ColorGrading { ..default() },
-            transform,
+        Camera {
+            is_active: false,
+            hdr: true,
             ..default()
         },
+        Tonemapping::None,
+        ColorGrading { ..default() },
+        transform,
         CameraComponent {
             id: CameraId::Perspective,
         },
-        // RaycastSource::<()>::new_cursor(), // For bevy_mod_raycast
         Name::new("Perspective Camera"),
     ));
 }

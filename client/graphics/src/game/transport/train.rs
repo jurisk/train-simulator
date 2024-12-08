@@ -1,8 +1,8 @@
 use bevy::asset::Assets;
 use bevy::core::Name;
 use bevy::math::Vec3;
-use bevy::pbr::{MeshMaterial3d, PbrBundle, StandardMaterial};
-use bevy::prelude::{BuildChildren, Color, Commands, Entity, Mesh3d, ResMut, Transform, default};
+use bevy::pbr::{MeshMaterial3d, StandardMaterial};
+use bevy::prelude::{BuildChildren, Color, Commands, Entity, Mesh3d, ResMut, Transform};
 use shared_domain::TransportId;
 use shared_domain::map_level::map_level::MapLevel;
 use shared_domain::server_response::Colour;
@@ -88,12 +88,9 @@ fn create_train_component(
     let mesh = transport_assets.train_component_mesh_for(train_component_type);
 
     let entity_commands = commands.spawn((
-        PbrBundle {
-            material: MeshMaterial3d(materials.add(color)),
-            transform,
-            mesh: Mesh3d(mesh),
-            ..default()
-        },
+        MeshMaterial3d(materials.add(color)),
+        transform,
+        Mesh3d(mesh),
         TransportIndexComponent(index),
         Name::new(format!("{train_component_type:?}-{index}")),
     ));

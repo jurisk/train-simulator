@@ -4,8 +4,8 @@ use bevy::core::Name;
 use bevy::pbr::{ExtendedMaterial, MeshMaterial3d};
 use bevy::picking::mesh_picking::RayCastPickable;
 use bevy::prelude::{
-    App, Color, Commands, EventReader, FixedUpdate, MaterialMeshBundle, Mesh, Mesh3d, Plugin, Res,
-    ResMut, StandardMaterial, Transform, default,
+    App, Color, Commands, EventReader, FixedUpdate, Mesh, Mesh3d, Plugin, Res, ResMut,
+    StandardMaterial, Transform, default,
 };
 use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::render_resource::VertexFormat;
@@ -41,8 +41,12 @@ enum LandMaterialType {
     Debug,
 }
 
+#[cfg(target_os = "macos")]
 // TODO HIGH: Due to https://github.com/bevyengine/bevy/issues/16588 we switched to Debug material
 const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Debug;
+
+#[cfg(not(target_os = "macos"))]
+const LAND_MATERIAL_TYPE: LandMaterialType = LandMaterialType::Advanced;
 
 #[expect(clippy::needless_pass_by_value, clippy::collapsible_match)]
 fn handle_map_level_updated(
@@ -113,12 +117,9 @@ pub(crate) fn create_land(
         LandMaterialType::Advanced => {
             let material = advanced_materials.add(create_advanced_land_material(asset_server));
             commands.spawn((
-                MaterialMeshBundle {
-                    mesh: Mesh3d(mesh),
-                    material: MeshMaterial3d(material),
-                    transform,
-                    ..default()
-                },
+                Mesh3d(mesh),
+                MeshMaterial3d(material),
+                transform,
                 RayCastPickable,
                 Name::new("Land"),
             ));

@@ -85,7 +85,6 @@ fn switch_to_camera(
         let is_active = camera_type_component.id == next_camera;
         camera.is_active = is_active;
 
-        // For bevy_mod_raycast
         let mut entity_commands = commands.entity(entity);
         if is_active {
             entity_commands.insert(RayCastPickable);
